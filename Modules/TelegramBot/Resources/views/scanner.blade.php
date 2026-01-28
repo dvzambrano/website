@@ -106,9 +106,7 @@
                 document.getElementById('status-title').innerText = "Procesando...";
                 document.getElementById('status-desc').innerText = "Enviando código: " + text;
 
-                // Extraemos los datos de inicialización
-                const urlParams = new URLSearchParams(window.location.search);
-                const botName = urlParams.get('bot');
+                const botName = "{{ $bot }}";
 
                 // guardandp el codigo como pendiente por si no hubiera coneccion
                 let pending = saveCodeToLocalStorage(text, botName);
