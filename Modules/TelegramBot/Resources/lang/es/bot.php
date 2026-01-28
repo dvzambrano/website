@@ -75,7 +75,7 @@ return [
     ],
     "scanner" => [
         "connectionbar" => [
-            "localmode" => "SIN CONEXIÓN - MODO LOCAL",
+            "localmode" => "NO CONEXIÓN - MODO LOCAL",
         ],
         "btn" => "Ud puede interactuar con este bot usando /menu o chequee /ayuda para temas de ayuda",
     ],
