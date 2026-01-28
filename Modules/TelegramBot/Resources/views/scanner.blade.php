@@ -14,7 +14,6 @@
             --tg-theme-bg-color: #ffffff;
             --tg-theme-text-color: #222222;
             --tg-theme-button-color: #3390ec;
-            --tg-theme-hint-color: #707579;
         }
 
         body {
@@ -68,7 +67,6 @@
             font-size: 1rem;
             opacity: 0.8;
             line-height: 1.4;
-            min-height: 1.4em;
         }
 
         .btn-retry {
@@ -79,13 +77,10 @@
             border: none;
             border-radius: 10px;
             font-weight: bold;
-            font-size: 1rem;
             cursor: pointer;
             display: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        /* Barra superior de estado (solo visible offline) */
         #connection-bar {
             position: fixed;
             top: 0;
@@ -104,13 +99,12 @@
 
 <body>
 
-    <div id="connection-bar">⚠️ SIN CONEXIÓN - MODO OFFLINE</div>
+    <div id="connection-bar">⚠️ SIN CONEXIÓN - MODO LOCAL</div>
 
-    <div class="container" id="main-content">
+    <div class="container">
         <div id="main-loader" class="loader"></div>
         <h2 id="status-title">Iniciando...</h2>
         <p id="status-desc">Cargando sistema.</p>
-
         <button class="btn-retry" id="retry-btn" onclick="openScanner()">Reabrir Cámara</button>
     </div>
 
@@ -123,114 +117,80 @@
         document.body.style.color = tg.textColor;
 
         const STORAGE_KEY = "{{ $bot }}_pending_scans";
-        let lastKnownState = navigator.onLine; // Para comparar cambios
+        let lastKnownState = true; // Asumimos online al inicio hasta el primer ping
 
         // =========================================================
-        // 1. EL LATIDO (HEARTBEAT) - Aquí está la magia
-        // =========================================================
-        // =========================================================
-        // 1. EL LATIDO CON PING REAL
+        // 1. EL LATIDO (PING REAL)
         // =========================================================
         setInterval(async () => {
             let isOnline;
-
             try {
-                // Intentamos una petición ultra rápida a un recurso externo o local
-                // Usamos 'no-cache' para obligar a que salga a la red
-                const response = await fetch("https://www.google.com/favicon.ico", {
-                    mode: 'no-cors',
-                    cache: 'no-store',
-                    signal: AbortSignal.timeout(1500) // Si en 1.5s no responde, está muerto
+                // Ping a Google (o podrías usar tu propia URL de salud del servidor)
+                await fetch("https://www.google.com/favicon.ico", {
+                    mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(2000)
                 });
                 isOnline = true;
             } catch (e) {
                 isOnline = false;
             }
 
-            // Solo actuamos si el estado REAL cambió
             if (isOnline !== lastKnownState) {
                 lastKnownState = isOnline;
-                console.log("Estado de red REAL cambiado a: " + (isOnline ? "ONLINE" : "OFFLINE"));
                 updateUIState(isOnline);
-
-                if (isOnline) {
-                    // Intentar sincronizar apenas detecte internet real
-                    fetchCodes();
-                }
+                if (isOnline) fetchCodes(); // Sincroniza apenas detecte internet
             }
-        }, 3000); // Lo hacemos cada 3 segundos para no saturar la batería
-
+        }, 3000);
 
         // =========================================================
-        // 2. ACTUALIZACIÓN DE INTERFAZ
+        // 2. INTERFAZ
         // =========================================================
         function updateUIState(isOnline) {
             const bar = document.getElementById('connection-bar');
             let pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
             if (isOnline) {
-                // VOLVIMOS A LINEA
                 bar.style.display = 'none';
-
-                // Solo cambiamos el texto central si estaba mostrando error
                 if (document.getElementById('status-title').innerText.includes("Offline")) {
-                    document.getElementById('status-title').innerText = "🟢 Conexión recuperada";
-                    document.getElementById('status-desc').innerText = "Sincronizando...";
-                    document.getElementById('main-loader').style.display = "inline-block";
-                    document.getElementById('retry-btn').style.display = "none";
+                    document.getElementById('status-title').innerText = "🟢 En Línea";
+                    document.getElementById('status-desc').innerText = "Sincronizando bultos...";
                 }
-
             } else {
-                // SE CAYÓ LA RED
                 bar.style.display = 'block';
-
                 document.getElementById('main-loader').style.display = "none";
                 document.getElementById('status-title').innerText = "🔴 Modo Offline";
-
                 document.getElementById('status-desc').innerText = pending.length > 0
-                    ? "Se guardarán " + pending.length + " bultos en el teléfono."
-                    : "Los códigos se guardarán localmente.";
-
+                    ? "Tienes " + pending.length + " códigos guardados localmente."
+                    : "Los códigos se guardarán en el teléfono.";
                 document.getElementById('retry-btn').style.display = "inline-block";
             }
         }
 
-
         // =========================================================
-        // 3. LOGICA DE DATOS
+        // 3. DATOS Y ENVÍO
         // =========================================================
         function saveCodeToLocalStorage(code) {
             let pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-            const exists = pending.find(item => item.code === code);
-            if (!exists) {
+            if (!pending.find(item => item.code === code)) {
                 pending.push({ code: code, date: new Date().toISOString() });
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(pending));
             }
-            // Si estamos offline, refrescamos el contador visual
-            if (!navigator.onLine) updateUIState(false);
+            if (!lastKnownState) updateUIState(false);
         }
 
         function fetchCodes(callback) {
             let pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
             if (pending.length > 0) {
-
-                // Cortocircuito Inmediato
-                if (!navigator.onLine) {
+                // --- CORTOCIRCUITO BASADO EN EL LATIDO ---
+                if (!lastKnownState) {
                     updateUIState(false);
                     if (callback) callback();
                     return;
                 }
 
-                // UI de Carga
                 document.getElementById('main-loader').style.display = "inline-block";
                 document.getElementById('status-title').innerText = "⌛️ Sincronizando...";
-                document.getElementById('status-desc').innerText = "Enviando " + pending.length + " códigos...";
                 document.getElementById('retry-btn').style.display = "none";
-
-                // Timeout de 3 seg
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
 
                 fetch("{{ route('telegram-scanner-store') }}", {
                     method: 'POST',
@@ -243,42 +203,34 @@
                         codes: pending,
                         bot: "{{ $bot }}",
                         initData: tg.initData
-                    }),
-                    signal: controller.signal
+                    })
                 })
                     .then(response => {
-                        clearTimeout(timeoutId);
-                        if (!response.ok) throw new Error('Error Servidor');
+                        if (!response.ok) throw new Error();
                         return response.json();
                     })
                     .then(data => {
                         localStorage.removeItem(STORAGE_KEY);
                         document.getElementById('main-loader').style.display = "none";
                         document.getElementById('status-title').innerText = "✅ ¡Logrado!";
-                        document.getElementById('status-desc').innerText = "Se enviaron " + pending.length + " códigos.";
+                        document.getElementById('status-desc').innerText = "Se procesaron " + pending.length + " códigos.";
                         document.getElementById('retry-btn').style.display = "inline-block";
                         tg.HapticFeedback.notificationOccurred('success');
                         if (callback) callback();
                     })
-                    .catch(error => {
-                        console.log("Error sync:", error);
-                        updateUIState(false); // Asumimos offline si falla
+                    .catch(() => {
+                        updateUIState(false);
                         tg.HapticFeedback.notificationOccurred('warning');
                         if (callback) callback();
                     });
             } else {
-                // Nada que enviar
                 document.getElementById('main-loader').style.display = "none";
-                if (!document.getElementById('status-title').innerText.includes("Offline")) {
-                    document.getElementById('retry-btn').style.display = "inline-block";
-                }
                 if (callback) callback();
             }
         }
 
         function openScanner() {
             tg.showScanQrPopup({ text: "Escanea la etiqueta" }, function (text) {
-                // UI temporal
                 document.getElementById('main-loader').style.display = "inline-block";
                 document.getElementById('status-title').innerText = "⌛️ Procesando";
                 document.getElementById('retry-btn').style.display = "none";
@@ -289,25 +241,12 @@
             });
         }
 
-        // =========================================================
-        // 4. ARRANQUE
-        // =========================================================
-        // Chequeo inicial
-        if (!navigator.onLine) {
-            updateUIState(false);
-        } else {
-            fetchCodes(function () {
-                openScanner();
-            });
-        }
+        // Inicio
+        fetchCodes(() => {
+            if (lastKnownState) openScanner();
+        });
 
-        tg.onEvent('scanQrPopupClosed', function () {
-            // Limpiar mensaje de 'procesando' si se cerró manual
-            if (document.getElementById('status-title').innerText.includes("Procesando")) {
-                document.getElementById('status-title').innerText = "Listo";
-                document.getElementById('status-desc').innerText = "";
-                document.getElementById('main-loader').style.display = "none";
-            }
+        tg.onEvent('scanQrPopupClosed', () => {
             document.getElementById('retry-btn').style.display = "inline-block";
         });
 
