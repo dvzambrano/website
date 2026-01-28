@@ -22,7 +22,7 @@ Route::prefix('telegram')->group(function () {
 
     // Ruta para el WebApp de escaneo
     // URL final ejemplo: https://tudominio.com/telegram/scanner
-    Route::get('/scanner/{botname}/{instance?}', 'TelegramBotController@initScanner')->name('telegram-scanner-init');
+    Route::get('/scanner/{gpsrequired}/{botname}/{instance?}', 'TelegramBotController@initScanner')->name('telegram-scanner-init');
     Route::post('/scanner/store', 'TelegramBotController@storeScan')->name('telegram-scanner-store');
 
 });

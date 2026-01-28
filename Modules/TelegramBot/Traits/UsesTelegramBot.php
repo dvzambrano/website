@@ -646,8 +646,8 @@ trait UsesTelegramBot
     }
 
 
-    public function initScanner($botname, $instance)
+    public function initScanner($gpsrequired, $botname, $instance)
     {
-        return view('telegrambot::scanner', ['bot' => $botname]);
+        return view('telegrambot::scanner', ['gpsrequired' => $gpsrequired, 'bot' => $botname]);
     }
 }

@@ -277,37 +277,59 @@
         // =========================================================
 
         async function bootstrap() {
-            // 1. Intentamos obtener la ubicación inicial ANTES de abrir cámara
-            // Esto fuerza a que el navegador pida permiso ahora mismo
-            try {
-                document.getElementById('status-title').innerText = "{{ __('telegrambot::bot.scanner.loadinggps') }}...";
+            let gpsSuccess = false;
+            let gpsRequired = parseInt("{{ $gpsrequired }}");
+            if (gpsRequired !== -1)
+                try {
+                    document.getElementById('status-title').innerText = "{{ __('telegrambot::bot.scanner.loading_gps') }}...";
+                    document.getElementById('main-loader').style.display = "inline-block";
 
-                // Esperamos un máximo de 3 segundos por la ubicación inicial
-                await new Promise((resolve) => {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            currentCoords = {
-                                lat: position.coords.latitude,
-                                lng: position.coords.longitude,
-                                acc: position.coords.accuracy
-                            };
-                            resolve();
-                        },
-                        (error) => {
-                            console.warn("GPS denegado o error:", error);
-                            resolve(); // Resolvemos igual para no bloquear la app si deniegan
-                        },
-                        { enableHighAccuracy: true }
-                    );
-                });
-            } catch (e) {
-                console.log("Error en bootstrap GPS");
+                    await new Promise((resolve) => {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                currentCoords = {
+                                    lat: position.coords.latitude,
+                                    lng: position.coords.longitude,
+                                    acc: position.coords.accuracy
+                                };
+                                gpsSuccess = true;
+                                resolve();
+                            },
+                            (error) => {
+                                console.warn("GPS denegado:", error);
+                                gpsSuccess = false;
+                                // Si NO es obligatorio (0), resolvemos para dejarlo pasar
+                                if (gpsRequired === 0) resolve();
+                                // Si ES obligatorio (1), aquí no resolvemos o manejamos el flujo de error
+                                else resolve();
+                            },
+                            { enableHighAccuracy: true }
+                        );
+                    });
+                } catch (e) {
+                    gpsSuccess = false;
+                }
+
+            // --- LÓGICA DE VALIDACIÓN ---
+            if (!gpsSuccess && gpsRequired === 1) {
+                // Bloqueamos la app y mostramos error
+                document.getElementById('main-loader').style.display = "none";
+                document.getElementById('status-title').innerText = "❌ {{ __('telegrambot::bot.scanner.gps_denied_title') }}";
+                document.getElementById('status-desc').innerText = "{{ __('telegrambot::bot.scanner.gps_denied_desc') }}";
+
+                // Mostramos un botón para reintentar (recargar la página)
+                const retryBtn = document.getElementById('retry-btn');
+                retryBtn.innerText = "{{ __('telegrambot::bot.scanner.retry_gps') }}";
+                retryBtn.onclick = () => location.reload();
+                retryBtn.style.display = "inline-block";
+
+                tg.HapticFeedback.notificationOccurred('error');
+                return; // DETENEMOS TODO AQUÍ. No se abre la cámara.
             }
 
-            // 2. Una vez resuelto el tema del permiso, activamos el vigilante en segundo plano
+            // Si llegamos aquí, o el GPS funcionó o no era obligatorio
             startLocationWatcher();
 
-            // 3. Ahora sí, procedemos con la lógica de envío y apertura de cámara
             fetchCodes(() => {
                 if (lastKnownState) {
                     openScanner();
