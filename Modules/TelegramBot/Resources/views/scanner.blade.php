@@ -128,26 +128,37 @@
         // =========================================================
         // 1. EL LATIDO (HEARTBEAT) - Aquí está la magia
         // =========================================================
-        setInterval(() => {
-            const isOnline = navigator.onLine;
+        // =========================================================
+        // 1. EL LATIDO CON PING REAL
+        // =========================================================
+        setInterval(async () => {
+            let isOnline;
 
-            // Si el estado cambió desde la última revisión
+            try {
+                // Intentamos una petición ultra rápida a un recurso externo o local
+                // Usamos 'no-cache' para obligar a que salga a la red
+                const response = await fetch("https://www.google.com/favicon.ico", {
+                    mode: 'no-cors',
+                    cache: 'no-store',
+                    signal: AbortSignal.timeout(1500) // Si en 1.5s no responde, está muerto
+                });
+                isOnline = true;
+            } catch (e) {
+                isOnline = false;
+            }
+
+            // Solo actuamos si el estado REAL cambió
             if (isOnline !== lastKnownState) {
                 lastKnownState = isOnline;
-                console.log("Cambio de red detectado por intervalo: " + (isOnline ? "ONLINE" : "OFFLINE"));
+                console.log("Estado de red REAL cambiado a: " + (isOnline ? "ONLINE" : "OFFLINE"));
                 updateUIState(isOnline);
 
-                // Si volvimos a tener internet, intentamos enviar lo pendiente automáticamente
-                if (isOnline) fetchCodes();
+                if (isOnline) {
+                    // Intentar sincronizar apenas detecte internet real
+                    fetchCodes();
+                }
             }
-
-            // Refuerzo: Si estamos offline, asegurar que el banner se vea
-            // (por si acaso la UI se limpió por error)
-            if (!isOnline && document.getElementById('connection-bar').style.display === 'none') {
-                updateUIState(false);
-            }
-
-        }, 1000); // Revisa cada 1 segundo
+        }, 3000); // Lo hacemos cada 3 segundos para no saturar la batería
 
 
         // =========================================================
