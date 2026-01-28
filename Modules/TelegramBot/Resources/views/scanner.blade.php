@@ -83,7 +83,7 @@
 <body>
 
     <div class="container" id="main-content">
-        <div class="loader"></div>
+        <div id="main-loader" class="loader"></div>
         <h2 id="status-title">Iniciando Escáner...</h2>
         <p id="status-desc">Se abrirá la cámara de Telegram para leer el código.</p>
         <button class="btn-retry" id="retry-btn" onclick="openScanner()">Reabrir Cámara</button>
@@ -102,7 +102,8 @@
 
         function openScanner() {
             tg.showScanQrPopup({ text: "Escanea la etiqueta" }, function (text) {
-                // 1. Cambiamos la interfaz para que el usuario sepa que se está procesando
+                // MOSTRAR LOADER al procesar un nuevo escaneo
+                document.getElementById('main-loader').style.display = "inline-block";
                 document.getElementById('status-title').innerText = "⌛️ Procesando";
                 document.getElementById('status-desc').innerText = "Enviando código...";
 
@@ -135,7 +136,8 @@
         function fetchCodes(callback) {
             let pending = JSON.parse(localStorage.getItem("{{ $bot }}_pending_scans") || "[]");
             if (pending.length > 0) {
-                // Mostrar visualmente que estamos trabajando
+                // MOSTRAR LOADER al empezar
+                document.getElementById('main-loader').style.display = "inline-block";
                 document.getElementById('status-title').innerText = "⌛️ Sincronizando...";
                 document.getElementById('retry-btn').style.display = "none";
 
@@ -155,6 +157,8 @@
                     if (!response.ok) throw new Error('Error en red');
                     return response.json();
                 }).then(data => {
+                    // OCULTAR LOADER en éxito
+                    document.getElementById('main-loader').style.display = "none";
                     document.getElementById('status-title').innerText = "✅ ¡Logrado!";
                     document.getElementById('status-desc').innerText = "Se procesaron " + pending.length + " códigos correctamente.";
                     document.getElementById('retry-btn').style.display = "inline-block";
@@ -168,6 +172,8 @@
                     if (callback) callback();
 
                 }).catch(error => {
+                    // OCULTAR LOADER en error
+                    document.getElementById('main-loader').style.display = "none";
                     document.getElementById('status-title').innerText = "🔴 Modo Offline";
                     document.getElementById('status-desc').innerText = "Tienes " + pending.length + " códigos guardados. Se enviarán cuando tengas señal.";
                     document.getElementById('retry-btn').style.display = "inline-block";
@@ -177,8 +183,11 @@
                     if (callback) callback();
                 });
             }
-            else
+            else {
+                // Si no hay nada que procesar, también ocultamos el loader
+                document.getElementById('main-loader').style.display = "none";
                 if (callback) callback();
+            }
         }
 
         // Ejecutar automáticamente al cargar
