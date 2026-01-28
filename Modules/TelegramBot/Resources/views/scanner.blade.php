@@ -175,6 +175,8 @@
             if (!pending.find(item => item.code === code)) {
                 pending.push({ code: code, date: new Date().toISOString() });
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(pending));
+                // haciendo q vibre tambien
+                tg.HapticFeedback.notificationOccurred('success');
             }
             if (!lastKnownState) updateUIState(false);
         }
