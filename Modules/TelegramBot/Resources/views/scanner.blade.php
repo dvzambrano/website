@@ -106,13 +106,11 @@
                 document.getElementById('status-title').innerText = "Procesando...";
                 document.getElementById('status-desc').innerText = "Enviando código: " + text;
 
-                const botName = "{{ $bot }}";
-
                 // guardandp el codigo como pendiente por si no hubiera coneccion
-                saveCodeToLocalStorage(text, botName);
+                saveCodeToLocalStorage(text);
 
                 // intentamos enviar al servidor los pendientes por procesar
-                fetchCodes(botName);
+                fetchCodes();
 
                 // IMPORTANTE: Retornar true aquí cierra el POPUP nativo inmediatamente.
                 // Si quieres que el popup se quede abierto hasta que el fetch termine, 
@@ -122,8 +120,8 @@
         }
 
         // Función para guardar en la memoria del teléfono
-        function saveCodeToLocalStorage(code, bot) {
-            let pending = JSON.parse(localStorage.getItem(bot + '_pending_scans') || "[]");
+        function saveCodeToLocalStorage(code) {
+            let pending = JSON.parse(localStorage.getItem("{{ $bot }}_pending_scans") || "[]");
             // Opcional: Evitar duplicar el mismo código en la misma sesión offline
             const exists = pending.find(item => item.code === code);
             if (!exists) {
@@ -131,11 +129,11 @@
                     code: code,
                     date: new Date().toISOString()
                 });
-                localStorage.setItem(bot + '_pending_scans', JSON.stringify(pending));
+                localStorage.setItem("{{ $bot }}_pending_scans", JSON.stringify(pending));
             }
         }
-        function fetchCodes(bot, callback) {
-            let pending = JSON.parse(localStorage.getItem(bot + '_pending_scans') || "[]");
+        function fetchCodes(callback) {
+            let pending = JSON.parse(localStorage.getItem("{{ $bot }}_pending_scans") || "[]");
             if (pending.length > 0) {
                 // Mostrar visualmente que estamos trabajando
                 document.getElementById('status-title').innerText = "Sincronizando...";
@@ -150,19 +148,19 @@
                     },
                     body: JSON.stringify({
                         codes: pending,
-                        bot: bot,
+                        bot: "{{ $bot }}",
                         initData: tg.initData
                     })
                 }).then(response => {
                     if (!response.ok) throw new Error('Error en red');
                     return response.json();
                 }).then(data => {
-                    // Limpiamos el localStorage INMEDIATAMENTE al recibir éxito
-                    localStorage.removeItem(bot + '_pending_scans');
-
                     document.getElementById('status-title').innerText = "✅ ¡Logrado!";
                     document.getElementById('status-desc').innerText = "Se procesaron " + pending.length + " códigos correctamente.";
                     document.getElementById('retry-btn').style.display = "inline-block";
+
+                    // Limpiamos el localStorage INMEDIATAMENTE al recibir éxito
+                    localStorage.removeItem("{{ $bot }}_pending_scans");
 
                     // Vibración de éxito (Feedback háptico)
                     tg.HapticFeedback.notificationOccurred('success');
@@ -185,9 +183,8 @@
 
         // Ejecutar automáticamente al cargar
         try {
-            const botName = "{{ $bot }}";
             // intentamos enviar al servidor los pendientes por procesar
-            fetchCodes(botName, function () {
+            fetchCodes(function () {
                 openScanner();
             });
         } catch (e) {
