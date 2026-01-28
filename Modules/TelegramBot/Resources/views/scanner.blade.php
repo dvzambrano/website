@@ -106,6 +106,7 @@
                 document.getElementById('main-loader').style.display = "inline-block";
                 document.getElementById('status-title').innerText = "⌛️ Procesando";
                 document.getElementById('status-desc').innerText = "Enviando código...";
+                document.getElementById('retry-btn').style.display = "none";
 
                 // guardandp el codigo como pendiente por si no hubiera coneccion
                 saveCodeToLocalStorage(text);
@@ -186,6 +187,7 @@
             else {
                 // Si no hay nada que procesar, también ocultamos el loader
                 document.getElementById('main-loader').style.display = "none";
+                document.getElementById('retry-btn').style.display = "inline-block";
                 if (callback) callback();
             }
         }
