@@ -170,7 +170,7 @@
         // =========================================================
         // 3. DATOS Y ENVÍO
         // =========================================================
-        function saveCodeToLocalStorage(code) {
+        async function saveCodeToLocalStorage(code) {
             let pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
             if (!pending.find(item => item.code === code)) {
                 // Obtenemos la ubicación justo en el momento del escaneo
@@ -241,7 +241,7 @@
         }
 
         function openScanner() {
-            tg.showScanQrPopup({ text: "{{ __('telegrambot::bot.scanner.prompt') }}" }, function (text) {
+            tg.showScanQrPopup({ text: "{{ __('telegrambot::bot.scanner.prompt') }}" }, async function (text) {
                 document.getElementById('main-loader').style.display = "inline-block";
                 document.getElementById('status-title').innerText = "⌛️ {{ __('telegrambot::bot.scanner.procesing') }}";
                 document.getElementById('retry-btn').style.display = "none";
