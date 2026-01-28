@@ -279,8 +279,9 @@
         async function bootstrap() {
             let gpsSuccess = false;
             let gpsRequired = parseInt("{{ $gpsrequired }}");
-            alert(gpsRequired + " -> " + psRequired !== -1);
-            if (gpsRequired !== -1)
+
+            // 1. Solo intentamos obtener GPS si no es -1
+            if (gpsRequired !== -1) {
                 try {
                     document.getElementById('status-title').innerText = "{{ __('telegrambot::bot.scanner.loading_gps') }}...";
                     document.getElementById('main-loader').style.display = "inline-block";
@@ -299,38 +300,37 @@
                             (error) => {
                                 console.warn("GPS denegado:", error);
                                 gpsSuccess = false;
-                                // Si NO es obligatorio (0), resolvemos para dejarlo pasar
-                                if (gpsRequired === 0) resolve();
-                                // Si ES obligatorio (1), aquí no resolvemos o manejamos el flujo de error
-                                else resolve();
+                                resolve();
                             },
-                            { enableHighAccuracy: true }
+                            { enableHighAccuracy: true, timeout: 5000 }
                         );
                     });
                 } catch (e) {
                     gpsSuccess = false;
                 }
+            }
 
-            // --- LÓGICA DE VALIDACIÓN ---
-            if (!gpsSuccess && gpsRequired === 1) {
-                // Bloqueamos la app y mostramos error
+            // 2. Lógica de Validación de Obligatoriedad
+            if (gpsRequired === 1 && !gpsSuccess) {
                 document.getElementById('main-loader').style.display = "none";
                 document.getElementById('status-title').innerText = "❌ {{ __('telegrambot::bot.scanner.gps_denied_title') }}";
                 document.getElementById('status-desc').innerText = "{{ __('telegrambot::bot.scanner.gps_denied_desc') }}";
 
-                // Mostramos un botón para reintentar (recargar la página)
                 const retryBtn = document.getElementById('retry-btn');
                 retryBtn.innerText = "{{ __('telegrambot::bot.scanner.retry_gps') }}";
                 retryBtn.onclick = () => location.reload();
                 retryBtn.style.display = "inline-block";
 
                 tg.HapticFeedback.notificationOccurred('error');
-                return; // DETENEMOS TODO AQUÍ. No se abre la cámara.
+                return;
             }
 
-            // Si llegamos aquí, o el GPS funcionó o no era obligatorio
-            startLocationWatcher();
+            // 3. SOLO activamos el watcher si el GPS está habilitado (0 o 1)
+            if (gpsRequired !== -1) {
+                startLocationWatcher();
+            }
 
+            // 4. Proceder a la cámara
             fetchCodes(() => {
                 if (lastKnownState) {
                     openScanner();
