@@ -302,7 +302,7 @@
                                 gpsSuccess = false;
                                 resolve();
                             },
-                            { enableHighAccuracy: true, timeout: 5000 }
+                            { enableHighAccuracy: true }
                         );
                     });
                 } catch (e) {
