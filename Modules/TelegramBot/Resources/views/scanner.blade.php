@@ -67,6 +67,7 @@
             font-size: 1rem;
             opacity: 0.8;
             line-height: 1.4;
+            min-height: 1.5em;
         }
 
         .btn-retry {
@@ -119,10 +120,31 @@
         document.body.style.color = tg.textColor;
 
         const STORAGE_KEY = "{{ $bot }}_pending_scans";
-        let lastKnownState = true; // Asumimos online al inicio hasta el primer ping
+        let lastKnownState = true;
+        let currentCoords = null; // Almacén de ubicación en tiempo real
 
         // =========================================================
-        // 1. EL LATIDO (PING REAL)
+        // 1. MONITOR DE UBICACIÓN (WATCHER)
+        // =========================================================
+        function startLocationWatcher() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        currentCoords = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                            acc: position.coords.accuracy
+                        };
+                        console.log("GPS OK");
+                    },
+                    (error) => console.warn("GPS Error:", error.message),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            }
+        }
+
+        // =========================================================
+        // 2. EL LATIDO (PING REAL)
         // =========================================================
         setInterval(async () => {
             let isOnline;
@@ -144,7 +166,7 @@
         }, 3000);
 
         // =========================================================
-        // 2. INTERFAZ
+        // 3. INTERFAZ
         // =========================================================
         function updateUIState(isOnline) {
             const bar = document.getElementById('connection-bar');
@@ -168,17 +190,15 @@
         }
 
         // =========================================================
-        // 3. DATOS Y ENVÍO
+        // 4. DATOS Y ENVÍO
         // =========================================================
-        async function saveCodeToLocalStorage(code) {
+        function saveCodeToLocalStorage(code) {
             let pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
             if (!pending.find(item => item.code === code)) {
-                // Obtenemos la ubicación justo en el momento del escaneo
-                const coords = await getCoordinates();
                 pending.push({
                     code: code,
                     date: new Date().toISOString(),
-                    location: coords
+                    location: currentCoords // Guardamos la ubicación que ya tenemos en memoria
                 });
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(pending));
                 // haciendo q vibre tambien
@@ -241,46 +261,30 @@
         }
 
         function openScanner() {
-            tg.showScanQrPopup({ text: "{{ __('telegrambot::bot.scanner.prompt') }}" }, async function (text) {
+            tg.showScanQrPopup({ text: "{{ __('telegrambot::bot.scanner.prompt') }}" }, function (text) {
                 document.getElementById('main-loader').style.display = "inline-block";
                 document.getElementById('status-title').innerText = "⌛️ {{ __('telegrambot::bot.scanner.procesing') }}";
                 document.getElementById('retry-btn').style.display = "none";
 
-                await saveCodeToLocalStorage(text); // Esperamos a que guarde con GPS
+                saveCodeToLocalStorage(text);
                 fetchCodes();
-
                 return true;
             });
         }
 
-        // Obtener coordenadas GPS
-        function getCoordinates() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve(null); // El navegador no soporta GPS
-                    return;
-                }
+        // =========================================================
+        // 5. INICIO
+        // =========================================================
 
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        resolve({
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                            acc: position.coords.accuracy // Precisión en metros
-                        });
-                    },
-                    (error) => {
-                        console.warn("Error obteniendo ubicación:", error.message);
-                        resolve(null); // Si el usuario rechaza o falla, enviamos null
-                    },
-                    { enableHighAccuracy: true, timeout: 5000 }
-                );
-            });
-        }
+        // Arrancamos el rastreador de GPS de inmediato
+        startLocationWatcher();
 
-        // Inicio
         fetchCodes(() => {
-            if (lastKnownState) openScanner();
+            if (lastKnownState) {
+                openScanner();
+            } else {
+                updateUIState(false);
+            }
         });
 
         tg.onEvent('scanQrPopupClosed', () => {
