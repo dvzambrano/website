@@ -111,6 +111,9 @@
                 document.getElementById('status-title').innerText = "Procesando...";
                 document.getElementById('status-desc').innerText = "Enviando código: " + text;
 
+                // guardandp el codigo como pendiente por si no hubiera coneccion
+                let pending = saveCodeToLocalStorage(text);
+
                 // 3. Ejecutamos el Fetch
                 fetch("{{ route('telegram-scanner-store') }}", {
                     method: 'POST',
@@ -120,7 +123,7 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
                     body: JSON.stringify({
-                        code: text,
+                        codes: pending,
                         bot: botName,
                         initData: tg.initData
                     })
@@ -128,21 +131,19 @@
                     if (!response.ok) throw new Error('Error en red');
                     return response.json();
                 }).then(data => {
+                    // Éxito: Limpiamos el localStorage porque el servidor ya los recibió
+                    localStorage.removeItem(botName + '_pending_scans');
+
                     // Éxito: Cerramos todo
                     tg.closeScanQrPopup();
                     tg.close();
                 }).catch(error => {
                     // FALLO DE CONEXIÓN: Guardamos el código en el teléfono
-                    saveOffline(text);
+                    document.getElementById('status-title').innerText = "Modo Offline";
+                    document.getElementById('status-desc').innerText = "El código " + text + " se guardó.<br/>Hay " + pending.length + " codigos pendientes a procesar...";
+                    document.getElementById('retry-btn').style.display = "inline-block";
 
                     tg.closeScanQrPopup();
-                    tg.showPopup({
-                        title: 'Modo Offline',
-                        message: 'Sin conexión. El código ' + text + ' se guardó.',
-                        buttons: [{ type: 'ok' }]
-                    }, function () {
-                        //tg.close();
-                    });
                 });
 
                 // IMPORTANTE: Retornar true aquí cierra el POPUP nativo inmediatamente.
@@ -153,19 +154,19 @@
         }
 
         // Función para guardar en la memoria del teléfono
-        function saveOffline(code) {
+        function saveCodeToLocalStorage(code) {
             let pending = JSON.parse(localStorage.getItem(botName + '_pending_scans') || "[]");
-            pending.push({
-                code: code,
-                bot: botName,
-                initData: initData,
-                date: new Date().toISOString()
-            });
-            localStorage.setItem(botName + '_pending_scans', JSON.stringify(pending));
-
-            document.getElementById('status-title').innerText = "Pendientes";
-            document.getElementById('status-desc').innerText = "Hay " + pending.length + " codigos pendientes.";
-            document.getElementById('retry-btn').style.display = "inline-block";
+            // Opcional: Evitar duplicar el mismo código en la misma sesión offline
+            const exists = pending.find(item => item.code === code);
+            if (!exists) {
+                pending.push({
+                    code: code,
+                    bot: botName,
+                    date: new Date().toISOString()
+                });
+                localStorage.setItem(botName + '_pending_scans', JSON.stringify(pending));
+            }
+            return pending;
         }
 
         // Al cargar la WebApp, si hay internet, revisamos si hay algo pendiente de enviar

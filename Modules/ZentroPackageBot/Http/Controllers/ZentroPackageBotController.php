@@ -104,12 +104,12 @@ class ZentroPackageBotController extends JsonsController
         );
     }
 
-    public function afterScan($user_id, $code)
+    public function afterScan($user_id, $codes)
     {
-        Log::info("afterScan {$user_id} {$code}");
+        Log::info("afterScan {$user_id} " . json_encode($codes));
         $array = array(
             "message" => array(
-                "text" => $code,
+                "text" => "recibi codigos",
                 "chat" => array(
                     "id" => $user_id,
                 ),
