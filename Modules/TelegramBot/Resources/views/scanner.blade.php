@@ -137,7 +137,7 @@
                 }).catch(error => {
                     // FALLO DE CONEXIÓN: Guardamos el código en el teléfono
                     document.getElementById('status-title').innerText = "Modo Offline";
-                    document.getElementById('status-desc').innerText = "El código " + text + " se guardó.<br/>Hay " + pending.length + " codigos pendientes a procesar...";
+                    document.getElementById('status-desc').innerText = "El código " + text + " se guardó: " + pending.length + " codigos pendientes a procesar...";
                     document.getElementById('retry-btn').style.display = "inline-block";
 
                     tg.closeScanQrPopup();
