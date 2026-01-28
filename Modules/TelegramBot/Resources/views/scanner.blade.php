@@ -109,39 +109,10 @@
                 const botName = "{{ $bot }}";
 
                 // guardandp el codigo como pendiente por si no hubiera coneccion
-                let pending = saveCodeToLocalStorage(text, botName);
+                saveCodeToLocalStorage(text, botName);
 
-                // 3. Ejecutamos el Fetch
-                fetch("{{ route('telegram-scanner-store') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        codes: pending,
-                        bot: botName,
-                        initData: tg.initData
-                    })
-                }).then(response => {
-                    if (!response.ok) throw new Error('Error en red');
-                    return response.json();
-                }).then(data => {
-                    // Éxito: Limpiamos el localStorage porque el servidor ya los recibió
-                    localStorage.removeItem(botName + '_pending_scans');
-
-                    // Éxito: Cerramos todo
-                    tg.closeScanQrPopup();
-                    tg.close();
-                }).catch(error => {
-                    // FALLO DE CONEXIÓN: Guardamos el código en el teléfono
-                    document.getElementById('status-title').innerText = "Modo Offline";
-                    document.getElementById('status-desc').innerText = "El código " + text + " se guardó: " + pending.length + " codigos pendientes a procesar...";
-                    document.getElementById('retry-btn').style.display = "inline-block";
-
-                    tg.closeScanQrPopup();
-                });
+                // intentamos enviar al servidor los pendientes por procesar
+                fetchCodes(botName);
 
                 // IMPORTANTE: Retornar true aquí cierra el POPUP nativo inmediatamente.
                 // Si quieres que el popup se quede abierto hasta que el fetch termine, 
@@ -162,7 +133,6 @@
                 });
                 localStorage.setItem(bot + '_pending_scans', JSON.stringify(pending));
             }
-            return pending;
         }
 
         // Al cargar la WebApp, si hay internet, revisamos si hay algo pendiente de enviar
@@ -175,20 +145,63 @@
                 return;
             };
 
-            tg.showPopup({
-                title: 'Sincronizando bultos pendientes',
-                message: 'Hay ' + pending.length + ' bultos.',
-                buttons: [{ type: 'ok' }]
-            }, function () {
+            // intentamos enviar al servidor los pendientes por procesar
+            fetchCodes(bot, function () {
                 openScanner();
             });
+        }
 
-            // Aquí podrías hacer otro fetch masivo o uno por uno
+        function fetchCodes(bot, callback) {
+            let pending = JSON.parse(localStorage.getItem(bot + '_pending_scans') || "[]");
+            if (pending.length > 0) {
+                // Mostrar visualmente que estamos trabajando
+                document.getElementById('status-title').innerText = "Sincronizando...";
+                document.getElementById('retry-btn').style.display = "none";
+
+                fetch("{{ route('telegram-scanner-store') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        codes: pending,
+                        bot: bot,
+                        initData: tg.initData
+                    })
+                }).then(response => {
+                    if (!response.ok) throw new Error('Error en red');
+                    return response.json();
+                }).then(data => {
+                    // Limpiamos el localStorage INMEDIATAMENTE al recibir éxito
+                    localStorage.removeItem(bot + '_pending_scans');
+
+                    document.getElementById('status-title').innerText = "✅ ¡Logrado!";
+                    document.getElementById('status-desc').innerText = "Se procesaron " + pending.length + " códigos correctamente.";
+                    document.getElementById('retry-btn').style.display = "inline-block";
+
+                    // Vibración de éxito (Feedback háptico)
+                    tg.HapticFeedback.notificationOccurred('success');
+
+                    if (callback) callback();
+
+                }).catch(error => {
+                    document.getElementById('status-title').innerText = "🔴 Modo Offline";
+                    document.getElementById('status-desc').innerText = "Tienes " + pending.length + " códigos guardados. Se enviarán cuando tengas señal.";
+                    document.getElementById('retry-btn').style.display = "inline-block";
+
+                    tg.HapticFeedback.notificationOccurred('warning');
+
+                    if (callback) callback();
+                });
+            }
         }
 
         // Ejecutar automáticamente al cargar
         try {
-            syncPending();
+            const botName = "{{ $bot }}";
+            syncPending(botName);
         } catch (e) {
             document.getElementById('status-title').innerText = "Error";
             document.getElementById('status-desc').innerText = "No se pudo acceder a la cámara nativa.";
