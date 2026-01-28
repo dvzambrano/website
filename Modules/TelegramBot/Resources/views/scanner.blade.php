@@ -162,6 +162,10 @@
                 date: new Date().toISOString()
             });
             localStorage.setItem(botName + '_pending_scans', JSON.stringify(pending));
+
+            document.getElementById('status-title').innerText = "Pendientes";
+            document.getElementById('status-desc').innerText = "Hay " + pending.length + " codigos pendientes.";
+            document.getElementById('retry-btn').style.display = "inline-block";
         }
 
         // Al cargar la WebApp, si hay internet, revisamos si hay algo pendiente de enviar
