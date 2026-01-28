@@ -279,6 +279,7 @@
         async function bootstrap() {
             let gpsSuccess = false;
             let gpsRequired = parseInt("{{ $gpsrequired }}");
+            alert(gpsRequired);
             if (gpsRequired !== -1)
                 try {
                     document.getElementById('status-title').innerText = "{{ __('telegrambot::bot.scanner.loading_gps') }}...";
