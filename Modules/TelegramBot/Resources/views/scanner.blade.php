@@ -309,7 +309,7 @@
                                     document.getElementById('status-desc').innerText = "{{ __('telegrambot::bot.scanner.gpsdeniedtitle') }}";
 
                                     const retryBtn = document.getElementById('retry-btn');
-                                    retryBtn.innerText = "{{ __('telegrambot::bot.scanner.retry_gps') }}";
+                                    retryBtn.innerText = "{{ __('telegrambot::bot.scanner.retrygps') }}";
                                     retryBtn.onclick = () => location.reload();
                                     retryBtn.style.display = "inline-block";
 
