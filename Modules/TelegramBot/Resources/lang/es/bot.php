@@ -74,9 +74,18 @@ return [
         ],
     ],
     "scanner" => [
-        "connectionbar" => [
-            "localmode" => "NO CONEXIÓN - MODO LOCAL",
+        "prompt" => "Escanea la etiqueta",
+        "localmode" => "SIN CONEXIÓN - MODO LOCAL",
+        "opencamera" => "Abrir Cámara",
+        "online" => "En Línea",
+        "offline" => "Sin conexión",
+        "synchronizing" => "Sincronizando",
+        "procesing" => "Procesando",
+        "fetch" => [
+            "title" => "¡Logrado!",
+            "desc" => "códigos procesados",
         ],
-        "btn" => "Ud puede interactuar con este bot usando /menu o chequee /ayuda para temas de ayuda",
+        "localstoragedcodes" => "códigos guardados localmente",
+        "localstorageaction" => "Los códigos se guardarán en el teléfono",
     ],
 ];

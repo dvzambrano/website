@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Escaner Pro</title>
+    <title></title>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -99,13 +99,15 @@
 
 <body>
 
-    <div id="connection-bar">⚠️ {{ __('telegrambot::bot.scanner.connectionbar.localmode') }}</div>
+    <div id="connection-bar">⚠️ {{ __('telegrambot::bot.scanner.localmode') }}</div>
 
     <div class="container">
         <div id="main-loader" class="loader"></div>
         <h2 id="status-title"></h2>
         <p id="status-desc"></p>
-        <button class="btn-retry" id="retry-btn" onclick="openScanner()">Abrir Cámara</button>
+        <button class="btn-retry" id="retry-btn" onclick="openScanner()">
+            {{ __('telegrambot::bot.scanner.opencamera') }}
+        </button>
     </div>
 
     <script>
@@ -150,17 +152,17 @@
 
             if (isOnline) {
                 bar.style.display = 'none';
-                if (document.getElementById('status-title').innerText.includes("Offline")) {
-                    document.getElementById('status-title').innerText = "🟢 En Línea";
-                    document.getElementById('status-desc').innerText = "Sincronizando bultos...";
+                if (document.getElementById('status-title').innerText.includes("🔴")) {
+                    document.getElementById('status-title').innerText = "🟢 {{ __('telegrambot::bot.scanner.online') }}";
+                    document.getElementById('status-desc').innerText = "{{ __('telegrambot::bot.scanner.synchronizing') }}...";
                 }
             } else {
                 bar.style.display = 'block';
                 document.getElementById('main-loader').style.display = "none";
-                document.getElementById('status-title').innerText = "🔴 Modo Offline";
+                document.getElementById('status-title').innerText = "🔴 {{ __('telegrambot::bot.scanner.offline') }}";
                 document.getElementById('status-desc').innerText = pending.length > 0
-                    ? "Tienes " + pending.length + " códigos guardados localmente."
-                    : "Los códigos se guardarán en el teléfono.";
+                    ? pending.length + " {{ __('telegrambot::bot.scanner.localstoragedcodes') }}."
+                    : "{{ __('telegrambot::bot.scanner.localstorageaction') }}.";
                 document.getElementById('retry-btn').style.display = "inline-block";
             }
         }
@@ -189,7 +191,7 @@
                 }
 
                 document.getElementById('main-loader').style.display = "inline-block";
-                document.getElementById('status-title').innerText = "⌛️ Sincronizando...";
+                document.getElementById('status-title').innerText = "⌛️ {{ __('telegrambot::bot.scanner.synchronizing') }}...";
                 document.getElementById('retry-btn').style.display = "none";
 
                 fetch("{{ route('telegram-scanner-store') }}", {
@@ -213,8 +215,8 @@
                         let STORAGE_KEY = "{{ $bot }}_pending_scans";
                         localStorage.removeItem(STORAGE_KEY);
                         document.getElementById('main-loader').style.display = "none";
-                        document.getElementById('status-title').innerText = "✅ ¡Logrado!";
-                        document.getElementById('status-desc').innerText = "Se procesaron " + pending.length + " códigos.";
+                        document.getElementById('status-title').innerText = "✅ {{ __('telegrambot::bot.scanner.fetch.title') }}";
+                        document.getElementById('status-desc').innerText = pending.length + " {{ __('telegrambot::bot.scanner.fetch.desc') }}.";
                         document.getElementById('retry-btn').style.display = "inline-block";
                         tg.HapticFeedback.notificationOccurred('success');
                         if (callback) callback();
@@ -231,9 +233,9 @@
         }
 
         function openScanner() {
-            tg.showScanQrPopup({ text: "Escanea la etiqueta" }, function (text) {
+            tg.showScanQrPopup({ text: "{{ __('telegrambot::bot.scanner.prompt') }}" }, function (text) {
                 document.getElementById('main-loader').style.display = "inline-block";
-                document.getElementById('status-title').innerText = "⌛️ Procesando";
+                document.getElementById('status-title').innerText = "⌛️ {{ __('telegrambot::bot.scanner.procesing') }}";
                 document.getElementById('retry-btn').style.display = "none";
 
                 saveCodeToLocalStorage(text);
