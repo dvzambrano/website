@@ -103,9 +103,9 @@
 
     <div class="container">
         <div id="main-loader" class="loader"></div>
-        <h2 id="status-title">Iniciando...</h2>
-        <p id="status-desc">Cargando sistema.</p>
-        <button class="btn-retry" id="retry-btn" onclick="openScanner()">Reabrir Cámara</button>
+        <h2 id="status-title"></h2>
+        <p id="status-desc"></p>
+        <button class="btn-retry" id="retry-btn" onclick="openScanner()">Abrir Cámara</button>
     </div>
 
     <script>
