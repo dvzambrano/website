@@ -173,7 +173,13 @@
         function saveCodeToLocalStorage(code) {
             let pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
             if (!pending.find(item => item.code === code)) {
-                pending.push({ code: code, date: new Date().toISOString() });
+                // Obtenemos la ubicación justo en el momento del escaneo
+                const coords = await getCoordinates();
+                pending.push({
+                    code: code,
+                    date: new Date().toISOString(),
+                    location: coords
+                });
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(pending));
                 // haciendo q vibre tambien
                 tg.HapticFeedback.notificationOccurred('success');
@@ -240,9 +246,35 @@
                 document.getElementById('status-title').innerText = "⌛️ {{ __('telegrambot::bot.scanner.procesing') }}";
                 document.getElementById('retry-btn').style.display = "none";
 
-                saveCodeToLocalStorage(text);
+                await saveCodeToLocalStorage(text); // Esperamos a que guarde con GPS
                 fetchCodes();
+
                 return true;
+            });
+        }
+
+        // Obtener coordenadas GPS
+        function getCoordinates() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve(null); // El navegador no soporta GPS
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                            acc: position.coords.accuracy // Precisión en metros
+                        });
+                    },
+                    (error) => {
+                        console.warn("Error obteniendo ubicación:", error.message);
+                        resolve(null); // Si el usuario rechaza o falla, enviamos null
+                    },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
             });
         }
 
