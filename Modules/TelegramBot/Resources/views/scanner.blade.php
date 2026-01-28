@@ -96,11 +96,6 @@
         tg.ready();
         tg.expand(); // Expandir al máximo
 
-        // Extraemos los datos de inicialización
-        const urlParams = new URLSearchParams(window.location.search);
-        const botName = urlParams.get('bot');
-        const initData = tg.initDataUnsafe;
-
         // Aplicar colores del tema de Telegram automáticamente
         document.body.style.backgroundColor = tg.backgroundColor;
         document.body.style.color = tg.textColor;
@@ -111,8 +106,13 @@
                 document.getElementById('status-title').innerText = "Procesando...";
                 document.getElementById('status-desc').innerText = "Enviando código: " + text;
 
+                // Extraemos los datos de inicialización
+                const urlParams = new URLSearchParams(window.location.search);
+                const botName = urlParams.get('bot');
+                const initData = tg.initDataUnsafe;
+
                 // guardandp el codigo como pendiente por si no hubiera coneccion
-                let pending = saveCodeToLocalStorage(text);
+                let pending = saveCodeToLocalStorage(text, botName);
 
                 // 3. Ejecutamos el Fetch
                 fetch("{{ route('telegram-scanner-store') }}", {
@@ -125,7 +125,7 @@
                     body: JSON.stringify({
                         codes: pending,
                         bot: botName,
-                        initData: tg.initData
+                        initData: initData
                     })
                 }).then(response => {
                     if (!response.ok) throw new Error('Error en red');
@@ -154,26 +154,25 @@
         }
 
         // Función para guardar en la memoria del teléfono
-        function saveCodeToLocalStorage(code) {
-            let pending = JSON.parse(localStorage.getItem(botName + '_pending_scans') || "[]");
+        function saveCodeToLocalStorage(code, bot) {
+            let pending = JSON.parse(localStorage.getItem(bot + '_pending_scans') || "[]");
             // Opcional: Evitar duplicar el mismo código en la misma sesión offline
             const exists = pending.find(item => item.code === code);
             if (!exists) {
                 pending.push({
                     code: code,
-                    bot: botName,
                     date: new Date().toISOString()
                 });
-                localStorage.setItem(botName + '_pending_scans', JSON.stringify(pending));
+                localStorage.setItem(bot + '_pending_scans', JSON.stringify(pending));
             }
             return pending;
         }
 
         // Al cargar la WebApp, si hay internet, revisamos si hay algo pendiente de enviar
-        function syncPending() {
+        function syncPending(bot) {
             if (!navigator.onLine) return;
 
-            let pending = JSON.parse(localStorage.getItem(botName + '_pending_scans') || "[]");
+            let pending = JSON.parse(localStorage.getItem(bot + '_pending_scans') || "[]");
             if (pending.length === 0) {
                 openScanner()
                 return;
