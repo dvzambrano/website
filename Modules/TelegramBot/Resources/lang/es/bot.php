@@ -88,5 +88,6 @@ return [
         "localstoragedcodes" => "códigos guardados localmente",
         "localstorageaction" => "Los códigos se guardarán en el teléfono",
         "loadinggps" => "Obteniendo ubicación GPS",
+        "gpsdeniedtitle" => "Debe activar y conceder permisos para su ubicación GPS",
     ],
 ];

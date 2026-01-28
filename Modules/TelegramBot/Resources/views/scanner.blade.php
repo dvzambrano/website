@@ -302,6 +302,20 @@
                                 gpsSuccess = false;
                                 if (gpsRequired === 0)
                                     resolve();
+
+                                if (gpsRequired === 1) {
+                                    document.getElementById('main-loader').style.display = "none";
+                                    document.getElementById('status-title').innerText = "❌ {{ __('telegrambot::bot.scanner.offline') }}";
+                                    document.getElementById('status-desc').innerText = "{{ __('telegrambot::bot.scanner.gpsdeniedtitle') }}";
+
+                                    const retryBtn = document.getElementById('retry-btn');
+                                    retryBtn.innerText = "{{ __('telegrambot::bot.scanner.retry_gps') }}";
+                                    retryBtn.onclick = () => location.reload();
+                                    retryBtn.style.display = "inline-block";
+
+                                    tg.HapticFeedback.notificationOccurred('error');
+                                    return;
+                                }
                             },
                             { enableHighAccuracy: true }
                         );
@@ -311,20 +325,6 @@
                 }
             }
 
-            // 2. Lógica de Validación de Obligatoriedad
-            if (gpsRequired === 1 && !gpsSuccess) {
-                document.getElementById('main-loader').style.display = "none";
-                document.getElementById('status-title').innerText = "❌ {{ __('telegrambot::bot.scanner.gps_denied_title') }}";
-                document.getElementById('status-desc').innerText = "{{ __('telegrambot::bot.scanner.gps_denied_desc') }}";
-
-                const retryBtn = document.getElementById('retry-btn');
-                retryBtn.innerText = "{{ __('telegrambot::bot.scanner.retry_gps') }}";
-                retryBtn.onclick = () => location.reload();
-                retryBtn.style.display = "inline-block";
-
-                tg.HapticFeedback.notificationOccurred('error');
-                return;
-            }
 
             // 3. SOLO activamos el watcher si el GPS está habilitado (0 o 1)
             if (gpsRequired !== -1) {
