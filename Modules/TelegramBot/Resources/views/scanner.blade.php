@@ -89,6 +89,7 @@
             font-size: 0.8rem;
             margin-top: 15px;
             font-weight: bold;
+            opacity: 0.7;
         }
     </style>
 </head>
@@ -111,7 +112,6 @@
         tg.ready();
         tg.expand();
 
-        // Estilos dinámicos de Telegram
         document.body.style.backgroundColor = tg.backgroundColor;
         document.body.style.color = tg.textColor;
 
@@ -137,17 +137,16 @@
             let pending = JSON.parse(localStorage.getItem(storageKey) || "[]");
 
             if (pending.length > 0) {
-                // 1. CORTOCIRCUITO: Si el navegador dice que está offline, ni lo intenta
-                if (!navigator.onLine) {
-                    showOfflineStatus(pending.length);
-                    if (callback) callback();
-                    return;
-                }
 
-                // 2. Si hay red, procedemos con el envío
+                // Actualizamos UI
                 document.getElementById('main-loader').style.display = "inline-block";
                 document.getElementById('status-title').innerText = "⌛️ Sincronizando...";
                 document.getElementById('retry-btn').style.display = "none";
+                updateStatusBadge("Intentando conectar...", "#ffa000"); // Ambar
+
+                // CONFIGURAMOS EL TIMEOUT DE 3 SEGUNDOS
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000); // <-- LA CLAVE: 3000ms
 
                 fetch("{{ route('telegram-scanner-store') }}", {
                     method: 'POST',
@@ -160,94 +159,92 @@
                         codes: pending,
                         bot: "{{ $bot }}",
                         initData: tg.initData
-                    })
+                    }),
+                    signal: controller.signal // Conectamos el timeout al fetch
                 })
                     .then(response => {
+                        clearTimeout(timeoutId); // Si llega aquí, cancelamos el timeout
                         if (!response.ok) throw new Error('Error en servidor');
                         return response.json();
                     })
                     .then(data => {
                         // ÉXITO
                         localStorage.removeItem(storageKey);
+
                         document.getElementById('main-loader').style.display = "none";
                         document.getElementById('status-title').innerText = "✅ ¡Logrado!";
-                        document.getElementById('status-desc').innerText = "Se procesaron " + pending.length + " códigos correctamente.";
+                        document.getElementById('status-desc').innerText = "Se procesaron " + pending.length + " códigos.";
                         document.getElementById('retry-btn').style.display = "inline-block";
+                        updateStatusBadge("🟢 Conexión estable", "#2e7d32");
 
                         tg.HapticFeedback.notificationOccurred('success');
                         if (callback) callback();
                     })
                     .catch(error => {
-                        // ERROR DE RED REAL (Señal débil o caída de servidor)
-                        showOfflineStatus(pending.length);
+                        // ERROR (Timeout o Red)
+                        let errorMsg = "Sin conexión";
+                        if (error.name === 'AbortError') {
+                            console.log("Fetch abortado por timeout (Lentitud extrema o fake online)");
+                            errorMsg = "Tiempo de espera agotado";
+                        }
+
+                        showOfflineStatus(pending.length, errorMsg);
                         if (callback) callback();
                     });
             } else {
-                // No hay nada pendiente
                 document.getElementById('main-loader').style.display = "none";
                 document.getElementById('retry-btn').style.display = "inline-block";
                 if (callback) callback();
             }
         }
 
-        function showOfflineStatus(count) {
+        function showOfflineStatus(count, detail) {
             document.getElementById('main-loader').style.display = "none";
             document.getElementById('status-title').innerText = "🔴 Modo Offline";
-            document.getElementById('status-desc').innerText = "Sin conexión. Tienes " + count + " códigos guardados en el teléfono.";
+            document.getElementById('status-desc').innerText = count + " códigos guardados. (" + detail + ")";
             document.getElementById('retry-btn').style.display = "inline-block";
+
+            updateStatusBadge("🔴 Sin conexión", "#d32f2f");
             tg.HapticFeedback.notificationOccurred('warning');
+        }
+
+        function updateStatusBadge(text, color) {
+            const badge = document.getElementById('connection-badge');
+            badge.innerText = text;
+            badge.style.color = color;
         }
 
         // --- CÁMARA ---
         function openScanner() {
             tg.showScanQrPopup({ text: "Escanea la etiqueta del bulto" }, function (text) {
-                // Feedback visual inmediato
                 document.getElementById('main-loader').style.display = "inline-block";
                 document.getElementById('status-title').innerText = "⌛️ Procesando";
                 document.getElementById('status-desc').innerText = "Guardando código...";
                 document.getElementById('retry-btn').style.display = "none";
 
                 saveCodeToLocalStorage(text);
-                fetchCodes(); // Intentará enviar si hay red, sino saltará al aviso offline
+                fetchCodes();
 
-                return true; // Cierra el popup nativo
+                return true;
             });
-        }
-
-        // --- MONITOREO DE RED ---
-        function updateNetworkStatus() {
-            const badge = document.getElementById('connection-badge');
-            if (navigator.onLine) {
-                badge.innerText = "🟢 Conectado";
-                badge.style.color = "#2e7d32";
-            } else {
-                badge.innerText = "🔴 Sin conexión";
-                badge.style.color = "#d32f2f";
-            }
         }
 
         // --- INICIO ---
         try {
-            updateNetworkStatus();
-            window.addEventListener('online', updateNetworkStatus);
-            window.addEventListener('offline', updateNetworkStatus);
-
-            // Al cargar, sincronizamos pendientes y luego abrimos cámara
+            // Intentamos sincronizar. El timeout se encargará de decidir si hay red real o no.
             fetchCodes(function () {
                 openScanner();
             });
         } catch (e) {
             document.getElementById('status-title').innerText = "❌ Error";
-            document.getElementById('status-desc').innerText = "No se pudo iniciar el sistema.";
             document.getElementById('retry-btn').style.display = "inline-block";
         }
 
-        // Evento de cierre de cámara por el usuario
         tg.onEvent('scanQrPopupClosed', function () {
-            // Solo limpiamos si no hay un mensaje de éxito/error activo
             if (document.getElementById('status-title').innerText === "⌛️ Procesando") {
                 document.getElementById('status-title').innerText = "Escáner en pausa";
                 document.getElementById('status-desc').innerText = "Presiona el botón para continuar.";
+                document.getElementById('main-loader').style.display = "none";
             }
             document.getElementById('retry-btn').style.display = "inline-block";
         });
