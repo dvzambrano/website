@@ -283,7 +283,7 @@
             // 1. Solo intentamos obtener GPS si no es -1
             if (gpsRequired !== -1) {
                 try {
-                    document.getElementById('status-title').innerText = "{{ __('telegrambot::bot.scanner.loading_gps') }}...";
+                    document.getElementById('status-title').innerText = "{{ __('telegrambot::bot.scanner.loadinggps') }}...";
                     document.getElementById('main-loader').style.display = "inline-block";
 
                     await new Promise((resolve) => {
