@@ -300,7 +300,8 @@
                             (error) => {
                                 console.warn("GPS denegado:", error);
                                 gpsSuccess = false;
-                                resolve();
+                                if (gpsRequired === 0)
+                                    resolve();
                             },
                             { enableHighAccuracy: true }
                         );
