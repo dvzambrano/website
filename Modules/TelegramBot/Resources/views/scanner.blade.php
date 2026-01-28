@@ -134,23 +134,6 @@
                 localStorage.setItem(bot + '_pending_scans', JSON.stringify(pending));
             }
         }
-
-        // Al cargar la WebApp, si hay internet, revisamos si hay algo pendiente de enviar
-        function syncPending(bot) {
-            if (!navigator.onLine) return;
-
-            let pending = JSON.parse(localStorage.getItem(bot + '_pending_scans') || "[]");
-            if (pending.length === 0) {
-                openScanner()
-                return;
-            };
-
-            // intentamos enviar al servidor los pendientes por procesar
-            fetchCodes(bot, function () {
-                openScanner();
-            });
-        }
-
         function fetchCodes(bot, callback) {
             let pending = JSON.parse(localStorage.getItem(bot + '_pending_scans') || "[]");
             if (pending.length > 0) {
@@ -196,12 +179,17 @@
                     if (callback) callback();
                 });
             }
+            else
+                if (callback) callback();
         }
 
         // Ejecutar automáticamente al cargar
         try {
             const botName = "{{ $bot }}";
-            syncPending(botName);
+            // intentamos enviar al servidor los pendientes por procesar
+            fetchCodes(bot, function () {
+                openScanner();
+            });
         } catch (e) {
             document.getElementById('status-title').innerText = "Error";
             document.getElementById('status-desc').innerText = "No se pudo acceder a la cámara nativa.";
