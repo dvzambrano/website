@@ -94,18 +94,12 @@
 
         // Configurar la WebApp
         tg.ready();
-
-        // --- SECCIÓN DE DEBUGGING ---
+        tg.expand(); // Expandir al máximo
 
         // Extraemos los datos de inicialización
+        const urlParams = new URLSearchParams(window.location.search);
+        const botName = urlParams.get('bot');
         const initData = tg.initDataUnsafe;
-
-        // ----------------------------
-
-
-
-
-        tg.expand(); // Expandir al máximo
 
         // Aplicar colores del tema de Telegram automáticamente
         document.body.style.backgroundColor = tg.backgroundColor;
@@ -117,17 +111,12 @@
                 document.getElementById('status-title').innerText = "Procesando...";
                 document.getElementById('status-desc').innerText = "Enviando código: " + text;
 
-                // 2. Obtenemos el bot_name de la URL (importante para tu variante)
-                const urlParams = new URLSearchParams(window.location.search);
-                const botName = urlParams.get('bot_name') || 'ZentroPackageBot';
-
                 // 3. Ejecutamos el Fetch
                 fetch("{{ route('telegram-scanner-store') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        // AQUÍ ESTÁ LA CLAVE:
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
                     body: JSON.stringify({
@@ -135,11 +124,26 @@
                         bot: botName,
                         initData: tg.initData
                     })
-                })
-                    .then(response => {
-                        tg.closeScanQrPopup();
+                }).then(response => {
+                    if (!response.ok) throw new Error('Error en red');
+                    return response.json();
+                }).then(data => {
+                    // Éxito: Cerramos todo
+                    tg.closeScanQrPopup();
+                    tg.close();
+                }).catch(error => {
+                    // FALLO DE CONEXIÓN: Guardamos el código en el teléfono
+                    saveOffline(text);
+
+                    tg.closeScanQrPopup();
+                    tg.showPopup({
+                        title: 'Modo Offline',
+                        message: 'Sin conexión. El código ' + text + ' se guardó.',
+                        buttons: [{ type: 'ok' }]
+                    }, function () {
                         tg.close();
                     });
+                });
 
                 // IMPORTANTE: Retornar true aquí cierra el POPUP nativo inmediatamente.
                 // Si quieres que el popup se quede abierto hasta que el fetch termine, 
@@ -148,9 +152,39 @@
             });
         }
 
+        // Función para guardar en la memoria del teléfono
+        function saveOffline(code) {
+            let pending = JSON.parse(localStorage.getItem(botName + '_pending_scans') || "[]");
+            pending.push({
+                code: code,
+                bot: botName,
+                initData: initData,
+                date: new Date().toISOString()
+            });
+            localStorage.setItem(botName + '_pending_scans', JSON.stringify(pending));
+        }
+
+        // Al cargar la WebApp, si hay internet, revisamos si hay algo pendiente de enviar
+        function syncPending() {
+            if (!navigator.onLine) return;
+
+            let pending = JSON.parse(localStorage.getItem(botName + '_pending_scans') || "[]");
+            if (pending.length === 0) openScanner();
+
+            tg.showPopup({
+                title: 'Sincronizando bultos pendientes',
+                message: 'Hay ' + pending.length + ' bultos.',
+                buttons: [{ type: 'ok' }]
+            }, function () {
+                openScanner();
+            });
+
+            // Aquí podrías hacer otro fetch masivo o uno por uno
+        }
+
         // Ejecutar automáticamente al cargar
         try {
-            openScanner();
+            syncPending();
         } catch (e) {
             document.getElementById('status-title').innerText = "Error";
             document.getElementById('status-desc').innerText = "No se pudo acceder a la cámara nativa.";
