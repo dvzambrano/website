@@ -109,7 +109,7 @@ class ZentroPackageBotController extends JsonsController
         Log::info("afterScan {$user_id} " . json_encode($codes));
         $array = array(
             "message" => array(
-                "text" => "recibi codigos",
+                "text" => "recibi " + count($codes) + " codigos",
                 "chat" => array(
                     "id" => $user_id,
                 ),
