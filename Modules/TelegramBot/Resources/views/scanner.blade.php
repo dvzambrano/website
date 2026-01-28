@@ -137,7 +137,21 @@
         function fetchCodes(callback) {
             let pending = JSON.parse(localStorage.getItem("{{ $bot }}_pending_scans") || "[]");
             if (pending.length > 0) {
-                // MOSTRAR LOADER al empezar
+                // Validamos q haya red...
+                if (!navigator.onLine) {
+                    // Modo offline detectado. Saltando fetch
+                    // Ocultamos loader y mostramos estado offline de inmediato
+                    document.getElementById('main-loader').style.display = "none";
+                    document.getElementById('status-title').innerText = "🔴 Sin conexión (Modo Local)";
+                    document.getElementById('status-desc').innerText = "Sin conexión. Tienes " + pending.length + " códigos guardados localmente.";
+                    document.getElementById('retry-btn').style.display = "inline-block";
+
+                    tg.HapticFeedback.notificationOccurred('warning');
+                    if (callback) callback();
+                    return; // Detenemos la ejecución aquí, no intentamos el fetch
+                }
+
+                // --- SI HAY RED, CONTINUAMOS CON EL FETCH ---
                 document.getElementById('main-loader').style.display = "inline-block";
                 document.getElementById('status-title').innerText = "⌛️ Sincronizando...";
                 document.getElementById('retry-btn').style.display = "none";
@@ -175,7 +189,7 @@
                 }).catch(error => {
                     // OCULTAR LOADER en error
                     document.getElementById('main-loader').style.display = "none";
-                    document.getElementById('status-title').innerText = "🔴 Modo Offline";
+                    document.getElementById('status-title').innerText = "🔴 Sin conexión (Modo Local)";
                     document.getElementById('status-desc').innerText = "Tienes " + pending.length + " códigos guardados. Se enviarán cuando tengas señal.";
                     document.getElementById('retry-btn').style.display = "inline-block";
 
@@ -210,6 +224,18 @@
             document.getElementById('status-desc').innerText = "";
             document.getElementById('retry-btn').style.display = "inline-block";
         });
+
+        // Monitor de red constante
+        setInterval(() => {
+            if (navigator.onLine) {
+                // Si vuelve la conexión y hay pendientes, podríamos intentar sincronizar solo
+                let pending = JSON.parse(localStorage.getItem("{{ $bot }}_pending_scans") || "[]");
+                if (pending.length > 0) {
+                    document.getElementById('status-title').innerText = "🟢 Conectado";
+                    // fetchCodes(); // Descomenta esto si quieres que sincronice solo al recuperar red
+                }
+            }
+        }, 2000);
 
     </script>
 </body>
