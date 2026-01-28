@@ -66,10 +66,8 @@ class TelegramBotController extends Controller
     public function storeScan()
     {
         $codes = request("codes"); // array
-        Log::info("storeScan bot:" . request("bot") . " " . json_encode($codes));
 
         // 1. Extraer el chat_id del usuario desde initData (para saber a quién responder)
-        // Telegram envía initData como un query string, hay que parsearlo
         parse_str(request("initData"), $tgData);
         $user = json_decode($tgData['user'] ?? '{}');
 

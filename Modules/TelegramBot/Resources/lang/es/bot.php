@@ -72,5 +72,11 @@ return [
             "text" => "No se que responderle a “:text”",
             "hint" => "Ud puede interactuar con este bot usando /menu o chequee /ayuda para temas de ayuda",
         ],
-    ]
+    ],
+    "scanner" => [
+        "connectionbar" => [
+            "localmode" => "SIN CONEXIÓN - MODO LOCAL",
+        ],
+        "btn" => "Ud puede interactuar con este bot usando /menu o chequee /ayuda para temas de ayuda",
+    ],
 ];

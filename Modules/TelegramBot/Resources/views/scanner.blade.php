@@ -99,7 +99,7 @@
 
 <body>
 
-    <div id="connection-bar">⚠️ SIN CONEXIÓN - MODO LOCAL</div>
+    <div id="connection-bar">⚠️ {{ __('telegrambot::bot.scanner.connectionbar.localmode') }}</div>
 
     <div class="container">
         <div id="main-loader" class="loader"></div>

@@ -106,7 +106,7 @@ class ZentroPackageBotController extends JsonsController
 
     public function afterScan($user_id, $codes)
     {
-        Log::info("afterScan {$user_id} " . json_encode($codes));
+        Log::info("User {$user_id} scanned: " . json_encode($codes));
         $array = array(
             "message" => array(
                 "text" => "recibi " . count($codes) . " codigos",
