@@ -109,7 +109,6 @@
                 // Extraemos los datos de inicialización
                 const urlParams = new URLSearchParams(window.location.search);
                 const botName = urlParams.get('bot');
-                const initData = tg.initDataUnsafe;
 
                 // guardandp el codigo como pendiente por si no hubiera coneccion
                 let pending = saveCodeToLocalStorage(text, botName);
@@ -125,7 +124,7 @@
                     body: JSON.stringify({
                         codes: pending,
                         bot: botName,
-                        initData: initData
+                        initData: tg.initData
                     })
                 }).then(response => {
                     if (!response.ok) throw new Error('Error en red');
