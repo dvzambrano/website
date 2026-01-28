@@ -210,6 +210,7 @@
                         return response.json();
                     })
                     .then(data => {
+                        let STORAGE_KEY = "{{ $bot }}_pending_scans";
                         localStorage.removeItem(STORAGE_KEY);
                         document.getElementById('main-loader').style.display = "none";
                         document.getElementById('status-title').innerText = "✅ ¡Logrado!";
