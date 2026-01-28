@@ -297,7 +297,7 @@
                             console.warn("GPS denegado o error:", error);
                             resolve(); // Resolvemos igual para no bloquear la app si deniegan
                         },
-                        { enableHighAccuracy: true, timeout: 3000 }
+                        { enableHighAccuracy: true }
                     );
                 });
             } catch (e) {
