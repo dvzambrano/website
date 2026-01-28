@@ -141,7 +141,7 @@
                         message: 'Sin conexión. El código ' + text + ' se guardó.',
                         buttons: [{ type: 'ok' }]
                     }, function () {
-                        tg.close();
+                        //tg.close();
                     });
                 });
 
@@ -169,7 +169,10 @@
             if (!navigator.onLine) return;
 
             let pending = JSON.parse(localStorage.getItem(botName + '_pending_scans') || "[]");
-            if (pending.length === 0) openScanner();
+            if (pending.length === 0) {
+                openScanner()
+                return;
+            };
 
             tg.showPopup({
                 title: 'Sincronizando bultos pendientes',
