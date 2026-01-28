@@ -154,7 +154,7 @@
                 bar.style.display = 'none';
                 if (document.getElementById('status-title').innerText.includes("🔴")) {
                     document.getElementById('status-title').innerText = "🟢 {{ __('telegrambot::bot.scanner.online') }}";
-                    document.getElementById('status-desc').innerText = "{{ __('telegrambot::bot.scanner.synchronizing') }}...";
+                    document.getElementById('status-desc').innerText = "";
                 }
             } else {
                 bar.style.display = 'block';
