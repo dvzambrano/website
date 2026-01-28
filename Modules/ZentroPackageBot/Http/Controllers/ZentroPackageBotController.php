@@ -117,6 +117,9 @@ class ZentroPackageBotController extends JsonsController
         );
 
         $this->TelegramController->sendMessage($array, $this->token);
+
+        // es obligatoria enviar la respuesta para q la UI sepa q se recibio la info
+        return response()->json(['success' => true]);
     }
 
 }

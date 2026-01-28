@@ -75,7 +75,7 @@ class TelegramBotController extends Controller
 
         $controller = $this->getController(request("bot"));
         if ($controller) {
-            $controller->afterScan(
+            return $controller->afterScan(
                 $user->id,
                 $codes
             );

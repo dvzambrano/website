@@ -103,8 +103,8 @@
         function openScanner() {
             tg.showScanQrPopup({ text: "Escanea la etiqueta" }, function (text) {
                 // 1. Cambiamos la interfaz para que el usuario sepa que se está procesando
-                document.getElementById('status-title').innerText = "Procesando...";
-                document.getElementById('status-desc').innerText = "Enviando código: " + text;
+                document.getElementById('status-title').innerText = "⌛️ Procesando";
+                document.getElementById('status-desc').innerText = "Enviando código...";
 
                 // guardandp el codigo como pendiente por si no hubiera coneccion
                 saveCodeToLocalStorage(text);
@@ -136,7 +136,7 @@
             let pending = JSON.parse(localStorage.getItem("{{ $bot }}_pending_scans") || "[]");
             if (pending.length > 0) {
                 // Mostrar visualmente que estamos trabajando
-                document.getElementById('status-title').innerText = "Sincronizando...";
+                document.getElementById('status-title').innerText = "⌛️ Sincronizando...";
                 document.getElementById('retry-btn').style.display = "none";
 
                 fetch("{{ route('telegram-scanner-store') }}", {
@@ -188,15 +188,15 @@
                 openScanner();
             });
         } catch (e) {
-            document.getElementById('status-title').innerText = "Error";
+            document.getElementById('status-title').innerText = "❌ Error";
             document.getElementById('status-desc').innerText = "No se pudo acceder a la cámara nativa.";
             document.getElementById('retry-btn').style.display = "inline-block";
         }
 
         // Si el usuario cierra el popup nativo sin escanear, mostramos el botón de reintento
         tg.onEvent('scanQrPopupClosed', function () {
-            document.getElementById('status-title').innerText = "Escáner cerrado";
-            //document.getElementById('status-desc').innerText = "No se detectó ningún código.";
+            document.getElementById('status-title').innerText = "";
+            document.getElementById('status-desc').innerText = "";
             document.getElementById('retry-btn').style.display = "inline-block";
         });
 
