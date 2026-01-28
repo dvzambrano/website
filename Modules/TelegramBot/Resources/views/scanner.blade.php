@@ -187,7 +187,7 @@
         try {
             const botName = "{{ $bot }}";
             // intentamos enviar al servidor los pendientes por procesar
-            fetchCodes(bot, function () {
+            fetchCodes(botName, function () {
                 openScanner();
             });
         } catch (e) {
