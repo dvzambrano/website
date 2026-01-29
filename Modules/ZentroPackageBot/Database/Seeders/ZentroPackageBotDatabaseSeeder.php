@@ -17,6 +17,7 @@ class ZentroPackageBotDatabaseSeeder extends Seeder
     {
         Model::unguard();
 
+        $this->call(MetadataSeeder::class);
         $this->call(PackagesSeeder::class);
     }
 }

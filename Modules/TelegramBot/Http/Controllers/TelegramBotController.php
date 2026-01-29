@@ -78,6 +78,9 @@ class TelegramBotController extends Controller
                 $user->id,
                 $codes
             );
+        } else {
+            // Si no aparece el controlador al menos dejamos el log de q se ha leido correctamente
+            Log::info("User " . $user->id . " scanned: " . json_encode($codes));
         }
 
         return response()->json(['success' => true]);

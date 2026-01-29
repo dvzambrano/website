@@ -7,7 +7,6 @@ use Illuminate\Support\Str;
 
 class PackagesSeeder extends Seeder
 {
-
     public function run(): void
     {
         // 1. Paquetes con formato Internacional (UPU - como la primera foto)

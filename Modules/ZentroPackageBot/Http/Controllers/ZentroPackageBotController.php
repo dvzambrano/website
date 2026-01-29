@@ -88,7 +88,7 @@ class ZentroPackageBotController extends JsonsController
         $menu = array();
 
         $url = route('telegram-scanner-init', array(
-            "gpsrequired" => 1,
+            "gpsrequired" => config('metadata.system.app.zentropackagebot.scanner.gpsrequired'),
             "botname" => $this->telegram["username"]
         ));
 
