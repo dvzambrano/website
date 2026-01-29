@@ -114,4 +114,9 @@ class JsonsController extends Controller
 
         return $reply;
     }
+
+    protected function configMenu($actor)
+    {
+
+    }
 }

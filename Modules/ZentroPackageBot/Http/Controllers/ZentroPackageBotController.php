@@ -105,6 +105,13 @@ class ZentroPackageBotController extends JsonsController
         );
     }
 
+    public function configMenu($actor)
+    {
+        return $this->getConfigMenu(
+            $actor
+        );
+    }
+
     public function afterScan($user_id, $codes)
     {
         Log::info("User {$user_id} scanned: " . json_encode($codes));
