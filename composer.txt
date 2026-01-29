@@ -1,0 +1,16 @@
+
+  "_comment_socialite": "Para que los usuarios inicien sesión con su cuenta de Google",
+ "laravel/socialite": "^5.21",
+ 
+ "_comment_nwidart": "El que nos permite hacer toda esta arquitectura de modulos",
+ "nwidart/laravel-modules": "^8.6",
+ 
+ "_comment_pragmarx": "Autenticación de dos factores (2FA)",
+ "pragmarx/google2fa-laravel": "^2.3",
+ 
+ "_comment_socialiteproviders": "Para que los usuarios inicien sesión con su cuenta de Google",
+ "socialiteproviders/google": "^4.1",
+ 
+ "_comment_wikimedia": "Busca todos los archivos composer.json de los modulos y los junta como si fueran uno solo",
+ "wikimedia/composer-merge-plugin": "^2.1"
+ 

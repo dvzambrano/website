@@ -7,6 +7,10 @@
             "email": "dvzambrano@gmail.com"
         }
     ],
+    "require": {
+        "php": "^8.2",
+        "webklex/laravel-imap": "^4.1"
+    },
     "extra": {
         "laravel": {
             "providers": [],

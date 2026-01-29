@@ -1,0 +1,9 @@
+
+ "_comment_phpoffice": "La libreria estandar para leer y escribir archivos Excel",
+ "phpoffice/phpspreadsheet": "^1.29",
+
+ "_comment_amenadiel": "Para generar graficos estadisticos (barras, tarta) en imagenes",
+ "amenadiel/jpgraph": "*",
+ 
+ "_comment_bacon": "Generador de codigos QR",
+ "bacon/bacon-qr-code": "^3.0"
