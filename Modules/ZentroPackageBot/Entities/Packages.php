@@ -2,9 +2,12 @@
 
 namespace Modules\ZentroPackageBot\Entities;
 
+use Illuminate\Database\Console\Migrations\StatusCommand;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\ModuleTrait;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use PhpParser\Node\Stmt\Static_;
 
 class Packages extends Model
 {
@@ -13,6 +16,7 @@ class Packages extends Model
 
     protected $table = 'packages';
     protected $guarded = [];
+
 
     /*
         protected $fillable = [
@@ -49,5 +53,45 @@ class Packages extends Model
     public function lastHistory()
     {
         return $this->hasOne(Histories::class)->latestOfMany();
+    }
+
+    /**
+     * Devuelve los campos usados para generar el seed del internal_ref de un paquete
+     * Debe mantenerse el orden o el internal_ref cambia!!
+     * @return string[]
+     */
+    public static function getSeedFields()
+    {
+        return [
+            'recipient_id',
+            'house',
+            'weight_kg',
+            'pieces'
+        ];
+    }
+
+
+    protected $appends = ['fingerprint'];
+    protected function fingerprint(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if ($this->awb)
+                    return $this->awb;
+                if ($this->tracking_number)
+                    return $this->tracking_number;
+                if ($this->internal_ref)
+                    return $this->internal_ref;
+
+                $seedString = "";
+                $seedFields = Packages::getSeedFields();
+                foreach ($seedFields as $field) {
+                    $seedString .= $rowData[$field] ?? '';
+                }
+                $seed = strtoupper(substr(md5($seedString), 0, 12));
+
+                return $seed;
+            },
+        );
     }
 }

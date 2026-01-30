@@ -68,12 +68,7 @@ class TestController extends Controller
                 'telefonodestinatario' => 'recipient_phone',
                 'direcciondestinatario' => 'full_address',
             ],
-            [
-                'recipient_id',
-                'house',
-                'weight_kg',
-                'pieces'
-            ],
+            Packages::getSeedFields(),
             "internal_ref"
         );
         foreach ($data as $package) {

@@ -13,4 +13,7 @@
 
 Route::prefix('ZentroPackageBot')->group(function () {
     Route::get('/', 'ZentroPackageBotController@index');
+
+    // Ruta de prueba para ver las etiquetas
+    Route::get('/print/labels', 'PackagesController@printLabels')->name('zentropackagebot.print.labels');
 });
