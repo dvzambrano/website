@@ -38,6 +38,7 @@ use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 use Modules\Web3\Http\Controllers\WalletController;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
+use Modules\ZentroOwnerBot\Http\Controllers\ZentroOwnerBotController;
 
 use FurqanSiddiqui\BIP39\BIP39;
 use FurqanSiddiqui\BIP39\Wordlist;
@@ -47,6 +48,18 @@ class TestController extends Controller
 {
     public function test(Request $request)
     {
+        $bot = new ZentroOwnerBotController("ZentroOwnerBot");
+        $text = '/l "zentro instrumental" VB69f1a16174d68a0c-1614241396 9y';
+        $array = $bot->getCommand($text);
+
+        $license = $bot->generateZentroLicence(array(
+            "name" => $array["pieces"][1],
+            "pc" => $array["pieces"][2],
+            "end" => $array["pieces"][3],
+            "build" => "FU",
+        ));
+        dd($license);
+
         $bot = new ZentroTraderBotController("ZentroTraderBot");
         //$text = "/start 816767995";
         //$text = "confirmation|promote2-123456|menu";

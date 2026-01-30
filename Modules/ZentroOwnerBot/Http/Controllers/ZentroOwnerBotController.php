@@ -170,7 +170,13 @@ class ZentroOwnerBotController extends JsonsController
 
         // guessing installation date
         $array = explode("-", $request["pc"]);
-        $installed = date_create_from_format("Y-m-d", date("Y-m-d", $array[count($array) - 1]));
+        $installed = date_create_from_format("Y-m-d", date("Y-m-d"));
+        if (count($array) > 1) {
+            try {
+                $installed = date_create_from_format("Y-m-d", date("Y-m-d", $array[count($array) - 1]));
+            } catch (\Throwable $th) {
+            }
+        }
         unset($array[count($array) - 1]);
 
 
