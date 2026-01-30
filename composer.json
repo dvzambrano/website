@@ -33,6 +33,7 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
+            "Modules\\Zentro\\": "Modules/Zentro/",
             "Modules\\TelegramBot\\": "Modules/TelegramBot/",
             "Modules\\Web3\\": "Modules/Web3/",
             "Modules\\GutoTradeBot\\": "Modules/GutoTradeBot/",

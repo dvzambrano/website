@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\ZentroOwnerBot\Entities;
+namespace Modules\Zentro\Entities;
 
 class sfSecurity
 {

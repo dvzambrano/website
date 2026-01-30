@@ -9,7 +9,7 @@ use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Lang;
 
-use Modules\ZentroOwnerBot\Entities\sfSecurity;
+use Modules\Zentro\Entities\sfSecurity;
 
 class ZentroOwnerBotController extends JsonsController
 {
