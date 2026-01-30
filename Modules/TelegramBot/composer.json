@@ -7,12 +7,6 @@
             "email": "dvzambrano@gmail.com"
         }
     ],
-    "require": {
-        "php": "^8.2",
-        "phpoffice/phpspreadsheet": "^1.29",
-        "amenadiel/jpgraph": "*",
-        "bacon/bacon-qr-code": "^3.0"
-    },
     "extra": {
         "laravel": {
             "providers": [],

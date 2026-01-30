@@ -4,6 +4,7 @@
 /public/hot
 /public/storage
 /public/autodestroy
+/public/import.xls
 /storage/*.key
 /storage/pail
 /vendor

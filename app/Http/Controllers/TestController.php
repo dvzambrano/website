@@ -43,11 +43,56 @@ use Modules\ZentroOwnerBot\Http\Controllers\ZentroOwnerBotController;
 use FurqanSiddiqui\BIP39\BIP39;
 use FurqanSiddiqui\BIP39\Wordlist;
 
+use Modules\Zentro\Services\Office\ExcelService;
+use Modules\ZentroPackageBot\Entities\Packages;
+
 
 class TestController extends Controller
 {
     public function test(Request $request)
     {
+
+        $data = ExcelService::import(
+            public_path("import.xls"),
+            ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"],
+            6,
+            "Worksheet",
+            [
+                //'house' => 'awb',
+                'naturalezaycantidad' => 'description',
+                'pesokg' => 'weight_kg',
+                'bultos' => 'pieces',
+                'remitente' => 'sender_name',
+                'destinatario' => 'recipient_name',
+                'identidaddestinatario' => 'recipient_id',
+                'telefonodestinatario' => 'recipient_phone',
+                'direcciondestinatario' => 'full_address',
+            ],
+            [
+                'recipient_id',
+                'house',
+                'weight_kg',
+                'pieces'
+            ],
+            "internal_ref"
+        );
+        foreach ($data as $package) {
+            Packages::create([
+                'internal_ref' => $package["internal_ref"],
+                'recipient_name' => $package["recipient_name"],
+                'recipient_id' => $package["recipient_id"],
+                'recipient_phone' => $package["recipient_phone"],
+                'full_address' => $package["full_address"],
+                'description' => $package["description"],
+                'weight_kg' => $package["weight_kg"],
+                'status' => 'in_transit',
+                'sender_name' => $package["sender_name"],
+            ]);
+        }
+        dd($data);
+
+
+
         $bot = new ZentroOwnerBotController("ZentroOwnerBot");
         $text = '/l "zentro instrumental" VB69f1a16174d68a0c-1614241396 9y';
         $array = $bot->getCommand($text);
