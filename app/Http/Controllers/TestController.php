@@ -51,6 +51,10 @@ class TestController extends Controller
 {
     public function test(Request $request)
     {
+        dd(route('telegram-scanner-init', array(
+            "botname" => "instance",
+            "instance" => "botname"
+        )));
 
         $data = ExcelService::import(
             public_path("import.xls"),
@@ -110,12 +114,6 @@ class TestController extends Controller
             "new" => $bot->getCommandNew($text),
             "old" => $bot->getCommand($text)
         ));
-
-
-        dd(route('telegram-scanner-init', array(
-            "botname" => "instance",
-            "instance" => "botname"
-        )));
 
 
         $wc = new WalletController();
