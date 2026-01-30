@@ -159,7 +159,7 @@ class ZentroPackageBotController extends JsonsController
                     $completed++;
                     $summarytext .=
                         "📦 *Item:* " . $array["code"] . "\n" .
-                        "🆔 *Ref:* `" . $package->fingerprint() . "`\n\n";
+                        "🆔 *Ref:* `" . $package->fingerprint . "`\n\n";
 
                 } else {
                     // CASO B: Hay varios (Conflicto de duplicados)
