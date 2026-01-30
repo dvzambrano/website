@@ -151,7 +151,7 @@ class ZentroPackageBotController extends JsonsController
                     // se crea el history escaneado
                     Histories::create([
                         'package_id' => $package->id,
-                        'location' => $array["location"],
+                        'location' => json_encode($array["location"]),
                         //'status' => $package["status"], // innecesario por ahora
                         'comment' => $array["date"],
                         'user_id' => $user_id,
