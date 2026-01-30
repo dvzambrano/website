@@ -80,9 +80,9 @@ class ZentroOwnerBotController extends JsonsController
             function () use ($array) {
                 try {
                     $license = $this->generateZentroLicence(array(
-                        "pc" => $array["pieces"][1],
-                        "end" => $array["pieces"][2],
-                        "name" => "test",
+                        "name" => $array["pieces"][1],
+                        "pc" => $array["pieces"][2],
+                        "end" => $array["pieces"][3],
                         "build" => "FU",
                     ));
 

@@ -381,38 +381,47 @@ trait UsesTelegramBot
     public function getCommand($text)
     {
         $text = trim("{$text}");
+        $command = "";
+        $message = "";
+        $params = [];
 
-        $array = explode(" ", $text);
-        $command = $array[0];
-
-        //comprobando q se haya recibido un comando estilo: /start 816767995
+        // 1. Formato estilo: /start 816767995 "una oracion" parametro3
         if (stripos($text, "/") === 0) {
-            unset($array[0]);
-            $message = "";
-            if (count($array) > 0) {
-                $message = implode(" ", $array);
-            }
-        } else {
-            //comprobando q se haya recibido un comando estilo: confirmation|promote2-123456|menu
-            $array = explode("|", strtolower($text));
-            $message = "";
-            if (count($array) == 1) {
-                //comprobando q se haya recibido un comando estilo: promote2-123456
-                $array = explode("-", strtolower($command));
-            }
+            // Usamos str_getcsv para separar por espacios (delimitador) 
+            // y respetar las comillas (enclosure)
+            $parts = str_getcsv($text, " ");
+
+            $command = $parts[0];
+            unset($parts[0]);
+
+            // Mantener índices 1, 2, 3...
+            $params = $parts;
+
+            // El "message" en este caso sería el texto original sin el comando
+            $message = trim(mb_substr($text, mb_strlen($command)));
+        }
+        // 2. Formato estilo: confirmation|promote2-123456|menu o promote2-123456
+        else {
+            // Determinamos el separador: pipe (|) o guion (-)
+            $separator = (strpos($text, "|") !== false) ? "|" : "-";
+
+            // Usamos strtolower solo para el comando si lo prefieres, 
+            // o a todo el texto según tu lógica original
+            $array = explode($separator, strtolower($text));
+
             $command = $array[0];
             unset($array[0]);
+
+            $params = $array; // Mantiene índices 1, 2...
+            $message = ""; // Mantengo el comportamiento de tu función original
         }
 
-        $response = array(
+        return [
             "command" => $command,
             "message" => $message,
-            "pieces" => $array,
-        );
-        unset($array[0]);
-        $response["params"] = $array;
-
-        return $response;
+            "pieces" => $params,
+            "params" => $params
+        ];
     }
 
     public function getMainMenu($actor, $menu = false, $description = false, $referral = false)

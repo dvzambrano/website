@@ -47,6 +47,18 @@ class TestController extends Controller
 {
     public function test(Request $request)
     {
+        $bot = new ZentroTraderBotController("ZentroTraderBot");
+        //$text = "/start 816767995";
+        //$text = "confirmation|promote2-123456|menu";
+        //$text = "promote2-123456";
+        //$text = '/start parametro1 "este parametro2 es una oracion" parametro3';
+        $text = '/start "este parametro1 es una oracion" parametro2 parametro3 parametro4';
+        dd(array(
+            "new" => $bot->getCommandNew($text),
+            "old" => $bot->getCommand($text)
+        ));
+
+
         dd(route('telegram-scanner-init', array(
             "botname" => "instance",
             "instance" => "botname"
