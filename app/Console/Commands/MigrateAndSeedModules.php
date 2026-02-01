@@ -15,7 +15,10 @@ class MigrateAndSeedModules extends Command
     {
         // Ejecutar migrate:fresh para la base de datos general
         $this->info('Running fresh migrations for the main project...');
-        Artisan::call('migrate:fresh --seed', [], $this->getOutput());
+        Artisan::call('migrate:fresh', [
+            '--seed' => true,
+            '--path' => 'database/migrations', // Especificamos la ruta relativa a la raíz
+        ], $this->getOutput());
 
 
         // Debe estar en Mayusculas para q Linux lo reconozca porq es sencible a may/min;
@@ -33,23 +36,28 @@ class MigrateAndSeedModules extends Command
 
     protected function runModuleMigrationsAndSeeders($module, $modulePath)
     {
-        $connectionName = $module; // Usando el nombre del módulo como conexión
-        $migrationPath = "{$modulePath}/Database/Migrations";
-        $seederClass = "Modules\\{$module}\\Database\\Seeders\\{$module}DatabaseSeeder";
+        $dbName = config("database.connections.{$module}.database");
+        if (!$dbName) {
+            $this->warn("No database configured for connection: {$module}");
+            return;
+        }
 
         $this->info("Resetting database for module: {$module}");
-        $this->resetDatabase($connectionName);
+        $this->resetDatabase($module);
 
         $this->info("Running migrations for module: {$module}");
+        $migrationPath = "{$modulePath}/Database/Migrations";
         if (is_dir($migrationPath)) {
-            Artisan::call('migrate', ['--database' => $connectionName, '--path' => $migrationPath], $this->getOutput());
+
+            Artisan::call('migrate', ['--database' => $module, '--path' => $migrationPath], $this->getOutput());
         } else {
             $this->warn("Migration path not found for module: {$module}");
         }
 
         $this->info("Running seeder for module: {$module}");
+        $seederClass = "Modules\\{$module}\\Database\\Seeders\\{$module}DatabaseSeeder";
         if (class_exists($seederClass)) {
-            Artisan::call('db:seed', ['--database' => $connectionName, '--class' => $seederClass], $this->getOutput());
+            Artisan::call('db:seed', ['--database' => $module, '--class' => $seederClass], $this->getOutput());
         } else {
             $this->warn("Seeder class {$seederClass} not found for module: {$module}. (CHECK composer autoload psr-4!!)");
         }
@@ -57,22 +65,34 @@ class MigrateAndSeedModules extends Command
 
     protected function resetDatabase($connection)
     {
-        $schema = DB::connection($connection)->getSchemaBuilder();
-        $tableNames = method_exists($schema, 'getTables')
-            ? array_column($schema->getTables(), 'name')
-            : $schema->getConnection()->getDoctrineSchemaManager()->listTableNames();
+        $dbName = config("database.connections.{$connection}.database");
+
+        // Consultamos las tablas de la base de datos específica
+        $tables = DB::connection($connection)->select("
+        SELECT table_name AS name 
+        FROM information_schema.tables 
+        WHERE table_schema = ?",
+            [$dbName]
+        );
+
+        // Usamos 'name' que definimos en el alias del SQL para evitar problemas de mayúsculas
+        $tableNames = array_map(function ($table) {
+            return $table->name;
+        }, $tables);
 
         DB::connection($connection)->statement('SET FOREIGN_KEY_CHECKS=0');
+
         foreach ($tableNames as $table) {
             try {
                 DB::connection($connection)->table($table)->truncate();
             } catch (QueryException $e) {
                 // Ignorar errores de tablas que no existen
                 if (!str_contains($e->getMessage(), "doesn't exist")) {
-                    throw $e; // Relanzar excepciones que no sean por tablas inexistentes
+                    throw $e;
                 }
             }
         }
+
         DB::connection($connection)->statement('SET FOREIGN_KEY_CHECKS=1');
     }
 }
