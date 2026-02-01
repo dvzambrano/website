@@ -220,15 +220,6 @@ class ZentroTraderBotController extends JsonsController
     {
         $suscriptor = Suscriptions::where("user_id", $actor->user_id)->first();
 
-        $menu = [];
-        array_push($menu, [
-            ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "notimplemented"],
-            ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "notimplemented"],
-        ]);
-        array_push($menu, [
-            ["text" => "🔔 " . Lang::get("zentrotraderbot::bot.options.subscribtion"), "callback_data" => "suscribemenu"]
-        ]);
-
         $wallet = array();
         // si el usuario no tiene wallet es recien suscrito y hay q completar su estructura
         if (!isset($suscriptor->data["wallet"])) {
@@ -263,6 +254,28 @@ class ZentroTraderBotController extends JsonsController
             $description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n\n" .
                 Lang::get("zentrotraderbot::bot.mainmenu.body") . "\n\n";
         }
+
+
+        $menu = [];
+        array_push($menu, [
+            ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "notimplemented"],
+            ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "notimplemented"],
+        ]);
+        array_push($menu, [
+            ["text" => "🔔 " . Lang::get("zentrotraderbot::bot.options.subscribtion"), "callback_data" => "suscribemenu"]
+        ]);
+
+        $url = config("metadata.system.app.zentrotraderbot.ramp.apiurl") . "/" .
+            "?apiKey=" . config("metadata.system.app.zentrotraderbot.ramp.apikey") .
+            "&cryptoCurrencyCode=USDC&network=polygon" .
+            "&walletAddress=" . $wallet["address"] .
+            "&disableWalletAddressForm=true" .
+            "&exchangeScreenTitle=Kashio" .
+            "&hideMenu=true"
+        ;
+        array_push($menu, [
+            ["text" => "💳 " . Lang::get("zentrotraderbot::bot.options.topup"), "url" => $url]
+        ]);
 
 
         return $this->getMainMenu(

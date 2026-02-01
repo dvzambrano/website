@@ -34,6 +34,7 @@ return [
         "actionlevel2" => "Ejecutar ordenes",
         "selloffer" => "Vender USD",
         "buyoffer" => "Comprar USD",
+        "topup" => "Depositar USD",
     ],
     "prompts" => [
         "clienturl" => [
