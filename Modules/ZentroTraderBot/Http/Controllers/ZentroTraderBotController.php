@@ -273,11 +273,9 @@ class ZentroTraderBotController extends JsonsController
             "&exchangeScreenTitle=Kashio" .
             "&hideMenu=true"
         ;
-        /*
         array_push($menu, [
             ["text" => "💳 " . Lang::get("zentrotraderbot::bot.options.topup"), "url" => $url]
         ]);
-        */
 
 
         return $this->getMainMenu(
