@@ -73,16 +73,21 @@ class RampController extends Controller
      */
     public function webhookOrder()
     {
-        // Logueamos la llegada para debug inicial
-        Log::info("Transak Order Webhook Hit", [
-            'headers' => request()->headers->all(),
-            'body' => request()->all()
-        ]);
+        try {
+            $payload = request()->all();
+            // Logueamos siempre para auditoría interna
+            Log::info("Transak Order Webhook - Evento recibido:" . json_encode($payload));
 
-        // Por ahora, solo respondemos 200 OK como pide soporte
+        } catch (\Exception $e) {
+            // Logueamos el error pero devolvemos 200 para que Transak no marque el webhook como "Caído"
+            Log::error("Error procesando Webhook de Orden: " . $e->getMessage());
+        }
+
+        // Si el soporte de Transak está probando el endpoint, 
+        // esto responderá con éxito antes de intentar procesar lógica compleja.
         return response()->json([
             'status' => 'success',
-            'message' => 'Order webhook received'
+            'timestamp' => now()->toIso8601String()
         ], 200);
     }
 
@@ -91,15 +96,17 @@ class RampController extends Controller
      */
     public function webhookKyc()
     {
-        Log::info("Transak KYC Webhook Hit", [
-            'headers' => request()->headers->all(),
-            'body' => request()->all()
-        ]);
+        try {
+            $payload = request()->all();
 
-        // Respondemos 200 OK
+            Log::info("Transak KYC Webhook - Evento recibido:" . json_encode($payload));
+
+        } catch (\Exception $e) {
+            Log::error("Error procesando Webhook de KYC: " . $e->getMessage());
+        }
         return response()->json([
             'status' => 'success',
-            'message' => 'KYC webhook received'
+            'timestamp' => now()->toIso8601String()
         ], 200);
     }
 
