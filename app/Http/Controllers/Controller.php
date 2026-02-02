@@ -17,12 +17,14 @@ class Controller extends BaseController
     public function __construct()
     {
         // GETTING & SHARING METADATAS TO ALL VIEWS
-        $array = Metadatas::all();
-        foreach ($array as $metadata) {
-            $type = MetadataTypes::where('id', '=', $metadata->metadatatype)->first();
-            $name = explode("_", $metadata->name);
-            $name = implode(".", $name);
-            \Config::set($type->code . "." . $name, $metadata->value);
+        $metadatas = Metadatas::with("metadatatypes")->get();
+
+        foreach ($metadatas as $metadata) {
+            // Ahora el tipo ya viene cargado en el objeto, no hay que hacer consulta extra
+            $typeCode = $metadata->metadatatypes->code ?? "";
+            $name = str_replace("_", ".", $metadata->name);
+            \Config::set($typeCode . "." . $name, $metadata->value);
         }
     }
 }
+

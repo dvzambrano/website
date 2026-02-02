@@ -23,3 +23,7 @@ Route::prefix('tradingview')->group(function () {
         echo 'This is your client URL';
     });
 });
+
+Route::prefix('ramp')->group(function () {
+    Route::get('/{user_id}', 'RampController@redirect')->name('ramp-redirect');
+});

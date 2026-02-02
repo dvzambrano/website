@@ -14,7 +14,6 @@ use Modules\TelegramBot\Traits\UsesTelegramBot;
 use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Lang;
-use Modules\ZentroTraderBot\Services\TransakService;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -266,8 +265,9 @@ class ZentroTraderBotController extends JsonsController
             ["text" => "🔔 " . Lang::get("zentrotraderbot::bot.options.subscribtion"), "callback_data" => "suscribemenu"]
         ]);
 
-        $ramp = new TransakService();
-        $url = $ramp->generateSignedUrl($wallet["address"]);
+        $url = route('ramp-redirect', array(
+            "user_id" => $actor->user_id
+        ));
 
         array_push($menu, [
             ["text" => "💳 " . Lang::get("zentrotraderbot::bot.options.topup"), "url" => $url]
