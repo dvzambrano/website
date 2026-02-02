@@ -30,6 +30,7 @@ class RouteServiceProvider extends ServiceProvider
             function ($middleware) {
                 $middleware->except([
                     'tradingview/*',
+                    'ramp/*',
                     // Agrega otras rutas aquí si es necesario
                 ]);
             }

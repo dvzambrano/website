@@ -67,6 +67,42 @@ class RampController extends Controller
 
         return redirect("https://t.me/TuBotNombre?start=order_pending");
     }
+
+    /**
+     * Webhook para el procesamiento de Órdenes (Pagos)
+     */
+    public function webhookOrder()
+    {
+        // Logueamos la llegada para debug inicial
+        Log::info("Transak Order Webhook Hit", [
+            'headers' => request()->headers->all(),
+            'body' => request()->all()
+        ]);
+
+        // Por ahora, solo respondemos 200 OK como pide soporte
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Order webhook received'
+        ], 200);
+    }
+
+    /**
+     * Webhook para el procesamiento de KYC (Verificación de Identidad)
+     */
+    public function webhookKyc()
+    {
+        Log::info("Transak KYC Webhook Hit", [
+            'headers' => request()->headers->all(),
+            'body' => request()->all()
+        ]);
+
+        // Respondemos 200 OK
+        return response()->json([
+            'status' => 'success',
+            'message' => 'KYC webhook received'
+        ], 200);
+    }
+
     public function webhook()
     {
         // 1. Logueamos TODO para ver la estructura real que nos manda Transak hoy
@@ -203,18 +239,5 @@ class RampController extends Controller
         }
 
         return $response->json()['data']['widgetUrl'] ?? null;
-    }
-    public function registerWebhook()
-    {
-        $accessToken = $this->getAccessToken();
-
-        $response = Http::withHeaders([
-            'access-token' => $accessToken
-        ])->post("{$this->gatewayBaseUrl}/api/v2/partners/webhooks", [
-                    'webhookUrl' => route('ramp-webhook'),
-                    'events' => ['ORDER_COMPLETED', 'ORDER_FAILED']
-                ]);
-
-        return $response->json();
     }
 }
