@@ -42,6 +42,9 @@
             "Modules\\ZentroTraderBot\\": "Modules/ZentroTraderBot/",
             "Modules\\ZentroPackageBot\\": "Modules/ZentroPackageBot/"
         },
+        "exclude-from-classmap": [
+            "Modules/**/Database/Migrations"
+        ],
         "files": [
             "app/Helpers/ModuleHelper.php"
         ]
