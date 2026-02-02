@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Observers\OfferObserver;
+use Modules\ZentroTraderBot\Entities\Ramporders;
+use Modules\ZentroTraderBot\Observers\RamporderObserver;
 
 class ZentroTraderBotServiceProvider extends ServiceProvider
 {
@@ -33,6 +35,8 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
 
         // Registramos el observador para el modelo Offer
         Offers::observe(OfferObserver::class);
+        // Registramos el observador para el modelo Ramporders
+        Ramporders::observe(RamporderObserver::class);
     }
 
     /**

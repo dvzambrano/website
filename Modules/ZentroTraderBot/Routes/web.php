@@ -25,7 +25,7 @@ Route::prefix('tradingview')->group(function () {
 });
 
 Route::prefix('ramp')->group(function () {
-    Route::get('/{user_id}', 'RampController@redirect')->name('ramp-redirect');
+    Route::get('/{botname}/{user_id}', 'RampController@redirect')->name('ramp-redirect');
     Route::get('/success', 'RampController@success')->name('ramp-success');
     Route::post('/order', 'RampController@webhookOrder')->name('ramp-webhook-order');
     Route::post('/kyc', 'RampController@webhookKyc')->name('ramp-webhook-kyc');

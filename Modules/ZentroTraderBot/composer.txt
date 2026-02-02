@@ -1,0 +1,4 @@
+
+ "_comment_firebase": "Para desencriptar los JWT (JSON Web Token) recibidos desde Transak",
+"firebase/php-jwt": "^7.0"
+ 

@@ -266,6 +266,7 @@ class ZentroTraderBotController extends JsonsController
         ]);
 
         $url = route('ramp-redirect', array(
+            "botname" => $this->telegram["username"],
             "user_id" => $actor->user_id
         ));
 
@@ -422,6 +423,22 @@ class ZentroTraderBotController extends JsonsController
         ]);
 
         return $reply;
+    }
+
+
+    public function notifyOnRampConfirmed($order)
+    {
+        $array = array(
+            "message" => array(
+                "text" =>
+                    "✅ *¡" . Lang::get("zentrotraderbot::bot.prompts.onramp.header") . "!*\n\n" .
+                    Lang::get("zentrotraderbot::bot.prompts.onramp.header", ["amount" => $order->amount, "currency" => $order->currency]),
+                "chat" => array(
+                    "id" => $order->user_id,
+                ),
+            ),
+        );
+        $this->TelegramController->sendMessage($array, $this->token);
     }
 
 }

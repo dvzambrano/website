@@ -97,28 +97,9 @@ trait UsesTelegramBot
             // antes estaba $this->message["text"] pero lo cambie para q mandara el error cuando mandan la captura de un pago sin nombre y cantidad
             if (isset($this->reply["text"]) && $this->reply["text"] != "") {
                 $autodestroy = 0;
-                if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0) {
+                if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
                     $autodestroy = $this->reply["autodestroy"];
-                    /*
 
-                    //eliminando el mensaje q origino este de autoeliminacion
-                    $bot_token = $this->token;
-                    $message_id = $this->message["message_id"];
-                    $chat_id = $this->message["chat"]["id"];
-                    dispatch(function () use ($message_id, $chat_id, $bot_token) {
-                        $array = array(
-                            "message" => array(
-                                "id" => $message_id,
-                                "chat" => array(
-                                    "id" => $chat_id,
-                                ),
-                            ),
-                        );
-                        $controller = new TelegramController();
-                        $controller->deleteMessage($array, $bot_token);
-                    })->delay(now()->addMinutes($autodestroy));
-                    */
-                }
                 $this->TelegramController->sendMessage($array, $this->token, $autodestroy);
             }
         }

@@ -52,12 +52,6 @@ class TestController extends Controller
 {
     public function test(Request $request)
     {
-        $ramp = new RampController();
-        $respose = $ramp->registerWebhook();
-        dd($respose);
-        die("done!");
-
-
         dd(route('telegram-scanner-init', array(
             "botname" => "instance",
             "instance" => "botname"

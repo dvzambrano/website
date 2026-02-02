@@ -44,5 +44,9 @@ return [
         ],
         "txsuccess" => "TX Exitosa",
         "txfail" => "TX Fallida",
+        "onramp" => [
+            "header" => "¡Pago Acreditado!",
+            "text" => "Hemos recibido tu depósito de :amount :currency correctamente",
+        ],
     ],
 ];
