@@ -46,11 +46,18 @@ use FurqanSiddiqui\BIP39\Wordlist;
 use Modules\Zentro\Services\Office\ExcelService;
 use Modules\ZentroPackageBot\Entities\Packages;
 
+use Modules\ZentroTraderBot\Http\Controllers\RampController;
 
 class TestController extends Controller
 {
     public function test(Request $request)
     {
+        $ramp = new RampController();
+        $respose = $ramp->registerWebhook();
+        dd($respose);
+        die("done!");
+
+
         dd(route('telegram-scanner-init', array(
             "botname" => "instance",
             "instance" => "botname"
