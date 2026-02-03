@@ -15,6 +15,7 @@ use kornrunner\Ethereum\Transaction;
 use kornrunner\Ethereum\EIP1559Transaction;
 use Modules\Web3\Http\Controllers\WalletController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
+use Modules\Web3\Http\Controllers\AlchemyController;
 
 class TraderWalletController extends WalletController
 {
@@ -56,7 +57,19 @@ class TraderWalletController extends WalletController
             $suscriptor->data = $currentData;
             $suscriptor->save();
 
-            Log::info("✅ Wallet generada en JSON para usuario $userId");
+
+            $webhookId = config("metadata.system.app.zentrotraderbot.alchemy.webhookid");
+            $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
+            $response = AlchemyController::updateWebhookAddresses(
+                $webhookId,
+                $authToken,
+                [$wallet["address"]]
+            );
+            $registered = "";
+            if ($response->successful())
+                $registered = " y registrada en en Alchemy webhook ID: " . $webhookId;
+
+            Log::info("✅ Wallet " . $wallet["address"] . " generada en JSON para usuario $userId" . $registered);
 
             return ['status' => 'created', 'address' => $wallet["address"]];
 

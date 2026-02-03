@@ -11,6 +11,7 @@ use kornrunner\Ethereum\EIP1559Transaction;
 use FurqanSiddiqui\BIP39\BIP39;
 use Modules\Web3\Traits\BlockchainTools;
 use BN\BN;
+use Illuminate\Support\Facades\Http;
 
 class WalletController extends Controller
 {
@@ -112,6 +113,30 @@ class WalletController extends Controller
                 'message' => $e->getMessage()
             ];
         }
+    }
+
+    public function registerWalletInAlchemy($newWalletAddress)
+    {
+        $webhookId = config('zentro.alchemy_webhook_id');
+        $authToken = config('zentro.alchemy_auth_token');
+
+        $response = Http::withHeaders([
+            'X-Alchemy-Token' => $authToken,
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ])->patch("https://dashboard.alchemy.com/api/update-webhook-addresses", [
+                    'webhook_id' => $webhookId,
+                    'addresses_to_add' => [$newWalletAddress],
+                    'addresses_to_remove' => [],
+                ]);
+
+        if ($response->successful()) {
+            Log::info("Wallet {$newWalletAddress} registrada en Alchemy con éxito.");
+            return true;
+        }
+
+        Log::error("Error registrando wallet en Alchemy: " . $response->body());
+        return false;
     }
 
     /**

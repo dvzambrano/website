@@ -6,8 +6,10 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Observers\OfferObserver;
-use Modules\ZentroTraderBot\Entities\Ramporders;
-use Modules\ZentroTraderBot\Observers\RamporderObserver;
+use Illuminate\Support\Facades\Event;
+use Modules\Web3\Events\BlockchainActivityDetected;
+use Modules\ZentroTraderBot\Listeners\ProcessBlockchainActivity;
+use Modules\ZentroTraderBot\Console\SyncAlchemyAddresses;
 
 class ZentroTraderBotServiceProvider extends ServiceProvider
 {
@@ -35,8 +37,18 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
 
         // Registramos el observador para el modelo Offer
         Offers::observe(OfferObserver::class);
-        // Registramos el observador para el modelo Ramporders
-        Ramporders::observe(RamporderObserver::class);
+        // Registramos el evento q escuchamos cuando Alchemy mana info al webhook del modulo Web3
+        Event::listen(
+            BlockchainActivityDetected::class,
+            ProcessBlockchainActivity::class
+        );
+        // Registramos el comando para sincronizar manualmente wallets existentes con Alchemy
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                SyncAlchemyAddresses::class,
+            ]);
+        }
+
     }
 
     /**

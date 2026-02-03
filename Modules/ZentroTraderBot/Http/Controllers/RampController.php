@@ -270,44 +270,4 @@ class RampController extends Controller
 
         return $response->json()['data']['widgetUrl'] ?? null;
     }
-
-
-    public function verifyOnChain($wallet, $amount)
-    {
-        try {
-            $apiKey = config("metadata.system.app.zentrotraderbot.polygonscan_key");
-            $usdcContract = config('web3.tokens.USDC.address'); // USDC en Polygon: 0x3c499c542cef5e3811e1192ce70d8cc03d5c3359
-
-            $response = Http::get("https://api.polygonscan.com/api", [
-                'module' => 'account',
-                'action' => 'tokentx',
-                'contractaddress' => $usdcContract,
-                'address' => $wallet,
-                'sort' => 'desc',
-                'apikey' => $apiKey,
-            ]);
-
-            if ($response->successful()) {
-                $transactions = $response->json()['result'] ?? [];
-
-                foreach ($transactions as $tx) {
-                    // El valor en la blockchain viene con 6 decimales para USDC
-                    $valueOnChain = $tx['value'] / 1000000;
-
-                    // Verificamos: 
-                    // 1. Que el receptor sea la wallet del usuario
-                    // 2. Que el monto coincida (o sea muy cercano)
-                    // 3. Que la transacción tenga menos de, por ejemplo, 24 horas (opcional)
-                    if (strtolower($tx['to']) === strtolower($wallet) && (float) $valueOnChain >= (float) $amount) {
-                        Log::info("Verificación On-Chain Exitosa: {$valueOnChain} USDC encontrados para {$wallet}");
-                        return true;
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error("Error consultando Polygonscan: " . $e->getMessage());
-        }
-
-        return false;
-    }
 }

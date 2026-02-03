@@ -228,7 +228,9 @@ class ZentroTraderBotController extends JsonsController
             $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
             if (!$suscriptor)
                 $suscriptor = new Suscriptions($actor->toArray());
-            $suscriptor->data = array();
+            $suscriptor->data = array(
+                // poner datos aqui para multientidad del bot y de su wallet
+            );
             $suscriptor->save();
 
             $wc = new TraderWalletController();
@@ -425,16 +427,18 @@ class ZentroTraderBotController extends JsonsController
         return $reply;
     }
 
-
-    public function notifyOnRampConfirmed($order)
+    public function notifyDepositConfirmed($user_id, $amount, $currency)
     {
         $array = array(
             "message" => array(
                 "text" =>
-                    "✅ *¡" . Lang::get("zentrotraderbot::bot.prompts.onramp.header") . "!*\n\n" .
-                    Lang::get("zentrotraderbot::bot.prompts.onramp.header", ["amount" => $order->amount, "currency" => $order->currency]),
+                    "✅ *¡" . Lang::get("zentrotraderbot::bot.prompts.deposit.header") . "!*\n\n" .
+                    Lang::get("zentrotraderbot::bot.prompts.deposit.header", [
+                        "amount" => $amount,
+                        "currency" => $currency
+                    ]),
                 "chat" => array(
-                    "id" => $order->user_id,
+                    "id" => $user_id,
                 ),
             ),
         );
