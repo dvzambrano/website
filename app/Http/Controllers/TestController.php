@@ -54,12 +54,10 @@ class TestController extends Controller
     {
         dd(route('webhook.alchemy.get'));
 
-        /*
         dd(route('telegram-scanner-init', array(
             "botname" => "instance",
             "instance" => "botname"
         )));
-        */
 
         $data = ExcelService::import(
             public_path("import.xls"),
