@@ -29,7 +29,7 @@ class RouteServiceProvider extends ServiceProvider
             VerifyCsrfToken::class,
             function ($middleware) {
                 $middleware->except([
-                    'web3/webhook/*',
+                    'webhook/*',
                 ]);
             }
         );
