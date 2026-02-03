@@ -4,6 +4,7 @@ namespace Modules\Web3\Providers;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,15 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Excluir CSRF para rutas específicas
+        $this->app->afterResolving(
+            VerifyCsrfToken::class,
+            function ($middleware) {
+                $middleware->except([
+                    'web3/webhook/*',
+                ]);
+            }
+        );
         parent::boot();
     }
 
