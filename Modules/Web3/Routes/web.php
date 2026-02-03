@@ -2,6 +2,7 @@
 
 use Modules\Web3\Http\Controllers\Web3Controller;
 use Modules\Web3\Http\Controllers\WalletsController;
+use Modules\Web3\Http\Controllers\AlchemyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,10 +18,13 @@ use Modules\Web3\Http\Controllers\WalletsController;
 Route::prefix('web3')->group(function () {
     Route::get('/', [Web3Controller::class, 'index'])->name('web3.index');
 
-    // Agrega más rutas según necesites
+    Route::prefix('webhook')->group(function () {
+        Route::post('/alchemy', [AlchemyController::class, 'webhook'])->name('webhook.alchemy');
+    });
 });
 
 Route::prefix('wallets')->group(function () {
     Route::post('/isregistered/{address}', [WalletsController::class, 'isregistered'])->name('wallet.isregistered');
     Route::post('/register', [WalletsController::class, 'register'])->name('wallet.register');
 });
+
