@@ -16,9 +16,9 @@ Route::prefix('telegrambot')->group(function () {
 });
 
 Route::prefix('telegram')->group(function () {
-    //https://micalme.com/telegram/bot/GutoTradeBot
-    //https://micalme.com/telegram/bot/ZentroTraderBot
-    Route::post('/bot/{botname}/{instance?}', 'TelegramBotController@handle')->name('telegram-webhook');
+    Route::post('/bot/{key}', 'TelegramBotController@handle')
+        ->middleware('tenant.detector')
+        ->name('telegram-bot-webhhok');
 
     // Ruta para el WebApp de escaneo
     // URL final ejemplo: https://tudominio.com/telegram/scanner

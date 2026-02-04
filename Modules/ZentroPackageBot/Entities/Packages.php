@@ -5,13 +5,13 @@ namespace Modules\ZentroPackageBot\Entities;
 use Illuminate\Database\Console\Migrations\StatusCommand;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\ModuleTrait;
+use App\Traits\TenantTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use PhpParser\Node\Stmt\Static_;
 
 class Packages extends Model
 {
-    use ModuleTrait;
+    use TenantTrait;
     use SoftDeletes;
 
     protected $table = 'packages';

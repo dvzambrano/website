@@ -63,38 +63,20 @@ class GutoTradeBotController extends JsonsController
         $this->ProfitsController = new ProfitsController();
         $this->AgentsController = new AgentsController();
         $this->CoingeckoController = new CoingeckoController();
-
-        if ($instance === false)
-            $instance = $botname;
-        $response = false;
-        try {
-            $bot = $this->getFirst(TelegramBots::class, "name", "=", "@{$instance}");
-            $this->token = $bot->token;
-            $this->data = $bot->data;
-
-            $response = json_decode($this->TelegramController->getBotInfo($this->token), true);
-        } catch (\Throwable $th) {
-        }
-        if (!$response)
-            $response = array(
-                "result" => array(
-                    "username" => $instance
-                )
-            );
-
-        $this->telegram = $response["result"];
     }
 
 
     public function processMessage()
     {
+        $bot = app('active_bot');
+
         $array = $this->getCommand($this->message["text"]);
 
         $this->strategies["/help"] =
             $this->strategies["help"] =
             $this->strategies["/ayuda"] =
             $this->strategies["ayuda"] =
-            function () {
+            function () use ($bot) {
                 $text = "📖 *¿Cómo usar este bot?*.\n_He aquí los principales elementos que debe conocer:_\n\n";
                 $text .= "1️⃣ *Acceder al menú principal*: /menu\n_Escriba “menu” o simplemente cliquee en el comando_\n";
                 $text .= "2️⃣ *Buscar pago*: /buscar\n_Escriba el comando para obtener el asistente de búsquedas. Si conoce el ID del pago puede usar el comando así: /buscar 1234_\n";
@@ -115,17 +97,17 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/payments"] =
-            function () {
+            function () use ($bot) {
                 $reply = $this->mainMenu($this->actor);
-                if ($this->actor->isLevel(1, $this->telegram["username"]) || $this->actor->isLevel(4, $this->telegram["username"])) {
+                if ($this->actor->isLevel(1, $bot->code) || $this->actor->isLevel(4, $bot->code)) {
                     $reply = $this->PaymentsController->getMenu($this, $this->actor);
                 }
                 return $reply;
             };
         $this->strategies["/capitals"] =
-            function () {
+            function () use ($bot) {
                 $reply = $this->mainMenu($this->actor);
-                if ($this->actor->isLevel(1, $this->telegram["username"]) || $this->actor->isLevel(4, $this->telegram["username"])) {
+                if ($this->actor->isLevel(1, $bot->code) || $this->actor->isLevel(4, $bot->code)) {
                     $reply = $this->CapitalsController->getMenu($this->actor);
                 }
                 return $reply;
@@ -133,19 +115,19 @@ class GutoTradeBotController extends JsonsController
 
 
         $this->strategies["buscar"] =
-            function () {
+            function () use ($bot) {
                 return $this->PaymentsController->getSearchPrompt(
                     $this,
                     "getpaymentbyvalue",
                     $this->actor->getBackOptions(
                         "✋ " . Lang::get("telegrambot::bot.options.cancel"),
-                        $this->telegram["username"],
+                        $bot->code,
                         [1, 4]
                     )
                 );
             };
         $this->strategies["/buscar"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 if ($array["message"] && strlen($array["message"]) > 1) {
                     $reply = $this->PaymentsController->renderPaymentsByAny(
                         $this,
@@ -174,7 +156,7 @@ class GutoTradeBotController extends JsonsController
                 return $reply;
             };
         $this->strategies["/findbyid"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 return $this->PaymentsController->renderPaymentsByField(
                     $this,
                     "Reporte de pago encontrado",
@@ -185,48 +167,48 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptpaymentdaysold"] =
-            function () {
+            function () use ($bot) {
                 return $this->PaymentsController->getDaysPrompt(
                     $this,
                     "getpaymentbydaysold",
                     $this->actor->getBackOptions(
                         "✋ " . Lang::get("telegrambot::bot.options.cancel"),
-                        $this->telegram["username"],
+                        $bot->code,
                         [1, 4]
                     )
                 );
             };
 
         $this->strategies["senderpaymentmenu"] =
-            function () {
+            function () use ($bot) {
                 return $this->PaymentsController->getPrompt($this, "getsenderpaymentscreenshot");
             };
         $this->strategies["sendercapitalmenu"] =
-            function () {
+            function () use ($bot) {
                 return $this->CapitalsController->getPrompt($this, "getsendercapitalscreenshot");
             };
 
         $this->strategies["supervisorpaymentmenu"] =
-            function () {
+            function () use ($bot) {
                 return $this->PaymentsController->getPrompt($this, "getsupervisorpaymentscreenshot");
             };
         $this->strategies["supervisorcapitalmenu"] =
-            function () {
+            function () use ($bot) {
                 return $this->CapitalsController->getPrompt($this, "getsupervisorcapitalscreenshot");
             };
 
         $this->strategies["getadminunconfirmedcapitalsmenu"] =
-            function () {
+            function () use ($bot) {
                 return $this->CapitalsController->getUnconfirmedMenuForUsers($this);
             };
 
         $this->strategies["/confirm"] =
-            function () {
+            function () use ($bot) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"]) ||
-                    $this->actor->isLevel(3, $this->telegram["username"]) ||
-                    $this->actor->isLevel(4, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code) ||
+                    $this->actor->isLevel(3, $bot->code) ||
+                    $this->actor->isLevel(4, $bot->code)
                 ) {
                     $reply = $this->PaymentsController->getUnconfirmedMenuForUsers($this);
                 }
@@ -234,11 +216,11 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/liquidate"] =
-            function () {
+            function () use ($bot) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"]) ||
-                    $this->actor->isLevel(4, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code) ||
+                    $this->actor->isLevel(4, $bot->code)
                 ) {
                     $reply = $this->PaymentsController->getUnliquidatedMenuForUsers($this);
                 }
@@ -246,23 +228,23 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["getadminallpaymentsmenu"] =
-            function () {
+            function () use ($bot) {
                 return $this->PaymentsController->getAllMenuForUsers($this);
             };
 
 
         $this->strategies["getadminallcapitalsmenu"] =
-            function () {
+            function () use ($bot) {
                 return $this->CapitalsController->getAllMenuForUsers($this);
             };
 
         $this->strategies["/storage"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"]) ||
-                    $this->actor->isLevel(3, $this->telegram["username"]) ||
-                    $this->actor->isLevel(4, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code) ||
+                    $this->actor->isLevel(3, $bot->code) ||
+                    $this->actor->isLevel(4, $bot->code)
                 ) {
                     $menu = [
                         [
@@ -321,11 +303,11 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/market"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"]) ||
-                    $this->actor->isLevel(4, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code) ||
+                    $this->actor->isLevel(4, $bot->code)
                 ) {
                     $amount = 100;
                     $rate = $this->CoingeckoController->getRate(Carbon::now()->format("Y-m-d"));
@@ -468,11 +450,11 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/stats"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"]) ||
-                    $this->actor->isLevel(4, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code) ||
+                    $this->actor->isLevel(4, $bot->code)
                 ) {
                     $array = explode(" ", $array["message"]);
                     $current_date = false;
@@ -488,11 +470,11 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/export"] =
-            function () {
+            function () use ($bot) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"]) ||
-                    $this->actor->isLevel(4, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code) ||
+                    $this->actor->isLevel(4, $bot->code)
                 ) {
                     $reply = $this->getSystemInfo();
                 }
@@ -500,11 +482,11 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/capital"] =
-            function () {
+            function () use ($bot) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"]) ||
-                    $this->actor->isLevel(4, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code) ||
+                    $this->actor->isLevel(4, $bot->code)
                 ) {
                     $array = $this->PaymentsController->getCapitalizationReport($this);
 
@@ -528,16 +510,16 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["capitalize"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 return $this->PaymentsController->capitalizeReport($this, $array["pieces"][1]);
             };
 
         $this->strategies["/cashflow"] =
-            function () {
+            function () use ($bot) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"]) ||
-                    $this->actor->isLevel(4, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code) ||
+                    $this->actor->isLevel(4, $bot->code)
                 ) {
                     $reply = $this->PaymentsController->getAllCash($this);
                 }
@@ -545,11 +527,11 @@ class GutoTradeBotController extends JsonsController
                 return $reply;
             };
         $this->strategies["/flow"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"]) ||
-                    $this->actor->isLevel(4, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code) ||
+                    $this->actor->isLevel(4, $bot->code)
                 ) {
                     $array = explode(" ", $array["message"]);
                     $current_date = false;
@@ -566,14 +548,14 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptaccountoperations"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $this->ActorsController->updateData(
                     Actors::class,
                     "user_id",
                     $this->actor->user_id,
                     "last_bot_callback_data",
                     "promptaccountoperations2-" . $array["pieces"][1],
-                    $this->telegram["username"]
+                    $bot->code
                 );
                 $reply = $this->AccountsController->getOperationsPrompt();
 
@@ -581,25 +563,25 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptmoneyamount"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->getRevalorizationPrompt($this, $array["pieces"][1]);
                 return $reply;
             };
 
         $this->strategies["promptmoneycomment"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->getRecommentPrompt($this, $array["pieces"][1]);
                 return $reply;
             };
 
         $this->strategies["/accounts"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->AccountsController->getActiveAccounts($this);
                 return $reply;
             };
 
         $this->strategies["accountactivation"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $account = $this->AccountsController->getFirst(Accounts::class, "id", "=", $array["pieces"][1]);
                 $account->is_active = $array["pieces"][2] == "true";
                 $account->save();
@@ -611,13 +593,13 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["confirmation"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->getAreYouSurePrompt($array["pieces"][1], $array["pieces"][2]);
                 return $reply;
             };
 
         $this->strategies["asignpaymentsupervisor"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 // asignar un RECEPTOR a un pago
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][2]);
                 $this->PaymentsController->asignSupervisor([$payment], $array["pieces"][1]);
@@ -638,15 +620,15 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["confirmpayment"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 if (!$payment->isConfirmed()) {
                     $this->PaymentsController->confirm([$payment], $this->actor->user_id);
                     $this->PaymentsController->notifyConfirmationToOwner($this, $payment);
 
                     if (
-                        isset($this->data["notifications"]["capitals"]["noenough"]["tocapitals"]) &&
-                        $this->data["notifications"]["capitals"]["noenough"]["tocapitals"] == 1
+                        isset($bot->data["notifications"]["capitals"]["noenough"]["tocapitals"]) &&
+                        $bot->data["notifications"]["capitals"]["noenough"]["tocapitals"] == 1
                     ) {
                         // notificar nivel de capital bajo
                         $reply = $this->notifyFlow(
@@ -662,7 +644,7 @@ class GutoTradeBotController extends JsonsController
                                     "name" => "admin_level",
                                     "value" => [1, 4],
                                 ],
-                            ], $this->telegram["username"]);
+                            ], $bot->code);
                             for ($i = 0; $i < count($admins); $i++) {
                                 $reply["chat"]["id"] = $admins[$i]->user_id;
 
@@ -670,7 +652,7 @@ class GutoTradeBotController extends JsonsController
                                     "message" => $reply,
                                 );
                                 $array["message"]["reply_markup"] = $array["message"]["markup"];
-                                $this->TelegramController->sendPhoto($array, $this->token);
+                                $this->TelegramController->sendPhoto($array, $bot->token);
                             }
                         }
                     }
@@ -681,12 +663,12 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/match"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"]) ||
-                    $this->actor->isLevel(3, $this->telegram["username"]) ||
-                    $this->actor->isLevel(4, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code) ||
+                    $this->actor->isLevel(3, $bot->code) ||
+                    $this->actor->isLevel(4, $bot->code)
                 ) {
                     $array = explode(" ", $array["message"]);
                     $reply = $this->PaymentsController->matchAny($this, $array[0], $array[1]);
@@ -694,7 +676,7 @@ class GutoTradeBotController extends JsonsController
                 return $reply;
             };
         $this->strategies["matchpayments"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 // se notifica la recepcion al remesador en la llamada a match
                 // y aqui se notifica al admin q esta haciendo la operacion
                 $reply = $this->PaymentsController->matchAny($this, $array["pieces"][1], $array["pieces"][2]);
@@ -703,7 +685,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["asignpaymentsender"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 // asignar un REMESADOR a un pago
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][2]);
                 $this->PaymentsController->asignSender([$payment], $array["pieces"][1]);
@@ -718,7 +700,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["requestpaymentconfirmation"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 $this->PaymentsController->requestConfirmation($this, [$payment]);
                 $reply = $this->PaymentsController->notifyAfterStatusRequest();
@@ -726,18 +708,18 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["requestpaymentcomments"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->getComments($this, $array["pieces"][1], $this->actor->user_id);
                 return $reply;
             };
         $this->strategies["commentpayment"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->getCommentPrompt($this, "payment", $array["pieces"][1]);
                 return $reply;
             };
 
         $this->strategies["liquidatepayment"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 $this->PaymentsController->liquidate([$payment], $this->actor->user_id);
                 $reply = $this->PaymentsController->notifyAfterLiquidate();
@@ -745,37 +727,37 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["unconfirmedpayments"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->getUnconfirmed($this, $array["pieces"][1], $this->actor->user_id);
                 return $reply;
             };
 
         $this->strategies["unliquidatedpayments"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->getUnliquidated($this, $array["pieces"][1], $this->actor->user_id);
                 return $reply;
             };
 
         $this->strategies["/float"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $array["pieces"][1] = "all";
                 $reply = $this->PaymentsController->getFloating($this, $array["pieces"][1], $this->actor->user_id);
                 return $reply;
             };
         $this->strategies["floatingpayments"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->getFloating($this, $array["pieces"][1], $this->actor->user_id);
                 return $reply;
             };
 
         $this->strategies["changepaymentscreenshot"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->getScreenshotChangePrompt($this, "getnewpaymentscreenshot-" . $array["pieces"][1]);
                 return $reply;
             };
 
         $this->strategies["notyetpayment"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 $this->PaymentsController->notifyStatusNotYetToOwner($this, $payment);
 
@@ -784,13 +766,13 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["allpayments"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->getAllList($this, $array["pieces"][1], $this->actor->user_id);
                 return $reply;
             };
 
         $this->strategies["deletepayment"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 // eliminar un pago
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 if ($payment->sender_id && $payment->sender_id > 0) {
@@ -818,7 +800,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["unconfirmpayment"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 // desconfirmar un pago
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 $array = $payment->data;
@@ -834,7 +816,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["asigncapitalsupervisor"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 // asignar un RECEPTOR a un aporte
                 $capital = $this->CapitalsController->getFirst(Capitals::class, "id", "=", $array["pieces"][2]);
                 $this->CapitalsController->asignSupervisor([$capital], $array["pieces"][1]);
@@ -849,7 +831,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["confirmcapital"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $capital = $this->CapitalsController->getFirst(Capitals::class, "id", "=", $array["pieces"][1]);
                 $this->CapitalsController->confirm([$capital], $this->actor->user_id);
                 $this->CapitalsController->notifyConfirmationToOwner($this, $capital);
@@ -858,7 +840,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["requestcapitalconfirmation"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $capital = $this->CapitalsController->getFirst(Capitals::class, "id", "=", $array["pieces"][1]);
                 $this->CapitalsController->requestConfirmation($this, [$capital]);
                 $reply = $this->CapitalsController->notifyAfterStatusRequest();
@@ -866,7 +848,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["notyetcapital"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $capital = $this->CapitalsController->getFirst(Capitals::class, "id", "=", $array["pieces"][1]);
                 $this->CapitalsController->notifyStatusNotYetToOwner($this, $capital);
 
@@ -875,19 +857,19 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["unconfirmedcapitals"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->CapitalsController->getUnconfirmed($this, $array["pieces"][1], $this->actor->user_id);
                 return $reply;
             };
 
         $this->strategies["allcapitals"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->CapitalsController->getAllList($this, $array["pieces"][1], $this->actor->user_id);
                 return $reply;
             };
 
         $this->strategies["deletecapital"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 // eliminar un pago
                 $capital = $this->CapitalsController->getFirst(Capitals::class, "id", "=", $array["pieces"][1]);
                 $capital->delete();
@@ -897,12 +879,12 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/comments"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->getComments($this, $array["message"], $this->actor->user_id);
                 return $reply;
             };
         $this->strategies["/comment"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $id = $this->getIdOfRepliedMessage();
                 if ($id && $id > 0) {
                     $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $id);
@@ -915,10 +897,10 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/profit"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->mainMenu($this->actor);
                 if (
-                    $this->actor->isLevel(1, $this->telegram["username"])
+                    $this->actor->isLevel(1, $bot->code)
                 ) {
                     $reply = $this->ProfitsController->getPrompt($this);
                 }
@@ -927,7 +909,7 @@ class GutoTradeBotController extends JsonsController
 
         $this->strategies["/asign"] =
             $this->strategies["/assign"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $id = $this->getIdOfRepliedMessage();
                 if ($id && $id > 0) {
                     $suscriptor = $this->AgentsController->getSuscriptor($this, $array["message"], true);
@@ -937,7 +919,7 @@ class GutoTradeBotController extends JsonsController
                         $payment->save();
                         $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $id);
                         // preparar el menu de opciones sobre este pago
-                        $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$this->telegram["username"]]["admin_level"]);
+                        $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$bot->code]["admin_level"]);
                         $payment->sendAsTelegramMessage(
                             $this,
                             $this->actor,
@@ -956,7 +938,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/rate"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $id = $this->getIdOfRepliedMessage();
                 if ($id && $id > 0) {
                     $rate = $array["message"];
@@ -968,7 +950,7 @@ class GutoTradeBotController extends JsonsController
                         $payment->save();
                         $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $id);
                         // preparar el menu de opciones sobre este pago
-                        $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$this->telegram["username"]]["admin_level"]);
+                        $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$bot->code]["admin_level"]);
                         $payment->sendAsTelegramMessage(
                             $this,
                             $this->actor,
@@ -988,7 +970,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/importbyid"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $id = $array["message"];
                 $fc = new FileController();
                 $payments = $fc->searchInLog('payment', $id, 'storage', true);
@@ -1001,7 +983,7 @@ class GutoTradeBotController extends JsonsController
                         $payment->save();
 
                         // preparar el menu de opciones sobre este pago
-                        $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$this->telegram["username"]]["admin_level"]);
+                        $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$bot->code]["admin_level"]);
                         $payment->sendAsTelegramMessage(
                             $this,
                             $this->actor,
@@ -1023,7 +1005,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["/checkemails"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $job = new CheckEmails();
                 $job->handle(); // Llama directamente al método handle()
     
@@ -1035,7 +1017,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["getpaymentbyvalue"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->renderPaymentsByAny(
                     $this,
                     $this->message["text"],
@@ -1050,7 +1032,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["getpaymentbydaysold"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = $this->PaymentsController->renderPaymentsByDate(
                     $this,
                     $this->message["text"],
@@ -1065,7 +1047,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptaccountoperations2"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $account = $this->AccountsController->getFirst(Accounts::class, "id", "=", $array["pieces"][1]);
                 $array = $account->data;
                 $array["remain_operations"] = $this->message["text"];
@@ -1079,13 +1061,13 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptmoneyamount2"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 $payment->amount = $this->message["text"];
                 $payment->save();
 
                 // preparar el menu de opciones sobre este pago
-                $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$this->telegram["username"]]["admin_level"]);
+                $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$bot->code]["admin_level"]);
                 $payment->sendAsTelegramMessage(
                     $this,
                     $this->actor,
@@ -1101,13 +1083,13 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptmoneycomment2"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 $payment->comment = $this->message["text"];
                 $payment->save();
 
                 // preparar el menu de opciones sobre este pago
-                $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$this->telegram["username"]]["admin_level"]);
+                $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$bot->code]["admin_level"]);
                 $payment->sendAsTelegramMessage(
                     $this,
                     $this->actor,
@@ -1123,13 +1105,13 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptmoneycomment2"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 $payment->comment = $this->message["text"];
                 $payment->save();
 
                 // preparar el menu de opciones sobre este pago
-                $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$this->telegram["username"]]["admin_level"]);
+                $menu = $this->PaymentsController->getOptionsMenuForThisOne($this, $payment, $this->actor->data[$bot->code]["admin_level"]);
                 $payment->sendAsTelegramMessage(
                     $this,
                     $this->actor,
@@ -1145,18 +1127,18 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptpaymentcomment"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 //$comment, $screenshot, $sender_id, $payment_id, $data = array()
                 $this->CommentsController->create($this->message["text"], $payment->screenshot, $this->actor->user_id, $array["pieces"][1]);
 
-                switch ($this->actor->data[$this->telegram["username"]]["admin_level"]) {
+                switch ($this->actor->data[$bot->code]["admin_level"]) {
                     // si lo ha escrito un remesador se notifica a los supervisores o a los admin4
                     case "2":
                     case 2:
                         if (
-                            isset($this->data["notifications"]["comments"]["new"]["tosupervisors"]) &&
-                            $this->data["notifications"]["comments"]["new"]["tosupervisors"] == 1
+                            isset($bot->data["notifications"]["comments"]["new"]["tosupervisors"]) &&
+                            $bot->data["notifications"]["comments"]["new"]["tosupervisors"] == 1
                         ) {
                             if ($payment->supervisor_id && $payment->supervisor_id > 0) {
                                 $supervisor = $this->ActorsController->getFirst(Actors::class, "user_id", "=", $payment->supervisor_id);
@@ -1174,8 +1156,8 @@ class GutoTradeBotController extends JsonsController
                             }
                         }
                         if (
-                            isset($this->data["notifications"]["comments"]["new"]["togestors"]) &&
-                            $this->data["notifications"]["comments"]["new"]["togestors"] == 1
+                            isset($bot->data["notifications"]["comments"]["new"]["togestors"]) &&
+                            $bot->data["notifications"]["comments"]["new"]["togestors"] == 1
                         ) {
                             $this->PaymentsController->notifyToGestors($this, $payment, $this->message["text"], "Comentario sobre:");
                         }
@@ -1202,7 +1184,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptprofit"] =
-            function () use ($array) {
+            function () use ($bot, $array) {
                 $reply = [
                     "text" => "",
                 ];
@@ -1263,8 +1245,8 @@ class GutoTradeBotController extends JsonsController
 
                 //$array = $this->getCommand($this->message["text"]);
                 $command = "";
-                if (isset($array[$this->telegram["username"]]["last_bot_callback_data"]))
-                    $command = $array[$this->telegram["username"]]["last_bot_callback_data"];
+                if (isset($array[$bot->code]["last_bot_callback_data"]))
+                    $command = $array[$bot->code]["last_bot_callback_data"];
 
                 $commandarray = $this->getCommand($command);
                 //Log::info("GutoTradeBotController photo command = '{$command}', commandarray = " . json_encode($commandarray));
@@ -1324,22 +1306,22 @@ class GutoTradeBotController extends JsonsController
 
                         request()->merge(['message' => $message]);
 
-                        $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "getforwardedpaymentscreenshot", $this->telegram["username"]);
+                        $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "getforwardedpaymentscreenshot", $bot->code);
 
-                        if ($this->actor->isLevel(1, $this->telegram["username"]))
+                        if ($this->actor->isLevel(1, $bot->code))
                             $reply = $this->PaymentsController->processMoney($this, 1);
-                        if ($this->actor->isLevel(2, $this->telegram["username"]))
+                        if ($this->actor->isLevel(2, $bot->code))
                             $reply = $this->PaymentsController->processMoney($this);
                         if (
-                            $this->actor->isLevel(3, $this->telegram["username"]) ||
-                            $this->actor->isLevel(4, $this->telegram["username"])
+                            $this->actor->isLevel(3, $bot->code) ||
+                            $this->actor->isLevel(4, $bot->code)
                         )
                             $reply = $this->PaymentsController->processMoney($this, 3);
 
                         break;
                     default:
                         // intentando resolver llamadas previas para el nuevo intento de reenviar un pago
-                        $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "", $this->telegram["username"]);
+                        $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "", $bot->code);
                         break;
                 }
 
@@ -1351,10 +1333,12 @@ class GutoTradeBotController extends JsonsController
 
     public function mainMenu($actor)
     {
+        $bot = app('active_bot');
+
         $menu = array();
 
         // admin_level = 1 Admnistrador, 2 Remesador, 3 Receptor, 4 Admin de capital
-        switch ($actor->data[$this->telegram["username"]]["admin_level"]) {
+        switch ($actor->data[$bot->code]["admin_level"]) {
             case "0":
             case 0:
                 $array = $this->AgentsController->getRoleMenu($actor->user_id, 0);
@@ -1408,6 +1392,8 @@ class GutoTradeBotController extends JsonsController
 
     public function adminMenu($actor)
     {
+        $bot = app('active_bot');
+
         $menu = [];
 
         array_push($menu, [
@@ -1415,7 +1401,7 @@ class GutoTradeBotController extends JsonsController
             ["text" => "💰 Capital", "callback_data" => "/capitals"],
         ]);
         // admin_level = 1 Admnistrador, 4 Admin de capital
-        switch ($actor->data[$this->telegram["username"]]["admin_level"]) {
+        switch ($actor->data[$bot->code]["admin_level"]) {
             case "1":
             case 1:
                 array_push($menu, [
@@ -1484,6 +1470,8 @@ class GutoTradeBotController extends JsonsController
      */
     public function notifyStats($actor, $start_date = false, $end_date = false)
     {
+        $bot = app('active_bot');
+
         $array = $this->PaymentsController->getPaymentsStats($this, $start_date, $end_date);
         $from_date = $array["from_date"];
         $to_date = $array["to_date"];
@@ -1502,7 +1490,7 @@ class GutoTradeBotController extends JsonsController
         $stats .= "\n\n🤷🏻‍♂️ *Sin confirmar*: " . Moneys::format($array["unconfirmed"]) . " 💶" .
             "\n🫰🏻 *Sin liquidar*: " . Moneys::format($array["unsettled"]) . " 💶";
 
-        switch (strtolower($this->telegram["username"])) {
+        switch (strtolower($bot->code)) {
             case "gutotradebot":
                 $stats .= "\n\n💰 *USDT Físico*: " . Moneys::format($array["stock"]) . " 💵";
 
@@ -1510,7 +1498,7 @@ class GutoTradeBotController extends JsonsController
 
                 $stats .= "\n💱 *Equivalentes a*: " . Moneys::format($value) . " 💶";
 
-                if ($actor->isLevel(1, $this->telegram["username"])) {
+                if ($actor->isLevel(1, $bot->code)) {
                     $stats .= "\n\n☑ *Debería tener*: " . Moneys::format($array["should"]) . " 💵";
                     if ($array["having"] >= $array["should"]) {
                         $stats .= "\n✅ ";
@@ -1614,14 +1602,14 @@ class GutoTradeBotController extends JsonsController
         $menu = [];
         $adminmenu = [];
         if (
-            $actor->isLevel(1, $this->telegram["username"]) ||
-            $actor->isLevel(4, $this->telegram["username"])
+            $actor->isLevel(1, $bot->code) ||
+            $actor->isLevel(4, $bot->code)
         ) {
             if ($array["unconfirmed"] > 0) {
                 array_push($adminmenu, ["text" => "👍 Confirmar", "callback_data" => "/confirm"]);
             }
         }
-        if ($actor->isLevel(1, $this->telegram["username"])) {
+        if ($actor->isLevel(1, $bot->code)) {
             if ($array["unsettled"] > 0) {
                 array_push($adminmenu, ["text" => "🫰🏻 Liquidar", "callback_data" => "/liquidate"]);
             }

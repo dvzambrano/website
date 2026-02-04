@@ -2,23 +2,22 @@
 
 namespace Modules\TelegramBot\Http\Controllers;
 
-use App\Http\Controllers\FileController;
-use App\Http\Controllers\JsonsController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Modules\TelegramBot\Entities\Actors;
 use App\Http\Controllers\Controller;
 
 class TelegramBotController extends Controller
 {
-    public function handle($botname, $instance = false)
+    public function handle()
     {
-        $controller = $this->getController($botname, $instance);
+        // El Middleware 'tenant.detector' ya hizo el trabajo sucio 
+        // de configurar la DB 'tenant' antes de llegar aquí.
+        $update = request()->all();
+        $bot = app('active_bot'); // Recuperamos lo que guardó el Middleware
+
+        $controller = $this->getController($bot->module, $bot->module);
         if ($controller) {
-            return $controller->receiveMessage(
-                //    $botname,
-                //   $instance
-            );
+            // Pasamos el objeto $bot y el $update (el mensaje de Telegram)
+            return $controller->receiveMessage($bot, $update);
         }
 
         abort(404, 'Bot handle controller not found');
@@ -44,18 +43,6 @@ class TelegramBotController extends Controller
         // Creando una instancia dinamica de una clase hija encargada de manipular el bot correspondiente
         $controller = "Modules\\{$botname}\\Http\\Controllers\\{$botname}Controller";
         if (class_exists($controller)) {
-            /*
-            if (!$instance)
-                $instance = $botname;
-            $host = request()->getHost(); // gutotradebot.micalme.com
-            $parts = explode(".", $host);
-            if (count($parts) > 2) {
-                unset($parts[count($parts) - 1]);
-                unset($parts[count($parts) - 1]);
-                $instance = implode(".", $parts);
-            }
-            */
-            //return app()->make($controller)->receiveMessage($botname, $instance);
             return app()->make($controller, [
                 'botname' => $botname,
                 'instance' => $instance

@@ -17,42 +17,22 @@ use Illuminate\Support\Facades\Lang;
 
 class ZentroTraderBotController extends JsonsController
 {
-    public $engine;
-
     use UsesTelegramBot;
     public $AgentsController;
+    public $engine;
 
     public function __construct($botname, $instance = false)
     {
-        $this->engine = new ZeroExController();
-
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();
         $this->AgentsController = new AgentsController();
-
-        if ($instance === false)
-            $instance = $botname;
-        $response = false;
-        try {
-            $bot = $this->getFirst(TelegramBots::class, "name", "=", "@{$instance}");
-            $this->token = $bot->token;
-            $this->data = $bot->data;
-
-            $response = json_decode($this->TelegramController->getBotInfo($this->token), true);
-        } catch (\Throwable $th) {
-        }
-        if (!$response)
-            $response = array(
-                "result" => array(
-                    "username" => $instance
-                )
-            );
-
-        $this->telegram = $response["result"];
+        $this->engine = new ZeroExController();
     }
 
     public function processMessage()
     {
+        $bot = app('active_bot');
+
         $array = $this->getCommand($this->message["text"]);
         $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
 
@@ -69,11 +49,12 @@ class ZentroTraderBotController extends JsonsController
                 );
             };
 
-        $this->strategies["actionmenu"] = function () {
-            if ($this->actor->isLevel(1, $this->telegram["username"]))
-                return $this->actionMenu();
-            return $this->mainMenu($this->actor);
-        };
+        $this->strategies["actionmenu"] =
+            function () use ($bot) {
+                if ($this->actor->isLevel(1, $bot->code))
+                    return $this->actionMenu();
+                return $this->mainMenu($this->actor);
+            };
         $this->strategies["actionlevel1"] =
             $this->strategies["actionlevel2"] =
             function () use ($array) {
@@ -218,6 +199,8 @@ class ZentroTraderBotController extends JsonsController
 
     public function mainMenu($actor)
     {
+        $bot = app('active_bot');
+
         $suscriptor = Suscriptions::where("user_id", $actor->user_id)->first();
 
         $wallet = array();
@@ -268,7 +251,7 @@ class ZentroTraderBotController extends JsonsController
         ]);
 
         $url = route('ramp-redirect', array(
-            "botname" => $this->telegram["username"],
+            "botname" => $bot->code,
             "user_id" => $actor->user_id
         ));
 
@@ -429,6 +412,8 @@ class ZentroTraderBotController extends JsonsController
 
     public function notifyDepositConfirmed($user_id, $amount, $currency)
     {
+        $bot = app('active_bot');
+
         $array = array(
             "message" => array(
                 "text" =>
@@ -442,7 +427,7 @@ class ZentroTraderBotController extends JsonsController
                 ),
             ),
         );
-        $this->TelegramController->sendMessage($array, $this->token);
+        $this->TelegramController->sendMessage($array, $bot->token);
     }
 
 }

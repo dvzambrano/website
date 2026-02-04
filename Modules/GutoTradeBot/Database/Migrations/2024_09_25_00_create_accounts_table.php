@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 
 class CreateAccountsTable extends Migration
 {
-    protected $connection = 'GutoTradeBot';
+    protected $connection = 'tenant';
     /**
      * Run the migrations.
      *

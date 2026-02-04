@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 
 class CreateCapitalsTable extends Migration
 {
-    protected $connection = 'GutoTradeBot';
+    protected $connection = 'tenant';
     /**
      * Run the migrations.
      *

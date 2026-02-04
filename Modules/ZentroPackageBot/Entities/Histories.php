@@ -3,11 +3,11 @@
 namespace Modules\ZentroPackageBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\ModuleTrait;
+use App\Traits\TenantTrait;
 
 class Histories extends Model
 {
-    use ModuleTrait;
+    use TenantTrait;
 
     protected $table = 'histories';
 

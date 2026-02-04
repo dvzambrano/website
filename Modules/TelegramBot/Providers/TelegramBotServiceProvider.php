@@ -3,7 +3,11 @@
 namespace Modules\TelegramBot\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Database\Eloquent\Factory;
+use Modules\TelegramBot\Console\MigrateAndSeedModules;
+use Modules\TelegramBot\Console\SetTelegramWebhook;
+use Modules\TelegramBot\Console\BotSimulate;
+use Illuminate\Routing\Router;
+use Modules\TelegramBot\Middleware\TenantMiddleware;
 
 class TelegramBotServiceProvider extends ServiceProvider
 {
@@ -22,12 +26,24 @@ class TelegramBotServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(Router $router)
     {
+        // Registramos el alias del middleware dinámicamente
+        $router->aliasMiddleware('tenant.detector', TenantMiddleware::class);
+
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'Database/Migrations'));
+
+        // Registramos el comando para migrar los modulos
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                MigrateAndSeedModules::class,
+                SetTelegramWebhook::class,
+                BotSimulate::class,
+            ]);
+        }
     }
 
     /**
@@ -51,7 +67,8 @@ class TelegramBotServiceProvider extends ServiceProvider
             module_path($this->moduleName, 'Config/config.php') => config_path($this->moduleNameLower . '.php'),
         ], 'config');
         $this->mergeConfigFrom(
-            module_path($this->moduleName, 'Config/config.php'), $this->moduleNameLower
+            module_path($this->moduleName, 'Config/config.php'),
+            $this->moduleNameLower
         );
     }
 

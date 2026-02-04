@@ -2,6 +2,9 @@ composer dump-autoload
 php artisan migrate:fresh --seed
 php artisan modules:migrate-seed
 
+php artisan bot:test KashioBot "/start"
+php artisan laravel:clear
+
 
 
 Formato de alertas recibidas desde TV:

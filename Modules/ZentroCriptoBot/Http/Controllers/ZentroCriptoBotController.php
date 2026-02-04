@@ -20,26 +20,6 @@ class ZentroCriptoBotController extends JsonsController
     {
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();
-
-        if ($instance === false)
-            $instance = $botname;
-        $response = false;
-        try {
-            $bot = $this->getFirst(TelegramBots::class, "name", "=", "@{$instance}");
-            $this->token = $bot->token;
-            $this->data = $bot->data;
-
-            $response = json_decode($this->TelegramController->getBotInfo($this->token), true);
-        } catch (\Throwable $th) {
-        }
-        if (!$response)
-            $response = array(
-                "result" => array(
-                    "username" => $instance
-                )
-            );
-
-        $this->telegram = $response["result"];
     }
 
     public function processMessage()
@@ -84,7 +64,7 @@ class ZentroCriptoBotController extends JsonsController
                 $text = "📖 *¿Cómo usar este bot?*.\n_He aquí los principales elementos que debe conocer:_\n\n";
                 $text .= "1️⃣ *Acceder al menú principal*: /menu\n_Escriba “menu” o simplemente cliquee en el comando_\n";
                 $text .= "2️⃣ *Establecer zona horaria*: /utc\n_Escriba el comando para obtener el asistente correspondiente._\n\n";
-                //$text .= "📚 *Manual de usuario*:\n_Puede encontrar el manual de usuario para REMESADORES aquí:_ [{request()->root()}/" . $this->telegram["username"] . ".pdf]\n\n";
+                //$text .= "📚 *Manual de usuario*:\n_Puede encontrar el manual de usuario para REMESADORES aquí:_ [{request()->root()}/" . $bot->code . ".pdf]\n\n";
                 //$text .= "👮‍♂️ *Términos y condiciones*:\n_Para usar nuestro servicio ud debe ACEPTAR nuestros términos que puede examinar aquí:_ [{request()->root()}/TermsAndConditions.pdf]\n*Usar este bot se considera una ACEPTACIÓN IMPLÍCITA*";
                 $reply = array(
                     "text" => $text,
@@ -113,6 +93,8 @@ class ZentroCriptoBotController extends JsonsController
 
     public function analizeToken($text)
     {
+        $bot = app('active_bot');
+
         $array = explode(" ", $text);
 
         // si hay mas de 2 palabras ya no es el formato /chain contract sino q es otra cosa y no se analiza
@@ -213,7 +195,7 @@ class ZentroCriptoBotController extends JsonsController
                     ),
                 );
 
-                $this->TelegramController->sendMessage($request, $this->token);
+                $this->TelegramController->sendMessage($request, $bot->token);
 
                 $error = "❌ *An error has occurred*: Contract: `{$contract}`\n";
                 if (isset($response['message'])) {
@@ -676,14 +658,16 @@ class ZentroCriptoBotController extends JsonsController
 
     public function mainMenu($actor)
     {
+        $bot = app('active_bot');
+
         $reply = array();
 
-        $text = "👋 *Bienvenido al " . $this->telegram["username"] . "*!\n\n" .
+        $text = "👋 *Bienvenido al " . $bot->code . "*!\n\n" .
             "_Este bot esta diseñado para analizar contratos de monedas en varias blockchains_.\n\n";
 
         $menu = array();
 
-        $this->ActorsController->updateData(Actors::class, "user_id", $actor->user_id, "last_bot_callback_data", "", $this->telegram["username"]);
+        $this->ActorsController->updateData(Actors::class, "user_id", $actor->user_id, "last_bot_callback_data", "", $bot->code);
 
         $text .= "👇 En qué le puedo ayudar hoy?";
 

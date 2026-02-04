@@ -1,11 +1,11 @@
 <?php
 namespace Modules\GutoTradeBot\Entities;
 
-use App\Traits\ModuleTrait;
+use App\Traits\TenantTrait;
 
 class Accounts extends Jsons
 {
-    use ModuleTrait;
+    use TenantTrait;
     protected $table = "accounts";
 
     protected $fillable = ['bank', 'name', 'number', 'detail', 'is_active', 'data'];

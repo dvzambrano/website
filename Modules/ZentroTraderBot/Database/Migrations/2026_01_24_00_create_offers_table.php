@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 
 class CreateOffersTable extends Migration
 {
-    protected $connection = 'ZentroTraderBot';
+    protected $connection = 'tenant';
     /**
      * Run the migrations.
      *

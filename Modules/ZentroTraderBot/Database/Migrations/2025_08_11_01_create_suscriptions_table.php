@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 
 class CreateSuscriptionsTable extends Migration
 {
-    protected $connection = 'ZentroTraderBot';
+    protected $connection = 'tenant';
 
     /**
      * Run the migrations.

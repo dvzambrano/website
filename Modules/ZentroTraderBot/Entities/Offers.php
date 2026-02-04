@@ -3,11 +3,11 @@
 namespace Modules\ZentroTraderBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\ModuleTrait;
+use App\Traits\TenantTrait;
 
 class Offers extends Model
 {
-    use ModuleTrait;
+    use TenantTrait;
 
     protected $table = 'offers';
     protected $guarded = [];

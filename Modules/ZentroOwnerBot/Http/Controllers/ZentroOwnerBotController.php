@@ -21,26 +21,6 @@ class ZentroOwnerBotController extends JsonsController
     {
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();
-
-        if ($instance === false)
-            $instance = $botname;
-        $response = false;
-        try {
-            $bot = $this->getFirst(TelegramBots::class, "name", "=", "@{$instance}");
-            $this->token = $bot->token;
-            $this->data = $bot->data;
-
-            $response = json_decode($this->TelegramController->getBotInfo($this->token), true);
-        } catch (\Throwable $th) {
-        }
-        if (!$response)
-            $response = array(
-                "result" => array(
-                    "username" => $instance
-                )
-            );
-
-        $this->telegram = $response["result"];
     }
 
     public function processMessage()

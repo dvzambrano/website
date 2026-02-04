@@ -16,9 +16,25 @@ class CreateTelegramBotsTable extends Migration
         $this->down();
         getModuleSchema()->create('bots', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('name', 190)->unique();
+            $table->string('name')->unique();
+
+            // Identificador para la URL (Clave "Pública" de la ruta)
+            $table->uuid('key')->unique()->index();
+
+            // Token para el Header (Clave "Privada" de validación)
+            $table->string('secret')->nullable();
+
+            $table->string('module')->nullable();
+
+            // Datos de conexión dinámicos
+            $table->string('database');
+            $table->string('username');
+            $table->string('password');
+
             $table->longtext('token');
             $table->jsonb('data');
+
+            $table->timestamps();
         });
     }
 

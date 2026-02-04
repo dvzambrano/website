@@ -52,15 +52,22 @@ class TestController extends Controller
 {
     public function test(Request $request)
     {
+
+        dd(route('telegram-bot-webhhok', array(
+            "key" => "mikey"
+        )));
+
+        dd(route('telegram-scanner-init', array(
+            "gpsrequired" => -1,
+            "botname" => "instance",
+            "instance" => "botname"
+        )));
+
+
         $address = "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1";
         // Aquí sí conocemos a Suscriptions porque estamos dentro del módulo del Bot
         $suscriptor = Suscriptions::where('data->wallet->address', $address)->first();
         dd($suscriptor->toArray());
-
-        dd(route('telegram-scanner-init', array(
-            "botname" => "instance",
-            "instance" => "botname"
-        )));
 
         $data = ExcelService::import(
             public_path("import.xls"),

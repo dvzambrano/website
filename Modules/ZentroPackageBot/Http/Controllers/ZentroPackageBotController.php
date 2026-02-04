@@ -21,26 +21,6 @@ class ZentroPackageBotController extends JsonsController
     {
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();
-
-        if ($instance === false)
-            $instance = $botname;
-        $response = false;
-        try {
-            $bot = $this->getFirst(TelegramBots::class, "name", "=", "@{$instance}");
-            $this->token = $bot->token;
-            $this->data = $bot->data;
-
-            $response = json_decode($this->TelegramController->getBotInfo($this->token), true);
-        } catch (\Throwable $th) {
-        }
-        if (!$response)
-            $response = array(
-                "result" => array(
-                    "username" => $instance
-                )
-            );
-
-        $this->telegram = $response["result"];
     }
 
     public function processMessage()
@@ -86,11 +66,13 @@ class ZentroPackageBotController extends JsonsController
 
     public function mainMenu($actor)
     {
+        $bot = app('active_bot');
+
         $menu = array();
 
         $url = route('telegram-scanner-init', array(
             "gpsrequired" => config('metadata.system.app.zentropackagebot.scanner.gpsrequired'),
-            "botname" => $this->telegram["username"]
+            "botname" => $bot->code
         ));
 
         array_push($menu, [
@@ -115,6 +97,8 @@ class ZentroPackageBotController extends JsonsController
 
     public function afterScan($user_id, $codes)
     {
+        $bot = app('active_bot');
+
         Log::info("User {$user_id} scanned: " . json_encode($codes));
 
         $completed = 0;
@@ -142,7 +126,7 @@ class ZentroPackageBotController extends JsonsController
                             "id" => $user_id,
                         ),
                     ),
-                ), $this->token);
+                ), $bot->token);
             } else {
                 // CASO A: Solo hay uno (Perfecto)
                 if ($packages->count() === 1) {
@@ -178,7 +162,7 @@ class ZentroPackageBotController extends JsonsController
                                 "id" => $user_id,
                             ),
                         ),
-                    ), $this->token);
+                    ), $bot->token);
 
                 }
 
@@ -194,7 +178,7 @@ class ZentroPackageBotController extends JsonsController
                         "id" => $user_id,
                     ),
                 ),
-            ), $this->token);
+            ), $bot->token);
         }
 
         // es obligatoria enviar la respuesta para q la UI sepa q se recibio la info

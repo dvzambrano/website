@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 
 class CreateHistoriesTable extends Migration
 {
-    protected $connection = 'ZentroPackageBot';
+    protected $connection = 'tenant';
     /**
      * Run the migrations.
      *

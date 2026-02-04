@@ -120,7 +120,7 @@ class TradingViewController extends TelegramBotController
                                 "name" => "suscription_level",
                                 "value" => 1,
                             ],
-                        ], $this->telegram["username"]);
+                        ], $bot->code);
                         $this->createTradeOrders($info, $suscriptors, $payload);
                     }
                     if (config('metadata.system.app.zentrotraderbot.tradingview.alert.action.level') > 0) {
