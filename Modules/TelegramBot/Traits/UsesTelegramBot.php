@@ -39,7 +39,7 @@ trait UsesTelegramBot
                 app()->instance('active_bot', $bot);
             }
         } catch (\Exception $e) {
-            Log::info("UsesTelegramBot receiveMessage Error:" . $e->getMessage());
+            Log::error("UsesTelegramBot receiveMessage Error:" . $e->getMessage());
         }
 
         $this->message = array();
@@ -118,7 +118,6 @@ trait UsesTelegramBot
                 if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
                     $autodestroy = $this->reply["autodestroy"];
 
-                Log::info("UsesTelegramBot receiveMessage sendMessage: " . $bot->token . " " . json_encode($array));
                 $this->TelegramController->sendMessage($array, $bot->token, $autodestroy);
             }
         }

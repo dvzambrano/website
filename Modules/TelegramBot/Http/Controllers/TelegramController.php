@@ -65,7 +65,7 @@ class TelegramController extends Controller
     {
         try {
             // si es DEMO escribimos en la consola y retornamos message_id -1
-            if (isset($request["demo"])) {
+            if (isset($request["demo"]) && $request["demo"] == true) {
                 echo "message = ";
                 var_dump(
                     array(
