@@ -5,7 +5,6 @@ namespace Modules\TelegramBot\Traits;
 use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\Lang;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 trait UsesTelegramBot
 {
@@ -40,6 +39,7 @@ trait UsesTelegramBot
                 app()->instance('active_bot', $bot);
             }
         } catch (\Exception $e) {
+            Log::info("UsesTelegramBot receiveMessage Error:" . $e->getMessage());
         }
 
         $this->message = array();
@@ -118,6 +118,7 @@ trait UsesTelegramBot
                 if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
                     $autodestroy = $this->reply["autodestroy"];
 
+                Log::info("UsesTelegramBot receiveMessage sendMessage: " . $bot->token . " " . json_encode($array));
                 $this->TelegramController->sendMessage($array, $bot->token, $autodestroy);
             }
         }

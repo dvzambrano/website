@@ -4,6 +4,7 @@ php artisan modules:migrate-seed
 
 php artisan bot:test KashioBot "/start"
 php artisan laravel:clear
+php artisan bot:set-webhook ZentroOwnerBot --domain dev.micalme.com
 
 
 

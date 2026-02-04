@@ -13,7 +13,7 @@ class SetTelegramWebhook extends Command
     public function handle()
     {
         // 1. Buscar el bot
-        $bot = TelegramBots::findOrFail($this->argument('id'));
+        $bot = TelegramBots::where('name', "@" . $this->argument('id'))->first();
 
         // 2. Obtener el dominio del parámetro o del .env
         $inputDomain = $this->option('domain') ?: config('app.url');
