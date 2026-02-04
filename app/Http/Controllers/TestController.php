@@ -53,6 +53,21 @@ class TestController extends Controller
     public function test(Request $request)
     {
 
+        $array = [
+            "message" => [
+                "text" => "Prueba: " . date("H:i:s"),
+                "chat" => [
+                    "id" => 816767995,
+                ],
+                "autodestroy" => 1
+            ],
+        ];
+        $tc = new TelegramController();
+        $response = json_decode($tc->sendMessage($array, "7543090584:AAEisZYB1NL24Wwwv2xQ2rVChOugyXYLdBU"), 1);
+        dd($response);
+
+
+
         dd(route('telegram-bot-webhhok', array(
             "key" => "mikey"
         )));
