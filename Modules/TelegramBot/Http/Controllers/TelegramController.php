@@ -135,21 +135,14 @@ class TelegramController extends Controller
             $array = json_decode($response, true);
 
             if (isset($array["result"]["message_id"])) {
-                $messageId = $array["result"]["message_id"];
-                $chatId = $array["result"]["chat"]["id"];
+                // Llamamos al Job y le pasamos los datos planos
+                \App\Jobs\DeleteTelegramMessage::dispatch(
+                    (string) $bot_token,
+                    (int) $array["result"]["chat"]["id"],
+                    (int) $array["result"]["message_id"]
+                )->delay(now()->addMinutes((int) $autodestroy));
 
-                Log::info("Programando autodestrucción en {$autodestroy} min para mensaje {$messageId}");
-                // USAMOS UNA CLASE ANONIMA O SOLO DATOS PRIMITIVOS
-                // No pases $this o $controller completo
-                dispatch(function () use ($messageId, $chatId, $bot_token) {
-                    // IMPORTANTE: Aquí dentro debes asegurarte de tener el token
-                    $urlDelete = "https://api.telegram.org/bot{$bot_token}/deleteMessage?chat_id={$chatId}&message_id={$messageId}";
-
-                    // Usamos Http de Laravel que es más limpio para Jobs
-                    Http::get($urlDelete);
-
-                    Log::info("Mensaje {$messageId} eliminado por autodestrucción.");
-                })->delay(now()->addMinutes($autodestroy));
+                Log::info("🚀 Job de autodestrucción programado para mensaje " . $array["result"]["message_id"]);
             }
         }
 
