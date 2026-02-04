@@ -135,11 +135,14 @@ class TelegramController extends Controller
             $request["result"] = $array["result"];
             if (isset($array["result"]) && isset($array["result"]["message_id"]) && $array["result"]["message_id"] > 0) {
                 $controller = $this;
+                Log::info("TelegramController sendMessage: autodestroy=" . $autodestroy . " / " . json_encode($request["message"]));
                 dispatch(function () use ($controller, $request, $bot_token) {
                     $request["message"] = array(
                         "id" => $request["result"]["message_id"],
                         "chat" => $request["result"]["chat"],
                     );
+                    Log::info("TelegramController sendMessage: " . json_encode($request["message"]));
+
                     $controller->deleteMessage($request, $bot_token);
                 })->delay(now()->addMinutes($autodestroy));
             }
