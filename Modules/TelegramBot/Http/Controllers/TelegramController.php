@@ -5,6 +5,7 @@ namespace Modules\TelegramBot\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\FileController;
+use \Illuminate\Support\Facades\Http;
 
 class TelegramController extends Controller
 {
@@ -132,18 +133,22 @@ class TelegramController extends Controller
 
         if ($autodestroy > 0) {
             $array = json_decode($response, true);
-            $request["result"] = $array["result"];
-            if (isset($array["result"]) && isset($array["result"]["message_id"]) && $array["result"]["message_id"] > 0) {
-                $controller = $this;
-                Log::info("TelegramController sendMessage: autodestroy=" . $autodestroy . " / " . json_encode($request["message"]));
-                dispatch(function () use ($controller, $request, $bot_token) {
-                    $request["message"] = array(
-                        "id" => $request["result"]["message_id"],
-                        "chat" => $request["result"]["chat"],
-                    );
-                    Log::info("TelegramController sendMessage: " . json_encode($request["message"]));
 
-                    $controller->deleteMessage($request, $bot_token);
+            if (isset($array["result"]["message_id"])) {
+                $messageId = $array["result"]["message_id"];
+                $chatId = $array["result"]["chat"]["id"];
+
+                Log::info("Programando autodestrucción en {$autodestroy} min para mensaje {$messageId}");
+                // USAMOS UNA CLASE ANONIMA O SOLO DATOS PRIMITIVOS
+                // No pases $this o $controller completo
+                dispatch(function () use ($messageId, $chatId, $bot_token) {
+                    // IMPORTANTE: Aquí dentro debes asegurarte de tener el token
+                    $urlDelete = "https://api.telegram.org/bot{$bot_token}/deleteMessage?chat_id={$chatId}&message_id={$messageId}";
+
+                    // Usamos Http de Laravel que es más limpio para Jobs
+                    Http::get($urlDelete);
+
+                    Log::info("Mensaje {$messageId} eliminado por autodestrucción.");
                 })->delay(now()->addMinutes($autodestroy));
             }
         }
