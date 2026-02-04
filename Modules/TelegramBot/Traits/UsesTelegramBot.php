@@ -24,7 +24,7 @@ trait UsesTelegramBot
 
         // Chequear si ya se ha guardado la informacion del bot desde Telegram
         try {
-            if (!$bot->data["info"]) {
+            if (!isset($bot->data["info"])) {
                 $response = json_decode($this->TelegramController->getBotInfo($bot->token), true);
 
                 // 1. Actualizamos el objeto local
