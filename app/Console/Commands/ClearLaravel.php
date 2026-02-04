@@ -22,6 +22,8 @@ class ClearLaravel extends Command
             'route:cache' => 'Cacheando rutas...',
             'config:cache' => 'Cacheando configuración...',
             'optimize' => 'Optimizando framework...',
+            'queue:restart' => 'Reiniciando worker...',
+            'queue:flush' => 'Limpiando la cola del worker...',
         ];
 
         foreach ($commands as $command => $description) {

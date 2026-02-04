@@ -5,7 +5,7 @@ namespace Modules\TelegramBot\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\FileController;
-use \Illuminate\Support\Facades\Http;
+use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
 
 class TelegramController extends Controller
 {
@@ -135,14 +135,11 @@ class TelegramController extends Controller
             $array = json_decode($response, true);
 
             if (isset($array["result"]["message_id"])) {
-                // Llamamos al Job y le pasamos los datos planos
-                \App\Jobs\DeleteTelegramMessage::dispatch(
+                DeleteTelegramMessage::dispatch(
                     (string) $bot_token,
                     (int) $array["result"]["chat"]["id"],
                     (int) $array["result"]["message_id"]
                 )->delay(now()->addMinutes((int) $autodestroy));
-
-                Log::info("🚀 Job de autodestrucción programado para mensaje " . $array["result"]["message_id"]);
             }
         }
 
