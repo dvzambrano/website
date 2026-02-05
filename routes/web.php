@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\TwoFactorAuthController;
+use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -34,7 +35,7 @@ Route::get('/cache', function () {
     }
     die('Hecho!');
 });
-Route::get('/test/{name?}', 'App\Http\Controllers\TestController@test')->name('test-byname');
+Route::get('/test/{name?}', [TestController::class, 'test'])->name('test-byname');
 
 Route::prefix('logs')->group(function () {
     Route::get('/clear', 'App\Http\Controllers\FileController@clearLog')->name('clear-logs');

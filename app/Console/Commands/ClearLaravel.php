@@ -13,11 +13,10 @@ class ClearLaravel extends Command
     public function handle()
     {
         $this->info('🚀 Iniciando limpieza profunda del proyecto...');
-
         $commands = [
-            'config:clear' => 'Limpiando configuración...',
             'route:clear' => 'Limpiando rutas...',
             'view:clear' => 'Limpiando vistas...',
+            'config:clear' => 'Limpiando configuración...',
             'cache:clear' => 'Limpiando caché de la aplicación...',
             'route:cache' => 'Cacheando rutas...',
             'config:cache' => 'Cacheando configuración...',

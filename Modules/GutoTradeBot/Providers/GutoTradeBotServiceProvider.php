@@ -4,6 +4,8 @@ namespace Modules\GutoTradeBot\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
+use Illuminate\Console\Scheduling\Schedule; // Importante
+use Modules\GutoTradeBot\Jobs\CheckEmails;
 
 class GutoTradeBotServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,18 @@ class GutoTradeBotServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Usamos el hook 'resolving' para inyectar tareas al Schedule
+        $this->app->booted(function () {
+            $schedule = $this->app->make(Schedule::class);
+
+            // Aquí pegas lo que tenías en app.php
+            $schedule->job(new CheckEmails())->everyMinute();
+
+            $schedule->command('queue:work --stop-when-empty')
+                ->everyMinute()
+                ->withoutOverlapping();
+        });
+
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
@@ -51,7 +65,8 @@ class GutoTradeBotServiceProvider extends ServiceProvider
             module_path($this->moduleName, 'Config/config.php') => config_path($this->moduleNameLower . '.php'),
         ], 'config');
         $this->mergeConfigFrom(
-            module_path($this->moduleName, 'Config/config.php'), $this->moduleNameLower
+            module_path($this->moduleName, 'Config/config.php'),
+            $this->moduleNameLower
         );
     }
 

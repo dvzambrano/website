@@ -16,7 +16,7 @@ class ZentroCriptoBotController extends JsonsController
 {
     use UsesTelegramBot;
 
-    public function __construct($botname, $instance = false)
+    public function __construct()
     {
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();

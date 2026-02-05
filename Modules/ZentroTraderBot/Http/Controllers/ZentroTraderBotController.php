@@ -21,7 +21,7 @@ class ZentroTraderBotController extends JsonsController
     public $AgentsController;
     public $engine;
 
-    public function __construct($botname, $instance = false)
+    public function __construct()
     {
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();

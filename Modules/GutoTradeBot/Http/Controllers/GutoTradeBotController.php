@@ -50,7 +50,7 @@ class GutoTradeBotController extends JsonsController
 
     public static $TEMPFILE_DURATION_HOURS = 168;
 
-    public function __construct($botname, $instance = false)
+    public function __construct()
     {
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();

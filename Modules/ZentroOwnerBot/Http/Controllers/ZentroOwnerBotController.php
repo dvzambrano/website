@@ -17,7 +17,7 @@ class ZentroOwnerBotController extends JsonsController
 
     private static $AUTODESTROY_TIME_IN_MINS = 1;
 
-    public function __construct($botname, $instance = false)
+    public function __construct()
     {
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();
