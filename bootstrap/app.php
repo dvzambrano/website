@@ -10,7 +10,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware) {
+    ->withMiddleware(function (Middleware $middleware): void {
         //
     
         $middleware->alias([
@@ -29,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             '2fa' => \App\Http\Middleware\Verify2FA::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions) {
+    ->withExceptions(function (Exceptions $exceptions): void {
         //
     })
     ->withSchedule(function (Illuminate\Console\Scheduling\Schedule $schedule) {
