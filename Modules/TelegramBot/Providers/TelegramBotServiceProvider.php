@@ -5,6 +5,7 @@ namespace Modules\TelegramBot\Providers;
 use Illuminate\Support\ServiceProvider;
 use Modules\TelegramBot\Console\MigrateAndSeedModules;
 use Modules\TelegramBot\Console\SetTelegramWebhook;
+use Modules\TelegramBot\Console\ResetTelegramWebhooks;
 use Modules\TelegramBot\Console\BotSimulate;
 use Illuminate\Routing\Router;
 use Modules\TelegramBot\Middleware\TenantMiddleware;
@@ -41,6 +42,7 @@ class TelegramBotServiceProvider extends ServiceProvider
             $this->commands([
                 MigrateAndSeedModules::class,
                 SetTelegramWebhook::class,
+                ResetTelegramWebhooks::class,
                 BotSimulate::class,
             ]);
         }

@@ -17,6 +17,8 @@ class TelegramBots extends Model
 
     protected $casts = [
         'data' => 'json',
+        'password' => 'encrypted',
+        'token' => 'encrypted',
     ];
 
     public $timestamps = true;
