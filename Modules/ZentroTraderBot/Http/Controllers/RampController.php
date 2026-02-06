@@ -40,7 +40,8 @@ class RampController extends Controller
         // Recuperamos el bot que el Middleware ya encontró y guardó
         $bot = app('active_bot');
 
-        $suscriptor = Suscriptions::where("user_id", $user_id)->first();
+        // Forzamos la consulta a la base de datos del Tenant
+        $suscriptor = Suscriptions::on('tenant')->where("user_id", $user_id)->first();
         if (!$suscriptor || !isset($suscriptor->data["wallet"]["address"])) {
             return "Lo sentimos, no pudimos encontrar tu billetera configurada.";
         }

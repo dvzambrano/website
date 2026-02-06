@@ -38,7 +38,6 @@ class TenantMiddleware
         // Forzamos la reconexión
         DB::purge('tenant');
         DB::reconnect('tenant');
-        DB::setDefaultConnection('tenant');
 
         // Opcional: Compartir la config con el resto de la app
         app()->instance('active_bot', $tenant);
