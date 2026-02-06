@@ -64,22 +64,6 @@ class MigrateAndSeedModules extends Command
 
     protected function runModuleMigrationsAndSeeders($module, $modulePath)
     {
-        config([
-            'database.connections.tenant' => [
-                'driver' => 'mysql',
-                'host' => env('DB_HOST', '127.0.0.1'),
-                'port' => env('DB_PORT', '3306'),
-                'database' => strtolower($module),
-                'username' => env('DB_USERNAME'),
-                'password' => env('DB_PASSWORD'),
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
-            ]
-        ]);
-        DB::purge('tenant');
-
-
-
         $dbName = config("database.connections.{$module}.database");
         if (!$dbName) {
             $this->info("  ⚠️  No database configured for connection: {$module}");
