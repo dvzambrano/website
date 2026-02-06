@@ -12,7 +12,7 @@ class Ramporders extends Model
     protected $table = 'ramporders';
     protected $fillable = [
         'order_id',
-        'botname',
+        'bot_id',
         'user_id',
         'amount',
         'currency',

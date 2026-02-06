@@ -251,7 +251,8 @@ class ZentroTraderBotController extends JsonsController
         ]);
 
         $url = route('ramp-redirect', array(
-            "botname" => $bot->code,
+            "key" => $bot->key,
+            "secret" => $bot->secret,
             "user_id" => $actor->user_id
         ));
 

@@ -16,7 +16,7 @@ class CreateRampordersTable extends Migration
         getModuleSchema()->create('ramporders', function ($table) {
             $table->id();
             $table->string('order_id')->unique(); // El ID de Transak
-            $table->string('botname');
+            $table->unsignedBigInteger('bot_id');
             $table->unsignedBigInteger('user_id'); // ID del usuario en tu sistema
             $table->decimal('amount', 18, 8); // Cantidad de crypto
             $table->string('currency')->default('USDC');

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Event;
 use Modules\Web3\Events\BlockchainActivityDetected;
 use Modules\ZentroTraderBot\Listeners\ProcessBlockchainActivity;
 use Modules\ZentroTraderBot\Console\SyncAlchemyAddresses;
+use Modules\TelegramBot\Middleware\TenantMiddleware;
 
 class ZentroTraderBotServiceProvider extends ServiceProvider
 {
@@ -30,6 +31,9 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $router = $this->app['router'];
+        $router->aliasMiddleware('tenant', TenantMiddleware::class);
+
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();

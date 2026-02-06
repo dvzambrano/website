@@ -13,7 +13,8 @@ class TenantMiddleware
     public function handle(Request $request, Closure $next)
     {
         $key = $request->route('key');
-        $headerToken = $request->header('X-Telegram-Bot-Api-Secret-Token');
+        $secret = $request->route('secret');
+        $headerToken = $request->header('X-Telegram-Bot-Api-Secret-Token') ?? $secret;
 
         // Buscamos la configuración en la DB principal
         $tenant = TelegramBots::where('key', $key)->firstOrFail();
@@ -37,6 +38,7 @@ class TenantMiddleware
         // Forzamos la reconexión
         DB::purge('tenant');
         DB::reconnect('tenant');
+        DB::setDefaultConnection('tenant');
 
         // Opcional: Compartir la config con el resto de la app
         app()->instance('active_bot', $tenant);

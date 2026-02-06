@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Entities\Ramporders;
 use Firebase\JWT\JWT;
@@ -34,19 +35,17 @@ class RampController extends Controller
         $this->gatewayBaseUrl = config("metadata.system.app.zentrotraderbot.ramp.urls." . $this->environment . ".gateway");
     }
 
-    public function redirect($botname, $user_id = null)
+    public function redirect($key, $secret, $user_id)
     {
-        if (!$user_id) {
-            return "Error: ID de usuario no proporcionado.";
-        }
+        // Recuperamos el bot que el Middleware ya encontró y guardó
+        $bot = app('active_bot');
 
         $suscriptor = Suscriptions::where("user_id", $user_id)->first();
-
         if (!$suscriptor || !isset($suscriptor->data["wallet"]["address"])) {
             return "Lo sentimos, no pudimos encontrar tu billetera configurada.";
         }
 
-        $widgetUrl = $this->getWidgetUrl($botname, $suscriptor);
+        $widgetUrl = $this->getWidgetUrl($bot, $suscriptor);
 
         if (!$widgetUrl) {
             return "Lo sentimos, hubo un error al generar tu sesión de pago. Por favor, intenta más tarde.";
@@ -150,14 +149,14 @@ class RampController extends Controller
         ], 200);
     }
 
-    private function createRamporder($botname, $orderId, $userId, $amount, $status, $payload)
+    private function createRamporder($bot_id, $orderId, $userId, $amount, $status, $payload)
     {
         // Guardamos en la tabla que creamos (ramporders)
         return Ramporders::updateOrCreate(
             ['order_id' => $orderId],
             [
                 'user_id' => $userId,
-                'botname' => $botname,
+                'bot_id' => $bot_id,
                 'amount' => $amount,
                 'status' => $status,
                 'raw_data' => $payload
@@ -218,7 +217,7 @@ class RampController extends Controller
         return null;
     }
 
-    public function getWidgetUrl($botname, $suscriptor)
+    public function getWidgetUrl($bot, $suscriptor)
     {
 
         $accessToken = $this->getAccessToken();
@@ -259,7 +258,7 @@ class RampController extends Controller
                         'environment' => $this->environment,
                         'redirectURL' => route('ramp-success'),
                         'partnerCustomerId' => $suscriptor->user_id,
-                        'partnerOrderId' => $botname,
+                        'partnerOrderId' => $bot->id,
                     ]
                 ]);
 
