@@ -418,8 +418,8 @@ class ZentroTraderBotController extends JsonsController
         $array = array(
             "message" => array(
                 "text" =>
-                    "✅ *¡" . Lang::get("zentrotraderbot::bot.prompts.deposit.header") . "!*\n\n" .
-                    Lang::get("zentrotraderbot::bot.prompts.deposit.header", [
+                    "✅ *¡" . Lang::get("zentrotraderbot::bot.prompts.deposit.completed.header") . "!*\n\n" .
+                    Lang::get("zentrotraderbot::bot.prompts.deposit.completed.text", [
                         "amount" => $amount,
                         "currency" => $currency
                     ]),

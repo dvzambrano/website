@@ -13,6 +13,7 @@ use Modules\ZentroTraderBot\Entities\Ramporders;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Symfony\Component\CssSelector\Node\FunctionNode;
+use Illuminate\Support\Facades\Lang;
 
 class RampController extends Controller
 {
@@ -39,7 +40,6 @@ class RampController extends Controller
     {
         // Recuperamos el bot que el Middleware ya encontró y guardó
         $bot = app('active_bot');
-
         // Forzamos la consulta a la base de datos del Tenant
         $suscriptor = Suscriptions::on('tenant')->where("user_id", $user_id)->first();
         if (!$suscriptor || !isset($suscriptor->data["wallet"]["address"])) {
@@ -55,9 +55,12 @@ class RampController extends Controller
         return Redirect::to($widgetUrl);
     }
 
-    public function success()
+    public function success($key, $secret, $user_id)
     {
         Log::info("Ramp success redirect hit: " . json_encode(request()->all()));
+
+        // Recuperamos el bot que el Middleware ya encontró y guardó
+        $bot = app('active_bot');
 
         /*
         redirectURL
@@ -74,19 +77,32 @@ class RampController extends Controller
         partnerCustomerId: Partner's customer ID (if present)
         partnerOrderId: Partner's order ID (if present)
         network: Network on which relevant crypto currency needs to be transferred
+
+        https://dev.micalme.com/ramp/success?
+        orderId=4d6a0067-2d37-493f-b671-3424f3207f25
+        &fiatCurrency=USD
+        &cryptoCurrency=USDC
+        &fiatAmount=300
+        &cryptoAmount=294
+        &isBuyOrSell=BUY
+        &status=FAILED
+        &walletAddress=0xd2531438b90232f4aab4ddfc6f146474e84e1ea1
+        &totalFeeInFiat=6
+        &isNFTOrder=undefined
+        &network=polygon
         */
 
         // Guardamos en la tabla que creamos (ramporders)
         $this->createRamporder(
-            request('partnerOrderId'),
+            $bot->id,
             request('orderId'),
-            request('partnerCustomerId'),
+            $user_id,
             request('cryptoAmount'),
             request('status'),
             request()->all()
         );
 
-        return redirect("https://t.me/TuBotNombre?start=order_pending");
+        return redirect("https://t.me/" . $bot->code . "?start=ramporder_" . request('orderId'));
     }
 
     /**
@@ -255,11 +271,17 @@ class RampController extends Controller
                         'isCryptoEditable' => false,
                         //'fiatCurrency' => 'USD',
                         'themeColor' => '043927',
-                        'exchangeScreenTitle' => 'Depositar en Kashio',
+                        'exchangeScreenTitle' => Lang::get("zentrotraderbot::bot.prompts.deposit.exchangetitle", [
+                            "name" => $bot->code
+                        ]),
                         'environment' => $this->environment,
-                        'redirectURL' => route('ramp-success'),
-                        'partnerCustomerId' => $suscriptor->user_id,
-                        'partnerOrderId' => $bot->id,
+                        'redirectURL' => route('ramp-success', array(
+                            "key" => $bot->key,
+                            "secret" => $bot->secret,
+                            "user_id" => $suscriptor->user_id
+                        )),
+                        //'partnerCustomerId' => $suscriptor->user_id,
+                        //'partnerOrderId' => $bot->id,
                     ]
                 ]);
 

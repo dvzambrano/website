@@ -45,8 +45,12 @@ return [
         "txsuccess" => "TX Exitosa",
         "txfail" => "TX Fallida",
         "deposit" => [
-            "header" => "Saldo Acreditado!",
-            "text" => "Hemos recibido un depósito para Ud de :amount :currency correctamente",
+            "exchangetitle" => "Depositar en :name",
+            "completed" => [
+                "header" => "Saldo Acreditado!",
+                "text" => "Hemos recibido un depósito para Ud de :amount :currency correctamente",
+            ],
+
         ],
     ],
 ];
