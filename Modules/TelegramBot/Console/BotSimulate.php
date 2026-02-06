@@ -8,13 +8,21 @@ use Modules\TelegramBot\Entities\TelegramBots;
 class BotSimulate extends Command
 {
     // Uso: php artisan bot:test {id} {mensaje}
-    protected $signature = 'bot:test {id} {text=/start}';
+    protected $signature = 'bot:test {id} {text=/start} {--real : Ejecutar como una operación real, no demo}';
     protected $description = 'Simula un webhook de Telegram localmente';
 
     public function handle()
     {
         $bot = TelegramBots::where('name', "@" . $this->argument('id'))->first();
+        if (!$bot) {
+            $this->error("Bot @{$this->argument('id')} no encontrado.");
+            return;
+        }
+
         $text = $this->argument('text');
+        // Si el usuario NO pone --real, es demo (true).
+        // Si el usuario pone --real, demo es false.
+        $isDemo = !$this->option('real');
 
         // Construimos la URL local
         // Asegúrate de que APP_URL en tu .env sea http://localhost o la IP de tu servidor local
@@ -22,29 +30,29 @@ class BotSimulate extends Command
             "key" => $bot->key
         ));
 
-        $this->line("Simulando mensaje '{$text}' para el bot: {$bot->name} en {$url}");
+        $statusMessage = $isDemo ? "<bg=yellow;fg=black> MODO DEMO ACTIVE </>" : "<bg=red;fg=white> MODO REAL (LIVE) </>";
+        $this->line("🤖 Bot: {$bot->name} | 📝 MSG: '{$text}'");
+        $this->line("📍 URL: {$url}");
+        $this->line($statusMessage);
+        $this->newLine();
 
         // Simulamos el JSON que enviaría Telegram
         $payload = [
-            'demo' => true,
+            'demo' => $isDemo,
             'update_id' => rand(10000, 99999),
             'message' => [
                 'message_id' => rand(1, 100),
                 'from' => [
-                    'id' => 1741391257,
-                    'is_bot' => false,
-                    'first_name' => 'Donel',
+                    'id' => 816767995,
                     'username' => 'dvzambrano',
-                    'language_code' => 'es'
                 ],
                 'chat' => [
-                    'id' => 1741391257,
+                    'id' => 816767995,
                     'type' => 'private',
-                    'first_name' => 'Donel',
-                    'username' => 'dvzambrano'
                 ],
                 'date' => time(),
-                'text' => $text
+                'text' => $text,
+                // Inyectamos la propiedad demo para que el controlador la capture
             ]
         ];
 

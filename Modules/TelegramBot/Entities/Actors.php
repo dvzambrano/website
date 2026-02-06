@@ -61,13 +61,13 @@ class Actors extends Model
         if (isset($this->data["telegram"]))
             $telegram = $this->data["telegram"];
         else {
-            $response = json_decode($bot->TelegramController->getUserInfo($this->user_id, $bot->token), true);
+            $response = json_decode(TelegramController::getUserInfo($this->user_id, $bot->token), true);
             $telegram = $response["result"];
         }
 
         $telegram["formated_username"] = "";
         if (isset($telegram["username"]))
-            $telegram["formated_username"] = $bot->TelegramController->escapeText4Url($telegram["username"]);
+            $telegram["formated_username"] = TelegramController::escapeText4Url($telegram["username"]);
 
         if (
             $telegram &&

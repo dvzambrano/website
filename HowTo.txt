@@ -5,6 +5,8 @@ php artisan modules:migrate-seed
 php artisan bot:test KashioBot "/start"
 php artisan laravel:clear
 php artisan bot:set-webhook ZentroOwnerBot --domain dev.micalme.com
+php artisan bot:reset-all-webhooks --domain dev.micalme.com
+php artisan bot:get-webhook KashioBot
 
 
 
@@ -120,8 +122,3 @@ php artisan migrate --path=modules/TelegramBot/Database/Migrations
 php artisan db:seed --class=Modules\\TelegramBot\\Database\\Seeders\\ActorsSeeder
 
 
-https://api.telegram.org/bot5797151131:AAF0o1P3C9wK8zx3OczGej9QmkILZmekJKc/getWebhookinfo
-curl -F "url=https://micalme.com/telegram/bot/ZentroCriptoBot"  https://api.telegram.org/bot5797151131:AAF0o1P3C9wK8zx3OczGej9QmkILZmekJKc/setWebhook
-
-https://api.telegram.org/bot6989103595:AAH-qQww_v01UnAt9Ex0ZfmVp3qAIR9KXrE/getWebhookinfo
-curl -F "url=https://micalme.com/telegram/bot/ZentroTraderBot"  https://api.telegram.org/bot6989103595:AAH-qQww_v01UnAt9Ex0ZfmVp3qAIR9KXrE/setWebhook

@@ -195,7 +195,7 @@ class ZentroCriptoBotController extends JsonsController
                     ),
                 );
 
-                $this->TelegramController->sendMessage($request, $bot->token);
+                TelegramController::sendMessage($request, $bot->token);
 
                 $error = "❌ *An error has occurred*: Contract: `{$contract}`\n";
                 if (isset($response['message'])) {

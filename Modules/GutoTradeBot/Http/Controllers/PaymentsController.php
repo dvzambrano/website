@@ -1366,10 +1366,10 @@ class PaymentsController extends MoneysController
                 );
 
                 if (isset($array["message"]["photo"]) && $array["message"]["photo"] && !$screenshot) {
-                    $bot->TelegramController->sendPhoto($array, $bot->token);
+                    TelegramController::sendPhoto($array, $bot->token);
                     $screenshot = true;
                 } else {
-                    $bot->TelegramController->sendMessage($array, $bot->token);
+                    TelegramController::sendMessage($array, $bot->token);
                 }
                 $count += 1;
             }

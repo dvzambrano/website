@@ -24,7 +24,7 @@ Route::prefix('payments')->group(function () {
     public function renderById($id)
     {
         $user = 1;
-        $response = $bot->TelegramController->exportFileLocally("AgACAgEAAxkBAAIEtWgU3p93-ImyhVgfK2DpzEE3tJKkAALarjEbnW6oRFe8vIv8tEB3AQADAgADeQADNgQ", $bot->token);
+        $response = TelegramController::exportFileLocally("AgACAgEAAxkBAAIEtWgU3p93-ImyhVgfK2DpzEE3tJKkAALarjEbnW6oRFe8vIv8tEB3AQADAgADeQADNgQ", $bot->token);
         return view('2fa.enable', ['qrCodeUrl' => $user]);
     }
 */

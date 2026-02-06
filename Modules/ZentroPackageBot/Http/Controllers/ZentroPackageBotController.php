@@ -119,7 +119,7 @@ class ZentroPackageBotController extends JsonsController
 
             // no hay resultados para este codigo
             if ($packages->isEmpty()) {
-                $this->TelegramController->sendMessage(array(
+                TelegramController::sendMessage(array(
                     "message" => array(
                         "text" => "❌ No se encontró ningún paquete `" . $array["code"] . "`.",
                         "chat" => array(
@@ -155,7 +155,7 @@ class ZentroPackageBotController extends JsonsController
                         $text .= "{$n}. {$pkg->recipient_name} ({$pkg->weight_kg} Kg)\n";
                     }
 
-                    $this->TelegramController->sendMessage(array(
+                    TelegramController::sendMessage(array(
                         "message" => array(
                             "text" => $text,
                             "chat" => array(
@@ -171,7 +171,7 @@ class ZentroPackageBotController extends JsonsController
         }
 
         if ($completed > 0) {
-            $this->TelegramController->sendMessage(array(
+            TelegramController::sendMessage(array(
                 "message" => array(
                     "text" => $summarytext,
                     "chat" => array(

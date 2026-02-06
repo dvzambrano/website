@@ -52,6 +52,8 @@ class TestController extends Controller
 {
     public function test(Request $request)
     {
+        $GutoTradeTestBot = TelegramBots::where('name', "@GutoTradeTestBot")->first();
+
 
         $array = [
             "message" => [
@@ -63,7 +65,7 @@ class TestController extends Controller
             ],
         ];
         $tc = new TelegramController();
-        $response = json_decode($tc->sendMessage($array, "7543090584:AAEisZYB1NL24Wwwv2xQ2rVChOugyXYLdBU"), 1);
+        $response = json_decode($tc->sendMessage($array, $GutoTradeTestBot->token), 1);
         dd($response);
 
 
@@ -204,7 +206,7 @@ class TestController extends Controller
 
 
 
-        $response = $bot->TelegramController->exportFileLocally("AgACAgEAAxkBAAIEtWgU3p93-ImyhVgfK2DpzEE3tJKkAALarjEbnW6oRFe8vIv8tEB3AQADAgADeQADNgQ", $bot->token);
+        $response = TelegramController::exportFileLocally("AgACAgEAAxkBAAIEtWgU3p93-ImyhVgfK2DpzEE3tJKkAALarjEbnW6oRFe8vIv8tEB3AQADAgADeQADNgQ", $bot->token);
         dd($response);
 
 
@@ -371,7 +373,7 @@ class TestController extends Controller
                             ),
                         ),
                     );
-                    $response = $bot->TelegramController->sendPhoto($array, $bot->token);
+                    $response = TelegramController::sendPhoto($array, $bot->token);
                     Log::info("CheckEmails sendtogroup message = " . json_encode($array["message"]) . " response = " . json_encode($response) . "\n");
 
 
@@ -467,8 +469,8 @@ class TestController extends Controller
         dd($bot);
 
         $tc = new TelegramController();
-        $response = json_decode($tc->getBotInfo("7543090584:AAEisZYB1NL24Wwwv2xQ2rVChOugyXYLdBU"), true);
-        $response = json_decode($tc->getBotInfo("7543090584:AAEisZYB1NL24Wwwv2xQ2rVChOugyXYLdBU"), true);
+        $response = json_decode($tc->getBotInfo($GutoTradeTestBot->token), true);
+        $response = json_decode($tc->getBotInfo($GutoTradeTestBot->token), true);
         dd($response);
 
 
@@ -494,7 +496,7 @@ class TestController extends Controller
             ],
         ];
         $tc = new TelegramController();
-        $response = json_decode($tc->sendMessage($array, "7543090584:AAEisZYB1NL24Wwwv2xQ2rVChOugyXYLdBU"), 1);
+        $response = json_decode($tc->sendMessage($array, $GutoTradeTestBot->token), 1);
         dd($response);
 
 
@@ -1025,7 +1027,7 @@ class TestController extends Controller
                 ],
             ],
         ];
-        $response = json_decode($tc->sendMessage($array, "7543090584:AAEisZYB1NL24Wwwv2xQ2rVChOugyXYLdBU"), true);
+        $response = json_decode($tc->sendMessage($array, $GutoTradeTestBot->token), true);
         dd($response);
         die(date("Y-m-d H:i:s") . ": DONE!");
 
@@ -1043,11 +1045,11 @@ class TestController extends Controller
                 ],
             ],
         ];
-        $response = json_decode($tc->getUserInfo(5328142807, "7543090584:AAEisZYB1NL24Wwwv2xQ2rVChOugyXYLdBU"), true);
+        $response = json_decode($tc->getUserInfo(5328142807, $GutoTradeTestBot->token), true);
         dd($response);
         die(date("Y-m-d H:i:s") . ": DONE!");
 
-        $array = json_decode($tc->sendMessage($array, "7543090584:AAEisZYB1NL24Wwwv2xQ2rVChOugyXYLdBU"), true);
+        $array = json_decode($tc->sendMessage($array, $GutoTradeTestBot->token), true);
 
         die(date("Y-m-d H:i:s") . ": DONE!");
 

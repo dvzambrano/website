@@ -652,7 +652,7 @@ class GutoTradeBotController extends JsonsController
                                     "message" => $reply,
                                 );
                                 $array["message"]["reply_markup"] = $array["message"]["markup"];
-                                $this->TelegramController->sendPhoto($array, $bot->token);
+                                TelegramController::sendPhoto($array, $bot->token);
                             }
                         }
                     }

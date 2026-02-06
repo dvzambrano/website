@@ -5,6 +5,7 @@ namespace Modules\TelegramBot\Traits;
 use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\Lang;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 trait UsesTelegramBot
 {
@@ -25,7 +26,7 @@ trait UsesTelegramBot
         // Chequear si ya se ha guardado la informacion del bot desde Telegram
         try {
             if (!isset($bot->data["info"])) {
-                $response = json_decode($this->TelegramController->getBotInfo($bot->token), true);
+                $response = json_decode(TelegramController::getBotInfo($bot->token), true);
 
                 // 1. Actualizamos el objeto local
                 $data = $bot->data;
@@ -85,7 +86,7 @@ trait UsesTelegramBot
         $textinfo = $this->getCommand($this->message["text"]);
 
         // Obteniendo al actor suscrito o suscribiedolo si no lo esta
-        $this->actor = $this->ActorsController->suscribe($this, $bot->code, $this->message["from"]["id"], $textinfo["message"]);
+        $this->actor = $this->ActorsController->suscribe($bot, $this->message["from"]["id"], $textinfo["message"]);
 
         // si trae pinned_message significa q solo se esta tratando de pinear un mensaje y no lleva respuesta
         if (isset($this->message["pinned_message"]))
@@ -109,7 +110,7 @@ trait UsesTelegramBot
             "demo" => $update['demo'] ?? false,
         );
         if (isset($this->reply["photo"])) {
-            $this->TelegramController->sendPhoto($array, $bot->token);
+            TelegramController::sendPhoto($array, $bot->token);
         } else {
             // solo se envia un mensaje si tiene text
             // antes estaba $this->message["text"] pero lo cambie para q mandara el error cuando mandan la captura de un pago sin nombre y cantidad
@@ -118,7 +119,7 @@ trait UsesTelegramBot
                 if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
                     $autodestroy = $this->reply["autodestroy"];
 
-                $this->TelegramController->sendMessage($array, $bot->token, $autodestroy);
+                TelegramController::sendMessage($array, $bot->token, $autodestroy);
             }
         }
 
@@ -132,7 +133,7 @@ trait UsesTelegramBot
                     ),
                 ),
             );
-            $this->TelegramController->deleteMessage($array, $bot->token);
+            TelegramController::deleteMessage($array, $bot->token);
         }
 
         // Envía una respuesta al servidor de Telegram para confirmar la recepción
@@ -141,6 +142,8 @@ trait UsesTelegramBot
     public function getProcessedMessage($array = false)
     {
         $bot = app('active_bot');
+
+        //Log::info("UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
 
         // validando q el usuario tenga un @username
         if (
@@ -197,7 +200,7 @@ trait UsesTelegramBot
                 break;
 
             case "/suscribe":
-                $this->ActorsController->suscribe($this, $bot->code, $array["message"], null);
+                $this->ActorsController->suscribe($bot, $array["message"], null);
                 $reply = $this->AgentsController->findSuscriptor($this, $array["message"]);
                 break;
 
@@ -276,9 +279,9 @@ trait UsesTelegramBot
                             ]),
                         ],
                     ];
-                    $array = json_decode($this->TelegramController->sendMessage($array, $bot->token), true);
+                    $array = json_decode(TelegramController::sendMessage($array, $bot->token), true);
                     if (isset($array["result"]) && isset($array["result"]["message_id"])) {
-                        $this->TelegramController->pinMessage([
+                        TelegramController::pinMessage([
                             "message" => [
                                 "chat" => [
                                     "id" => $suscriptor->user_id,
@@ -633,7 +636,7 @@ trait UsesTelegramBot
                     ]),
                 ),
             );
-            $this->TelegramController->sendMessage($array, $bot->token);
+            TelegramController::sendMessage($array, $bot->token);
         }
     }
 

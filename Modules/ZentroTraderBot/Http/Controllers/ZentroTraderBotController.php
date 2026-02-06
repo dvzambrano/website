@@ -99,7 +99,7 @@ class ZentroTraderBotController extends JsonsController
                     $amount,
                     $privateKey,
                     function ($text, $autodestroy) use ($bot, $userId) {
-                        $bot->TelegramController->sendMessage(
+                        TelegramController::sendMessage(
                             array(
                                 "message" => array(
                                     "text" => $text,
@@ -427,7 +427,7 @@ class ZentroTraderBotController extends JsonsController
                 ),
             ),
         );
-        $this->TelegramController->sendMessage($array, $bot->token);
+        TelegramController::sendMessage($array, $bot->token);
     }
 
 }

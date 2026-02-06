@@ -23,9 +23,9 @@ class AgentsController extends ActorsController
         $array["message"]["text"] = $text;
         //var_dump($array["message"]["photo"]);
         if (isset($array["message"]["photo"])) {
-            $bot->TelegramController->sendPhoto($array, $bot->token);
+            TelegramController::sendPhoto($array, $bot->token);
         } else {
-            $bot->TelegramController->sendMessage($array, $bot->token);
+            TelegramController::sendMessage($array, $bot->token);
         }
     }
 

@@ -9,7 +9,7 @@ use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
 
 class TelegramController extends Controller
 {
-    public function analizeUrl($url)
+    public static function analizeUrl($url)
     {
         // Primero, utilizamos parse_url para obtener la parte del "path"
         $array = parse_url($url);
@@ -27,7 +27,7 @@ class TelegramController extends Controller
         return $array;
     }
 
-    public function cleanText4Url($text)
+    public static function cleanText4Url($text)
     {
         // Lista de caracteres problemáticos a reemplazar
         $chars = [
@@ -44,7 +44,7 @@ class TelegramController extends Controller
         ];
         return strtr($text, $chars);
     }
-    public function escapeText4Url($text)
+    public static function escapeText4Url($text)
     {
         // Lista de caracteres problemáticos a reemplazar
         $chars = [
@@ -62,7 +62,7 @@ class TelegramController extends Controller
     }
 
     // ["result":["message_id":ID]] ID = 0 ERROR; ID = -1 DEMO
-    public function send($request, $url, $attempt = 1, $data = false)
+    public static function send($request, $url, $attempt = 1, $data = false)
     {
         try {
             // si es DEMO escribimos en la consola y retornamos message_id -1
@@ -104,7 +104,7 @@ class TelegramController extends Controller
             return $response;
 
         } catch (\Throwable $th) {
-            $array = $this->analizeUrl($url);
+            $array = TelegramController::analizeUrl($url);
             $method = $array["path_parts"][count($array["path_parts"]) - 1];
             Log::error("TelegramController {$method} attempt {$attempt}, CODE: {$th->getCode()}, line {$th->getLine()}, URL: {$url}, Message: {$th->getMessage()}");
             //Log::error("TelegramController TraceAsString: " . $th->getTraceAsString());
@@ -122,19 +122,20 @@ class TelegramController extends Controller
 
     }
 
-    public function sendMessage($request, $bot_token, $autodestroy = 0)
+    public static function sendMessage($request, $bot_token, $autodestroy = 0)
     {
         $url = "https://api.telegram.org/bot" .
             $bot_token .
             "/sendMessage?chat_id={$request["message"]["chat"]["id"]}" .
             "&text=" . urlencode($request["message"]["text"]);
 
-        $response = $this->send($request, $url);
+        $response = TelegramController::send($request, $url);
 
         if ($autodestroy > 0) {
             $array = json_decode($response, true);
+            //Log::info("TelegramController sendMessage array: " . json_encode($array));
 
-            if (isset($array["result"]["message_id"])) {
+            if (isset($array["result"]["message_id"]) && $array["result"]["message_id"] > -1) {
                 DeleteTelegramMessage::dispatch(
                     (string) $bot_token,
                     (int) $array["result"]["chat"]["id"],
@@ -146,7 +147,7 @@ class TelegramController extends Controller
         return $response;
     }
 
-    public function sendPhoto($request, $bot_token)
+    public static function sendPhoto($request, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .
             $bot_token .
@@ -154,27 +155,27 @@ class TelegramController extends Controller
             "&photo={$request["message"]["photo"]}" .
             "&caption=" . urlencode($request["message"]["text"]);
 
-        $response = $this->send($request, $url);
+        $response = TelegramController::send($request, $url);
         $array = json_decode($response, true);
 
         if (isset($array["result"]) && isset($array["result"]["message_id"]) && $array["result"]["message_id"] == 0) {
-            return $this->sendMessage($request, $bot_token);
+            return TelegramController::sendMessage($request, $bot_token);
         }
 
         return $response;
     }
 
-    public function sendMediaGroup($request, $bot_token)
+    public static function sendMediaGroup($request, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .
             $bot_token .
             "/sendMediaGroup?chat_id={$request["message"]["chat"]["id"]}" .
             "&media={$request["message"]["media"]}";
 
-        return $this->send($request, $url);
+        return TelegramController::send($request, $url);
     }
 
-    public function sendDocument($request, $bot_token)
+    public static function sendDocument($request, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .
             $bot_token .
@@ -183,43 +184,43 @@ class TelegramController extends Controller
             //."&caption=" . urlencode($request["message"]["text"])
         ;
 
-        return $this->send($request, $url);
+        return TelegramController::send($request, $url);
 
     }
-    public function pinMessage($request, $bot_token)
+    public static function pinMessage($request, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .
             $bot_token .
             "/pinChatMessage?chat_id={$request["message"]["chat"]["id"]}" .
             "&message_id={$request["message"]["message_id"]}";
 
-        return $this->send($request, $url);
+        return TelegramController::send($request, $url);
     }
 
-    public function deleteMessage($request, $bot_token)
+    public static function deleteMessage($request, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .
             $bot_token .
             "/deleteMessage?chat_id={$request["message"]["chat"]["id"]}" .
             "&message_id={$request["message"]["id"]}";
 
-        return $this->send($request, $url);
+        return TelegramController::send($request, $url);
     }
 
-    public function forwardMessage($request, $bot_token)
+    public static function forwardMessage($request, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .
             $bot_token .
             "/forwardMessage";
 
-        return $this->send($request, $url, 1, [
+        return TelegramController::send($request, $url, 1, [
             'chat_id' => $request["message"]["chat"]["id"],
             'from_chat_id' => $request["message"]["from"]["id"],
             'message_id' => $request["message"]["message_id"],
         ]);
     }
 
-    public function getBotInfo($bot_token)
+    public static function getBotInfo($bot_token)
     {
         $response = false;
         $url = "https://api.telegram.org/bot" .
@@ -236,7 +237,7 @@ class TelegramController extends Controller
         return $response;
     }
 
-    public function getUserInfo($userId, $bot_token)
+    public static function getUserInfo($userId, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .
             $bot_token .
@@ -257,14 +258,14 @@ class TelegramController extends Controller
             // Formando un text personalizado con los datos del usuario
             $text = "👤 ";
             if (isset($json["result"]["first_name"])) {
-                $text .= $this->cleanText4Url($json["result"]["first_name"]);
+                $text .= TelegramController::cleanText4Url($json["result"]["first_name"]);
             }
             if (isset($json["result"]["last_name"])) {
-                $text .= " " . $this->cleanText4Url($json["result"]["last_name"]);
+                $text .= " " . TelegramController::cleanText4Url($json["result"]["last_name"]);
             }
             $json["result"]["full_name"] = $text;
             if (isset($json["result"]["username"])) {
-                $json["result"]["formated_username"] = $this->escapeText4Url($json["result"]["username"]);
+                $json["result"]["formated_username"] = TelegramController::escapeText4Url($json["result"]["username"]);
                 $text .= " \n✉️ @" . $json["result"]["formated_username"];
 
             }
@@ -278,7 +279,7 @@ class TelegramController extends Controller
         return json_encode($json);
     }
 
-    private function getUserProfilePhotos($userId, $bot_token)
+    private static function getUserProfilePhotos($userId, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .
             $bot_token .
@@ -292,17 +293,17 @@ class TelegramController extends Controller
         }
     }
 
-    public function getUserPhotos($userId, $bot_token)
+    public static function getUserPhotos($userId, $bot_token)
     {
         $array = array();
-        $response = json_decode($this->getUserProfilePhotos($userId, $bot_token), true);
+        $response = json_decode(TelegramController::getUserProfilePhotos($userId, $bot_token), true);
         if (isset($response["result"]) && isset($response["result"]["photos"]) && count($response["result"]["photos"]) > 0) {
             $array = $response["result"]["photos"];
         }
         return $array;
     }
 
-    public function getFileUrl($fileId, $bot_token)
+    public static function getFileUrl($fileId, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .
             $bot_token .
@@ -316,7 +317,7 @@ class TelegramController extends Controller
         }
     }
 
-    public function getFile($filePath, $bot_token)
+    public static function getFile($filePath, $bot_token)
     {
         $url = "https://api.telegram.org/file/bot" .
             $bot_token .
@@ -327,9 +328,9 @@ class TelegramController extends Controller
         return $contents;
     }
 
-    public function exportFileLocally($fileId, $bot_token)
+    public static function exportFileLocally($fileId, $bot_token)
     {
-        $response = $this->getFileUrl($fileId, $bot_token);
+        $response = TelegramController::getFileUrl($fileId, $bot_token);
         $response = json_decode($response, true);
         $filePath = $response["result"]["file_path"];
         $imageUrl = "https://api.telegram.org/file/bot{$bot_token}/{$filePath}";

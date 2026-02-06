@@ -133,7 +133,7 @@ class Moneys extends Jsons
                         ),
                     ),
                 );
-                $response = json_decode($bot->TelegramController->sendMediaGroup($array, $bot->token), true);
+                $response = json_decode(TelegramController::sendMediaGroup($array, $bot->token), true);
                 $array = array(
                     "demo" => $demo ? true : null,
                     "message" => array(
@@ -148,7 +148,7 @@ class Moneys extends Jsons
                     ),
                 );
 
-                $bot->TelegramController->sendMessage($array, $bot->token);
+                TelegramController::sendMessage($array, $bot->token);
 
             } else {
                 $array = array(
@@ -164,7 +164,7 @@ class Moneys extends Jsons
                         ]),
                     ),
                 );
-                $bot->TelegramController->sendPhoto($array, $bot->token);
+                TelegramController::sendPhoto($array, $bot->token);
             }
         }
     }
