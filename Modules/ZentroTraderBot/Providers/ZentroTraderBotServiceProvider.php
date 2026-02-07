@@ -4,6 +4,8 @@ namespace Modules\ZentroTraderBot\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
+use Modules\ZentroTraderBot\Entities\Ramporders;
+use Modules\ZentroTraderBot\Observers\RamporderObserver;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Observers\OfferObserver;
 use Illuminate\Support\Facades\Event;
@@ -39,9 +41,11 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'Database/Migrations'));
 
+        // Registramos el observador para el modelo Ramporders: notifica al usuario cuando hay movimiento en su Orden hecha a traves del RAMP
+        Ramporders::observe(RamporderObserver::class);
         // Registramos el observador para el modelo Offer
         Offers::observe(OfferObserver::class);
-        // Registramos el evento q escuchamos cuando Alchemy mana info al webhook del modulo Web3
+        // Registramos el evento q escuchamos cuando Alchemy manda info al webhook del modulo Web3
         Event::listen(
             BlockchainActivityDetected::class,
             ProcessBlockchainActivity::class

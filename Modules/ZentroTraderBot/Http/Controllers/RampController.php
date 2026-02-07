@@ -57,7 +57,7 @@ class RampController extends Controller
 
     public function success($key, $secret, $user_id)
     {
-        Log::info("Ramp success redirect hit: " . json_encode(request()->all()));
+        //Log::info("Ramp success redirect hit: " . json_encode(request()->all()));
 
         // Recuperamos el bot que el Middleware ya encontró y guardó
         $bot = app('active_bot');
@@ -102,7 +102,7 @@ class RampController extends Controller
             request()->all()
         );
 
-        return redirect("https://t.me/" . $bot->code . "?start=ramporder_" . request('orderId'));
+        return redirect("https://t.me/" . $bot->code);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Modules\ZentroTraderBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\TenantTrait;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Ramporders extends Model
 {
@@ -23,4 +24,20 @@ class Ramporders extends Model
     protected $casts = [
         'raw_data' => 'array',
     ];
+
+    protected $appends = ['statusemoji'];
+    protected function statusemoji(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                return match (strtoupper($this->status)) {
+                    'COMPLETED' => '🟢',
+                    'FAILED' => '🔴',
+                    'PENDING' => '🟡',
+                    'PROCESSING' => '🔵',
+                    default => '⚪',
+                };
+            },
+        );
+    }
 }

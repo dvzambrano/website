@@ -46,6 +46,12 @@ return [
         "txfail" => "TX Fallida",
         "deposit" => [
             "exchangetitle" => "Depositar en :name",
+            "update" => [
+                "header" => "Actualización de Depósito",
+                "completed" => "¡Sus fondos están en camino a su cuenta!",
+                "failed" => "¡La transacción HA FALLADO!",
+                "processing" => "Estamos procesando su solicitud.",
+            ],
             "completed" => [
                 "header" => "Saldo Acreditado!",
                 "text" => "Hemos recibido un depósito para Ud de :amount :currency correctamente",
