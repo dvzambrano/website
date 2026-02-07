@@ -32,6 +32,10 @@ class RamporderObserver
         // Recuperamos el bot activo del contenedor (inyectado por el middleware)
         $bot = app('active_bot');
 
+        // Forzamos a que el modelo cargue sus valores por defecto de la DB
+        // y se asegure de tener todas las llaves.
+        $order->refresh();
+
         // Enviamos al Job (esto es instantáneo para la DB)
         NotifyRampOrder::dispatch($order, $bot);
     }

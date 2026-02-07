@@ -31,7 +31,7 @@ class NotifyRampOrder implements ShouldQueue
         $orderId = $this->order['order_id'];
         $status = strtoupper($this->order['status']);
         $amount = number_format($this->order['amount'], 2);
-        $currency = $this->order['currency'];
+        $currency = $this->order['currency'] ?? 'USDC';
         $userId = $this->order['user_id'];
         $statusemoji = $this->order['statusemoji'];
         $createdAt = $this->order['created_at'];
