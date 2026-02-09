@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Log;
 use Modules\GutoTradeBot\Entities\Capitals;
 use Modules\GutoTradeBot\Entities\Moneys;
 use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
-use Modules\TelegramBot\Http\Controllers\TelegramBotController;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -271,9 +268,8 @@ class CapitalsController extends MoneysController
 
     public function getPrompt($bot, $method)
     {
-        //$bot = app('active_bot');
-
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->data["info"]["username"]);
+        $tenant = app('active_bot');
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $tenant->code);
 
         $reply = array(
             "text" => "💰 *Reportar aporte de capital*\n\n_Para reportar un aporte de capital, ud debe enviar una captura y poner como descripción de la misma, el nombre y apellidos del remitente y el monto enviado._\n\nEjemplo:    *Juan Perez 1200*\n_Así estaríamos informando que Juan Perez ha enviado 1200 USDT_\n\n👇 Envíe la captura del aporte de capital realizado:",

@@ -3,6 +3,7 @@
 namespace Modules\GutoTradeBot\Http\Controllers;
 
 use Modules\TelegramBot\Http\Controllers\ActorsController;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 class AgentsController extends ActorsController
 {

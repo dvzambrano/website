@@ -4,8 +4,7 @@ namespace Modules\GutoTradeBot\Http\Controllers;
 
 use App\Http\Controllers\JsonsController;
 use Modules\GutoTradeBot\Entities\Accounts;
-use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 class AccountsController extends JsonsController
 {

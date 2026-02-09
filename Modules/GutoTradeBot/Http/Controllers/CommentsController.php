@@ -5,9 +5,6 @@ namespace Modules\GutoTradeBot\Http\Controllers;
 use App\Http\Controllers\JsonsController;
 use Modules\GutoTradeBot\Entities\Comments;
 use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
-use Modules\TelegramBot\Http\Controllers\TelegramBotController;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 class CommentsController extends JsonsController
 {

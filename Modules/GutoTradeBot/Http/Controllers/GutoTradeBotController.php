@@ -15,20 +15,14 @@ use Modules\GutoTradeBot\Entities\Capitals;
 use Modules\GutoTradeBot\Entities\Moneys;
 use Modules\GutoTradeBot\Entities\Payments;
 use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Traits\UsesTelegramBot;
 use Modules\GutoTradeBot\Jobs\CheckEmails;
 
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Conditional;
 
 use Illuminate\Support\Facades\Lang;

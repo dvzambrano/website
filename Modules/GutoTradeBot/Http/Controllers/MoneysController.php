@@ -3,21 +3,13 @@
 namespace Modules\GutoTradeBot\Http\Controllers;
 
 use App\Http\Controllers\JsonsController;
-use App\Http\Controllers\TextController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\GutoTradeBot\Entities\Capitals;
 use Modules\GutoTradeBot\Entities\Payments;
-use Modules\GutoTradeBot\Entities\Profits;
 use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
-use Modules\TelegramBot\Http\Controllers\TelegramBotController;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use App\Http\Controllers\FileController;
