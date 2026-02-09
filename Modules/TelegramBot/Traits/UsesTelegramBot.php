@@ -223,7 +223,7 @@ trait UsesTelegramBot
                     $role,
                     $bot->code
                 );
-                $this->ActorsController->notifyRoleChange($this, $array["pieces"][1]);
+                $this->ActorsController->notifyRoleChange($bot, $array["pieces"][1]);
                 $reply = $this->ActorsController->notifyAfterModifyRole($this, $array["pieces"][1], $role);
                 break;
             case "deleteuser":
