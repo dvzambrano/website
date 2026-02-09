@@ -677,12 +677,14 @@ class CapitalsController extends MoneysController
 
     public function notifyAfterReceived($bot, $capital, $user_id)
     {
+        $tenant = app('active_bot');
+
         $reply = array();
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $user_id);
         $array = $actor->data;
-        if (isset($array[$bot->data["info"]["username"]]["last_bot_callback_data"])) {
-            switch ($array[$bot->data["info"]["username"]]["last_bot_callback_data"]) {
+        if (isset($array[$tenant->code]["last_bot_callback_data"])) {
+            switch ($array[$tenant->code]["last_bot_callback_data"]) {
                 case "getsendercapitalscreenshot":
                     $reply = $this->getMessageTemplate(
                         $bot,
@@ -729,7 +731,7 @@ class CapitalsController extends MoneysController
                     break;
             }
         }
-        $array[$bot->data["info"]["username"]]["last_bot_callback_data"] = "";
+        $array[$tenant->code]["last_bot_callback_data"] = "";
         $actor->data = $array;
         $actor->save();
 
