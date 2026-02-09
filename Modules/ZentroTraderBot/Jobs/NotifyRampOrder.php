@@ -41,18 +41,18 @@ class NotifyRampOrder implements ShouldQueue
         Log::info("NotifyRampOrder handle bot: " . json_encode($this->bot) . " order: " . json_encode($this->order));
 
         // Construimos un mensaje atractivo
-        $message = "🔔 *" . Lang::get("zentrotraderbot::bot.prompts.deposit.update.header") . "* \n\n";
+        $message = "🔔 *" . Lang::get("zentrotraderbot::bot.prompts.buy.update.header") . "* \n\n";
         $message .= "🆔 `{$orderId}`\n";
         $message .= "💰 *{$amount} {$currency}*\n";
         $message .= "{$statusemoji} {$status}\n\n";
         $message .= "📅 " . $createdAt . "\n\n";
 
         if ($status === 'COMPLETED') {
-            $message .= "✅ " . Lang::get("zentrotraderbot::bot.prompts.deposit.update.completed");
+            $message .= "✅ " . Lang::get("zentrotraderbot::bot.prompts.buy.update.completed");
         } elseif ($status === 'FAILED') {
-            $message .= "❌ " . Lang::get("zentrotraderbot::bot.prompts.deposit.update.failed");
+            $message .= "❌ " . Lang::get("zentrotraderbot::bot.prompts.buy.update.failed");
         } else {
-            $message .= "⏳ " . Lang::get("zentrotraderbot::bot.prompts.deposit.update.processing");
+            $message .= "⏳ " . Lang::get("zentrotraderbot::bot.prompts.buy.update.processing");
         }
 
         TelegramController::sendMessage(

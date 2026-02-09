@@ -12,6 +12,10 @@ class Metadatas extends Model
 
     protected $fillable = ['name', 'comment', 'value', 'metadatatype', 'is_visible'];
 
+    protected $casts = [
+        'value' => 'encrypted',
+    ];
+
     public $timestamps = false;
 
     public function metadatatypes()

@@ -242,6 +242,7 @@ class ZentroTraderBotController extends JsonsController
 
 
         $menu = [];
+        /*
         array_push($menu, [
             ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "notimplemented"],
             ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "notimplemented"],
@@ -249,15 +250,27 @@ class ZentroTraderBotController extends JsonsController
         array_push($menu, [
             ["text" => "🔔 " . Lang::get("zentrotraderbot::bot.options.subscribtion"), "callback_data" => "suscribemenu"]
         ]);
-
-        $url = route('ramp-redirect', array(
-            "key" => $bot->key,
-            "secret" => $bot->secret,
-            "user_id" => $actor->user_id
-        ));
+        */
 
         array_push($menu, [
-            ["text" => "💳 " . Lang::get("zentrotraderbot::bot.options.topup"), "url" => $url]
+            [
+                "text" => "💳 " . Lang::get("zentrotraderbot::bot.options.topup"),
+                "url" => route('ramp-redirect', array(
+                    "action" => "buy",
+                    "key" => $bot->key,
+                    "secret" => $bot->secret,
+                    "user_id" => $actor->user_id
+                ))
+            ],
+            [
+                "text" => "💲 " . Lang::get("zentrotraderbot::bot.options.withdraw"),
+                "url" => route('ramp-redirect', array(
+                    "action" => "sell",
+                    "key" => $bot->key,
+                    "secret" => $bot->secret,
+                    "user_id" => $actor->user_id
+                ))
+            ]
         ]);
 
 
@@ -418,8 +431,8 @@ class ZentroTraderBotController extends JsonsController
         $array = array(
             "message" => array(
                 "text" =>
-                    "✅ *¡" . Lang::get("zentrotraderbot::bot.prompts.deposit.completed.header") . "!*\n\n" .
-                    Lang::get("zentrotraderbot::bot.prompts.deposit.completed.text", [
+                    "✅ *¡" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.header") . "!*\n\n" .
+                    Lang::get("zentrotraderbot::bot.prompts.buy.completed.text", [
                         "amount" => $amount,
                         "currency" => $currency
                     ]),

@@ -35,6 +35,7 @@ return [
         "selloffer" => "Vender USD",
         "buyoffer" => "Comprar USD",
         "topup" => "Depositar USD",
+        "withdraw" => "Extraer USD",
     ],
     "prompts" => [
         "clienturl" => [
@@ -44,7 +45,7 @@ return [
         ],
         "txsuccess" => "TX Exitosa",
         "txfail" => "TX Fallida",
-        "deposit" => [
+        "buy" => [
             "exchangetitle" => "Depositar en :name",
             "update" => [
                 "header" => "Actualización de Depósito",
@@ -58,5 +59,23 @@ return [
             ],
 
         ],
+        "sell" => [
+            "exchangetitle" => "Retirar de :name",
+            "update" => [
+                "header" => "Actualización de Extracción",
+                "completed" => "¡Sus fondos están en camino a su cuenta!",
+                "failed" => "¡La transacción HA FALLADO!",
+                "processing" => "Estamos procesando su solicitud.",
+            ],
+            "completed" => [
+                "header" => "Saldo Acreditado!",
+                "text" => "Hemos recibido una extracción de Ud de :amount :currency correctamente",
+            ],
+
+        ],
+        "fail" => [
+            "suscriptor" => "Lo sentimos, no pudimos encontrar tu billetera configurada.",
+            "widgeturl" => "Lo sentimos, hubo un error al generar tu sesión de pago. Por favor, intenta más tarde.",
+        ]
     ],
 ];

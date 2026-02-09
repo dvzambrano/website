@@ -36,20 +36,20 @@ class RampController extends Controller
         $this->gatewayBaseUrl = config("metadata.system.app.zentrotraderbot.ramp.urls." . $this->environment . ".gateway");
     }
 
-    public function redirect($key, $secret, $user_id)
+    public function redirect($action, $key, $secret, $user_id)
     {
         // Recuperamos el bot que el Middleware ya encontró y guardó
         $bot = app('active_bot');
         // Forzamos la consulta a la base de datos del Tenant
         $suscriptor = Suscriptions::on('tenant')->where("user_id", $user_id)->first();
         if (!$suscriptor || !isset($suscriptor->data["wallet"]["address"])) {
-            return "Lo sentimos, no pudimos encontrar tu billetera configurada.";
+            return Lang::get("zentrotraderbot::bot.prompts.fail.suscriptor");
         }
 
-        $widgetUrl = $this->getWidgetUrl($bot, $suscriptor);
+        $widgetUrl = $this->getWidgetUrl($bot, $suscriptor, strtoupper($action));
 
         if (!$widgetUrl) {
-            return "Lo sentimos, hubo un error al generar tu sesión de pago. Por favor, intenta más tarde.";
+            return Lang::get("zentrotraderbot::bot.prompts.fail.widgeturl");
         }
 
         return Redirect::to($widgetUrl);
@@ -234,9 +234,8 @@ class RampController extends Controller
         return null;
     }
 
-    public function getWidgetUrl($bot, $suscriptor)
+    public function getWidgetUrl($bot, $suscriptor, $action = "BUY")
     {
-
         $accessToken = $this->getAccessToken();
         if (!$accessToken)
             return null;
@@ -267,11 +266,11 @@ class RampController extends Controller
                         'walletAddress' => $wallet,
                         'disableWalletAddressForm' => true,
                         'hideMenu' => true,
-                        'productsAvailed' => 'BUY',
+                        'productsAvailed' => $action,
                         'isCryptoEditable' => false,
                         //'fiatCurrency' => 'USD',
                         'themeColor' => '043927',
-                        'exchangeScreenTitle' => Lang::get("zentrotraderbot::bot.prompts.deposit.exchangetitle", [
+                        'exchangeScreenTitle' => Lang::get("zentrotraderbot::bot.prompts." . strtolower($action) . ".exchangetitle", [
                             "name" => $bot->code
                         ]),
                         'environment' => $this->environment,
