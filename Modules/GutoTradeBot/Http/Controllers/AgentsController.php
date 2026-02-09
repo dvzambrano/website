@@ -11,12 +11,14 @@ class AgentsController extends ActorsController
     public function notifySuscriptor($bot, $actor, $suscriptor, $show_photo = false)
     {
 
+        $tenant = app('active_bot');
+
         $array = parent::notifySuscriptor($bot, $actor, $suscriptor, $show_photo);
         $text = $array["message"]["text"];
 
         // mostrar los meadatos definidos para este suscriptor
-        if (isset($suscriptor->data[$bot->data["info"]["username"]]) && isset($suscriptor->data[$bot->data["info"]["username"]]["metadatas"]))
-            foreach ($suscriptor->data[$bot->data["info"]["username"]]["metadatas"] as $key => $value) {
+        if (isset($suscriptor->data[$tenant->code]) && isset($suscriptor->data[$tenant->code]["metadatas"]))
+            foreach ($suscriptor->data[$tenant->code]["metadatas"] as $key => $value) {
                 $icon = "{$key} ";
                 if ($key == "wallet")
                     $icon = "💰 ";
@@ -36,9 +38,9 @@ class AgentsController extends ActorsController
         $array["message"]["text"] = $text;
         //var_dump($array["message"]["photo"]);
         if (isset($array["message"]["photo"])) {
-            TelegramController::sendPhoto($array, $bot->token);
+            TelegramController::sendPhoto($array, $tenant->token);
         } else {
-            TelegramController::sendMessage($array, $bot->token);
+            TelegramController::sendMessage($array, $tenant->token);
         }
     }
 

@@ -105,8 +105,10 @@ class MoneysController extends JsonsController
      */
     public function badCaptionReply($bot, $bad_caption, $type = 2)
     {
+        $tenant = app('active_bot');
+
         // $type = 1 es capital, 2 es un pago
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "", $bot->data["info"]["username"]);
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "", $tenant->code);
 
         $icon = "💶";
         $text = "";
@@ -339,6 +341,8 @@ class MoneysController extends JsonsController
 
     public function getUnconfirmedQuery($bot, $model, $user_id = false)
     {
+
+        $tenant = app('active_bot');
         $query = $model::whereNull(DB::raw("JSON_EXTRACT(data, '$.confirmation_date')"));
 
         switch (true) {
@@ -355,7 +359,7 @@ class MoneysController extends JsonsController
                         "name" => "parent_id",
                         "value" => [$user_id],
                     ],
-                ], $bot->data["info"]["username"]);
+                ], $tenant->code);
                 foreach ($actors as $actor) {
                     $array[] = $actor->user_id;
                 }
@@ -418,6 +422,8 @@ class MoneysController extends JsonsController
     }
     public function getAllMoneys($bot, $model, $user_id = false)
     {
+        $tenant = app('active_bot');
+
         $query = $model::where("id", ">", 0);
 
         switch (true) {
@@ -433,7 +439,7 @@ class MoneysController extends JsonsController
                         "name" => "parent_id",
                         "value" => [$user_id],
                     ],
-                ], $bot->data["info"]["username"]);
+                ], $tenant->code);
                 foreach ($actors as $actor) {
                     $array[] = $actor->user_id;
                 }
@@ -448,6 +454,8 @@ class MoneysController extends JsonsController
 
     public function getUnliquidatedQuery($bot, $model, $user_id = false)
     {
+        $tenant = app('active_bot');
+
         $query = $model::whereNull(DB::raw("JSON_EXTRACT(data, '$.liquidation_date')"))
             ->whereNotNull(DB::raw("JSON_EXTRACT(data, '$.confirmation_date')"));
 
@@ -464,7 +472,7 @@ class MoneysController extends JsonsController
                         "name" => "parent_id",
                         "value" => [$user_id],
                     ],
-                ], $bot->data["info"]["username"]);
+                ], $tenant->code);
                 foreach ($actors as $actor) {
                     $array[] = $actor->user_id;
                 }
@@ -484,6 +492,8 @@ class MoneysController extends JsonsController
 
     public function getOptionsMenuForThisOne($bot, $money, $role = 3, $extra_options = false)
     {
+        $tenant = app('active_bot');
+
         $controller = null;
 
         $menu = array();
@@ -586,7 +596,7 @@ class MoneysController extends JsonsController
                                 "name" => "admin_level",
                                 "value" => [3, 4],
                             ],
-                        ], $bot->data["info"]["username"]);
+                        ], $tenant->code);
                         break;
                     case "capital":
                         // confirmarlo a traves de ADMIN gestor
@@ -596,7 +606,7 @@ class MoneysController extends JsonsController
                                 "name" => "admin_level",
                                 "value" => 1,
                             ],
-                        ], $bot->data["info"]["username"]);
+                        ], $tenant->code);
                         break;
 
                     default:
@@ -932,7 +942,9 @@ class MoneysController extends JsonsController
 
     public function getScreenshotChangePrompt($bot, $method)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->data["info"]["username"]);
+        $tenant = app('active_bot');
+
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $tenant->code);
 
         $reply = array(
             "text" => "🎆 *Cambiar captura*\n\n_Para cambiar la captura Ud solo debe enviar la nueva a continuación.\nNo es necesario agregar texto en la descripción._\n\n👇 Envíe la nueva captura:",
@@ -948,7 +960,8 @@ class MoneysController extends JsonsController
 
     public function getSearchPrompt($bot, $method, $backoption)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->data["info"]["username"]);
+        $tenant = app('active_bot');
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $tenant->code);
 
         $reply = array(
             "text" => "🔎 *Buscar registro en la BD*\n_Ud puede escribir el ID, la cantidad, o parte del nombre del remitente para buscarlo. Tenga en cuenta que criterios muy cortos pueden generar muchos resultados._\n\n👇 Escriba el valor por el que desea buscar:",
@@ -964,7 +977,8 @@ class MoneysController extends JsonsController
 
     public function getDaysPrompt($bot, $method, $backoption)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->data["info"]["username"]);
+        $tenant = app('active_bot');
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $tenant->code);
 
         $reply = array(
             "text" => "🔎 *Buscar registros en la BD*\n_Es posible buscar registros con cierta cantidad de días de antigüedad. Si escribe un valor positivo, se sumará esa cantidad de días a le fecha actual; si por el contrario el número escrito es negativo, se resta a la fecha actual los días especificados._\n\n👇 Escriba cuántos días desea buscar:",
@@ -980,7 +994,8 @@ class MoneysController extends JsonsController
 
     public function getRevalorizationPrompt($bot, $money_id)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "promptmoneyamount2-{$money_id}", $bot->data["info"]["username"]);
+        $tenant = app('active_bot');
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "promptmoneyamount2-{$money_id}", $tenant->code);
 
         $reply = array(
             "text" => "🎲 *Ajustar cantidad del envio*\n\n👇 Escriba el nuevo valor:",
@@ -996,7 +1011,8 @@ class MoneysController extends JsonsController
 
     public function getRecommentPrompt($bot, $money_id)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "promptmoneycomment2-{$money_id}", $bot->data["info"]["username"]);
+        $tenant = app('active_bot');
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "promptmoneycomment2-{$money_id}", $tenant->code);
 
         $reply = array(
             "text" => "✒ *Ajustar el nombre del remitente*\n\n👇 Escriba el nuevo valor:",
@@ -1011,7 +1027,8 @@ class MoneysController extends JsonsController
     }
     public function getCommentPrompt($bot, $type, $money_id)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "prompt{$type}comment-{$money_id}", $bot->data["info"]["username"]);
+        $tenant = app('active_bot');
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "prompt{$type}comment-{$money_id}", $tenant->code);
 
         $reply = array(
             "text" => "💬 *Comentar sobre este registro*\n\n👇 Escriba el texto que desee a continuación:",

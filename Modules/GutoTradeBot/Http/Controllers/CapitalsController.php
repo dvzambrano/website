@@ -243,6 +243,8 @@ class CapitalsController extends MoneysController
     }
     public function requestConfirmation($bot, $capitals)
     {
+        $tenant = app('active_bot');
+
         foreach ($capitals as $capital) {
             if ($capital->supervisor_id && $capital->supervisor_id > 0) {
                 // solicitar directamente al supervisor asignado
@@ -258,7 +260,7 @@ class CapitalsController extends MoneysController
                         "name" => "admin_level",
                         "value" => [1, 4],
                     ],
-                ], $bot->data["info"]["username"]);
+                ], $bot->code);
                 for ($i = 0; $i < count($admins); $i++) {
                     $this->notifyStatusRequestToSupervisor($bot, $capital, $admins[$i], $supervisorsmenu);
                 }
@@ -311,6 +313,8 @@ class CapitalsController extends MoneysController
 
     public function getUnconfirmed($bot, $user_id, $to_id = false)
     {
+        $tenant = app('active_bot');
+
         if (!$to_id) {
             $to_id = $user_id;
         }
@@ -333,7 +337,7 @@ class CapitalsController extends MoneysController
         );
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
-        $isadmin = $actor->isLevel(1, $bot->data["info"]["username"]);
+        $isadmin = $actor->isLevel(1, $bot->code);
         $capitals = $this->getUnconfirmedCapitals($bot, $user_id);
 
         if (count($capitals) > 0) {
@@ -400,13 +404,15 @@ class CapitalsController extends MoneysController
 
     public function getUnconfirmedMenuForUsers($bot)
     {
+        $tenant = app('active_bot');
+
         $senders = $bot->ActorsController->getData(Actors::class, [
             [
                 "contain" => true,
                 "name" => "admin_level",
                 "value" => 4,
             ],
-        ], $bot->data["info"]["username"]);
+        ], $tenant->code);
         $menu = array();
         array_push($menu, [
             ["text" => "👥 Todos", "callback_data" => "unconfirmedcapitals-all"],
@@ -432,13 +438,16 @@ class CapitalsController extends MoneysController
 
     public function getAllMenuForUsers($bot)
     {
+
+        $tenant = app('active_bot');
+
         $senders = $bot->ActorsController->getData(Actors::class, [
             [
                 "contain" => true,
                 "name" => "admin_level",
                 "value" => 4,
             ],
-        ], $bot->data["info"]["username"]);
+        ], $tenant->code);
         $menu = array();
         array_push($menu, [
             ["text" => "👥 Todos", "callback_data" => "allcapitals-all"],
@@ -464,6 +473,8 @@ class CapitalsController extends MoneysController
 
     public function getAllList($bot, $user_id, $to_id = false)
     {
+        $tenant = app('active_bot');
+
         if (!$to_id) {
             $to_id = $user_id;
         }
@@ -486,7 +497,7 @@ class CapitalsController extends MoneysController
         );
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
-        $isadmin = $actor->isLevel(1, $bot->data["info"]["username"]);
+        $isadmin = $actor->isLevel(1, $bot->code);
         $capitals = $this->getAllCapitals($bot, $user_id);
 
         if (count($capitals) > 0) {
@@ -540,6 +551,8 @@ class CapitalsController extends MoneysController
 
     public function notifyToGestors($bot, $capital)
     {
+        $tenant = app('active_bot');
+
         $supervisorsmenu = $this->getOptionsMenuForThisOne($bot, $capital, 1);
 
         $admins = $bot->ActorsController->getData(Actors::class, [
@@ -548,7 +561,7 @@ class CapitalsController extends MoneysController
                 "name" => "admin_level",
                 "value" => [1],
             ],
-        ], $bot->data["info"]["username"]);
+        ], $tenant->code);
         for ($i = 0; $i < count($admins); $i++) {
             $this->notifyNew($bot, $capital, $admins[$i], $supervisorsmenu);
         }
@@ -574,7 +587,9 @@ class CapitalsController extends MoneysController
 
     public function notifyConfirmationToAdmin($bot)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "", $bot->data["info"]["username"]);
+        $tenant = app('active_bot');
+
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "", $tenant->code);
 
         $reply = array(
             "text" => "✅ *Aporte de capital confirmado*\n_Ud ha confirmado satisfactoriamente el aporte de capital recibido_\n\nSe le ha enviado notificación a quien reportó este aporte de capital para que esté al tanto de esta confirmación.\n\n👇 Qué desea hacer ahora?",

@@ -33,12 +33,14 @@ class CommentsController extends JsonsController
 
     public function getMessageTemplate($bot, $comment, $to_id)
     {
+        $tenant = app('active_bot');
+
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
 
         $fullname = "";
         $sender = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $comment->sender_id);
 
-        switch ($sender->data[$bot->data["info"]["username"]]["admin_level"]) {
+        switch ($sender->data[$tenant->code]["admin_level"]) {
             case 1:
             case "1":
             case 4:
@@ -60,7 +62,7 @@ class CommentsController extends JsonsController
                 break;
         }
 
-        $created_at = $actor->getLocalDateTime($comment->created_at, $bot->data["info"]["username"]);
+        $created_at = $actor->getLocalDateTime($comment->created_at, $tenant->code);
         $text = $fullname . " 💬\n📅 {$created_at}\n\n" . $comment->comment;
 
         return array(

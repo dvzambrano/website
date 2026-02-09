@@ -15,7 +15,8 @@ class ProfitsController extends JsonsController
 
     public function getPrompt($bot)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "promptprofit", $bot->data["info"]["username"]);
+        $tenant = app('active_bot');
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "promptprofit", $tenant->code);
 
         $salary = $this->getFirst(Profits::class, "name", "=", "salary");
         $salary->save();

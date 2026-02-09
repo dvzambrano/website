@@ -101,12 +101,13 @@ class AccountsController extends JsonsController
 
     public function getActiveAccounts($bot)
     {
+        $tenant = app('active_bot');
         $reply = [];
 
         $text = "";
 
         $active_accounts = $this->getAccountsGroupedByBank("is_active", "=", true);
-        switch ($bot->actor->data[$bot->data["info"]["username"]]["admin_level"]) {
+        switch ($bot->actor->data[$tenant->code]["admin_level"]) {
             case '1':
             case 1:
             case '4':
@@ -127,7 +128,7 @@ class AccountsController extends JsonsController
                 foreach ($active_accounts as $bank => $accounts) {
                     foreach ($accounts as $account) {
                         $array = $this->getMessageTemplate($account, $bot->actor->user_id);
-                        TelegramController::sendMessage($array, $bot->token);
+                        TelegramController::sendMessage($array, $tenant->token);
                         $amount++;
                     }
                 }

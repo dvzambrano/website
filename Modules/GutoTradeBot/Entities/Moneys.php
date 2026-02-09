@@ -33,6 +33,8 @@ class Moneys extends Jsons
     }
     public function sendAsTelegramMessage($bot, $actor, $title, $message = false, $show_owner_id = true, $menu = false, $demo = false)
     {
+        $tenant = app('active_bot');
+
         $text = "💰 *{$title}*\n🆔 `{$this->id}`  ";
         if ($this->isConfirmed()) {
             $text .= "🟩";
@@ -67,8 +69,8 @@ class Moneys extends Jsons
 
         if ($actor && $actor->id > 0) {
             // Personalizando fecha y hora en dependencia de la zona horaria del actor
-            $created_at = $actor->getLocalDateTime($this->created_at, $bot->data["info"]["username"]);
-            $updated_at = $actor->getLocalDateTime($this->updated_at, $bot->data["info"]["username"]);
+            $created_at = $actor->getLocalDateTime($this->created_at, $tenant->code);
+            $updated_at = $actor->getLocalDateTime($this->updated_at, $tenant->code);
             $text .= "📅 *Fecha*: {$created_at}\n\n";
 
             if ($show_owner_id) {
@@ -80,9 +82,9 @@ class Moneys extends Jsons
                 if (
                     $this->supervisor_id && $this->supervisor_id > 0 &&
                     (
-                        $actor->isLevel(1, $bot->data["info"]["username"]) ||
-                        $actor->isLevel(3, $bot->data["info"]["username"]) ||
-                        $actor->isLevel(4, $bot->data["info"]["username"])
+                        $actor->isLevel(1, $tenant->code) ||
+                        $actor->isLevel(3, $tenant->code) ||
+                        $actor->isLevel(4, $tenant->code)
                     )
                 ) {
                     $suscriptor = $bot->AgentsController->getSuscriptor($bot, $this->supervisor_id, true);
@@ -133,7 +135,7 @@ class Moneys extends Jsons
                         ),
                     ),
                 );
-                $response = json_decode(TelegramController::sendMediaGroup($array, $bot->token), true);
+                $response = json_decode(TelegramController::sendMediaGroup($array, $tenant->token), true);
                 $array = array(
                     "demo" => $demo ? true : null,
                     "message" => array(
@@ -148,7 +150,7 @@ class Moneys extends Jsons
                     ),
                 );
 
-                TelegramController::sendMessage($array, $bot->token);
+                TelegramController::sendMessage($array, $tenant->token);
 
             } else {
                 $array = array(
@@ -164,7 +166,7 @@ class Moneys extends Jsons
                         ]),
                     ),
                 );
-                TelegramController::sendPhoto($array, $bot->token);
+                TelegramController::sendPhoto($array, $tenant->token);
             }
         }
     }

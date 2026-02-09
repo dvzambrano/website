@@ -9,12 +9,6 @@ class JsonsController extends Controller
 {
     use ModuleTrait;
 
-    public function getToken($name)
-    {
-        $bot = $this->getFirst(TelegramBots::class, "name", "=", "@{$name}");
-        return $bot->token;
-    }
-
     public function getFirst($model, $field, $symbol, $value)
     {
         return $model::where($field, $symbol, $value)->first();
