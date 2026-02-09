@@ -14,8 +14,8 @@ class AgentsController extends ActorsController
         $text = $array["message"]["text"];
 
         // mostrar los meadatos definidos para este suscriptor
-        if (isset($suscriptor->data[$bot->telegram["username"]]) && isset($suscriptor->data[$bot->telegram["username"]]["metadatas"]))
-            foreach ($suscriptor->data[$bot->telegram["username"]]["metadatas"] as $key => $value) {
+        if (isset($suscriptor->data[$bot->code]) && isset($suscriptor->data[$bot->code]["metadatas"]))
+            foreach ($suscriptor->data[$bot->code]["metadatas"] as $key => $value) {
                 $icon = "{$key} ";
                 $text .= "\n{$icon}`" . $value . "`";
             }

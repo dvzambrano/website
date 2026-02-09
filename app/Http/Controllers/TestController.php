@@ -182,7 +182,7 @@ class TestController extends Controller
                 "name" => "admin_level",
                 "value" => [1],
             ],
-        ], $bot->telegram["username"]);
+        ], $bot->code);
         dd($admins->toArray());
         die("\n");
 
@@ -427,7 +427,7 @@ class TestController extends Controller
         dd($similarity);
 
         dd($bot->data["notifications"]);
-        //$bot->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "/utc", $bot->telegram["username"]);
+        //$bot->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "/utc", $bot->code);
         $array = array(
             "notifications" => array(
                 "payments" => array(

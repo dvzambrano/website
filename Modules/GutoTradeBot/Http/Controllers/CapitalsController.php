@@ -261,7 +261,7 @@ class CapitalsController extends MoneysController
                         "name" => "admin_level",
                         "value" => [1, 4],
                     ],
-                ], $bot->telegram["username"]);
+                ], $bot->code);
                 for ($i = 0; $i < count($admins); $i++) {
                     $this->notifyStatusRequestToSupervisor($bot, $capital, $admins[$i], $supervisorsmenu);
                 }
@@ -269,9 +269,11 @@ class CapitalsController extends MoneysController
         }
     }
 
-    public function getPrompt($bot, $method)
+    public function getPrompt($method)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->telegram["username"]);
+        $bot = app('active_bot');
+
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->code);
 
         $reply = array(
             "text" => "💰 *Reportar aporte de capital*\n\n_Para reportar un aporte de capital, ud debe enviar una captura y poner como descripción de la misma, el nombre y apellidos del remitente y el monto enviado._\n\nEjemplo:    *Juan Perez 1200*\n_Así estaríamos informando que Juan Perez ha enviado 1200 USDT_\n\n👇 Envíe la captura del aporte de capital realizado:",
@@ -335,7 +337,7 @@ class CapitalsController extends MoneysController
         );
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
-        $isadmin = $actor->isLevel(1, $bot->telegram["username"]);
+        $isadmin = $actor->isLevel(1, $bot->code);
         $capitals = $this->getUnconfirmedCapitals($bot, $user_id);
 
         if (count($capitals) > 0) {
@@ -408,7 +410,7 @@ class CapitalsController extends MoneysController
                 "name" => "admin_level",
                 "value" => 4,
             ],
-        ], $bot->telegram["username"]);
+        ], $bot->code);
         $menu = array();
         array_push($menu, [
             ["text" => "👥 Todos", "callback_data" => "unconfirmedcapitals-all"],
@@ -440,7 +442,7 @@ class CapitalsController extends MoneysController
                 "name" => "admin_level",
                 "value" => 4,
             ],
-        ], $bot->telegram["username"]);
+        ], $bot->code);
         $menu = array();
         array_push($menu, [
             ["text" => "👥 Todos", "callback_data" => "allcapitals-all"],
@@ -488,7 +490,7 @@ class CapitalsController extends MoneysController
         );
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
-        $isadmin = $actor->isLevel(1, $bot->telegram["username"]);
+        $isadmin = $actor->isLevel(1, $bot->code);
         $capitals = $this->getAllCapitals($bot, $user_id);
 
         if (count($capitals) > 0) {
@@ -550,7 +552,7 @@ class CapitalsController extends MoneysController
                 "name" => "admin_level",
                 "value" => [1],
             ],
-        ], $bot->telegram["username"]);
+        ], $bot->code);
         for ($i = 0; $i < count($admins); $i++) {
             $this->notifyNew($bot, $capital, $admins[$i], $supervisorsmenu);
         }
@@ -576,7 +578,7 @@ class CapitalsController extends MoneysController
 
     public function notifyConfirmationToAdmin($bot)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "", $bot->telegram["username"]);
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "", $bot->code);
 
         $reply = array(
             "text" => "✅ *Aporte de capital confirmado*\n_Ud ha confirmado satisfactoriamente el aporte de capital recibido_\n\nSe le ha enviado notificación a quien reportó este aporte de capital para que esté al tanto de esta confirmación.\n\n👇 Qué desea hacer ahora?",
@@ -683,8 +685,8 @@ class CapitalsController extends MoneysController
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $user_id);
         $array = $actor->data;
-        if (isset($array[$bot->telegram["username"]]["last_bot_callback_data"])) {
-            switch ($array[$bot->telegram["username"]]["last_bot_callback_data"]) {
+        if (isset($array[$bot->code]["last_bot_callback_data"])) {
+            switch ($array[$bot->code]["last_bot_callback_data"]) {
                 case "getsendercapitalscreenshot":
                     $reply = $this->getMessageTemplate(
                         $bot,
@@ -731,7 +733,7 @@ class CapitalsController extends MoneysController
                     break;
             }
         }
-        $array[$bot->telegram["username"]]["last_bot_callback_data"] = "";
+        $array[$bot->code]["last_bot_callback_data"] = "";
         $actor->data = $array;
         $actor->save();
 

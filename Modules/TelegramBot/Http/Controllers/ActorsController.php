@@ -97,7 +97,7 @@ class ActorsController extends JsonsController
         if ($suscriptor) {
             if (
                 $any_bot ||
-                isset($suscriptor->data[$bot->telegram["username"]])
+                isset($suscriptor->data[$bot->code])
             ) {
                 return $suscriptor;
             }
@@ -108,11 +108,11 @@ class ActorsController extends JsonsController
 
     public function findSuscriptors($bot, $actor)
     {
-        $suscriptors = $this->getAllForBot($bot->telegram["username"]);
+        $suscriptors = $this->getAllForBot($bot->code);
 
         $count = 0;
         foreach ($suscriptors as $suscriptor) {
-            if (isset($suscriptor->data[$bot->telegram["username"]])) {
+            if (isset($suscriptor->data[$bot->code])) {
                 $this->notifySuscriptor($bot, $actor, $suscriptor);
                 $count++;
             }
@@ -138,7 +138,7 @@ class ActorsController extends JsonsController
 
         $suscriptor = $this->getSuscriptor($bot, $user_id);
         if ($suscriptor) {
-            if (isset($suscriptor->data[$bot->telegram["username"]])) {
+            if (isset($suscriptor->data[$bot->code])) {
                 $this->notifySuscriptor($bot, $bot->actor, $suscriptor, true);
             }
         } else {
@@ -161,8 +161,8 @@ class ActorsController extends JsonsController
             "menu" => [],
         ];
 
-        if (isset($suscriptor->data[$bot->telegram["username"]]))
-            $array = $this->getRoleMenu($suscriptor->user_id, $suscriptor->data[$bot->telegram["username"]]["admin_level"]);
+        if (isset($suscriptor->data[$bot->code]))
+            $array = $this->getRoleMenu($suscriptor->user_id, $suscriptor->data[$bot->code]["admin_level"]);
 
         array_push($array["menu"], [["text" => "🏷 Añadir metadato", "callback_data" => "/usermetadata {$suscriptor->user_id}"]]);
         array_push($array["menu"], [["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteuser-{$suscriptor->user_id}|adminmenu"]]);
@@ -234,7 +234,7 @@ class ActorsController extends JsonsController
 
     public function getUTCPrompt($bot)
     {
-        $this->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "/utc2", $bot->telegram["username"]);
+        $this->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "/utc2", $bot->code);
 
         $reply = [
             "text" => "⏰ *Ajustar zona horaria*\n\n_Definir su zona horaria hará que el bot le personalice las fechas y horas.\nPara establecer su zona horaria de la forma UTC-4 escriba solo -4._\n\n👇 Escriba en qué zona horaria esta ud:",
@@ -289,7 +289,7 @@ class ActorsController extends JsonsController
 
     public function getApplyMetadataPrompt($bot, $method, $backoption)
     {
-        $this->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->telegram["username"]);
+        $this->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->code);
 
         $reply = [
             "text" => "🏷 *Definir metadato al suscriptor*\n\nEj: `wallet:0xFAcD960564531bd336ed94fBBd0911408288FCF2`\n\n👇 Escriba a continuacion:",

@@ -176,7 +176,7 @@ class PaymentsController extends MoneysController
 
     public function getPaymentsSheet($bot, $payments, $actor, $sheet)
     {
-        $isadmin = $actor->isLevel(1, $bot->telegram["username"]) || $actor->isLevel(4, $bot->telegram["username"]);
+        $isadmin = $actor->isLevel(1, $bot->code) || $actor->isLevel(4, $bot->code);
 
         $sheet->setCellValue("A1", "ID");
         $sheet->setCellValue("B1", "Fecha");
@@ -504,7 +504,7 @@ class PaymentsController extends MoneysController
                         "name" => "admin_level",
                         "value" => [1, 4],
                     ],
-                ], $bot->telegram["username"]);
+                ], $bot->code);
                 for ($i = 0; $i < count($admins); $i++) {
                     $this->notifyStatusRequestToSupervisor($bot, $payment, $admins[$i], $supervisorsmenu);
                 }
@@ -514,7 +514,7 @@ class PaymentsController extends MoneysController
 
     public function getPrompt($bot, $method)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->telegram["username"]);
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->code);
 
         $reply = array(
             "text" => "💶 *Reportar pago*\n\n_Para reportar un pago, ud debe enviar una captura y poner como descripción de la misma, el nombre y apellidos del remitente y el monto enviado._\n\nEjemplo:    `Juan Perez 20`\n_Así estaríamos informando que Juan Perez ha enviado 20 EUR_\n\n👇 Envíe la captura del pago realizado:",
@@ -545,7 +545,7 @@ class PaymentsController extends MoneysController
                 ["text" => "🐌 Rezagados", "callback_data" => "promptpaymentdaysold"],
             ]);
             // admin_level = 1 Admnistrador, 4 Admin de capital
-            switch ($actor->data[$bot->telegram["username"]]["admin_level"]) {
+            switch ($actor->data[$bot->code]["admin_level"]) {
                 case "1":
                 case 1:
                     break;
@@ -605,7 +605,7 @@ class PaymentsController extends MoneysController
         );
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
-        $isadmin = $actor->isLevel(1, $bot->telegram["username"]);
+        $isadmin = $actor->isLevel(1, $bot->code);
         $payments = $this->getUnconfirmedPayments($bot, $user_id);
 
         if (count($payments) > 0) {
@@ -613,7 +613,7 @@ class PaymentsController extends MoneysController
             $count = 0;
             foreach ($payments as $payment) {
 
-                $pendingmenu = $this->getOptionsMenuForThisOne($bot, $payment, $actor->data[$bot->telegram["username"]]["admin_level"]);
+                $pendingmenu = $this->getOptionsMenuForThisOne($bot, $payment, $actor->data[$bot->code]["admin_level"]);
                 $payment->sendAsTelegramMessage(
                     $bot,
                     $actor,
@@ -668,7 +668,7 @@ class PaymentsController extends MoneysController
                 "value" => [1, 2],
             ],
 
-        ], $bot->telegram["username"]);
+        ], $bot->code);
 
         $menu = array();
         $total = 0;
@@ -751,7 +751,7 @@ class PaymentsController extends MoneysController
         );
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
-        $isadmin = $actor->isLevel(1, $bot->telegram["username"]);
+        $isadmin = $actor->isLevel(1, $bot->code);
         $payments = $this->getUnliquidatedPayments($bot, $user_id);
 
         if (count($payments) > 0) {
@@ -762,7 +762,7 @@ class PaymentsController extends MoneysController
 
             foreach ($payments as $payment) {
 
-                $pendingmenu = $this->getOptionsMenuForThisOne($bot, $payment, $actor->data[$bot->telegram["username"]]["admin_level"]);
+                $pendingmenu = $this->getOptionsMenuForThisOne($bot, $payment, $actor->data[$bot->code]["admin_level"]);
                 $payment->sendAsTelegramMessage(
                     $bot,
                     $actor,
@@ -823,13 +823,13 @@ class PaymentsController extends MoneysController
                 ) {
                     $text .= "\n\n👉 @{$response['result']['formated_username']}";
                 }
-                //Log::info("PaymentsController getUnliquidated subject: " . json_encode($subject->data[$bot->telegram["username"]]));
+                //Log::info("PaymentsController getUnliquidated subject: " . json_encode($subject->data[$bot->code]));
                 if (
-                    isset($subject->data[$bot->telegram["username"]]["metadatas"]) &&
-                    isset($subject->data[$bot->telegram["username"]]["metadatas"]["wallet"]) &&
-                    $subject->data[$bot->telegram["username"]]["metadatas"]["wallet"] != ""
+                    isset($subject->data[$bot->code]["metadatas"]) &&
+                    isset($subject->data[$bot->code]["metadatas"]["wallet"]) &&
+                    $subject->data[$bot->code]["metadatas"]["wallet"] != ""
                 ) {
-                    $text .= "\n💰 `" . $subject->data[$bot->telegram["username"]]["metadatas"]["wallet"] . "`";
+                    $text .= "\n💰 `" . $subject->data[$bot->code]["metadatas"]["wallet"] . "`";
                 }
 
             }
@@ -856,7 +856,7 @@ class PaymentsController extends MoneysController
                 "name" => "admin_level",
                 "value" => [1, 2],
             ],
-        ], $bot->telegram["username"]);
+        ], $bot->code);
 
         $menu = array();
         $total = 0;
@@ -931,14 +931,14 @@ class PaymentsController extends MoneysController
         );
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
-        $isadmin = $actor->isLevel(1, $bot->telegram["username"]);
+        $isadmin = $actor->isLevel(1, $bot->code);
         $payments = $this->getFloatingPayments();
 
         if (count($payments) > 0) {
             $amount = 0;
             $count = 0;
             foreach ($payments as $payment) {
-                $pendingmenu = $this->getOptionsMenuForThisOne($bot, $payment, $actor->data[$bot->telegram["username"]]["admin_level"]);
+                $pendingmenu = $this->getOptionsMenuForThisOne($bot, $payment, $actor->data[$bot->code]["admin_level"]);
                 $payment->sendAsTelegramMessage(
                     $bot,
                     $actor,
@@ -989,7 +989,7 @@ class PaymentsController extends MoneysController
                 "name" => "admin_level",
                 "value" => 2,
             ],
-        ], $bot->telegram["username"]);
+        ], $bot->code);
         $menu = array();
         if (count($senders) > 0) {
             array_push($menu, [
@@ -1040,7 +1040,7 @@ class PaymentsController extends MoneysController
         );
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
-        $isadmin = $actor->isLevel(1, $bot->telegram["username"]);
+        $isadmin = $actor->isLevel(1, $bot->code);
         $payments = $this->getAllPayments($bot, $user_id);
 
         if (count($payments) > 0) {
@@ -1089,7 +1089,7 @@ class PaymentsController extends MoneysController
                 "name" => "admin_level",
                 "value" => 4,
             ],
-        ], $bot->telegram["username"]);
+        ], $bot->code);
         for ($i = 0; $i < count($admins); $i++) {
             $payment->sendAsTelegramMessage(
                 $bot,
@@ -1112,7 +1112,7 @@ class PaymentsController extends MoneysController
                 "name" => "admin_level",
                 "value" => 1,
             ],
-        ], $bot->telegram["username"]);
+        ], $bot->code);
         for ($i = 0; $i < count($admins); $i++) {
             $payment->sendAsTelegramMessage(
                 $bot,
@@ -1144,7 +1144,7 @@ class PaymentsController extends MoneysController
 
     public function notifyConfirmationToAdmin($bot)
     {
-        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "", $bot->telegram["username"]);
+        $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "", $bot->code);
 
         $reply = array(
             "text" => "✅ *Pago confirmado*\n_Ud ha confirmado satisfactoriamente el pago recibido_\n\nSe le ha enviado notificación a quien reportó este pago para que esté al tanto de esta confirmación.\n\n👇 Qué desea hacer ahora?",
@@ -1267,8 +1267,8 @@ class PaymentsController extends MoneysController
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $user_id);
         $array = $actor->data;
-        if (isset($array[$bot->telegram["username"]]["last_bot_callback_data"])) {
-            switch ($array[$bot->telegram["username"]]["last_bot_callback_data"]) {
+        if (isset($array[$bot->code]["last_bot_callback_data"])) {
+            switch ($array[$bot->code]["last_bot_callback_data"]) {
                 case "getsenderpaymentscreenshot":
                     $reply = $this->getMessageTemplate(
                         $bot,
@@ -1333,7 +1333,7 @@ class PaymentsController extends MoneysController
                     break;
             }
         }
-        $array[$bot->telegram["username"]]["last_bot_callback_data"] = "";
+        $array[$bot->code]["last_bot_callback_data"] = "";
         $actor->data = $array;
         $actor->save();
 
@@ -1415,7 +1415,7 @@ class PaymentsController extends MoneysController
         $payments = $this->searchMoneysByField(Payments::class, $field, $symbol, $value);
         foreach ($payments as $payment) {
             // preparar el menu de opciones sobre este pago
-            $menu = $this->getOptionsMenuForThisOne($bot, $payment, $bot->actor->data[$bot->telegram["username"]]["admin_level"]);
+            $menu = $this->getOptionsMenuForThisOne($bot, $payment, $bot->actor->data[$bot->code]["admin_level"]);
             $payment->sendAsTelegramMessage(
                 $bot,
                 $bot->actor,
@@ -1466,7 +1466,7 @@ class PaymentsController extends MoneysController
 
                 if (
                         // si es un admin
-                    ($bot->actor->isLevel(1, $bot->telegram["username"]) || $bot->actor->isLevel(4, $bot->telegram["username"])) ||
+                    ($bot->actor->isLevel(1, $bot->code) || $bot->actor->isLevel(4, $bot->code)) ||
                         // si es el q lo subio
                     ($payment->sender_id == $bot->actor->user_id || $payment->supervisor_id == $bot->actor->user_id) ||
                         // si quien lo subio, es descendiente del actor
@@ -1474,7 +1474,7 @@ class PaymentsController extends MoneysController
                     ($owner && $owner->id > 0 && $owner->isDescendantOf($bot))
                 ) {
                     // preparar el menu de opciones sobre este pago
-                    $menu = $this->getOptionsMenuForThisOne($bot, $payment, $bot->actor->data[$bot->telegram["username"]]["admin_level"]);
+                    $menu = $this->getOptionsMenuForThisOne($bot, $payment, $bot->actor->data[$bot->code]["admin_level"]);
                     $payment->sendAsTelegramMessage(
                         $bot,
                         $bot->actor,

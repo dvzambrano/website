@@ -181,20 +181,20 @@ class GutoTradeBotController extends JsonsController
 
         $this->strategies["senderpaymentmenu"] =
             function () use ($bot) {
-                return $this->PaymentsController->getPrompt($this, "getsenderpaymentscreenshot");
+                return $this->PaymentsController->getPrompt("getsenderpaymentscreenshot");
             };
         $this->strategies["sendercapitalmenu"] =
             function () use ($bot) {
-                return $this->CapitalsController->getPrompt($this, "getsendercapitalscreenshot");
+                return $this->CapitalsController->getPrompt("getsendercapitalscreenshot");
             };
 
         $this->strategies["supervisorpaymentmenu"] =
             function () use ($bot) {
-                return $this->PaymentsController->getPrompt($this, "getsupervisorpaymentscreenshot");
+                return $this->PaymentsController->getPrompt("getsupervisorpaymentscreenshot");
             };
         $this->strategies["supervisorcapitalmenu"] =
             function () use ($bot) {
-                return $this->CapitalsController->getPrompt($this, "getsupervisorcapitalscreenshot");
+                return $this->CapitalsController->getPrompt("getsupervisorcapitalscreenshot");
             };
 
         $this->strategies["getadminunconfirmedcapitalsmenu"] =
