@@ -74,7 +74,7 @@ class CoingeckoController extends JsonsController
                     "localization" => "false",
                 ]);
         if ($response->successful()) {
-            $array = json_decode($response->json(), true);
+            $array = $response->json();
             if (isset($array["market_data"])) {
                 $rate["direct"] = $array["market_data"]["current_price"][$coin];
                 $rate["inverse"] = 1 / $rate["direct"];
