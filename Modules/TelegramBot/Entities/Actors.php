@@ -5,7 +5,7 @@ namespace Modules\TelegramBot\Entities;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 use App\Traits\ModuleTrait;
 
 class Actors extends Model

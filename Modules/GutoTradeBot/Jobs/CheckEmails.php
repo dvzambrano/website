@@ -16,6 +16,7 @@ use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Log;
 use Modules\GutoTradeBot\Entities\Moneys;
 use App\Http\Controllers\TextController;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 class CheckEmails implements ShouldQueue
 {
