@@ -52,6 +52,23 @@ class TestController extends Controller
 {
     public function test(Request $request)
     {
+        $response = Http::withHeaders([
+            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        ])->get('https://api.coingecko.com/api/v3/coins/tether/history', [
+                    'date' => '11-05-2025',
+                    'localization' => 'false',
+                ]);
+
+        if ($response->successful()) {
+            dd($response->json());
+        } else {
+            dd("Error: " . $response->status());
+        }
+
+
+
+
+
         $GutoTradeTestBot = TelegramBots::where('name', "@GutoTradeTestBot")->first();
 
 

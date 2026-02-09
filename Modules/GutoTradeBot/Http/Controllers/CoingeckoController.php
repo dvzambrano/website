@@ -6,6 +6,7 @@ use App\Http\Controllers\JsonsController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Modules\GutoTradeBot\Entities\Rates;
+use Illuminate\Support\Facades\Http;
 
 
 class CoingeckoController extends JsonsController
@@ -29,6 +30,13 @@ class CoingeckoController extends JsonsController
                     'base' => "tether",
                     'coin' => "eur",
                     'rate' => $value,
+                ]);
+            } else {
+                $rate = Rates::create([
+                    'date' => date("Y-m-d"),
+                    'base' => "tether",
+                    'coin' => "eur",
+                    'rate' => 1,
                 ]);
             }
         }
@@ -58,17 +66,15 @@ class CoingeckoController extends JsonsController
             "inverse" => 0,
         );
 
-        try {
-            //https://api.coingecko.com/api/v3/coins/tether/history?date=11-05-2025&localization=false
-            $url = "https://api.coingecko.com/api/v3/coins/{$base}/history?date={$date}&localization=false";
-            $response = file_get_contents($url, false, stream_context_create([
-                'http' => [
-                    'method' => 'GET',
-                    'header' => "Content-Type: application/x-www-form-urlencoded",
-                    //'content' => $data ? http_build_query($data) : false,
-                ],
-            ]));
-            $array = json_decode($response, true);
+        //https://api.coingecko.com/api/v3/coins/tether/history?date=11-05-2025&localization=false
+        $response = Http::withHeaders([
+            "User-Agent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        ])->get("https://api.coingecko.com/api/v3/coins/{$base}/history", [
+                    "date" => "{$date}",
+                    "localization" => "false",
+                ]);
+        if ($response->successful()) {
+            $array = json_decode($response->json(), true);
             if (isset($array["market_data"])) {
                 $rate["direct"] = $array["market_data"]["current_price"][$coin];
                 $rate["inverse"] = 1 / $rate["direct"];
@@ -77,9 +83,8 @@ class CoingeckoController extends JsonsController
                 return CoingeckoController::getHistory("eur", "tether", $date);
             }
 
-        } catch (\Throwable $th) {
-            Log::error("CoingeckoController getHistory ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()}");
-            //Log::error("GutoTradeBotController TraceAsString: " . $th->getTraceAsString());
+        } else {
+            Log::error("CoingeckoController getHistory response status: " . $response->status());
         }
 
         return $rate;
