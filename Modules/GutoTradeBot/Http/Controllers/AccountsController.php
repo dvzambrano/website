@@ -107,7 +107,7 @@ class AccountsController extends JsonsController
         $text = "";
 
         $active_accounts = $this->getAccountsGroupedByBank("is_active", "=", true);
-        switch ($bot->actor->data[$bot->code]["admin_level"]) {
+        switch ($bot->actor->data[$bot->data["info"]["username"]]["admin_level"]) {
             case '1':
             case 1:
             case '4':

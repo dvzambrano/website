@@ -32,7 +32,7 @@ class Actors extends Model
         $descendants = [];
 
         // Obtener los hijos directos del actor
-        $children = self::whereRaw("JSON_EXTRACT(data, '$." . $bot->code . ".parent_id') = ?", [$user_id])->get();
+        $children = self::whereRaw("JSON_EXTRACT(data, '$." . $bot->data["info"]["username"] . ".parent_id') = ?", [$user_id])->get();
 
         foreach ($children as $child) {
             // Agregar el ID del hijo al array

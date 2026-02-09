@@ -14,8 +14,8 @@ class AgentsController extends ActorsController
         $text = $array["message"]["text"];
 
         // mostrar los meadatos definidos para este suscriptor
-        if (isset($suscriptor->data[$bot->code]) && isset($suscriptor->data[$bot->code]["metadatas"]))
-            foreach ($suscriptor->data[$bot->code]["metadatas"] as $key => $value) {
+        if (isset($suscriptor->data[$bot->data["info"]["username"]]) && isset($suscriptor->data[$bot->data["info"]["username"]]["metadatas"]))
+            foreach ($suscriptor->data[$bot->data["info"]["username"]]["metadatas"] as $key => $value) {
                 $icon = "{$key} ";
                 if ($key == "wallet")
                     $icon = "💰 ";

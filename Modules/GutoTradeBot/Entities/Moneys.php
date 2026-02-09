@@ -67,8 +67,8 @@ class Moneys extends Jsons
 
         if ($actor && $actor->id > 0) {
             // Personalizando fecha y hora en dependencia de la zona horaria del actor
-            $created_at = $actor->getLocalDateTime($this->created_at, $bot->code);
-            $updated_at = $actor->getLocalDateTime($this->updated_at, $bot->code);
+            $created_at = $actor->getLocalDateTime($this->created_at, $bot->data["info"]["username"]);
+            $updated_at = $actor->getLocalDateTime($this->updated_at, $bot->data["info"]["username"]);
             $text .= "📅 *Fecha*: {$created_at}\n\n";
 
             if ($show_owner_id) {
@@ -80,9 +80,9 @@ class Moneys extends Jsons
                 if (
                     $this->supervisor_id && $this->supervisor_id > 0 &&
                     (
-                        $actor->isLevel(1, $bot->code) ||
-                        $actor->isLevel(3, $bot->code) ||
-                        $actor->isLevel(4, $bot->code)
+                        $actor->isLevel(1, $bot->data["info"]["username"]) ||
+                        $actor->isLevel(3, $bot->data["info"]["username"]) ||
+                        $actor->isLevel(4, $bot->data["info"]["username"])
                     )
                 ) {
                     $suscriptor = $bot->AgentsController->getSuscriptor($bot, $this->supervisor_id, true);

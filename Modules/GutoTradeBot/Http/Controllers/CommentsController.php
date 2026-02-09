@@ -41,7 +41,7 @@ class CommentsController extends JsonsController
         $fullname = "";
         $sender = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $comment->sender_id);
 
-        switch ($sender->data[$bot->code]["admin_level"]) {
+        switch ($sender->data[$bot->data["info"]["username"]]["admin_level"]) {
             case 1:
             case "1":
             case 4:
@@ -63,7 +63,7 @@ class CommentsController extends JsonsController
                 break;
         }
 
-        $created_at = $actor->getLocalDateTime($comment->created_at, $bot->code);
+        $created_at = $actor->getLocalDateTime($comment->created_at, $bot->data["info"]["username"]);
         $text = $fullname . " 💬\n📅 {$created_at}\n\n" . $comment->comment;
 
         return array(
