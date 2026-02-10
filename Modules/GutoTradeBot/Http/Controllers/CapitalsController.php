@@ -260,7 +260,7 @@ class CapitalsController extends MoneysController
                         "name" => "admin_level",
                         "value" => [1, 4],
                     ],
-                ], $bot->code);
+                ], $bot->tenant->code);
                 for ($i = 0; $i < count($admins); $i++) {
                     $this->notifyStatusRequestToSupervisor($bot, $capital, $admins[$i], $supervisorsmenu);
                 }
@@ -337,7 +337,7 @@ class CapitalsController extends MoneysController
         );
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
-        $isadmin = $actor->isLevel(1, $bot->code);
+        $isadmin = $actor->isLevel(1, $bot->tenant->code);
         $capitals = $this->getUnconfirmedCapitals($bot, $user_id);
 
         if (count($capitals) > 0) {
@@ -497,7 +497,7 @@ class CapitalsController extends MoneysController
         );
 
         $actor = $bot->ActorsController->getFirst(Actors::class, "user_id", "=", $to_id);
-        $isadmin = $actor->isLevel(1, $bot->code);
+        $isadmin = $actor->isLevel(1, $bot->tenant->code);
         $capitals = $this->getAllCapitals($bot, $user_id);
 
         if (count($capitals) > 0) {

@@ -1335,7 +1335,7 @@ class GutoTradeBotController extends JsonsController
         $menu = array();
 
         // admin_level = 1 Admnistrador, 2 Remesador, 3 Receptor, 4 Admin de capital
-        switch ($actor->data[$bot->code]["admin_level"]) {
+        switch ($actor->data[$this->tenant->code]["admin_level"]) {
             case "0":
             case 0:
                 $array = $this->AgentsController->getRoleMenu($actor->user_id, 0);
@@ -1398,7 +1398,7 @@ class GutoTradeBotController extends JsonsController
             ["text" => "💰 Capital", "callback_data" => "/capitals"],
         ]);
         // admin_level = 1 Admnistrador, 4 Admin de capital
-        switch ($actor->data[$bot->code]["admin_level"]) {
+        switch ($actor->data[$this->tenant->code]["admin_level"]) {
             case "1":
             case 1:
                 array_push($menu, [
@@ -1487,7 +1487,7 @@ class GutoTradeBotController extends JsonsController
         $stats .= "\n\n🤷🏻‍♂️ *Sin confirmar*: " . Moneys::format($array["unconfirmed"]) . " 💶" .
             "\n🫰🏻 *Sin liquidar*: " . Moneys::format($array["unsettled"]) . " 💶";
 
-        switch (strtolower($bot->code)) {
+        switch (strtolower($this->tenant->code)) {
             case "gutotradebot":
                 $stats .= "\n\n💰 *USDT Físico*: " . Moneys::format($array["stock"]) . " 💵";
 
@@ -1495,7 +1495,7 @@ class GutoTradeBotController extends JsonsController
 
                 $stats .= "\n💱 *Equivalentes a*: " . Moneys::format($value) . " 💶";
 
-                if ($actor->isLevel(1, $bot->code)) {
+                if ($actor->isLevel(1, $this->tenant->code)) {
                     $stats .= "\n\n☑ *Debería tener*: " . Moneys::format($array["should"]) . " 💵";
                     if ($array["having"] >= $array["should"]) {
                         $stats .= "\n✅ ";
@@ -1599,14 +1599,14 @@ class GutoTradeBotController extends JsonsController
         $menu = [];
         $adminmenu = [];
         if (
-            $actor->isLevel(1, $bot->code) ||
-            $actor->isLevel(4, $bot->code)
+            $actor->isLevel(1, $this->tenant->code) ||
+            $actor->isLevel(4, $this->tenant->code)
         ) {
             if ($array["unconfirmed"] > 0) {
                 array_push($adminmenu, ["text" => "👍 Confirmar", "callback_data" => "/confirm"]);
             }
         }
-        if ($actor->isLevel(1, $bot->code)) {
+        if ($actor->isLevel(1, $this->tenant->code)) {
             if ($array["unsettled"] > 0) {
                 array_push($adminmenu, ["text" => "🫰🏻 Liquidar", "callback_data" => "/liquidate"]);
             }

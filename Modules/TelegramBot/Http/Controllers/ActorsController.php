@@ -108,11 +108,11 @@ class ActorsController extends JsonsController
 
     public function findSuscriptors($bot, $actor)
     {
-        $suscriptors = $this->getAllForBot($bot->code);
+        $suscriptors = $this->getAllForBot($bot->tenant->code);
 
         $count = 0;
         foreach ($suscriptors as $suscriptor) {
-            if (isset($suscriptor->data[$bot->code])) {
+            if (isset($suscriptor->data[$bot->tenant->code])) {
                 $this->notifySuscriptor($bot, $actor, $suscriptor);
                 $count++;
             }
@@ -138,7 +138,7 @@ class ActorsController extends JsonsController
 
         $suscriptor = $this->getSuscriptor($bot, $user_id);
         if ($suscriptor) {
-            if (isset($suscriptor->data[$bot->code])) {
+            if (isset($suscriptor->data[$bot->tenant->code])) {
                 $this->notifySuscriptor($bot, $bot->actor, $suscriptor, true);
             }
         } else {
