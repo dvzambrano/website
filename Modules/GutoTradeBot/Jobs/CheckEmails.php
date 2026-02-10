@@ -67,9 +67,7 @@ class CheckEmails implements ShouldQueue
         Carbon::setLocale('en');
         $tc = new TextController();
 
-        $bots = TelegramBots::where('data->email', '!=', '')
-            ->whereNotNull('data->email')
-            ->get();
+        $bots = TelegramBots::whereJsonContainsKey('data->email')->get();
         foreach ($bots as $tenant) {
             $client = Client::make([
                 'host' => $tenant->data["email"]["host"],     // ej: 'mail.micalme.com'
