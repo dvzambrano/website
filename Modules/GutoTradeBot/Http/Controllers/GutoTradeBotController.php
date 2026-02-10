@@ -67,7 +67,7 @@ class GutoTradeBotController extends JsonsController
         $tenant = app('active_bot');
 
         $array = $this->getCommand($this->message["text"]);
-        Log::info("GutoTradeBotController getCommand " . json_encode($array));
+        //Log::info("GutoTradeBotController getCommand " . json_encode($array));
 
         $this->strategies["/help"] =
             $this->strategies["help"] =
@@ -1058,7 +1058,12 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptmoneyamount2"] =
-            function () use ($tenant, $array) {
+            function () use ($tenant) {
+                $command = "";
+                if (isset($this->actor->data[$tenant->code]["last_bot_callback_data"]))
+                    $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
+                $array = $this->getCommand($command);
+
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 $payment->amount = $this->message["text"];
                 $payment->save();
@@ -1080,7 +1085,12 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptmoneycomment2"] =
-            function () use ($tenant, $array) {
+            function () use ($tenant) {
+                $command = "";
+                if (isset($this->actor->data[$tenant->code]["last_bot_callback_data"]))
+                    $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
+                $array = $this->getCommand($command);
+
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 $payment->comment = $this->message["text"];
                 $payment->save();
@@ -1128,11 +1138,10 @@ class GutoTradeBotController extends JsonsController
                 $command = "";
                 if (isset($this->actor->data[$tenant->code]["last_bot_callback_data"]))
                     $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
-
                 $array = $this->getCommand($command);
 
-                Log::info("GutoTradeBotController promptpaymentcomment " . json_encode($array));
-
+                //Log::info("GutoTradeBotController promptpaymentcomment " . json_encode($array));
+    
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
 
                 //$comment, $screenshot, $sender_id, $payment_id, $data = array()
@@ -1190,7 +1199,12 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["promptprofit"] =
-            function () use ($tenant, $array) {
+            function () use ($tenant) {
+                $command = "";
+                if (isset($this->actor->data[$tenant->code]["last_bot_callback_data"]))
+                    $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
+                $array = $this->getCommand($command);
+
                 $reply = [
                     "text" => "",
                 ];
@@ -1254,7 +1268,7 @@ class GutoTradeBotController extends JsonsController
                     $command = $array[$tenant->code]["last_bot_callback_data"];
 
                 $commandarray = $this->getCommand($command);
-                Log::info("GutoTradeBotController promptprofit " . json_encode($commandarray));
+                //Log::info("GutoTradeBotController promptprofit " . json_encode($commandarray));
 
                 $commandarray = $commandarray["pieces"];
                 if (count($commandarray) > 1)
