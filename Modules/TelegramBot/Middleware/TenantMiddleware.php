@@ -39,6 +39,12 @@ class TenantMiddleware
         DB::purge('tenant');
         DB::reconnect('tenant');
 
+        // Creamos un nombre de archivo de log dinámico basado en el Tenant
+        $logName = "storage_" . strtolower($tenant->code) . ".log";
+        config(['logging.channels.storage.path' => storage_path("logs/{$logName}")]);
+        // Para asegurar que use el nuevo path, "olvidamos" el canal anterior:
+        app('log')->forgetChannel('storage');
+
         // Opcional: Compartir la config con el resto de la app
         app()->instance('active_bot', $tenant);
 

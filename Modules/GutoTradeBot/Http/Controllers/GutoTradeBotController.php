@@ -249,11 +249,11 @@ class GutoTradeBotController extends JsonsController
                     ];
 
                     $fc = new FileController();
-                    $payments = $fc->searchInLog('payment', $array["message"], 'storage', false);
+                    $payments = $fc->searchInLog('payment', $array["message"], config('logging.channels.storage.path'), false);
 
                     $amount = count($payments);
                     if ($amount > 20) {
-                        $payments = $fc->searchInLog('payment', $array["message"], 'storage');
+                        $payments = $fc->searchInLog('payment', $array["message"], config('logging.channels.storage.path'));
                         $amount = count($payments);
                     }
 
@@ -969,7 +969,7 @@ class GutoTradeBotController extends JsonsController
             function () use ($tenant, $array) {
                 $id = $array["message"];
                 $fc = new FileController();
-                $payments = $fc->searchInLog('payment', $id, 'storage', true);
+                $payments = $fc->searchInLog('payment', $id, config('logging.channels.storage.path'), true);
                 foreach ($payments as $array)
                     if ($array["id"] == $id) {
                         $payment = new Payments($array);
