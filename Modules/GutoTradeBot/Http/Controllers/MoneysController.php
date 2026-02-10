@@ -594,7 +594,7 @@ class MoneysController extends JsonsController
                             [
                                 "contain" => true,
                                 "name" => "admin_level",
-                                "value" => [3, 4],
+                                "value" => [3, "3", 4, "4"],
                             ],
                         ], $tenant->code);
                         break;
@@ -604,7 +604,7 @@ class MoneysController extends JsonsController
                             [
                                 "contain" => true,
                                 "name" => "admin_level",
-                                "value" => 1,
+                                "value" => [1, "1"],
                             ],
                         ], $tenant->code);
                         break;

@@ -638,7 +638,7 @@ class GutoTradeBotController extends JsonsController
                                 [
                                     "contain" => true,
                                     "name" => "admin_level",
-                                    "value" => [1, 4],
+                                    "value" => [1, "1", 4, "4"],
                                 ],
                             ], $tenant->code);
                             for ($i = 0; $i < count($admins); $i++) {

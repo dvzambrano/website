@@ -500,7 +500,7 @@ class PaymentsController extends MoneysController
                     [
                         "contain" => true,
                         "name" => "admin_level",
-                        "value" => [1, 4],
+                        "value" => [1, "1", 4, "4"],
                     ],
                 ], $tenant->code);
                 for ($i = 0; $i < count($admins); $i++) {
@@ -668,7 +668,7 @@ class PaymentsController extends MoneysController
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => [1, 2],
+                "value" => [1, "1", 2, "2"],
             ],
 
         ], $tenant->code);
@@ -860,7 +860,7 @@ class PaymentsController extends MoneysController
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => [1, 2],
+                "value" => [1, "1", 2, "2"],
             ],
         ], $tenant->code);
 
@@ -995,7 +995,7 @@ class PaymentsController extends MoneysController
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => 2,
+                "value" => [2, "2"],
             ],
         ], $tenant->code);
         $menu = array();
@@ -1099,7 +1099,7 @@ class PaymentsController extends MoneysController
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => 4,
+                "value" => [4, "4"],
             ],
         ], $tenant->code);
         for ($i = 0; $i < count($admins); $i++) {
@@ -1123,7 +1123,7 @@ class PaymentsController extends MoneysController
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => 1,
+                "value" => [1, "1"],
             ],
         ], $tenant->code);
         for ($i = 0; $i < count($admins); $i++) {

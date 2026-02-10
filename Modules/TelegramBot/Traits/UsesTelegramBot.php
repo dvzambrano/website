@@ -599,7 +599,7 @@ trait UsesTelegramBot
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => [1],
+                "value" => [1, "1"],
             ],
         ], $this->tenant->code);
 

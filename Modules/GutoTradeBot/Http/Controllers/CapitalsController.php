@@ -258,7 +258,7 @@ class CapitalsController extends MoneysController
                     [
                         "contain" => true,
                         "name" => "admin_level",
-                        "value" => [1, 4],
+                        "value" => [1, "1", 4, "4"],
                     ],
                 ], $bot->tenant->code);
                 for ($i = 0; $i < count($admins); $i++) {
@@ -410,7 +410,7 @@ class CapitalsController extends MoneysController
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => 4,
+                "value" => [4, "4"],
             ],
         ], $tenant->code);
         $menu = array();
@@ -445,7 +445,7 @@ class CapitalsController extends MoneysController
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => 4,
+                "value" => [4, "4"],
             ],
         ], $tenant->code);
         $menu = array();
@@ -559,7 +559,7 @@ class CapitalsController extends MoneysController
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => [1],
+                "value" => [1, "1"],
             ],
         ], $tenant->code);
         for ($i = 0; $i < count($admins); $i++) {

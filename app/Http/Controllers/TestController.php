@@ -68,10 +68,11 @@ class TestController extends Controller
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => [1, 2],
+                "value" => [1, "1", 2, "2"],
             ],
 
         ], $tenant->code);
+
         dd($senders->toArray());
 
 
@@ -232,7 +233,7 @@ class TestController extends Controller
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => [1],
+                "value" => [1, "1"],
             ],
         ], $bot->data["info"]["username"]);
         dd($admins->toArray());
@@ -543,7 +544,7 @@ class TestController extends Controller
             [
                 "contain" => true,
                 "name" => "admin_level",
-                "value" => [1, 4],
+                "value" => [1, "1", 4, "4"],
             ],
         ], "gutotradebot");
         dd($admins->toArray());
