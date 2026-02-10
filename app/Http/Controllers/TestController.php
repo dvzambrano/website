@@ -59,6 +59,22 @@ class TestController extends Controller
     public function test(Request $request)
     {
 
+        app()->instance('active_bot', $this->GutoTradeTestBot);
+        $bot = new GutoTradeBotController();
+
+
+        $tenant = app('active_bot');
+
+        $senders = $bot->ActorsController->getData(Actors::class, [
+            [
+                "contain" => true,
+                "name" => "admin_level",
+                "value" => [1, 2],
+            ],
+
+        ], $tenant->code);
+        dd($senders->toArray());
+
 
         // Creamos un nombre de archivo de log dinámico basado en el Tenant
         $logName = "storage_gutotradetestbot.log";

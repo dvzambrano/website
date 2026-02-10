@@ -7,9 +7,9 @@ use Modules\TelegramBot\Entities\TelegramBots;
 
 class BotSimulate extends Command
 {
-    // Uso: php artisan bot:test {id} {mensaje}
-    protected $signature = 'bot:test {id} {text=/start} {--real : Ejecutar como una operación real, no demo}';
-    protected $description = 'Simula un webhook de Telegram localmente';
+    // Uso: php artisan bot:test mi_bot "/start" 123456789 --real
+    protected $signature = 'bot:test {id} {text=/start} {user_id=816767995} {--real : Ejecutar como una operación real, no demo}';
+    protected $description = 'Simula un webhook de Telegram localmente con ID de usuario dinámico';
 
     public function handle()
     {
@@ -20,6 +20,7 @@ class BotSimulate extends Command
         }
 
         $text = $this->argument('text');
+        $userId = (int) $this->argument('user_id'); // Obtenemos el ID del usuario
         // Si el usuario NO pone --real, es demo (true).
         // Si el usuario pone --real, demo es false.
         $isDemo = !$this->option('real');
@@ -32,6 +33,7 @@ class BotSimulate extends Command
 
         $statusMessage = $isDemo ? "<bg=yellow;fg=black> MODO DEMO ACTIVE </>" : "<bg=red;fg=white> MODO REAL (LIVE) </>";
         $this->line("🤖 Bot: {$bot->name} | 📝 MSG: '{$text}'");
+        $this->line("👤 User ID: {$userId}");
         $this->line("📍 URL: {$url}");
         $this->line($statusMessage);
         $this->newLine();
@@ -43,11 +45,11 @@ class BotSimulate extends Command
             'message' => [
                 'message_id' => rand(1, 100),
                 'from' => [
-                    'id' => 816767995,
-                    'username' => 'dvzambrano',
+                    'id' => $userId,
+                    'username' => 'sim_user',
                 ],
                 'chat' => [
-                    'id' => 816767995,
+                    'id' => $userId,
                     'type' => 'private',
                 ],
                 'date' => time(),
