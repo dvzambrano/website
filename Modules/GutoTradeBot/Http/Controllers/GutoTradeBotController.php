@@ -67,6 +67,7 @@ class GutoTradeBotController extends JsonsController
         $tenant = app('active_bot');
 
         $array = $this->getCommand($this->message["text"]);
+        Log::info("GutoTradeBotController getCommand " . json_encode($array));
 
         $this->strategies["/help"] =
             $this->strategies["help"] =
@@ -1240,13 +1241,13 @@ class GutoTradeBotController extends JsonsController
                 $array = $this->actor->data;
                 //Log::info("GutoTradeBotController photo actor->data = " . json_encode($array));
 
-                //$array = $this->getCommand($this->message["text"]);
                 $command = "";
                 if (isset($array[$tenant->code]["last_bot_callback_data"]))
                     $command = $array[$tenant->code]["last_bot_callback_data"];
 
                 $commandarray = $this->getCommand($command);
-                //Log::info("GutoTradeBotController photo command = '{$command}', commandarray = " . json_encode($commandarray));
+                Log::info("GutoTradeBotController promptprofit " . json_encode($commandarray));
+
                 $commandarray = $commandarray["pieces"];
                 if (count($commandarray) > 1)
                     $command = $commandarray[0];
