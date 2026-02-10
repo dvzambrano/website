@@ -161,8 +161,8 @@ class ActorsController extends JsonsController
             "menu" => [],
         ];
 
-        if (isset($suscriptor->data[$bot->code]))
-            $array = $this->getRoleMenu($suscriptor->user_id, $suscriptor->data[$bot->code]["admin_level"]);
+        if (isset($suscriptor->data[$bot->tenant->code]))
+            $array = $this->getRoleMenu($suscriptor->user_id, $suscriptor->data[$bot->tenant->code]["admin_level"]);
 
         array_push($array["menu"], [["text" => "🏷 Añadir metadato", "callback_data" => "/usermetadata {$suscriptor->user_id}"]]);
         array_push($array["menu"], [["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteuser-{$suscriptor->user_id}|adminmenu"]]);
