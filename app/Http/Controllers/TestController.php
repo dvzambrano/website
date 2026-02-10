@@ -50,8 +50,19 @@ use Modules\ZentroTraderBot\Http\Controllers\RampController;
 
 class TestController extends Controller
 {
+    private $GutoTradeTestBot;
+    public function __construct()
+    {
+        $this->GutoTradeTestBot = TelegramBots::where('name', "@GutoTradeTestBot")->first();
+    }
     public function test(Request $request)
     {
+        $array = $this->GutoTradeTestBot->getCommand("Esta es una prueba");
+        dd($array);
+
+
+
+
         $response = Http::withHeaders([
             'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         ])->get('https://api.coingecko.com/api/v3/coins/tether/history', [
@@ -69,7 +80,6 @@ class TestController extends Controller
 
 
 
-        $GutoTradeTestBot = TelegramBots::where('name', "@GutoTradeTestBot")->first();
 
 
         $array = [

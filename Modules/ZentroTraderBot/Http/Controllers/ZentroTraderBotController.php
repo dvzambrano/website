@@ -23,6 +23,8 @@ class ZentroTraderBotController extends JsonsController
 
     public function __construct()
     {
+        $this->tenant = app('active_bot');
+
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();
         $this->AgentsController = new AgentsController();
@@ -51,7 +53,7 @@ class ZentroTraderBotController extends JsonsController
 
         $this->strategies["actionmenu"] =
             function () use ($bot) {
-                if ($this->actor->isLevel(1, $bot->code))
+                if ($this->actor->isLevel(1, $this->tenant->code))
                     return $this->actionMenu();
                 return $this->mainMenu($this->actor);
             };
@@ -91,14 +93,13 @@ class ZentroTraderBotController extends JsonsController
                 $from = $array["pieces"][2];   // Token que vendes
                 $to = $array["pieces"][3];  // Token que compras
     
-                $bot = $this;
                 $userId = $this->actor->user_id;
                 $array = $this->engine->swap(
                     $from,
                     $to,
                     $amount,
                     $privateKey,
-                    function ($text, $autodestroy) use ($bot, $userId) {
+                    function ($text, $autodestroy) use ($userId) {
                         TelegramController::sendMessage(
                             array(
                                 "message" => array(
@@ -108,7 +109,7 @@ class ZentroTraderBotController extends JsonsController
                                     )
                                 ),
                             ),
-                            $bot->token,
+                            $this->tenant->token,
                             $autodestroy
                         );
                     },
@@ -426,8 +427,6 @@ class ZentroTraderBotController extends JsonsController
 
     public function notifyDepositConfirmed($user_id, $amount, $currency)
     {
-        $bot = app('active_bot');
-
         $array = array(
             "message" => array(
                 "text" =>
@@ -441,7 +440,7 @@ class ZentroTraderBotController extends JsonsController
                 ),
             ),
         );
-        TelegramController::sendMessage($array, $bot->token);
+        TelegramController::sendMessage($array, $this->tenant->token);
     }
 
 }

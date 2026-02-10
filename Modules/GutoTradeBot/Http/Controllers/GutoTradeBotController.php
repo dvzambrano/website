@@ -46,6 +46,8 @@ class GutoTradeBotController extends JsonsController
 
     public function __construct()
     {
+        $this->tenant = app('active_bot');
+
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();
         $this->TextController = new TextController();
@@ -1123,6 +1125,7 @@ class GutoTradeBotController extends JsonsController
         $this->strategies["promptpaymentcomment"] =
             function () use ($tenant, $array) {
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
+
                 //$comment, $screenshot, $sender_id, $payment_id, $data = array()
                 $this->CommentsController->create($this->message["text"], $payment->screenshot, $this->actor->user_id, $array["pieces"][1]);
 
@@ -1327,7 +1330,7 @@ class GutoTradeBotController extends JsonsController
 
     public function mainMenu($actor)
     {
-        $bot = app('active_bot');
+        $bot = $this->tenant;
 
         $menu = array();
 
@@ -1386,7 +1389,7 @@ class GutoTradeBotController extends JsonsController
 
     public function adminMenu($actor)
     {
-        $bot = app('active_bot');
+        $bot = $this->tenant;
 
         $menu = [];
 
@@ -1464,7 +1467,7 @@ class GutoTradeBotController extends JsonsController
      */
     public function notifyStats($actor, $start_date = false, $end_date = false)
     {
-        $bot = app('active_bot');
+        $bot = $this->tenant;
 
         $array = $this->PaymentsController->getPaymentsStats($this, $start_date, $end_date);
         $from_date = $array["from_date"];

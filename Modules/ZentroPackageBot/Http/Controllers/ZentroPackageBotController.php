@@ -19,6 +19,8 @@ class ZentroPackageBotController extends JsonsController
 
     public function __construct()
     {
+        $this->tenant = app('active_bot');
+
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();
     }
@@ -97,8 +99,6 @@ class ZentroPackageBotController extends JsonsController
 
     public function afterScan($user_id, $codes)
     {
-        $bot = app('active_bot');
-
         Log::info("User {$user_id} scanned: " . json_encode($codes));
 
         $completed = 0;
@@ -126,7 +126,7 @@ class ZentroPackageBotController extends JsonsController
                             "id" => $user_id,
                         ),
                     ),
-                ), $bot->token);
+                ), $this->tenant->token);
             } else {
                 // CASO A: Solo hay uno (Perfecto)
                 if ($packages->count() === 1) {
@@ -162,7 +162,7 @@ class ZentroPackageBotController extends JsonsController
                                 "id" => $user_id,
                             ),
                         ),
-                    ), $bot->token);
+                    ), $this->tenant->token);
 
                 }
 
@@ -178,7 +178,7 @@ class ZentroPackageBotController extends JsonsController
                         "id" => $user_id,
                     ),
                 ),
-            ), $bot->token);
+            ), $this->tenant->token);
         }
 
         // es obligatoria enviar la respuesta para q la UI sepa q se recibio la info

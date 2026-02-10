@@ -9,6 +9,7 @@ use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 trait UsesTelegramBot
 {
+    public $tenant;
     public $message;
     public $actor;
     public $reply;
@@ -19,14 +20,10 @@ trait UsesTelegramBot
 
     public function receiveMessage($bot, $update)
     {
-        // $bot = app('active_bot');
-        //var_dump($update['message'])
-        //$chatId = $update['message']['chat']['id'];
-
         // Chequear si ya se ha guardado la informacion del bot desde Telegram
         try {
             if (!isset($bot->data["info"])) {
-                $response = json_decode(TelegramController::getBotInfo($bot->token), true);
+                $response = json_decode(TelegramController::getBotInfo($this->tenant->token), true);
 
                 // 1. Actualizamos el objeto local
                 $data = $bot->data;
@@ -71,7 +68,7 @@ trait UsesTelegramBot
         }
         //var_dump($this->message);
         // Escribiendo en el Log lo recibido para debug
-        $log = "TelegramBotController {$type} for " . $bot->code;
+        $log = "TelegramBotController {$type} for " . $this->tenant->code;
         $logfrom = "";
         if (isset($this->message['chat'])) {
             $logfrom = " {$this->message['chat']['type']} {$this->message['chat']['id']}: ";
@@ -94,7 +91,7 @@ trait UsesTelegramBot
 
         // Finalmente se procesa la peticion recibida
         $this->reply = $this->processMessage();
-        $log = "TelegramBotController {$type} reply from " . $bot->code;
+        $log = "TelegramBotController {$type} reply from " . $this->tenant->code;
         Log::info("{$log} to {$logfrom}" . json_encode($this->reply) . "\n");
         // Armando la respuesta correspondiente:
         $array = array(
@@ -104,13 +101,13 @@ trait UsesTelegramBot
                 "chat" => array(
                     "id" => $this->message["chat"]["id"],
                 ),
-                "reply_to_message_id" => isset($this->actor->data[$bot->code]["config_delete_prev_messages"]) ? false : $this->message["message_id"], // responder al mensaje q origino esta interaccion del bot si no es dvzambrano
+                "reply_to_message_id" => isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) ? false : $this->message["message_id"], // responder al mensaje q origino esta interaccion del bot si no es dvzambrano
                 "reply_markup" => isset($this->reply["markup"]) ? $this->reply["markup"] : false,
             ),
             "demo" => $update['demo'] ?? false,
         );
         if (isset($this->reply["photo"])) {
-            TelegramController::sendPhoto($array, $bot->token);
+            TelegramController::sendPhoto($array, $this->tenant->token);
         } else {
             // solo se envia un mensaje si tiene text
             // antes estaba $this->message["text"] pero lo cambie para q mandara el error cuando mandan la captura de un pago sin nombre y cantidad
@@ -119,12 +116,12 @@ trait UsesTelegramBot
                 if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
                     $autodestroy = $this->reply["autodestroy"];
 
-                TelegramController::sendMessage($array, $bot->token, $autodestroy);
+                TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
             }
         }
 
         // eliminar el mensaje q origino esta interaccion del bot
-        if ($this->message["message_id"] != "" && isset($this->actor->data[$bot->code]["config_delete_prev_messages"])) {
+        if ($this->message["message_id"] != "" && isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])) {
             $array = array(
                 "message" => array(
                     "id" => $this->message["message_id"],
@@ -133,7 +130,7 @@ trait UsesTelegramBot
                     ),
                 ),
             );
-            TelegramController::deleteMessage($array, $bot->token);
+            TelegramController::deleteMessage($array, $this->tenant->token);
         }
 
         // Envía una respuesta al servidor de Telegram para confirmar la recepción
@@ -141,8 +138,6 @@ trait UsesTelegramBot
     }
     public function getProcessedMessage($array = false)
     {
-        $bot = app('active_bot');
-
         //Log::info("UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
 
         // validando q el usuario tenga un @username
@@ -181,7 +176,7 @@ trait UsesTelegramBot
                 break;
             case "adminmenu":
                 $reply = $this->mainMenu($this->actor);
-                if ($this->actor->isLevel(1, $bot->code))
+                if ($this->actor->isLevel(1, $this->tenant->code))
                     $reply = $this->adminMenu($this->actor);
                 break;
             case "configmenu":
@@ -190,17 +185,17 @@ trait UsesTelegramBot
 
             case "/users":
             case "getsuscriptors":
-                if ($this->actor->isLevel(1, $bot->code))
+                if ($this->actor->isLevel(1, $this->tenant->code))
                     $reply = $this->AgentsController->findSuscriptors($this, $this->actor);
                 break;
 
             case "/user":
-                if ($this->actor->isLevel(1, $bot->code))
+                if ($this->actor->isLevel(1, $this->tenant->code))
                     $reply = $this->AgentsController->findSuscriptor($this, $array["message"]);
                 break;
 
             case "/suscribe":
-                $this->ActorsController->suscribe($bot, $array["message"], null);
+                $this->ActorsController->suscribe($this->tenant, $array["message"], null);
                 $reply = $this->AgentsController->findSuscriptor($this, $array["message"]);
                 break;
 
@@ -221,13 +216,13 @@ trait UsesTelegramBot
                     $array["pieces"][1],
                     "admin_level",
                     $role,
-                    $bot->code
+                    $this->tenant->code
                 );
-                $this->ActorsController->notifyRoleChange($bot, $array["pieces"][1]);
+                $this->ActorsController->notifyRoleChange($this->tenant, $array["pieces"][1]);
                 $reply = $this->ActorsController->notifyAfterModifyRole($this, $array["pieces"][1], $role);
                 break;
             case "deleteuser":
-                if ($this->actor->isLevel(1, $bot->code)) {
+                if ($this->actor->isLevel(1, $this->tenant->code)) {
                     // eliminar un usuario
                     $user = $this->ActorsController->getFirst(Actors::class, "user_id", "=", $array["pieces"][1]);
                     $user->delete();
@@ -242,14 +237,14 @@ trait UsesTelegramBot
                     "promptusermetadata-" . $array["message"],
                     $this->actor->getBackOptions(
                         "✋ " . Lang::get("telegrambot::bot.options.cancel"),
-                        $bot->code,
+                        $this->tenant->code,
                         [1]
                     )
                 );
                 break;
 
             case "sendannouncement":
-                $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "getannouncement", $bot->code);
+                $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "getannouncement", $this->tenant->code);
                 $reply = [
                     "text" => "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.header") . "*\n\n" .
                         "👇 " . Lang::get("telegrambot::bot.prompts.announcement.whatsnext") . ":",
@@ -279,7 +274,7 @@ trait UsesTelegramBot
                             ]),
                         ],
                     ];
-                    $array = json_decode(TelegramController::sendMessage($array, $bot->token), true);
+                    $array = json_decode(TelegramController::sendMessage($array, $this->tenant->token), true);
                     if (isset($array["result"]) && isset($array["result"]["message_id"])) {
                         TelegramController::pinMessage([
                             "message" => [
@@ -288,7 +283,7 @@ trait UsesTelegramBot
                                 ],
                                 "message_id" => $array["result"]["message_id"],
                             ],
-                        ], $bot->token);
+                        ], $this->tenant->token);
                         $amount++;
                     }
                 }
@@ -310,10 +305,10 @@ trait UsesTelegramBot
 
             case "configdeleteprevmessages":
                 $array = $this->actor->data;
-                if (isset($array[$bot->code]["config_delete_prev_messages"])) {
-                    unset($array[$bot->code]["config_delete_prev_messages"]);
+                if (isset($array[$this->tenant->code]["config_delete_prev_messages"])) {
+                    unset($array[$this->tenant->code]["config_delete_prev_messages"]);
                 } else {
-                    $array[$bot->code]["config_delete_prev_messages"] = true;
+                    $array[$this->tenant->code]["config_delete_prev_messages"] = true;
                 }
 
                 $this->actor->data = $array;
@@ -329,9 +324,9 @@ trait UsesTelegramBot
                 if (is_numeric($this->message["text"])) {
 
                     $array = $this->actor->data;
-                    $array[$bot->code]["time_zone"] = $this->message["text"];
+                    $array[$this->tenant->code]["time_zone"] = $this->message["text"];
                     if ($this->message["text"] == 0 || $this->message["text"] == "0") {
-                        unset($array[$bot->code]["time_zone"]);
+                        unset($array[$this->tenant->code]["time_zone"]);
                     }
 
                     $this->actor->data = $array;
@@ -351,11 +346,11 @@ trait UsesTelegramBot
                 $message = explode(":", $this->message["text"]);
 
                 $suscriptor = $this->ActorsController->getFirst(Actors::class, "user_id", "=", $array["pieces"][1]);
-                //$this->getToken($bot->code)
+                //$this->getToken($this->tenant->code)
                 $suscriptordata = $suscriptor->data;
-                if (!isset($suscriptordata[$bot->code]["metadatas"]))
-                    $suscriptordata[$bot->code]["metadatas"] = array();
-                $suscriptordata[$bot->code]["metadatas"][trim($message[0])] = trim($message[1]);
+                if (!isset($suscriptordata[$this->tenant->code]["metadatas"]))
+                    $suscriptordata[$this->tenant->code]["metadatas"] = array();
+                $suscriptordata[$this->tenant->code]["metadatas"][trim($message[0])] = trim($message[1]);
 
                 $suscriptor->data = $suscriptordata;
                 $suscriptor->save();
@@ -367,11 +362,11 @@ trait UsesTelegramBot
 
             default:
                 $array = $this->actor->data;
-                if (isset($array[$bot->code]["last_bot_callback_data"])) {
-                    $array = $this->getCommand($array[$bot->code]["last_bot_callback_data"]);
+                if (isset($array[$this->tenant->code]["last_bot_callback_data"])) {
+                    $array = $this->getCommand($array[$this->tenant->code]["last_bot_callback_data"]);
 
                     // resetear el comando obtenido a traves de la BD
-                    $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "", $bot->code);
+                    $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "", $this->tenant->code);
 
                     $reply = $this->getProcessedMessage($array);
                 }
@@ -430,26 +425,24 @@ trait UsesTelegramBot
 
     public function getMainMenu($actor, $menu = false, $description = false, $referral = false)
     {
-        $bot = app('active_bot');
-
         $reply = [];
 
-        $text = "👋 *" . Lang::get("telegrambot::bot.mainmenu.salutation", ["bot_name" => $bot->code]) . "*!\n" . $description;
+        $text = "👋 *" . Lang::get("telegrambot::bot.mainmenu.salutation", ["bot_name" => $this->tenant->code]) . "*!\n" . $description;
         if ($referral) {
-            if (isset($actor->data[$bot->code]["parent_id"]) && $actor->data[$bot->code]["parent_id"] > 0) {
-                $parent = $this->ActorsController->getFirst(Actors::class, "user_id", "=", $actor->data[$bot->code]["parent_id"]);
+            if (isset($actor->data[$this->tenant->code]["parent_id"]) && $actor->data[$this->tenant->code]["parent_id"] > 0) {
+                $parent = $this->ActorsController->getFirst(Actors::class, "user_id", "=", $actor->data[$this->tenant->code]["parent_id"]);
                 if ($parent && $parent->id > 0 && $parent->data) {
-                    if (isset($parent->data[$bot->code]["config_allow_referals_to_myreferals"])) {
-                        $text .= "_" . Lang::get("telegrambot::bot.mainmenu.referral") . ":_\n`https://t.me/" . $bot->code . "?start={$actor->user_id}`\n\n";
+                    if (isset($parent->data[$this->tenant->code]["config_allow_referals_to_myreferals"])) {
+                        $text .= "_" . Lang::get("telegrambot::bot.mainmenu.referral") . ":_\n`https://t.me/" . $this->tenant->code . "?start={$actor->user_id}`\n\n";
                     }
                 }
             } else {
-                $text .= "_" . Lang::get("telegrambot::bot.mainmenu.referral") . ":_\n`https://t.me/" . $bot->code . "?start={$actor->user_id}`\n\n";
+                $text .= "_" . Lang::get("telegrambot::bot.mainmenu.referral") . ":_\n`https://t.me/" . $this->tenant->code . "?start={$actor->user_id}`\n\n";
             }
         }
         $text .= "👇 " . Lang::get("telegrambot::bot.mainmenu.question");
 
-        $this->ActorsController->updateData(Actors::class, "user_id", $actor->user_id, "last_bot_callback_data", "", $bot->code);
+        $this->ActorsController->updateData(Actors::class, "user_id", $actor->user_id, "last_bot_callback_data", "", $this->tenant->code);
 
         if (!$menu)
             $menu = [];
@@ -502,8 +495,6 @@ trait UsesTelegramBot
 
     public function getConfigMenu($actor, $menu = false)
     {
-        $bot = app('active_bot');
-
         $reply = [];
 
         if (!$menu)
@@ -512,15 +503,15 @@ trait UsesTelegramBot
         $array = $actor->data;
 
         // Opciones para todos los usuarios:
-        if (isset($array[$bot->code]["config_delete_prev_messages"])) {
+        if (isset($array[$this->tenant->code]["config_delete_prev_messages"])) {
             array_push($menu, [["text" => "🟢 " . Lang::get("telegrambot::bot.options.keepprevmessages"), "callback_data" => "configdeleteprevmessages"]]);
         } else {
             array_push($menu, [["text" => "🔴 " . Lang::get("telegrambot::bot.options.deleteprevmessages"), "callback_data" => "configdeleteprevmessages"]]);
         }
 
         $timezone = "UTC";
-        if (isset($array[$bot->code]["time_zone"])) {
-            $timezone .= $array[$bot->code]["time_zone"];
+        if (isset($array[$this->tenant->code]["time_zone"])) {
+            $timezone .= $array[$this->tenant->code]["time_zone"];
         }
         array_push($menu, [["text" => "⏰ " . Lang::get("telegrambot::bot.options.timezone", ["timezone" => $timezone]), "callback_data" => "/utc"]]);
 
@@ -610,7 +601,7 @@ trait UsesTelegramBot
                 "name" => "admin_level",
                 "value" => [1],
             ],
-        ], $bot->code);
+        ], $this->tenant->code);
 
         array_push($array, [
             ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
@@ -618,9 +609,9 @@ trait UsesTelegramBot
 
         for ($i = 0; $i < count($admins); $i++) {
             $text = "🆕 *" . Lang::get("telegrambot::bot.prompts.userwithnorole.header") . "*\n\n" . $actor->getTelegramInfo($this, "full_info") . "\n\n";
-            if ($actor && $actor->id > 0 && isset($actor->data[$bot->code]["parent_id"]) && $actor->data[$bot->code]["parent_id"] > 0) {
+            if ($actor && $actor->id > 0 && isset($actor->data[$this->tenant->code]["parent_id"]) && $actor->data[$this->tenant->code]["parent_id"] > 0) {
                 // obteniendo datos del usuario padre en telegram
-                $parent = $this->AgentsController->getSuscriptor($this, $actor->data[$bot->code]["parent_id"], true);
+                $parent = $this->AgentsController->getSuscriptor($this, $actor->data[$this->tenant->code]["parent_id"], true);
                 $text .= "🫡 " . Lang::get("telegrambot::bot.prompts.userwithnorole.warning") . ":\n" . $parent->getTelegramInfo($this, "full_info") . "\n\n";
             }
             $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
@@ -636,7 +627,7 @@ trait UsesTelegramBot
                     ]),
                 ),
             );
-            TelegramController::sendMessage($array, $bot->token);
+            TelegramController::sendMessage($array, $this->tenant->token);
         }
     }
 

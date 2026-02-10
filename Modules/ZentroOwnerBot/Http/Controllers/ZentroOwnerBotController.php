@@ -19,6 +19,8 @@ class ZentroOwnerBotController extends JsonsController
 
     public function __construct()
     {
+        $this->tenant = app('active_bot');
+
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();
     }

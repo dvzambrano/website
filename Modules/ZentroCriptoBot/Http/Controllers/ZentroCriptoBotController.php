@@ -18,6 +18,8 @@ class ZentroCriptoBotController extends JsonsController
 
     public function __construct()
     {
+        $this->tenant = app('active_bot');
+
         $this->ActorsController = new ActorsController();
         $this->TelegramController = new TelegramController();
     }
@@ -93,8 +95,6 @@ class ZentroCriptoBotController extends JsonsController
 
     public function analizeToken($text)
     {
-        $bot = app('active_bot');
-
         $array = explode(" ", $text);
 
         // si hay mas de 2 palabras ya no es el formato /chain contract sino q es otra cosa y no se analiza
@@ -195,7 +195,7 @@ class ZentroCriptoBotController extends JsonsController
                     ),
                 );
 
-                TelegramController::sendMessage($request, $bot->token);
+                TelegramController::sendMessage($request, $this->tenant->token);
 
                 $error = "❌ *An error has occurred*: Contract: `{$contract}`\n";
                 if (isset($response['message'])) {
