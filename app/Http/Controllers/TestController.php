@@ -58,15 +58,6 @@ class TestController extends Controller
 
     public function test(Request $request)
     {
-
-        // Ejecutar el Job manualmente
-        $job = new CheckEmails();
-        $job->handle(); // Llama directamente al método handle()
-        die(date("Y-m-d H:i:s") . ": DONE!");
-
-
-
-
         app()->instance('active_bot', $this->GutoTradeTestBot);
         $bot = new GutoTradeBotController();
 
@@ -82,6 +73,18 @@ class TestController extends Controller
 
         ], $tenant->code);
         dd($senders->toArray());
+
+
+
+        // Ejecutar el Job manualmente
+        $job = new CheckEmails();
+        $job->handle(); // Llama directamente al método handle()
+        die(date("Y-m-d H:i:s") . ": DONE!");
+
+
+
+
+
 
 
         // Creamos un nombre de archivo de log dinámico basado en el Tenant
