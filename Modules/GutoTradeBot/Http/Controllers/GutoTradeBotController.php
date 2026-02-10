@@ -1125,6 +1125,8 @@ class GutoTradeBotController extends JsonsController
 
         $this->strategies["promptpaymentcomment"] =
             function () use ($tenant, $array) {
+                Log::info("GutoTradeBotController promptpaymentcomment " . json_encode($array));
+
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
 
                 //$comment, $screenshot, $sender_id, $payment_id, $data = array()
