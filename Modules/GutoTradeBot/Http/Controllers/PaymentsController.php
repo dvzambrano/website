@@ -672,6 +672,7 @@ class PaymentsController extends MoneysController
             ],
 
         ], $tenant->code);
+        Log::info("PaymentsController getUnconfirmedMenuForUsers (" . $tenant->code . ") " . json_encode($senders->toArray()));
 
         $menu = array();
         $total = 0;
