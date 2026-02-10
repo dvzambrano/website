@@ -58,10 +58,18 @@ class TestController extends Controller
 
     public function test(Request $request)
     {
-        dd(basename(config('logging.channels.storage.path')));
+
+
+        // Creamos un nombre de archivo de log dinámico basado en el Tenant
+        $logName = "storage_gutotradetestbot.log";
+        config(['logging.channels.storage.path' => storage_path("logs/{$logName}")]);
+        // Para asegurar que use el nuevo path, "olvidamos" el canal anterior:
+        app('log')->forgetChannel('storage');
+
+        //dd(basename(config('logging.channels.storage.path')));
 
         $fc = new FileController();
-        $payments = $fc->searchInLog('payment', "Juan", config('logging.channels.storage.path'), false);
+        $payments = $fc->searchInLog('payment', "Juan", basename(config('logging.channels.storage.path')), false);
         dd($payments);
 
         $array = $this->GutoTradeTestBot->getCommand("Esta es una prueba");

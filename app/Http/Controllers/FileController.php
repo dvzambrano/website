@@ -140,9 +140,9 @@ class FileController extends Controller
         die(date("Y-m-d H:i:s") . ": Logs limpiados correctamente!");
     }
 
-    public function searchInLog($key, $searchValue, $log = "storage", $exactMatch = true)
+    public function searchInLog($key, $searchValue, $log = "storage.log", $exactMatch = true)
     {
-        $logFile = storage_path("logs/{$log}.log");
+        $logFile = storage_path("logs/{$log}");
 
         if (!File::exists($logFile)) {
             return response()->json(['error' => 'Log file not found'], 404);
