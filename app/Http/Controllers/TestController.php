@@ -55,8 +55,15 @@ class TestController extends Controller
     {
         $this->GutoTradeTestBot = TelegramBots::where('name', "@GutoTradeTestBot")->first();
     }
+
     public function test(Request $request)
     {
+        dd(basename(config('logging.channels.storage.path')));
+
+        $fc = new FileController();
+        $payments = $fc->searchInLog('payment', "Juan", config('logging.channels.storage.path'), false);
+        dd($payments);
+
         $array = $this->GutoTradeTestBot->getCommand("Esta es una prueba");
         dd($array);
 
