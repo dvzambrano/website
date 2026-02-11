@@ -35,7 +35,7 @@ class DeleteTelegramMessage implements ShouldQueue
         ]);
 
         if ($response->successful()) {
-            Log::info("✅ Mensaje {$this->messageId} eliminado correctamente.");
+            // Log::info("✅ Mensaje {$this->messageId} eliminado correctamente.");
         } else {
             Log::error("❌ Error al eliminar mensaje: " . $response->body());
         }
