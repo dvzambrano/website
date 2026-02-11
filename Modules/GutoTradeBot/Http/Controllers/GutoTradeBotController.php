@@ -68,6 +68,10 @@ class GutoTradeBotController extends JsonsController
 
         $array = $this->getCommand($this->message["text"]);
         //Log::info("GutoTradeBotController getCommand " . json_encode($array));
+        $replied_message_id = $this->getIdOfRepliedMessage($this->message);
+        Log::info("GutoTradeBotController processMessage {$replied_message_id} " . json_encode($array));
+
+        $message = request()->input('message', []);
 
         $this->strategies["/help"] =
             $this->strategies["help"] =
@@ -908,7 +912,6 @@ class GutoTradeBotController extends JsonsController
         $this->strategies["/asign"] =
             $this->strategies["/assign"] =
             function () use ($id, $tenant, $array) {
-                Log::info("GutoTradeBotController asign {$id} " . json_encode($array));
                 if ($id && $id > 0) {
                     $suscriptor = $this->AgentsController->getSuscriptor($this, $array["message"], true);
                     if ($suscriptor) {
@@ -1752,11 +1755,11 @@ class GutoTradeBotController extends JsonsController
         return $reply;
     }
 
-    public function getIdOfRepliedMessage()
+    public function getIdOfRepliedMessage($message)
     {
         $id = false;
 
-        $message = request()->input('message', []);
+
         if (
             isset($message["reply_to_message"]) &&
             isset($message["reply_to_message"]["reply_markup"]) &&
