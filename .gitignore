@@ -32,3 +32,4 @@ yarn-error.log
 /.vscode
 /.zed
 /Modules/TelegramBot/Database/Seeders/TelegramBotsSeeder.php
+/Modules/ZentroTraderBot/Database/Seeders/MetadataSeeder.php
