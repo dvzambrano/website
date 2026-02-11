@@ -5,49 +5,96 @@ namespace Modules\ZentroTraderBot\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
-use Modules\Web3\Http\Controllers\AlchemyController;
+use Modules\TelegramBot\Entities\TelegramBots;
+use App\Models\Metadatas;
+use Illuminate\Support\Facades\DB;
 
 class SyncAlchemyAddresses extends Command
 {
-    protected $signature = 'zentrotraderbot:sync-alchemy 
-                        {--webhookid= : El ID del webhook de Alchemy} 
-                        {--authtoken= : El Token de autenticación de Alchemy}';
-    protected $description = 'Registra todas las wallets de los suscriptores en el webhook de Alchemy';
+    protected $signature = 'zentrotraderbot:alchemy-sync-wallets {module=ZentroTraderBot}';
+    protected $description = 'Vuelca todas las wallets de los suscriptores hacia sus respectivos webhooks en Alchemy';
 
     public function handle()
     {
-        // Capturamos los valores de los parámetros
-        $webhookId = $this->option('webhookid');
-        $authToken = $this->option('authtoken');
-        // Validación de seguridad
-        if (!$webhookId || !$authToken) {
-            $this->error('❌ Faltan parámetros. Uso: php artisan zentrotraderbot:sync-alchemy --webhookid=XXX --authtoken=YYY');
+        $metadata = Metadatas::where('name', "app_zentrotraderbot_alchemy_authtoken")->first();
+        if (!$metadata) {
+            $this->error("❌ No se encontró el AuthToken de Alchemy.");
             return;
         }
-        $this->info("Iniciando sincronización con Alchemy Webhook ID: {$webhookId}");
+        $alchemyToken = $metadata->value;
 
-        // 1. Obtener todas las wallets únicas de tus suscriptores
-        // Nota: Asegúrate de que el path del JSON sea el correcto para tu DB
-        $addresses = Suscriptions::all()
-            ->map(fn($s) => $s->data['wallet']['address'] ?? null)
-            ->filter()
-            ->unique()
-            ->values()
-            ->toArray();
+        $bots = TelegramBots::where('module', $this->argument('module'))->get();
+        foreach ($bots as $bot) {
+            $webhookId = $bot->data['alchemy_webhook_id'] ?? null;
 
-        if (empty($addresses)) {
-            $this->warn('No se encontraron wallets para sincronizar.');
-            return;
+            if (!$webhookId) {
+                $this->warn("⚠️ El bot {$bot->code} no tiene un Webhook ID.");
+                continue;
+            }
+
+            // --- CONFIGURACIÓN DINÁMICA DE LA CONEXIÓN ---
+            // Asumiendo que guardas los datos de la BD en el objeto $bot o sus metadatos
+            // Si todos están en el mismo servidor de Hostinger, solo cambia el database name
+            config([
+                'database.connections.tenant' => [
+                    'driver' => 'mysql',
+                    'host' => env('DB_HOST', '127.0.0.1'),
+                    'port' => env('DB_PORT', '3306'),
+                    'database' => $bot->database,
+                    'username' => $bot->username ?: env('DB_USERNAME'),
+                    'password' => $bot->password ?: env('DB_PASSWORD'),
+                    'charset' => 'utf8mb4',
+                    'collation' => 'utf8mb4_unicode_ci',
+                ]
+            ]);
+
+            // Limpiamos el caché de conexiones para que reconozca la nueva configuración
+            DB::purge('tenant');
+            DB::reconnect('tenant');
+
+            $this->info("🔍 Recopilando wallets para el bot: {$bot->code} en la BD: {$bot->database_name}");
+
+            // Ahora usamos la conexión 'tenant' que acabamos de configurar
+            try {
+                $addresses = Suscriptions::on('tenant')
+                    ->get()
+                    ->pluck('data.wallet.address')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->toArray();
+
+                if (empty($addresses)) {
+                    $this->warn("ℹ️ No hay wallets registradas para {$bot->code}.");
+                    continue;
+                }
+
+                $this->info("📡 Enviando " . count($addresses) . " direcciones a Alchemy (ID: {$webhookId})...");
+
+                // 2. Actualizar el webhook en Alchemy
+                // Usamos PATCH para reemplazar las direcciones del webhook con la lista actual
+                $response = Http::withHeaders([
+                    'X-Alchemy-Token' => $alchemyToken,
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])->patch("https://dashboard.alchemy.com/api/update-webhook-addresses", [
+                            'webhook_id' => $webhookId,
+                            'addresses_to_add' => $addresses,
+                            'addresses_to_remove' => [], // Podrías usar esto para ser más selectivo, pero enviar todo es más seguro para sincronizar
+                        ]);
+
+                if ($response->successful()) {
+                    $this->info("✅ Wallets sincronizadas para {$bot->code}.");
+                } else {
+                    $this->error("❌ Error en Alchemy para {$bot->code}: " . $response->body());
+                }
+
+            } catch (\Exception $e) {
+                $this->error("❌ Error conectando a la base de datos del bot {$bot->code}: " . $e->getMessage());
+                continue;
+            }
         }
 
-        $this->info('Enviando ' . count($addresses) . ' direcciones a Alchemy...');
-
-        // 2. Llamada a la API de Alchemy (Update Webhook)
-        $response = AlchemyController::updateWebhookAddresses($webhookId, $authToken, $addresses);
-        if ($response->successful()) {
-            $this->info('✅ Sincronización exitosa. Alchemy ahora vigila estas wallets.');
-        } else {
-            $this->error('❌ Error en Alchemy: ' . $response->body());
-        }
+        $this->info("🏁 Proceso de sincronización terminado.");
     }
 }

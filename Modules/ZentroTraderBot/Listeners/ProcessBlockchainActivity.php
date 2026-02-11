@@ -5,6 +5,9 @@ use Modules\Web3\Events\BlockchainActivityDetected;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Entities\Ramporders;
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
+use Modules\TelegramBot\Entities\TelegramBots;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class ProcessBlockchainActivity
 {
@@ -22,6 +25,7 @@ class ProcessBlockchainActivity
                 "network": "MATIC_MAINNET",
                 "activity": [
                     {
+                        "tenantCode": "16a65922-6a5d-4a45-a754-560a38c3c44c", }// este se lo puse en el AlchemyController/webhook
                         "fromAddress": "0xb0873c46937d34e98615e8c868bd3580bc6dcd47",
                         "toAddress": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
                         "blockNum": "0x4eafa87",
@@ -57,17 +61,43 @@ class ProcessBlockchainActivity
             }
         }
          */
-        $toAddress = strtolower($activity['toAddress']);
 
-        // Aquí sí conocemos a Suscriptions porque estamos dentro del módulo del Bot
-        $suscriptor = Suscriptions::where('data->wallet->address', $toAddress)->first();
+        $bot = TelegramBots::where('key', $activity['tenantCode'])->first();
+        if (!$bot) {
+            Log::error("ProcessBlockchainActivity handle event: " . $activity['tenantCode']);
+            return;
+        }
+
+        // 2. Configurar la conexión 'tenant' dinámicamente
+        config([
+            'database.connections.tenant' => [
+                'driver' => 'mysql',
+                'host' => env('DB_HOST', '127.0.0.1'),
+                'port' => env('DB_PORT', '3306'),
+                'database' => $bot->database,
+                'username' => $bot->username ?: env('DB_USERNAME'),
+                'password' => $bot->password ?: env('DB_PASSWORD'),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+            ]
+        ]);
+
+        // Limpiamos el caché de conexiones para que reconozca la nueva configuración
+        DB::purge('tenant');
+        DB::reconnect('tenant');
+
+        // Opcional: Compartir la config con el resto de la app
+        app()->instance('active_bot', $bot);
+
+        $toAddress = strtolower($activity['toAddress']);
+        $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
         if ($suscriptor) {
             // aqui podriamos actualizar una orden entrante, pero el deposito no necesariamente viene por esa via
-            if (!Ramporders::where('tx_hash', $activity['hash'])->exists()) {
+            if (!Ramporders::on('tenant')->where('tx_hash', $activity['hash'])->exists()) {
 
             }
 
-            $bot = new ZentroTraderBotController('Kashio'); // O dinámico
+            $bot = new ZentroTraderBotController(); // O dinámico
             $bot->notifyDepositConfirmed(
                 $suscriptor->user_id,
                 $activity['value'],

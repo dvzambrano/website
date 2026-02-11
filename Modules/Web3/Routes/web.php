@@ -26,7 +26,7 @@ Route::prefix('wallets')->group(function () {
 });
 
 Route::prefix('webhook')->group(function () {
-    Route::get('/alchemy', [AlchemyController::class, 'webhook'])->name('webhook.alchemy.get');
-    Route::post('/alchemy', [AlchemyController::class, 'webhook'])->name('webhook.alchemy.post');
+    Route::get('/alchemy/{code}', [AlchemyController::class, 'webhook'])->name('webhook.alchemy.get');
+    Route::post('/alchemy/{code}', [AlchemyController::class, 'webhook'])->name('webhook.alchemy.post');
 });
 

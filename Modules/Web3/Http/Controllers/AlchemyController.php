@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Http;
 
 class AlchemyController extends Controller
 {
-    public function webhook()
+    public function webhook($code)
     {
         try {
             $payload = request()->all();
@@ -26,6 +26,7 @@ class AlchemyController extends Controller
                 return response()->json(['status' => 'ignored'], 200);
             }
 
+
             $usdcContract = config('web3.tokens.USDC.address'); // USDC en Polygon: 0x3c499c542cef5e3811e1192ce70d8cc03d5c3359
 
             $activities = $payload['event']['activity'] ?? [];
@@ -34,6 +35,7 @@ class AlchemyController extends Controller
                 $contract = $activity['rawContract']['address'] ?? null;
                 if (strtolower($contract) !== strtolower($usdcContract))
                     continue;
+                $activity['tenantCode'] = $code;
                 // Disparamos el evento para que cualquier otro módulo lo capture
                 event(new BlockchainActivityDetected($activity));
             }

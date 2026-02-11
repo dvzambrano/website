@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Event;
 use Modules\Web3\Events\BlockchainActivityDetected;
 use Modules\ZentroTraderBot\Listeners\ProcessBlockchainActivity;
 use Modules\ZentroTraderBot\Console\SyncAlchemyAddresses;
+use Modules\ZentroTraderBot\Console\RegisterAlchemyWebhooks;
 use Modules\TelegramBot\Middleware\TenantMiddleware;
 
 class ZentroTraderBotServiceProvider extends ServiceProvider
@@ -54,6 +55,7 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 SyncAlchemyAddresses::class,
+                RegisterAlchemyWebhooks::class,
             ]);
         }
 
