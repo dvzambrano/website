@@ -908,7 +908,7 @@ class GutoTradeBotController extends JsonsController
                 return $reply;
             };
 
-        $id = $this->getIdOfRepliedMessage();
+        $id = false;
         $this->strategies["/asign"] =
             $this->strategies["/assign"] =
             function () use ($id, $tenant, $array) {
