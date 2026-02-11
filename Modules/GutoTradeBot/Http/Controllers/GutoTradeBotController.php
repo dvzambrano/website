@@ -904,10 +904,10 @@ class GutoTradeBotController extends JsonsController
                 return $reply;
             };
 
+        $id = $this->getIdOfRepliedMessage();
         $this->strategies["/asign"] =
             $this->strategies["/assign"] =
-            function () use ($tenant, $array) {
-                $id = $this->getIdOfRepliedMessage();
+            function () use ($id, $tenant, $array) {
                 Log::info("GutoTradeBotController asign {$id} " . json_encode($array));
                 if ($id && $id > 0) {
                     $suscriptor = $this->AgentsController->getSuscriptor($this, $array["message"], true);
