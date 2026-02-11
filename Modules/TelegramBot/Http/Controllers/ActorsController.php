@@ -30,13 +30,13 @@ class ActorsController extends JsonsController
         if (is_numeric($user_id)) {
             // si no esta suscrito lo agregamos a la BD
             if ($actor == null) {
-                $actor = $this->create($bot->code, $user_id, $parent_id);
+                $actor = $this->create($bot->tenant->code, $user_id, $parent_id);
             }
             // Chequeando si se ha suscrito a otro bot pero no este y añadiendolo
-            if (!isset($actor->data[$bot->code])) {
+            if (!isset($actor->data[$bot->tenant->code])) {
                 $array = $actor->data;
                 // Se envia $textinfo["message"] porq alli viene el parent_id en caso de ser un referido en la forma /start 816767995
-                $array[$bot->code] = Actors::getTemplate(0, $parent_id);
+                $array[$bot->tenant->code] = Actors::getTemplate(0, $parent_id);
                 $actor->data = $array;
                 $actor->save();
             }
@@ -97,7 +97,7 @@ class ActorsController extends JsonsController
         if ($suscriptor) {
             if (
                 $any_bot ||
-                isset($suscriptor->data[$bot->code])
+                isset($suscriptor->data[$bot->tenant->code])
             ) {
                 return $suscriptor;
             }
@@ -289,7 +289,7 @@ class ActorsController extends JsonsController
 
     public function getApplyMetadataPrompt($bot, $method, $backoption)
     {
-        $this->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->code);
+        $this->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->tenant->code);
 
         $reply = [
             "text" => "🏷 *Definir metadato al suscriptor*\n\nEj: `wallet:0xFAcD960564531bd336ed94fBBd0911408288FCF2`\n\n👇 Escriba a continuacion:",
