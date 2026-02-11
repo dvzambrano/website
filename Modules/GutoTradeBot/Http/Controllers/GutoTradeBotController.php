@@ -69,7 +69,7 @@ class GutoTradeBotController extends JsonsController
         $array = $this->getCommand($this->message["text"]);
         //Log::info("GutoTradeBotController getCommand " . json_encode($array));
         $replied_message_id = $this->getIdOfRepliedMessage($this->message);
-        Log::info("GutoTradeBotController processMessage {$replied_message_id} " . json_encode($array));
+        Log::info("GutoTradeBotController processMessage -{$replied_message_id}- | " . json_encode($array) . " | " . json_encode($this->message));
 
         $message = request()->input('message', []);
 
