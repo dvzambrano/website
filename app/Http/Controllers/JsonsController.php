@@ -96,7 +96,7 @@ class JsonsController extends Controller
     {
         $reply = array(
             "text" => "👍 *Registro eliminado*\n_Se ha eliminado el registro de la base de datos satisfactoriamente._\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],

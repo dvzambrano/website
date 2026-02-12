@@ -82,7 +82,7 @@ class GutoTradeBotController extends JsonsController
                 $text .= "👮‍♂️ *Términos y condiciones*:\n_Para usar nuestro servicio ud debe ACEPTAR nuestros términos que puede examinar aquí:_ [" . request()->root() . "/TermsAndConditions.pdf]\n*Usar este bot se considera una ACEPTACIÓN IMPLÍCITA*";
                 return [
                     "text" => $text,
-                    "markup" => json_encode([
+                    "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [
                                 ["text" => "↖️ Ir al menú principal", "callback_data" => "menu"],
@@ -264,7 +264,7 @@ class GutoTradeBotController extends JsonsController
                             "chat" => [
                                 "id" => $this->actor->user_id,
                             ],
-                            "markup" => json_encode([
+                            "reply_markup" => json_encode([
                                 "inline_keyboard" => $menu,
                             ]),
                         ];
@@ -289,7 +289,7 @@ class GutoTradeBotController extends JsonsController
                         }
                         $reply = array(
                             "text" => "👆 *Pagos en STORAGE*\n_Estos son {$amount} pagos encontrados en el fichero STORAGE._",
-                            "markup" => json_encode([
+                            "reply_markup" => json_encode([
                                 "inline_keyboard" => $menu,
                             ]),
                         );
@@ -430,7 +430,7 @@ class GutoTradeBotController extends JsonsController
                     $reply = [
                         "photo" => $filename ? request()->root() . FileController::$AUTODESTROY_DIR . "/{$filename}" : null,
                         "text" => $text,
-                        "markup" => json_encode([
+                        "reply_markup" => json_encode([
                             "inline_keyboard" => [
                                 [
                                     ["text" => "🔃 Volver a cargar", "callback_data" => "/market"],
@@ -498,7 +498,7 @@ class GutoTradeBotController extends JsonsController
 
                     $reply = array(
                         "text" => $text,
-                        "markup" => json_encode([
+                        "reply_markup" => json_encode([
                             "inline_keyboard" => $menu,
                         ]),
                     );
@@ -583,10 +583,7 @@ class GutoTradeBotController extends JsonsController
                 $account->is_active = $array["pieces"][2] == "true";
                 $account->save();
 
-                $reply = $this->AccountsController->getMessageTemplate($account->toArray(), $this->actor->user_id);
-                $reply = $reply["message"];
-                $reply["markup"] = $reply["reply_markup"];
-                return $reply;
+                return $this->AccountsController->getMessageTemplate($account->toArray(), $this->actor->user_id);
             };
 
         $this->strategies["confirmation"] =
@@ -648,7 +645,7 @@ class GutoTradeBotController extends JsonsController
                                 $array = array(
                                     "message" => $reply,
                                 );
-                                $array["message"]["reply_markup"] = $array["message"]["markup"];
+                                $array["message"]["reply_markup"] = $array["message"]["reply_markup"];
                                 TelegramController::sendPhoto($array, $tenant->token);
                             }
                         }
@@ -1051,10 +1048,7 @@ class GutoTradeBotController extends JsonsController
                 $account->data = $array;
                 $account->save();
 
-                $reply = $this->AccountsController->getMessageTemplate($account->toArray(), $this->actor->user_id);
-                $reply = $reply["message"];
-                $reply["markup"] = $reply["reply_markup"];
-                return $reply;
+                return $this->AccountsController->getMessageTemplate($account->toArray(), $this->actor->user_id);
             };
 
         $this->strategies["promptmoneyamount2"] =
@@ -1308,8 +1302,6 @@ class GutoTradeBotController extends JsonsController
                                 [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]],
                             ]
                         );
-                        $reply = $reply["message"];
-                        $reply["markup"] = $reply["reply_markup"];
                         break;
                     case "":
                         // NO BORRAR ESTE CASE: Sirve para reenviar pagos desde otras cuentas de telegram
@@ -1464,7 +1456,7 @@ class GutoTradeBotController extends JsonsController
             "chat" => [
                 "id" => $user_id,
             ],
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "🔎 Buscar otro", "callback_data" => "buscar"],
@@ -1647,7 +1639,7 @@ class GutoTradeBotController extends JsonsController
             "chat" => [
                 "id" => $actor->user_id,
             ],
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         ];
@@ -1733,7 +1725,7 @@ class GutoTradeBotController extends JsonsController
             "chat" => [
                 "id" => $actor->user_id,
             ],
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "🔃 Volver a cargar", "callback_data" => "/flow"],
@@ -1858,7 +1850,7 @@ class GutoTradeBotController extends JsonsController
 
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         );

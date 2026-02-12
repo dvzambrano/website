@@ -518,7 +518,7 @@ class PaymentsController extends MoneysController
 
         $reply = array(
             "text" => "💶 *Reportar pago*\n\n_Para reportar un pago, ud debe enviar una captura y poner como descripción de la misma, el nombre y apellidos del remitente y el monto enviado._\n\nEjemplo:    `Juan Perez 20`\n_Así estaríamos informando que Juan Perez ha enviado 20 EUR_\n\n👇 Envíe la captura del pago realizado:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "✋ Cancelar", "callback_data" => "menu"]],
                 ],
@@ -561,7 +561,7 @@ class PaymentsController extends MoneysController
 
             $reply = array(
                 "text" => "💶 *Menú de pagos*!\n_Aquí encontrará las opciones sobre los pagos realizados_\n\n👇 Qué desea hacer ahora?",
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
             );
@@ -601,7 +601,7 @@ class PaymentsController extends MoneysController
         }
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         );
@@ -651,7 +651,7 @@ class PaymentsController extends MoneysController
 
             $reply = array(
                 "text" => $text,
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
             );
@@ -711,7 +711,7 @@ class PaymentsController extends MoneysController
         }
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
 
@@ -750,7 +750,7 @@ class PaymentsController extends MoneysController
         }
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         );
@@ -843,7 +843,7 @@ class PaymentsController extends MoneysController
 
             $reply = array(
                 "text" => $text,
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
             );
@@ -912,7 +912,7 @@ class PaymentsController extends MoneysController
         }
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
 
@@ -931,7 +931,7 @@ class PaymentsController extends MoneysController
 
         $reply = array(
             "text" => "👍 *No hay pagos flotantes*\n_No existen pagos flotantes en sistema._",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "↖️ Volver al menú de pagos", "callback_data" => "/payments"]],
                 ],
@@ -978,7 +978,7 @@ class PaymentsController extends MoneysController
 
             $reply = array(
                 "text" => $text,
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
             );
@@ -1015,7 +1015,7 @@ class PaymentsController extends MoneysController
 
         $reply = array(
             "text" => "💶 *Pagos por usuarios*\n_Aquí puede obtener el reporte de pagos de uno o todos los usuarios_\n\n👇 De quién desea ver?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
 
@@ -1044,7 +1044,7 @@ class PaymentsController extends MoneysController
         }
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         );
@@ -1079,7 +1079,7 @@ class PaymentsController extends MoneysController
 
             $reply = array(
                 "text" => $text,
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
             );
@@ -1162,7 +1162,7 @@ class PaymentsController extends MoneysController
 
         $reply = array(
             "text" => "✅ *Pago confirmado*\n_Ud ha confirmado satisfactoriamente el pago recibido_\n\nSe le ha enviado notificación a quien reportó este pago para que esté al tanto de esta confirmación.\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -1181,7 +1181,7 @@ class PaymentsController extends MoneysController
         $suscriptor = $bot->AgentsController->getSuscriptor($bot, $user_id, true);
         $reply = array(
             "text" => "🆗 *Reporte de pago asignado*\n\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -1229,7 +1229,7 @@ class PaymentsController extends MoneysController
     {
         $reply = array(
             "text" => "👍 *Respuesta enviada*\n_Se le ha notificado al usuario que su pago aún no ha sido recibido._\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -1246,7 +1246,7 @@ class PaymentsController extends MoneysController
     {
         $reply = array(
             "text" => "👍 *Solicitud de confirmación*\n_Se ha enviado solicitud de confirmación del pago a las personas encargadas de procesarlo.\nPor favor, sea paciente, le notificaremos lo antes posible._\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -1262,7 +1262,7 @@ class PaymentsController extends MoneysController
     {
         $reply = array(
             "text" => "✅ *Pago liquidado*\n_Ud ha liquidado satisfactoriamente el pago_\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -1303,8 +1303,6 @@ class PaymentsController extends MoneysController
 
                         ]
                     );
-                    $reply = $reply["message"];
-                    $reply["markup"] = $reply["reply_markup"];
                     break;
                 case "getsupervisorpaymentscreenshot":
                     $reply = $this->getMessageTemplate(
@@ -1324,8 +1322,6 @@ class PaymentsController extends MoneysController
 
                         ]
                     );
-                    $reply = $reply["message"];
-                    $reply["markup"] = $reply["reply_markup"];
                     break;
                 case "getforwardedpaymentscreenshot":
                     $reply = $this->getMessageTemplate(
@@ -1342,8 +1338,6 @@ class PaymentsController extends MoneysController
 
                         ]
                     );
-                    $reply = $reply["message"];
-                    $reply["markup"] = $reply["reply_markup"];
                     break;
                 default:
                     break;
@@ -1366,7 +1360,7 @@ class PaymentsController extends MoneysController
         ];
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         );
@@ -1400,7 +1394,7 @@ class PaymentsController extends MoneysController
 
             $reply = array(
                 "text" => $text,
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
             );
@@ -1415,7 +1409,7 @@ class PaymentsController extends MoneysController
     {
         $reply = array(
             "text" => "👍 *Pago desconfirmado*\n_Se ha desconfirmado el pago satisfactoriamente._\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -1513,14 +1507,14 @@ class PaymentsController extends MoneysController
             if (count($payments) <= 20) {
                 $reply = array(
                     "text" => "👆 *Registros encontrados*\n_Estos son los {$amount} pagos que cumplen con su criterio de búsqueda._\n\n👇 Qué desea hacer ahora?",
-                    "markup" => json_encode([
+                    "reply_markup" => json_encode([
                         "inline_keyboard" => $options,
                     ]),
                 );
             } else {
                 $reply = array(
                     "text" => "🤯 *" . count($payments) . " registros encontrados*\n_Se han encontrado " . count($payments) . " pagos que cumplen con su criterio de búsqueda._\n*Son muchos para enviarle los mensages correspondientes.*\n_Intente buscar por otro criterio para obtener menos resultados._\n\n👇 Qué desea hacer ahora?",
-                    "markup" => json_encode([
+                    "reply_markup" => json_encode([
                         "inline_keyboard" => $options,
                     ]),
                 );
@@ -1528,7 +1522,7 @@ class PaymentsController extends MoneysController
         } else {
             $reply = array(
                 "text" => "🤦‍♂️ *Registro no encontrado*\n_No se ha encontrado ningún registo que cumpla con su criterio de búsqueda._\n\n👇 Qué desea hacer ahora?",
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => $options,
                 ]),
             );
@@ -1875,7 +1869,7 @@ class PaymentsController extends MoneysController
     {
         $reply = array(
             "text" => "⚠️ *El reporte ya no existe*\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "📋 Crear uno nuevo", "callback_data" => "/capital"]],
                     [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]],
@@ -1900,7 +1894,7 @@ class PaymentsController extends MoneysController
 
             $reply = array(
                 "text" => "✅ *Reporte usado satisfactoriamente*\n_El reporte '{$filename}' se ha usado para procesar {$amount} pagos para su capitalización_\n\n👇 Qué desea hacer ahora?",
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => [
                         [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]],
                     ],

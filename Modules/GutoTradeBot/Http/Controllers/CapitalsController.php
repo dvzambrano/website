@@ -275,7 +275,7 @@ class CapitalsController extends MoneysController
 
         $reply = array(
             "text" => "💰 *Reportar aporte de capital*\n\n_Para reportar un aporte de capital, ud debe enviar una captura y poner como descripción de la misma, el nombre y apellidos del remitente y el monto enviado._\n\nEjemplo:    *Juan Perez 1200*\n_Así estaríamos informando que Juan Perez ha enviado 1200 USDT_\n\n👇 Envíe la captura del aporte de capital realizado:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "✋ Cancelar", "callback_data" => "menu"]],
                 ],
@@ -301,7 +301,7 @@ class CapitalsController extends MoneysController
 
             $reply = array(
                 "text" => "💰 *Menú de aportes de capital*!\n_Aquí encontrará las opciones sobre los aportes de capital realizados_\n\n👇 Qué desea hacer ahora?",
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
             );
@@ -331,7 +331,7 @@ class CapitalsController extends MoneysController
         }
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         );
@@ -392,7 +392,7 @@ class CapitalsController extends MoneysController
 
             $reply = array(
                 "text" => $text,
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
             );
@@ -427,7 +427,7 @@ class CapitalsController extends MoneysController
 
         $reply = array(
             "text" => "💰 *Aportes de capital sin confirmar por usuarios*\n_Aquí puede obtener el reporte de aportes de capital sin confirmar de uno o todos los usuarios_\n\n👇 De quién desea ver?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
 
@@ -462,7 +462,7 @@ class CapitalsController extends MoneysController
 
         $reply = array(
             "text" => "💰 *Aportes de capital por usuarios*\n_Aquí puede obtener el reporte de aportes de capital de uno o todos los usuarios_\n\n👇 De quién desea ver?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
 
@@ -491,7 +491,7 @@ class CapitalsController extends MoneysController
         }
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         );
@@ -527,7 +527,7 @@ class CapitalsController extends MoneysController
 
             $reply = array(
                 "text" => $text,
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
             );
@@ -593,7 +593,7 @@ class CapitalsController extends MoneysController
 
         $reply = array(
             "text" => "✅ *Aporte de capital confirmado*\n_Ud ha confirmado satisfactoriamente el aporte de capital recibido_\n\nSe le ha enviado notificación a quien reportó este aporte de capital para que esté al tanto de esta confirmación.\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -612,7 +612,7 @@ class CapitalsController extends MoneysController
         $suscriptor = $bot->AgentsController->getSuscriptor($bot, $user_id, true);
         $reply = array(
             "text" => "🆗 *Aporte de capital asignado*\n\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -660,7 +660,7 @@ class CapitalsController extends MoneysController
     {
         $reply = array(
             "text" => "👍 *Respuesta enviada*\n_Se le ha notificado al usuario que su aporte de capital aún no ha sido recibido._\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -677,7 +677,7 @@ class CapitalsController extends MoneysController
     {
         $reply = array(
             "text" => "👍 *Solicitud de confirmación*\n_Se ha enviado solicitud de confirmación del aporte de capital a las personas encargadas de procesarlo.\nPor favor, sea paciente, le notificaremos lo antes posible._\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -718,8 +718,6 @@ class CapitalsController extends MoneysController
 
                         ]
                     );
-                    $reply = $reply["message"];
-                    $reply["markup"] = $reply["reply_markup"];
                     break;
                 case "getsupervisorcapitalscreenshot":
                     $reply = $this->getMessageTemplate(
@@ -739,8 +737,6 @@ class CapitalsController extends MoneysController
 
                         ]
                     );
-                    $reply = $reply["message"];
-                    $reply["markup"] = $reply["reply_markup"];
                     break;
                 default:
                     break;

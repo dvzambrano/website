@@ -71,7 +71,7 @@ class ZentroTraderBotController extends JsonsController
 
                 $uri = str_replace("telegram/bot/ZentroTraderBot", "tradingview/client/{$this->actor->user_id}", request()->fullUrl());
                 $reply["text"] = "🌎 " . Lang::get("zentrotraderbot::bot.prompts.clienturl.header") . ":\n{$uri}\n\n👆 " . Lang::get("zentrotraderbot::bot.prompts.clienturl.warning") . ".";
-                $reply["markup"] = json_encode([
+                $reply["reply_markup"] = json_encode([
                     "inline_keyboard" => [
                         [
                             ["text" => "🔙 " . Lang::get("zentrotraderbot::bot.options.backtosuscribemenu"), "callback_data" => "suscribemenu"],
@@ -328,7 +328,7 @@ class ZentroTraderBotController extends JsonsController
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
         );
 
-        $reply["markup"] = json_encode([
+        $reply["reply_markup"] = json_encode([
             "inline_keyboard" => [
                 $action_settings_menu,
                 [
@@ -411,7 +411,7 @@ class ZentroTraderBotController extends JsonsController
             array_push($suscription_settings_menu, ["text" => "🌎 " . Lang::get("zentrotraderbot::bot.options.clienturl"), "callback_data" => "clienturl"]);
         }
 
-        $reply["markup"] = json_encode([
+        $reply["reply_markup"] = json_encode([
             "inline_keyboard" => [
                 $suscription_settings_menu,
                 [

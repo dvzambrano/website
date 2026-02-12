@@ -39,7 +39,7 @@ class AccountsController extends JsonsController
     {
         $reply = array(
             "text" => "🎲 *Ajustar operaciones restantes*\n\n👇 Escriba cuántas operaciones restan en esta cuenta:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "✋ Cancelar", "callback_data" => "menu"]],
                 ],
@@ -191,7 +191,7 @@ class AccountsController extends JsonsController
 
         $reply = [
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         ];

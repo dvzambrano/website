@@ -128,7 +128,7 @@ class MoneysController extends JsonsController
 
         $reply = [
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "{$icon} Intentar nuevamente", "callback_data" => $callback_data],
@@ -271,7 +271,7 @@ class MoneysController extends JsonsController
                     Log::error("MoneysController processMoney ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()} TraceAsString: " . $th->getTraceAsString());
                     $reply = [
                         "text" => "😬 *Ha ocurrido un error {$th->getCode()}*\n_{$th->getMessage()}_",
-                        "markup" => json_encode([
+                        "reply_markup" => json_encode([
                             "inline_keyboard" => [
                                 [
                                     ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
@@ -953,7 +953,7 @@ class MoneysController extends JsonsController
 
         $reply = array(
             "text" => "🎆 *Cambiar captura*\n\n_Para cambiar la captura Ud solo debe enviar la nueva a continuación.\nNo es necesario agregar texto en la descripción._\n\n👇 Envíe la nueva captura:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "✋ Cancelar", "callback_data" => "menu"]],
                 ],
@@ -970,7 +970,7 @@ class MoneysController extends JsonsController
 
         $reply = array(
             "text" => "🔎 *Buscar registro en la BD*\n_Ud puede escribir el ID, la cantidad, o parte del nombre del remitente para buscarlo. Tenga en cuenta que criterios muy cortos pueden generar muchos resultados._\n\n👇 Escriba el valor por el que desea buscar:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [$backoption],
                 ],
@@ -987,7 +987,7 @@ class MoneysController extends JsonsController
 
         $reply = array(
             "text" => "🔎 *Buscar registros en la BD*\n_Es posible buscar registros con cierta cantidad de días de antigüedad. Si escribe un valor positivo, se sumará esa cantidad de días a le fecha actual; si por el contrario el número escrito es negativo, se resta a la fecha actual los días especificados._\n\n👇 Escriba cuántos días desea buscar:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [$backoption],
                 ],
@@ -1004,7 +1004,7 @@ class MoneysController extends JsonsController
 
         $reply = array(
             "text" => "🎲 *Ajustar cantidad del envio*\n\n👇 Escriba el nuevo valor:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "✋ Cancelar", "callback_data" => "menu"]],
                 ],
@@ -1021,7 +1021,7 @@ class MoneysController extends JsonsController
 
         $reply = array(
             "text" => "✒ *Ajustar el nombre del remitente*\n\n👇 Escriba el nuevo valor:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "✋ Cancelar", "callback_data" => "menu"]],
                 ],
@@ -1037,7 +1037,7 @@ class MoneysController extends JsonsController
 
         $reply = array(
             "text" => "💬 *Comentar sobre este registro*\n\n👇 Escriba el texto que desee a continuación:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "✋ Cancelar", "callback_data" => "menu"]],
                 ],
@@ -1085,7 +1085,7 @@ class MoneysController extends JsonsController
 
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         );

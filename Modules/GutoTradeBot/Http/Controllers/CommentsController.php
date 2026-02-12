@@ -80,7 +80,7 @@ class CommentsController extends JsonsController
     {
         $reply = array(
             "text" => "💬 *Comentario enviado*\n_Se ha enviado su comentario satisfactoriamente._\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],

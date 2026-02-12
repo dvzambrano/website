@@ -29,7 +29,7 @@ class ProfitsController extends JsonsController
                 "*Actualmente configurado:* `" . $salary->value . ":" . $profit->value . "`\n_" . $salary->value . "% de salario y " . $profit->value . "% de ganancias_\n" .
                 "Los envios se realizan a un " . ($salary->value + $profit->value) . "%\n\n" .
                 "👇 Escriba salario:ganancia",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "✋ Cancelar", "callback_data" => "adminmenu"]],
                 ],
@@ -43,7 +43,7 @@ class ProfitsController extends JsonsController
     {
         $reply = array(
             "text" => "🤑 *Ganancias actualizadas*\n_Se han actualizado las ganancias satisfactoriamente._\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú de administrador", "callback_data" => "adminmenu"],

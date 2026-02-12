@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Modules\TelegramBot\Jobs\SendAnnouncement;
 
 trait UsesTelegramBot
 {
@@ -102,7 +103,7 @@ trait UsesTelegramBot
                     "id" => $this->message["chat"]["id"],
                 ),
                 "reply_to_message_id" => isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) ? false : $this->message["message_id"], // responder al mensaje q origino esta interaccion del bot si no es dvzambrano
-                "reply_markup" => isset($this->reply["markup"]) ? $this->reply["markup"] : false,
+                "reply_markup" => isset($this->reply["reply_markup"]) ? $this->reply["reply_markup"] : false,
             ),
             "demo" => $update['demo'] ?? false,
         );
@@ -257,7 +258,7 @@ trait UsesTelegramBot
                 $reply = [
                     "text" => "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.prompt") . "*\n\n" .
                         "👇 " . Lang::get("telegrambot::bot.prompts.announcement.whatsnext") . ":",
-                    "markup" => json_encode([
+                    "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [["text" => "✋ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "adminmenu"]],
                         ],
@@ -265,45 +266,21 @@ trait UsesTelegramBot
                 ];
                 break;
             case "getannouncement":
-                $amount = 0;
                 $suscriptors = $this->ActorsController->getAllForBot($this->tenant->code);
+                $text =
+                    "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.header") . "*\n\n" .
+                    $this->message["text"];
+
                 foreach ($suscriptors as $suscriptor) {
-                    $array = [
-                        "message" => [
-                            "text" =>
-                                "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.header") . "*\n\n" .
-                                $this->message["text"],
-                            "chat" => [
-                                "id" => $suscriptor->user_id,
-                            ],
-                            "reply_markup" => json_encode([
-                                "inline_keyboard" => [
-                                    [
-                                        ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]
-                                    ],
-                                ],
-                            ]),
-                        ],
-                    ];
-                    $array = json_decode(TelegramController::sendMessage($array, $this->tenant->token), true);
-                    if (isset($array["result"]) && isset($array["result"]["message_id"])) {
-                        TelegramController::pinMessage([
-                            "message" => [
-                                "chat" => [
-                                    "id" => $suscriptor->user_id,
-                                ],
-                                "message_id" => $array["result"]["message_id"],
-                            ],
-                        ], $this->tenant->token);
-                        $amount++;
-                    }
+                    // Despachamos el job individual
+                    SendAnnouncement::dispatch($this->tenant, $suscriptor->user_id, $text);
                 }
 
                 $reply = [
                     "text" => "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.sent.header") . "*\n" .
-                        Lang::get("telegrambot::bot.prompts.announcement.sent.warning", ["amount" => $amount]) . ".\n\n" .
+                        Lang::get("telegrambot::bot.prompts.announcement.sent.warning", ["amount" => $suscriptors->count()]) . ".\n\n" .
                         "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
-                    "markup" => json_encode([
+                    "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [
                                 ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtoadminmenu"), "callback_data" => "adminmenu"]
@@ -469,7 +446,7 @@ trait UsesTelegramBot
 
         $reply = [
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         ];
@@ -495,7 +472,7 @@ trait UsesTelegramBot
 
         $reply = [
             "text" => "👮‍♂️ *" . Lang::get("telegrambot::bot.adminmenu.header") . "*!\n_" . Lang::get("telegrambot::bot.adminmenu.warning") . "_\n\n👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         ];
@@ -530,7 +507,7 @@ trait UsesTelegramBot
 
         $reply = [
             "text" => "⚙️ *" . Lang::get("telegrambot::bot.configmenu.header") . "*!\n_" . Lang::get("telegrambot::bot.configmenu.warning") . "_\n\n👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         ];
@@ -548,7 +525,7 @@ trait UsesTelegramBot
 
         return array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "👍 " . Lang::get("telegrambot::bot.options.yes"), "callback_data" => "{$yes_method}"],
@@ -589,7 +566,7 @@ trait UsesTelegramBot
             "chat" => array(
                 "id" => $user_id,
             ),
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
@@ -654,7 +631,7 @@ trait UsesTelegramBot
             "chat" => array(
                 "id" => $user_id,
             ),
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "👍 " . Lang::get("telegrambot::bot.prompts.usernamerequired.done"), "callback_data" => "menu"],

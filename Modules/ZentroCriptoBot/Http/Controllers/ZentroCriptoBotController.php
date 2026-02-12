@@ -70,7 +70,7 @@ class ZentroCriptoBotController extends JsonsController
                 //$text .= "👮‍♂️ *Términos y condiciones*:\n_Para usar nuestro servicio ud debe ACEPTAR nuestros términos que puede examinar aquí:_ [{request()->root()}/TermsAndConditions.pdf]\n*Usar este bot se considera una ACEPTACIÓN IMPLÍCITA*";
                 $reply = array(
                     "text" => $text,
-                    "markup" => json_encode([
+                    "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [
                                 ["text" => "↖️ Ir al menú principal", "callback_data" => "menu"],
@@ -678,7 +678,7 @@ class ZentroCriptoBotController extends JsonsController
 
         $reply = array(
             "text" => $text,
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
         );

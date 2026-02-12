@@ -120,7 +120,7 @@ class ActorsController extends JsonsController
 
         $reply = array(
             "text" => "🫂 *Usuarios suscritos*\n_Estos son los {$count} usuarios que se han suscrito al bot._",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "↖️ Volver al menú de administrador", "callback_data" => "adminmenu"]],
                 ],
@@ -144,7 +144,7 @@ class ActorsController extends JsonsController
         } else {
             $reply = [
                 "text" => "🤷🏻‍♂️ *Usuario no encontrado*\n\nEl usuario `{$user_id}` no se encuenta suscrito a este bot.",
-                "markup" => json_encode([
+                "reply_markup" => json_encode([
                     "inline_keyboard" => [
                         [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]],
                     ],
@@ -203,7 +203,7 @@ class ActorsController extends JsonsController
         $suscriptor = $this->getSuscriptor($bot, $user_id, true);
         $reply = [
             "text" => "🆗 *Rol de usuario modificado*\n\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n" . $array["role"] . "\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => $array["menu"],
             ]),
         ];
@@ -238,7 +238,7 @@ class ActorsController extends JsonsController
 
         $reply = [
             "text" => "⏰ *Ajustar zona horaria*\n\n_Definir su zona horaria hará que el bot le personalice las fechas y horas.\nPara establecer su zona horaria de la forma UTC-4 escriba solo -4._\n\n👇 Escriba en qué zona horaria esta ud:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "✋ Cancelar", "callback_data" => "menu"]],
                 ],
@@ -254,7 +254,7 @@ class ActorsController extends JsonsController
         $date = $now->format("Y-m-d H:i:s");
         $reply = [
             "text" => "⏰ *Zona horaria actualizada*\n_Se ha actualizado su zona horaria satisfactoriamente._\n\nAhora son las {$date}.\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "↖️ Volver al menú configuraciones", "callback_data" => "configmenu"],
@@ -271,7 +271,7 @@ class ActorsController extends JsonsController
     {
         $reply = [
             "text" => "⏰ *Zona con error*\n_No se puede establecer la zona horaria “{$text}”_\nRevise q haya enviado un número válido con el que se pueda ajustar la hora.\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "⏰ Intentar nuevamente", "callback_data" => "/utc"],
@@ -293,7 +293,7 @@ class ActorsController extends JsonsController
 
         $reply = [
             "text" => "🏷 *Definir metadato al suscriptor*\n\nEj: `wallet:0xFAcD960564531bd336ed94fBBd0911408288FCF2`\n\n👇 Escriba a continuacion:",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [$backoption],
                 ],
@@ -307,7 +307,7 @@ class ActorsController extends JsonsController
     {
         $reply = array(
             "text" => "🏷 *Metadato actualizado*\n_Se ha actualizado el metadato del suscriptor satisfactoriamente._\n\n👇 Qué desea hacer ahora?",
-            "markup" => json_encode([
+            "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "🔃 Volver a mostrar el suscriptor", "callback_data" => "/user {$user_id}"]
