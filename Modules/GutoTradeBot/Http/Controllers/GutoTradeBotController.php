@@ -1261,23 +1261,20 @@ class GutoTradeBotController extends JsonsController
             return $this->getProcessedMessage();
         }
 
+        // si ha llegado hasta aqui es porq no mandaron texto, sino otra cosa y se requiere un reply diferente
+        $reply = [
+            "text" => "",
+        ];
+
         if ((isset($this->message["photo"])) || isset($this->message["document"])) {
             // para poder analizar fotos y documentos para procesarlos como pago debe existir el actor previamente
             // si es una animacion no es un pago, es un mal manejo
             if ($this->actor && $this->actor->id > 0 && !isset($this->message["animation"])) {
-                $array = $this->actor->data;
-                //Log::info("GutoTradeBotController photo actor->data = " . json_encode($array));
-
                 $command = "";
-                if (isset($array[$tenant->code]["last_bot_callback_data"]))
-                    $command = $array[$tenant->code]["last_bot_callback_data"];
-
-                $commandarray = $this->getCommand($command);
-                Log::info("GutoTradeBotController promptprofit " . json_encode($commandarray));
-
-                $commandarray = $commandarray["pieces"];
-                if (count($commandarray) > 1)
-                    $command = $commandarray[0];
+                if (isset($this->actor->data[$tenant->code]["last_bot_callback_data"]))
+                    $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
+                $array = $this->getCommand($command);
+                Log::info("GutoTradeBotController promptprofit " . json_encode($array));
 
                 switch ($command) {
                     case "getsenderpaymentscreenshot":
@@ -1293,13 +1290,12 @@ class GutoTradeBotController extends JsonsController
                         $reply = $this->CapitalsController->processMoney($this, 1, 1);
                         break;
                     case "getnewpaymentscreenshot":
-
                         // Guardar la captura y devolver la ruta
                         $path = $this->getScreenshotPath();
 
-                        $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $commandarray[1]);
+                        $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array[1]);
                         $this->PaymentsController->updateScreenshot($payment, $path);
-                        $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $commandarray[1]);
+                        $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array[1]);
 
                         $reply = $this->PaymentsController->getMessageTemplate(
                             $this,
