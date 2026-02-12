@@ -322,7 +322,9 @@ trait UsesTelegramBot
 
                 $text =
                     "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.header") . "*\n\n" .
-                    $this->message["text"];
+                    $this->message["text"] . "\n\n" .
+                    "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
+
                 foreach ($suscriptors as $key => $suscriptor) {
                     // Despachamos el job individual
                     SendAnnouncement::dispatch(
