@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Jobs\SendAnnouncement;
 use Illuminate\Support\Facades\Cache;
+use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
 
 trait UsesTelegramBot
 {
@@ -255,18 +256,41 @@ trait UsesTelegramBot
                 break;
 
             case "sendannouncement":
-                $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "getannouncement", $this->tenant->code);
+                $response = json_decode(TelegramController::sendMessage(
+                    array(
+                        "message" => array(
+                            "text" => "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.prompt") . "*\n\n" .
+                                "👇 " . Lang::get("telegrambot::bot.prompts.announcement.whatsnext") . ":",
+                            "reply_markup" => json_encode([
+                                "inline_keyboard" => [
+                                    [["text" => "✋ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "adminmenu"]],
+                                ],
+                            ]),
+                        ),
+                    ),
+                    $this->tenant->token
+                ), true);
+                $message_id = false;
+                if (isset($response["result"]["message_id"]) && $response["result"]["message_id"] > -1)
+                    $message_id = $response["result"]["message_id"];
+                $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "getannouncement-" . $message_id, $this->tenant->code);
+
+
+                // haciendo q no haya respuesta
                 $reply = [
-                    "text" => "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.prompt") . "*\n\n" .
-                        "👇 " . Lang::get("telegrambot::bot.prompts.announcement.whatsnext") . ":",
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [["text" => "✋ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "adminmenu"]],
-                        ],
-                    ]),
+                    "text" => "",
                 ];
+
                 break;
             case "getannouncement":
+                // eliminando el mensaje previo promt q nos trajo hasta aqui:
+                if (isset($array["pieces"][1]))
+                    DeleteTelegramMessage::dispatch(
+                        (string) $this->tenant->token,
+                        (int) $this->actor->user_id,
+                        (int) $array["pieces"][1]
+                    );
+
                 $suscriptors = $this->ActorsController->getAllForBot($this->tenant->code);
                 $message_id = false;
                 $response = json_decode(TelegramController::sendMessage(
