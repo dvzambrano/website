@@ -1273,7 +1273,7 @@ class GutoTradeBotController extends JsonsController
                     $command = $array[$tenant->code]["last_bot_callback_data"];
 
                 $commandarray = $this->getCommand($command);
-                //Log::info("GutoTradeBotController promptprofit " . json_encode($commandarray));
+                Log::info("GutoTradeBotController promptprofit " . json_encode($commandarray));
 
                 $commandarray = $commandarray["pieces"];
                 if (count($commandarray) > 1)
@@ -1293,6 +1293,7 @@ class GutoTradeBotController extends JsonsController
                         $reply = $this->CapitalsController->processMoney($this, 1, 1);
                         break;
                     case "getnewpaymentscreenshot":
+
                         // Guardar la captura y devolver la ruta
                         $path = $this->getScreenshotPath();
 
