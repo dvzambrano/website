@@ -261,6 +261,9 @@ trait UsesTelegramBot
                         "message" => array(
                             "text" => "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.prompt") . "*\n\n" .
                                 "👇 " . Lang::get("telegrambot::bot.prompts.announcement.whatsnext") . ":",
+                            "chat" => array(
+                                "id" => $this->actor->user_id,
+                            ),
                             "reply_markup" => json_encode([
                                 "inline_keyboard" => [
                                     [["text" => "✋ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "adminmenu"]],
