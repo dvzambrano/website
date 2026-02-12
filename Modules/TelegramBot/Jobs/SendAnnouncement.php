@@ -104,11 +104,14 @@ class SendAnnouncement implements ShouldQueue
                         else
                             $duration = round($duration / 60, 1);
 
-                        $destroyformat = "mins";
-                        if ($this->timeToDestroy < 60)
-                            $destroyformat = "segs";
+                        $destroyformat = "segs";
+                        $timeToDestroy = $this->timeToDestroy;
+                        if ($timeToDestroy >= 60) {
+                            $destroyformat = "mins";
+                            $timeToDestroy = round($this->timeToDestroy / 60, 1);
+                        }
                         $text .= "⏱ *" . Lang::get("telegrambot::bot.prompts.announcement.sent.duration.header") . "* " . Lang::choice("telegrambot::bot.prompts.announcement.sent.duration." . $durationformat, $duration, ['count' => $duration]) . "\n" .
-                            "🗑 _" . Lang::choice("telegrambot::bot.prompts.announcement.sent.destroy." . $destroyformat, $this->timeToDestroy, ['count' => $this->timeToDestroy]) . "_";
+                            "🗑 _" . Lang::choice("telegrambot::bot.prompts.announcement.sent.destroy." . $destroyformat, $timeToDestroy, ['count' => $timeToDestroy]) . "_";
 
                     }
 
@@ -127,7 +130,7 @@ class SendAnnouncement implements ShouldQueue
                             (string) $tenant->token,
                             (int) $data['admin_id'],
                             (int) $this->messageId
-                        )->delay(now()->addMinutes($this->timeToDestroy));
+                        )->delay(now()->addSeconds($this->timeToDestroy));
 
                         Cache::forget($cacheKey);
                         Cache::forget($cacheKey . "_sent");
