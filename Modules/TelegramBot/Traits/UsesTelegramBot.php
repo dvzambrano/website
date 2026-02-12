@@ -257,7 +257,7 @@ trait UsesTelegramBot
                 break;
             case "getannouncement":
                 $amount = 0;
-                $suscriptors = $this->ActorsController->getAll();
+                $suscriptors = $this->ActorsController->getAllForBot($this->tenant->code);
                 foreach ($suscriptors as $suscriptor) {
                     $array = [
                         "message" => [
