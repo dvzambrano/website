@@ -325,7 +325,7 @@ trait UsesTelegramBot
                     SendAnnouncement::dispatch(
                         $this->tenant->id,
                         $suscriptor->user_id,
-                        $this->message["id"],
+                        $this->message["message_id"],
                         $message_id,
                         $this->actor->user_id,
                         1 * 60 // en segundos... se multiplica por 60 para hacerlo en minutos
