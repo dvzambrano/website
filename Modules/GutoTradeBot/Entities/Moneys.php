@@ -35,7 +35,11 @@ class Moneys extends Jsons
     {
         $tenant = app('active_bot');
 
-        $text = "💰 *{$title}*\n🆔 `{$this->id}`  ";
+        $hiddenId = $this->id;
+        $invisibleChar = "‌";
+        $invisibleLink = "[{$invisibleChar}](tg://metadata?id={$hiddenId})";
+
+        $text = $invisibleLink . "💰 *{$title}*\n🆔 `{$this->id}`  ";
         if ($this->isConfirmed()) {
             $text .= "🟩";
             if ($this->isLiquidated()) {

@@ -661,7 +661,12 @@ class MoneysController extends JsonsController
 
     public function getMessageTemplate($bot, $money, $to_id, $title, $message = false, $show_owner_id = true, $menu = false, $extra_capture = false)
     {
-        $text = "💰 *{$title}*\n🆔 `{$money->id}`\n\n";
+
+        $hiddenId = $money->id;
+        $invisibleChar = "‌";
+        $invisibleLink = "[{$invisibleChar}](tg://metadata?id={$hiddenId})";
+
+        $text = $invisibleLink . "💰 *{$title}*\n🆔 `{$money->id}`\n\n";
 
         if ($message && $message != "") {
             $text .= "{$message}\n\n";
