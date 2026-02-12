@@ -1276,7 +1276,7 @@ class GutoTradeBotController extends JsonsController
                 $array = $this->getCommand($command);
                 Log::info("GutoTradeBotController photo or document with command='{$command}' " . json_encode($array));
 
-                switch ($command) {
+                switch ($array["command"]) {
                     case "getsenderpaymentscreenshot":
                         $reply = $this->PaymentsController->processMoney($this, 2, 2);
                         break;
@@ -1293,9 +1293,9 @@ class GutoTradeBotController extends JsonsController
                         // Guardar la captura y devolver la ruta
                         $path = $this->getScreenshotPath();
 
-                        $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array[1]);
+                        $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                         $this->PaymentsController->updateScreenshot($payment, $path);
-                        $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array[1]);
+                        $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
 
                         $reply = $this->PaymentsController->getMessageTemplate(
                             $this,
