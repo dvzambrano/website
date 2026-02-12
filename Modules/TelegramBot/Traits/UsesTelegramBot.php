@@ -230,7 +230,10 @@ trait UsesTelegramBot
                 if ($this->actor->isLevel(1, $this->tenant->code)) {
                     // eliminar un usuario
                     $user = $this->ActorsController->getFirst(Actors::class, "user_id", "=", $array["pieces"][1]);
-                    $user->delete();
+                    $data = $user->data;
+                    unset($data[$this->tenant->code]);
+                    $user->data = $data;
+                    $user->save();
 
                     $reply = $this->ActorsController->notifyAfterDelete();
                 } else
