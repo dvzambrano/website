@@ -298,7 +298,13 @@ trait UsesTelegramBot
                     $this->message["text"];
                 foreach ($suscriptors as $key => $suscriptor) {
                     // Despachamos el job individual
-                    SendAnnouncement::dispatch($this->tenant->id, $suscriptor->user_id, $text, $message_id);
+                    SendAnnouncement::dispatch(
+                        $this->tenant->id,
+                        $suscriptor->user_id,
+                        $text,
+                        $message_id,
+                        1 * 60 // en segundos... se multiplica por 60 para hacerlo en minutos
+                    );
                     // ->delay(now()->addMinutes($key * 1)) // para ralentizar y ver como funciona COMENTAR ESTO!!
                 }
 

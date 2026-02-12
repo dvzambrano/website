@@ -7,8 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 class DeleteTelegramMessage implements ShouldQueue
 {
@@ -27,17 +26,12 @@ class DeleteTelegramMessage implements ShouldQueue
 
     public function handle()
     {
-        $url = "https://api.telegram.org/bot{$this->token}/deleteMessage";
-
-        $response = Http::post($url, [
-            'chat_id' => $this->chatId,
-            'message_id' => $this->messageId
-        ]);
-
-        if ($response->successful()) {
-            // Log::info("✅ Mensaje {$this->messageId} eliminado correctamente.");
-        } else {
-            Log::error("❌ Error al eliminar mensaje: " . $response->body());
-        }
+        // Llamamos directamente al controlador
+        TelegramController::deleteMessage([
+            "message" => [
+                "chat" => ["id" => $this->chatId],
+                "id" => $this->messageId // Tu controlador usa "id" para borrar
+            ]
+        ], $this->token);
     }
 }

@@ -20,15 +20,15 @@ class SendAnnouncement implements ShouldQueue
     protected $userId;
     protected $text;
     protected $messageId;
-    protected $timeToDestroy;
+    protected $secoundsToDestroy;
 
-    public function __construct($tenantId, $userId, $text, $messageId)
+    public function __construct($tenantId, $userId, $text, $messageId, $secoundsToDestroy)
     {
         $this->tenantId = $tenantId;
         $this->userId = $userId;
         $this->text = $text;
         $this->messageId = $messageId ?? false;
-        $this->timeToDestroy = 5 * 60; // en segundos... se multiplica por 60 para hacerlo en minutos
+        $this->secoundsToDestroy = $secoundsToDestroy;
     }
 
     public function handle()
@@ -105,13 +105,13 @@ class SendAnnouncement implements ShouldQueue
                             $duration = round($duration / 60, 1);
 
                         $destroyformat = "segs";
-                        $timeToDestroy = $this->timeToDestroy;
-                        if ($timeToDestroy >= 60) {
+                        $secoundsToDestroy = $this->secoundsToDestroy;
+                        if ($secoundsToDestroy >= 60) {
                             $destroyformat = "mins";
-                            $timeToDestroy = round($this->timeToDestroy / 60, 1);
+                            $secoundsToDestroy = round($this->secoundsToDestroy / 60, 1);
                         }
                         $text .= "⏱ *" . Lang::get("telegrambot::bot.prompts.announcement.sent.duration.header") . "* " . Lang::choice("telegrambot::bot.prompts.announcement.sent.duration." . $durationformat, $duration, ['count' => $duration]) . "\n" .
-                            "🗑 _" . Lang::choice("telegrambot::bot.prompts.announcement.sent.destroy." . $destroyformat, $timeToDestroy, ['count' => $timeToDestroy]) . "_";
+                            "🗑 _" . Lang::choice("telegrambot::bot.prompts.announcement.sent.destroy." . $destroyformat, $secoundsToDestroy, ['count' => $secoundsToDestroy]) . "_";
 
                     }
 
@@ -123,15 +123,15 @@ class SendAnnouncement implements ShouldQueue
                         ]
                     ], $tenant->token);
 
-                    // Limpieza de caché si ya terminó
                     if ($currentSent == $total) {
                         // 2. DISPARAR LA AUTODESTRUCCIÓN
                         DeleteTelegramMessage::dispatch(
                             (string) $tenant->token,
                             (int) $data['admin_id'],
                             (int) $this->messageId
-                        )->delay(now()->addSeconds($this->timeToDestroy));
+                        )->delay(now()->addSeconds($this->secoundsToDestroy));
 
+                        // Limpieza de caché 
                         Cache::forget($cacheKey);
                         Cache::forget($cacheKey . "_sent");
                     }
