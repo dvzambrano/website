@@ -1433,9 +1433,7 @@ class GutoTradeBotController extends JsonsController
                     ["text" => "💹 Estadísticas", "callback_data" => "/stats"],
                     ["text" => "🧮 Flujo de Caja", "callback_data" => "/cashflow"]
                 ]);
-                array_push($menu, [["text" => "🚨 Anuncio", "callback_data" => "sendannouncement"]]);
                 array_push($menu, [["text" => "🤑 Ajustar ganancias", "callback_data" => "/profit"]]);
-                array_push($menu, [["text" => "🫂 Usuarios suscritos", "callback_data" => "/users"]]);
                 break;
             case "4":
             case 4:
@@ -1443,7 +1441,6 @@ class GutoTradeBotController extends JsonsController
                     ["text" => "💹 Estadísticas", "callback_data" => "/stats"],
                     ["text" => "🧮 Flujo de Caja", "callback_data" => "/cashflow"]
                 ]);
-                array_push($menu, [["text" => "🚨 Anuncio", "callback_data" => "sendannouncement"]]);
                 break;
             default:
                 break;

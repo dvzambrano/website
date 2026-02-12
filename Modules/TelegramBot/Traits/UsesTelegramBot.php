@@ -175,9 +175,10 @@ trait UsesTelegramBot
                 $reply = $this->mainMenu($this->actor);
                 break;
             case "adminmenu":
-                $reply = $this->mainMenu($this->actor);
                 if ($this->actor->isLevel(1, $this->tenant->code))
                     $reply = $this->adminMenu($this->actor);
+                else
+                    $reply = $this->mainMenu($this->actor);
                 break;
             case "configmenu":
                 $reply = $this->configMenu($this->actor);
@@ -186,12 +187,16 @@ trait UsesTelegramBot
             case "/users":
             case "getsuscriptors":
                 if ($this->actor->isLevel(1, $this->tenant->code))
-                    $reply = $this->AgentsController->findSuscriptors($this, $this->actor);
+                    $reply = $this->AgentsController->findSuscriptors($this);
+                else
+                    $reply = $this->mainMenu($this->actor);
                 break;
 
             case "/user":
                 if ($this->actor->isLevel(1, $this->tenant->code))
                     $reply = $this->AgentsController->findSuscriptor($this, $array["message"]);
+                else
+                    $reply = $this->mainMenu($this->actor);
                 break;
 
             case "/suscribe":
@@ -228,7 +233,8 @@ trait UsesTelegramBot
                     $user->delete();
 
                     $reply = $this->ActorsController->notifyAfterDelete();
-                }
+                } else
+                    $reply = $this->mainMenu($this->actor);
                 break;
 
             case "/usermetadata":
