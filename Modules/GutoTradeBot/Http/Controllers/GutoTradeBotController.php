@@ -69,9 +69,6 @@ class GutoTradeBotController extends JsonsController
         $array = $this->getCommand($this->message["text"]);
         //Log::info("GutoTradeBotController getCommand " . json_encode($array));
 
-        $replied_message_id = $this->getIdOfRepliedMessage();
-        Log::info("GutoTradeBotController replied_message_id={$replied_message_id}");
-
         $this->strategies["/help"] =
             $this->strategies["help"] =
             $this->strategies["/ayuda"] =
@@ -911,7 +908,6 @@ class GutoTradeBotController extends JsonsController
             $this->strategies["/assign"] =
             function () use ($tenant, $array) {
                 $id = $this->getIdOfRepliedMessage();
-                Log::info("GutoTradeBotController asign {$id} " . json_encode($array));
                 if ($id && $id > 0) {
                     $suscriptor = $this->AgentsController->getSuscriptor($this, $array["message"], true);
                     if ($suscriptor) {
@@ -1759,10 +1755,9 @@ class GutoTradeBotController extends JsonsController
     {
         $message = request()->input('message', []);
 
-
         if (isset($message["reply_to_message"])) {
             $message = $message["reply_to_message"];
-            Log::info("GutoTradeBotController getIdOfRepliedMessage " . json_encode($message));
+            //Log::info("GutoTradeBotController getIdOfRepliedMessage " . json_encode($message));
 
             // Los mensajes con foto usan 'caption_entities', los de texto 'entities'
             $entities = $message['caption_entities'] ?? $message['entities'] ?? [];
