@@ -20,6 +20,7 @@ class SendAnnouncement implements ShouldQueue
     protected $userId;
     protected $text;
     protected $messageId;
+    protected $timeToDestroy;
 
     public function __construct($tenantId, $userId, $text, $messageId)
     {
@@ -27,6 +28,7 @@ class SendAnnouncement implements ShouldQueue
         $this->userId = $userId;
         $this->text = $text;
         $this->messageId = $messageId ?? false;
+        $this->timeToDestroy = 5 * 60; // en segundos... se multiplica por 60 para hacerlo en minutos
     }
 
     public function handle()
@@ -44,7 +46,12 @@ class SendAnnouncement implements ShouldQueue
                 "text" => $this->text,
                 "chat" => ["id" => $this->userId],
                 "reply_markup" => json_encode([
-                    "inline_keyboard" => [[["text" => "↖️ Menu", "callback_data" => "menu"]]],
+                    "inline_keyboard" => [
+                        [
+                            ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]
+                        ]
+                    ],
+
                 ]),
             ],
         ];
@@ -84,17 +91,44 @@ class SendAnnouncement implements ShouldQueue
                         "✅ *" . Lang::get("telegrambot::bot.prompts.announcement.sent.header") . "*" :
                         "⏳ *" . Lang::get("telegrambot::bot.prompts.announcement.sending.header") . "*";
 
+                    $text = "{$status}\n" .
+                        "_" . Lang::get("telegrambot::bot.prompts.announcement.sending.warning", ["amount" => $currentSent, "total" => $total]) . "_\n\n";
+
+                    if ($currentSent == $total) {
+                        $startTime = $data['start_time'];
+                        $duration = $startTime->diffInSeconds(now());
+                        // Formateamos el tiempo (segundos o minutos)
+                        $durationformat = "mins";
+                        if ($duration < 60)
+                            $durationformat = "segs";
+                        else
+                            $duration = round($duration / 60, 1);
+
+                        $destroyformat = "mins";
+                        if ($this->timeToDestroy < 60)
+                            $destroyformat = "segs";
+                        $text .= "⏱ *" . Lang::get("telegrambot::bot.prompts.announcement.sent.duration.header") . "* " . Lang::choice("telegrambot::bot.prompts.announcement.sent.duration." . $durationformat, $duration, ['count' => $duration]) . "\n" .
+                            "🗑 _" . Lang::choice("telegrambot::bot.prompts.announcement.sent.destroy." . $destroyformat, $this->timeToDestroy, ['count' => $this->timeToDestroy]) . "_";
+
+                    }
+
                     TelegramController::editMessageText([
                         "message" => [
                             "chat" => ["id" => $data['admin_id']],
                             "message_id" => $this->messageId,
-                            "text" => "{$status}\n" .
-                                "_" . Lang::get("telegrambot::bot.prompts.announcement.sending.warning", ["amount" => $currentSent, "total" => $total]) . "_",
+                            "text" => $text,
                         ]
                     ], $tenant->token);
 
                     // Limpieza de caché si ya terminó
                     if ($currentSent == $total) {
+                        // 2. DISPARAR LA AUTODESTRUCCIÓN
+                        DeleteTelegramMessage::dispatch(
+                            (string) $tenant->token,
+                            (int) $data['admin_id'],
+                            (int) $this->messageId
+                        )->delay(now()->addMinutes($this->timeToDestroy));
+
                         Cache::forget($cacheKey);
                         Cache::forget($cacheKey . "_sent");
                     }

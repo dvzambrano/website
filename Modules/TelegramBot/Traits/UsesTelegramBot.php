@@ -288,7 +288,8 @@ trait UsesTelegramBot
                 // 2. Inicializamos la caché. Usamos el ID del mensaje como parte de la llave para que sea única.
                 Cache::put("bot_announcement_{$message_id}", [
                     'total' => $suscriptors->count(),
-                    'admin_id' => $this->actor->user_id
+                    'admin_id' => $this->actor->user_id,
+                    'start_time' => now()
                 ], now()->addHours(2));
                 Cache::put("bot_announcement_{$message_id}_sent", 0, now()->addHours(2));
 

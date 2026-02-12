@@ -58,6 +58,15 @@ return [
             ],
             "sent" => [
                 "header" => "¡Envío completado!",
+                'destroy' => [
+                    "segs" => 'Este mensaje se eliminará en :count segundo|Este mensaje se eliminará en :count segundos',
+                    'mins' => 'Este mensaje se eliminará en :count minuto|Este mensaje se eliminará en :count minutos',
+                ],
+                'duration' => [
+                    "header" => "Tiempo total:",
+                    "segs" => ':count segundo|:count segundos',
+                    'mins' => ':count minuto|:count minutos',
+                ],
             ],
         ],
         "userwithnorole" => [
