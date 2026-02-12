@@ -85,10 +85,7 @@ class SendAnnouncement implements ShouldQueue
                         "message" => [
                             "chat" => ["id" => $data['admin_id']],
                             "message_id" => $this->messageId,
-                            "text" => "🚨 *Progreso del Anuncio*\n\n{$status}\nProgreso: {$currentSent} de {$total} usuarios.",
-                            "reply_markup" => json_encode([
-                                "inline_keyboard" => [[["text" => "↖️ Volver al Panel", "callback_data" => "adminmenu"]]],
-                            ]),
+                            "text" => "🚨 *Progreso del Anuncio*\n\n{$status}\nProgreso: {$currentSent} de {$total} usuarios."
                         ]
                     ], $tenant->token);
 

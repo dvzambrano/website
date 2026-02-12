@@ -301,9 +301,11 @@ trait UsesTelegramBot
                 $text =
                     "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.header") . "*\n\n" .
                     $this->message["text"];
-                foreach ($suscriptors as $suscriptor) {
+                foreach ($suscriptors as $key => $suscriptor) {
                     // Despachamos el job individual
-                    SendAnnouncement::dispatch($this->tenant->id, $suscriptor->user_id, $text, $message_id);
+                    SendAnnouncement::dispatch($this->tenant->id, $suscriptor->user_id, $text, $message_id)
+                        ->delay(now()->addMinutes($key * 1)) // para ralentizar y ver como funciona COMENTAR ESTO!!
+                    ;
                 }
 
                 // haciendo q no haya respuesta
