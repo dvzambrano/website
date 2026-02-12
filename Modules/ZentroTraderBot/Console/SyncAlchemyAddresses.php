@@ -33,24 +33,7 @@ class SyncAlchemyAddresses extends Command
             }
 
             // --- CONFIGURACIÓN DINÁMICA DE LA CONEXIÓN ---
-            // Asumiendo que guardas los datos de la BD en el objeto $bot o sus metadatos
-            // Si todos están en el mismo servidor de Hostinger, solo cambia el database name
-            config([
-                'database.connections.tenant' => [
-                    'driver' => 'mysql',
-                    'host' => env('DB_HOST', '127.0.0.1'),
-                    'port' => env('DB_PORT', '3306'),
-                    'database' => $bot->database,
-                    'username' => $bot->username ?: env('DB_USERNAME'),
-                    'password' => $bot->password ?: env('DB_PASSWORD'),
-                    'charset' => 'utf8mb4',
-                    'collation' => 'utf8mb4_unicode_ci',
-                ]
-            ]);
-
-            // Limpiamos el caché de conexiones para que reconozca la nueva configuración
-            DB::purge('tenant');
-            DB::reconnect('tenant');
+            $bot->connectToThisTenant();
 
             $this->info("🔍 Recopilando wallets para el bot: {$bot->code} en la BD: {$bot->database_name}");
 

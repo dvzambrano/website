@@ -17,49 +17,40 @@ class ProcessBlockchainActivity
 
         /*
         {
-            "webhookId": "wh_2vk2jwuyidkm80xa",
-            "id": "whevt_t3dhlkpqocswvmy8",
-            "createdAt": "2026-02-03T16:40:53.702Z",
-            "type": "ADDRESS_ACTIVITY",
-            "event": {
-                "network": "MATIC_MAINNET",
-                "activity": [
-                    {
-                        "tenantCode": "16a65922-6a5d-4a45-a754-560a38c3c44c", }// este se lo puse en el AlchemyController/webhook
-                        "fromAddress": "0xb0873c46937d34e98615e8c868bd3580bc6dcd47",
-                        "toAddress": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
-                        "blockNum": "0x4eafa87",
-                        "hash": "0x8542bfadf98f54778587710af7ee3c476d3ff2e2f772cfb8b41b99fefc01e115",
-                        "value": 0.111153,
-                        "asset": "USDC",
-                        "category": "token",
-                        "rawContract": {
-                            "rawValue": "0x000000000000000000000000000000000000000000000000000000000001b231",
-                            "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-                            "decimals": 6
-                        },
-                        "log": {
-                            "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-                            "topics": [
-                                "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-                                "0x000000000000000000000000b0873c46937d34e98615e8c868bd3580bc6dcd47",
-                                "0x000000000000000000000000d2531438b90232f4aab4ddfc6f146474e84e1ea1"
-                            ],
-                            "data": "0x000000000000000000000000000000000000000000000000000000000001b231",
-                            "blockNumber": "0x4eafa87",
-                            "transactionHash": "0x8542bfadf98f54778587710af7ee3c476d3ff2e2f772cfb8b41b99fefc01e115",
-                            "transactionIndex": "0xfa",
-                            "blockHash": "0x9d2932cfe732e9d8c3d612378012e43bd8989efdf899092a78c28463b191c7e5",
-                            "blockTimestamp": "0x69822514",
-                            "logIndex": "0xfcf",
-                            "removed": false
-                        },
-                        "blockTimestamp": "0x69822514"
-                    }
-                ],
-                "source": "chainlake-kafka"
-            }
-        }
+            "activity": [
+                {
+                    "tenantCode": "16a65922-6a5d-4a45-a754-560a38c3c44c", }// este se lo puse en el AlchemyController/webhook
+                    "fromAddress": "0xb0873c46937d34e98615e8c868bd3580bc6dcd47",
+                    "toAddress": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
+                    "blockNum": "0x4eafa87",
+                    "hash": "0x8542bfadf98f54778587710af7ee3c476d3ff2e2f772cfb8b41b99fefc01e115",
+                    "value": 0.111153,
+                    "asset": "USDC",
+                    "category": "token",
+                    "rawContract": {
+                        "rawValue": "0x000000000000000000000000000000000000000000000000000000000001b231",
+                        "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                        "decimals": 6
+                    },
+                    "log": {
+                        "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                        "topics": [
+                            "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                            "0x000000000000000000000000b0873c46937d34e98615e8c868bd3580bc6dcd47",
+                            "0x000000000000000000000000d2531438b90232f4aab4ddfc6f146474e84e1ea1"
+                        ],
+                        "data": "0x000000000000000000000000000000000000000000000000000000000001b231",
+                        "blockNumber": "0x4eafa87",
+                        "transactionHash": "0x8542bfadf98f54778587710af7ee3c476d3ff2e2f772cfb8b41b99fefc01e115",
+                        "transactionIndex": "0xfa",
+                        "blockHash": "0x9d2932cfe732e9d8c3d612378012e43bd8989efdf899092a78c28463b191c7e5",
+                        "blockTimestamp": "0x69822514",
+                        "logIndex": "0xfcf",
+                        "removed": false
+                    },
+                    "blockTimestamp": "0x69822514"
+                }
+            ]
          */
 
         $bot = TelegramBots::where('key', $activity['tenantCode'])->first();
@@ -68,36 +59,12 @@ class ProcessBlockchainActivity
             return;
         }
 
-        // 2. Configurar la conexión 'tenant' dinámicamente
-        config([
-            'database.connections.tenant' => [
-                'driver' => 'mysql',
-                'host' => env('DB_HOST', '127.0.0.1'),
-                'port' => env('DB_PORT', '3306'),
-                'database' => $bot->database,
-                'username' => $bot->username ?: env('DB_USERNAME'),
-                'password' => $bot->password ?: env('DB_PASSWORD'),
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
-            ]
-        ]);
-
-        // Limpiamos el caché de conexiones para que reconozca la nueva configuración
-        DB::purge('tenant');
-        DB::reconnect('tenant');
-
-        // Opcional: Compartir la config con el resto de la app
-        app()->instance('active_bot', $bot);
+        $bot->connectToThisTenant();
 
         $toAddress = strtolower($activity['toAddress']);
         $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
         if ($suscriptor) {
-            // aqui podriamos actualizar una orden entrante, pero el deposito no necesariamente viene por esa via
-            if (!Ramporders::on('tenant')->where('tx_hash', $activity['hash'])->exists()) {
-
-            }
-
-            $bot = new ZentroTraderBotController(); // O dinámico
+            $bot = new ZentroTraderBotController();
             $bot->notifyDepositConfirmed(
                 $suscriptor->user_id,
                 $activity['value'],

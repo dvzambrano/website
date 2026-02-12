@@ -110,20 +110,7 @@ class MigrateAndSeedModules extends Command
 
             $this->info("  ℹ️  Migrando Tenant: {$tenant->name} (DB: {$tenant->database}) " . 'Modules/' . $tenant->module . '/Database/Migrations');
 
-            config([
-                'database.connections.tenant' => [
-                    'driver' => 'mysql',
-                    'host' => env('DB_HOST', '127.0.0.1'),
-                    'port' => env('DB_PORT', '3306'),
-                    'database' => $tenant->database,
-                    'username' => $tenant->username ?: env('DB_USERNAME'),
-                    'password' => $tenant->password ?: env('DB_PASSWORD'),
-                    'charset' => 'utf8mb4',
-                    'collation' => 'utf8mb4_unicode_ci',
-                ]
-            ]);
-
-            DB::purge('tenant');
+            $tenant->connectToThisTenant();
 
             try {
                 // 1. Verificamos que la base de datos exista físicamente (por si acaso)

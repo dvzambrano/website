@@ -24,20 +24,7 @@ class TenantMiddleware
         }
 
         // 3. Si todo está ok, configuramos la conexión dinámica 'tenant'
-        Config::set('database.connections.tenant', [
-            'driver' => 'mysql',
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'database' => $tenant->database,
-            'username' => $tenant->username,
-            'password' => $tenant->password,
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => '',
-        ]);
-
-        // Forzamos la reconexión
-        DB::purge('tenant');
-        DB::reconnect('tenant');
+        $tenant->connectToThisTenant();
 
         // Creamos un nombre de archivo de log dinámico basado en el Tenant
         $logName = "storage_" . strtolower($tenant->code) . ".log";
