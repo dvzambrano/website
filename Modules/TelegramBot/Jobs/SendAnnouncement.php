@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Lang;
 
 class SendAnnouncement implements ShouldQueue
 {
@@ -79,14 +80,16 @@ class SendAnnouncement implements ShouldQueue
                     $interval = 50;
 
                 if ($currentSent % $interval == 0 || $currentSent == $total) {
-                    $status = ($currentSent == $total) ? "✅ *¡Envío de anuncios completado!*" : "⏳ *Enviando anuncios...*";
+                    $status = ($currentSent == $total) ?
+                        "✅ *" . Lang::get("telegrambot::bot.prompts.announcement.sent.header") . "*" :
+                        "⏳ *" . Lang::get("telegrambot::bot.prompts.announcement.sending.header") . "*";
 
                     TelegramController::editMessageText([
                         "message" => [
                             "chat" => ["id" => $data['admin_id']],
                             "message_id" => $this->messageId,
                             "text" => "{$status}\n" .
-                                "Progreso: {$currentSent} de {$total} anuncios enviados."
+                                "_" . Lang::get("telegrambot::bot.prompts.announcement.sending.warning", ["amount" => $currentSent, "total" => $total]) . "_",
                         ]
                     ], $tenant->token);
 

@@ -48,13 +48,16 @@ return [
             "prompt" => "Enviar anuncio",
             "header" => "ATENCION: Anuncio del sistema",
             "whatsnext" => "Escriba el anuncio que desea enviar",
+            "preparing" => [
+                "header" => "Preparando anuncios",
+                "warning" => "Se enviarán anuncios a :amount suscriptores...",
+            ],
             "sending" => [
-                "header" => "Enviando anuncios",
-                "warning" => "Se han enviado :amount de :total anuncios",
+                "header" => "Enviando anuncios...",
+                "warning" => "Progreso: :amount de :total anuncios enviados.",
             ],
             "sent" => [
-                "header" => "Anuncio enviado",
-                "warning" => "El anuncio ha sido enviado correctamente a :amount suscriptores",
+                "header" => "¡Envío completado!",
             ],
         ],
         "userwithnorole" => [

@@ -272,18 +272,12 @@ trait UsesTelegramBot
                 $response = json_decode(TelegramController::sendMessage(
                     array(
                         "message" => array(
-                            "text" => "⏳ *Preparando anuncios*\nSe enviarán anuncios a " . $suscriptors->count() . " suscriptores...",
+                            "text" =>
+                                "⏳ *" . Lang::get("telegrambot::bot.prompts.announcement.preparing.header") . "*\n" .
+                                "_" . Lang::get("telegrambot::bot.prompts.announcement.preparing.warning", ["amount" => $suscriptors->count()]) . "_",
                             "chat" => array(
                                 "id" => $this->actor->user_id,
                             ),
-                            "reply_markup" => json_encode([
-                                "inline_keyboard" => [
-                                    [
-                                        ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtoadminmenu"), "callback_data" => "adminmenu"]
-                                    ],
-
-                                ],
-                            ]),
                         ),
                     ),
                     $this->tenant->token
@@ -303,9 +297,8 @@ trait UsesTelegramBot
                     $this->message["text"];
                 foreach ($suscriptors as $key => $suscriptor) {
                     // Despachamos el job individual
-                    SendAnnouncement::dispatch($this->tenant->id, $suscriptor->user_id, $text, $message_id)
-                        ->delay(now()->addMinutes($key * 1)) // para ralentizar y ver como funciona COMENTAR ESTO!!
-                    ;
+                    SendAnnouncement::dispatch($this->tenant->id, $suscriptor->user_id, $text, $message_id);
+                    // ->delay(now()->addMinutes($key * 1)) // para ralentizar y ver como funciona COMENTAR ESTO!!
                 }
 
                 // haciendo q no haya respuesta
