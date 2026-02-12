@@ -70,6 +70,7 @@ class GutoTradeBotController extends JsonsController
         //Log::info("GutoTradeBotController getCommand " . json_encode($array));
 
         $replied_message_id = $this->getIdOfRepliedMessage();
+        Log::info("GutoTradeBotController replied_message_id={$replied_message_id}");
 
         $this->strategies["/help"] =
             $this->strategies["help"] =
@@ -1756,37 +1757,33 @@ class GutoTradeBotController extends JsonsController
 
     public function getIdOfRepliedMessage()
     {
-        $id = false;
-
         $message = request()->input('message', []);
 
-        if (isset($message["reply_to_message"]))
-            Log::info("GutoTradeBotController getIdOfRepliedMessage " . json_encode($message["reply_to_message"]));
 
-        if (
-            isset($message["reply_to_message"]) &&
-            isset($message["reply_to_message"]["reply_markup"]) &&
-            isset($message["reply_to_message"]["reply_markup"]["inline_keyboard"])
-        ) {
-            foreach ($message["reply_to_message"]["reply_markup"]["inline_keyboard"] as $row) {
-                foreach ($row as $btn)
-                    if (isset($btn["callback_data"])) {
-                        // un pago existente en la BD tiene la opcion de findbyid
-                        if (stripos($btn["callback_data"], "/findbyid") > -1) {
-                            $id = str_ireplace("/findbyid ", "", $btn["callback_data"]);
-                            break;
-                        }
-                        // un pago en storage tiene opcion de importbyid
-                        if (stripos($btn["callback_data"], "/importbyid") > -1) {
-                            $id = str_ireplace("/importbyid ", "", $btn["callback_data"]);
-                            break;
-                        }
+        if (isset($message["reply_to_message"])) {
+            $message = $message["reply_to_message"];
+            Log::info("GutoTradeBotController getIdOfRepliedMessage " . json_encode($message));
+
+            // Los mensajes con foto usan 'caption_entities', los de texto 'entities'
+            $entities = $message['caption_entities'] ?? $message['entities'] ?? [];
+
+            foreach ($entities as $entity) {
+                // Buscamos específicamente entidades de tipo text_link
+                if ($entity['type'] === 'text_link' && isset($entity['url'])) {
+                    $url = $entity['url'];
+
+                    // Verificamos si la URL empieza con nuestro esquema personalizado
+                    if (str_starts_with($url, 'tg://metadata')) {
+                        // Parseamos la URL para obtener los parámetros
+                        $queryString = parse_url($url, PHP_URL_QUERY);
+                        parse_str($queryString, $params);
+
+                        return $params['id'] ?? null;
                     }
+                }
             }
         }
-
-        return $id;
-
+        return null;
     }
 
     public function getSystemInfo()

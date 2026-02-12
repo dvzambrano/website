@@ -1,5 +1,5 @@
 {
-    "message_id": 2704,
+    "message_id": 2731,
     "from": {
         "id": 7543090584,
         "is_bot": true,
@@ -13,7 +13,7 @@
         "username": "dvzambrano",
         "type": "private"
     },
-    "date": 1770847904,
+    "date": 1770855069,
     "photo": [
         {
             "file_id": "AgACAgEAAxkBAAIKj2mM_p_HfmApXH_vg2FQr2W_FQ0jAAKLC2sbDptoRO5gZ9NJ_Nz6AQADAgADcwADOgQ",
@@ -44,14 +44,20 @@
             "height": 1280
         }
     ],
-    "caption": "\ud83d\udcb0 Reenvio de pago en revisi\u00f3n\n\ud83c\udd94 1\n\n\ud83e\udeaa A nombre de:\n\ud83d\udc64 SIN DATOS: 0 \ud83d\udcb6\n\ud83d\udcc5 Fecha: 2026-02-11 22:11:44\n\n\ud83d\udc68\ud83c\udffb\u200d\ud83d\udcbb Reportado por:\n\ud83d\udc64 Donel Vazquez Zambrano \n\u2709\ufe0f @dvzambrano \n\ud83c\udd94 816767995\n\n\ud83d\udc47 Qu\u00e9 desea hacer?",
+    "caption": "\ud83d\udcb0 Reenvio de pago en revisi\u00f3n\n\ud83c\udd94 3\n\n\ud83e\udeaa A nombre de:\n\ud83d\udc64 SIN DATOS: 0 \ud83d\udcb6\n\ud83d\udcc5 Fecha: 2026-02-12 00:11:09\n\n\ud83d\udc68\ud83c\udffb\u200d\ud83d\udcbb Reportado por:\n\ud83d\udc64 Donel Vazquez Zambrano \n\u2709\ufe0f @dvzambrano \n\ud83c\udd94 816767995\n\n\ud83d\udc47 Qu\u00e9 desea hacer?",
     "caption_entities": [
-        { "offset": 3, "length": 27, "type": "bold" },
-        { "offset": 34, "length": 1, "type": "code" },
-        { "offset": 37, "length": 34, "type": "bold" },
-        { "offset": 75, "length": 5, "type": "bold" },
-        { "offset": 156, "length": 11, "type": "mention" },
-        { "offset": 172, "length": 9, "type": "code" }
+        {
+            "offset": 0,
+            "length": 1,
+            "type": "text_link",
+            "url": "tg:\/\/metadata?id=3"
+        },
+        { "offset": 4, "length": 27, "type": "bold" },
+        { "offset": 35, "length": 1, "type": "code" },
+        { "offset": 38, "length": 34, "type": "bold" },
+        { "offset": 76, "length": 5, "type": "bold" },
+        { "offset": 157, "length": 11, "type": "mention" },
+        { "offset": 173, "length": 9, "type": "code" }
     ],
     "reply_markup": {
         "inline_keyboard": [
