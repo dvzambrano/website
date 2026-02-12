@@ -7,6 +7,7 @@ use Modules\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Jobs\SendAnnouncement;
+use Illuminate\Support\Facades\Cache;
 
 trait UsesTelegramBot
 {
@@ -267,27 +268,47 @@ trait UsesTelegramBot
                 break;
             case "getannouncement":
                 $suscriptors = $this->ActorsController->getAllForBot($this->tenant->code);
+                $message_id = false;
+                $response = json_decode(TelegramController::sendMessage(
+                    array(
+                        "message" => array(
+                            "text" => "🚨 *Iniciando Envío Masivo*\nProgreso: 0 de " . $suscriptors->count() . "\n⏳ Preparando motores...",
+                            "chat" => array(
+                                "id" => $this->actor->user_id,
+                            ),
+                            "reply_markup" => json_encode([
+                                "inline_keyboard" => [
+                                    [
+                                        ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtoadminmenu"), "callback_data" => "adminmenu"]
+                                    ],
+
+                                ],
+                            ]),
+                        ),
+                    ),
+                    $this->tenant->token
+                ), true);
+                if (isset($response["result"]["message_id"]) && $response["result"]["message_id"] > -1)
+                    $message_id = $response["result"]["message_id"];
+
+                // 2. Inicializamos la caché. Usamos el ID del mensaje como parte de la llave para que sea única.
+                Cache::put("bot_announcement_{$message_id}", [
+                    'total' => $suscriptors->count(),
+                    'admin_id' => $this->actor->user_id
+                ], now()->addHours(2));
+                Cache::put("bot_announcement_{$message_id}_sent", 0, now()->addHours(2));
+
                 $text =
                     "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.header") . "*\n\n" .
                     $this->message["text"];
-
                 foreach ($suscriptors as $suscriptor) {
                     // Despachamos el job individual
-                    SendAnnouncement::dispatch($this->tenant, $suscriptor->user_id, $text);
+                    SendAnnouncement::dispatch($this->tenant->id, $suscriptor->user_id, $text, $message_id);
                 }
 
+                // haciendo q no haya respuesta
                 $reply = [
-                    "text" => "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.sent.header") . "*\n" .
-                        Lang::get("telegrambot::bot.prompts.announcement.sent.warning", ["amount" => $suscriptors->count()]) . ".\n\n" .
-                        "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [
-                                ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtoadminmenu"), "callback_data" => "adminmenu"]
-                            ],
-
-                        ],
-                    ]),
+                    "text" => "",
                 ];
                 break;
 

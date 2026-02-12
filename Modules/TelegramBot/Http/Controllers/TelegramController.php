@@ -147,6 +147,19 @@ class TelegramController extends Controller
         return $response;
     }
 
+    public static function editMessageText($request, $bot_token)
+    {
+        // Estructura básica: chat_id, message_id y el nuevo texto
+        $url = "https://api.telegram.org/bot" .
+            $bot_token .
+            "/editMessageText?chat_id={$request["message"]["chat"]["id"]}" .
+            "&message_id={$request["message"]["message_id"]}" .
+            "&text=" . urlencode($request["message"]["text"]);
+
+        // Reutilizamos tu método send que ya maneja parse_mode, reply_markup y logs de errores
+        return TelegramController::send($request, $url);
+    }
+
     public static function sendPhoto($request, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .

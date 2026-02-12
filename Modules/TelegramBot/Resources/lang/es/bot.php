@@ -48,6 +48,10 @@ return [
             "prompt" => "Enviar anuncio",
             "header" => "ATENCION: Anuncio del sistema",
             "whatsnext" => "Escriba el anuncio que desea enviar",
+            "sending" => [
+                "header" => "Enviando anuncios",
+                "warning" => "Se han enviado :amount de :total anuncios",
+            ],
             "sent" => [
                 "header" => "Anuncio enviado",
                 "warning" => "El anuncio ha sido enviado correctamente a :amount suscriptores",
