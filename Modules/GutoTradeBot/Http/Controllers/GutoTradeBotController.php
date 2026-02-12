@@ -1113,6 +1113,11 @@ class GutoTradeBotController extends JsonsController
 
         $this->strategies["promptmoneycomment2"] =
             function () use ($tenant, $array) {
+                $command = "";
+                if (isset($this->actor->data[$tenant->code]["last_bot_callback_data"]))
+                    $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
+                $array = $this->getCommand($command);
+
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
                 $payment->comment = $this->message["text"];
                 $payment->save();
