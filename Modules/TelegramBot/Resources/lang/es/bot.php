@@ -45,7 +45,8 @@ return [
             "warning" => "Esta función aun no está lista. Estamos trabajando en ella para sacarla en los próximos días.",
         ],
         "announcement" => [
-            "header" => "Enviar anuncio",
+            "prompt" => "Enviar anuncio",
+            "header" => "ATENCION: Anuncio del sistema",
             "whatsnext" => "Escriba el anuncio que desea enviar",
             "sent" => [
                 "header" => "Anuncio enviado",

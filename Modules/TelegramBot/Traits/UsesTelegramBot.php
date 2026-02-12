@@ -246,7 +246,7 @@ trait UsesTelegramBot
             case "sendannouncement":
                 $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "getannouncement", $this->tenant->code);
                 $reply = [
-                    "text" => "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.header") . "*\n\n" .
+                    "text" => "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.prompt") . "*\n\n" .
                         "👇 " . Lang::get("telegrambot::bot.prompts.announcement.whatsnext") . ":",
                     "markup" => json_encode([
                         "inline_keyboard" => [
@@ -261,7 +261,9 @@ trait UsesTelegramBot
                 foreach ($suscriptors as $suscriptor) {
                     $array = [
                         "message" => [
-                            "text" => $this->message["text"],
+                            "text" =>
+                                "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.header") . "*\n\n" .
+                                $this->message["text"],
                             "chat" => [
                                 "id" => $suscriptor->user_id,
                             ],
