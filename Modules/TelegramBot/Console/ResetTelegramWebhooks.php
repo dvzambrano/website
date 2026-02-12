@@ -26,33 +26,33 @@ class ResetTelegramWebhooks extends Command
         $this->info("🔄 Iniciando reseteo masivo para el dominio: https://{$domain}");
         $this->warn("Se generarán nuevas Keys y Secretos para " . $bots->count() . " bots.");
 
-        foreach ($bots as $bot) {
+        foreach ($bots as $tenant) {
             $this->line("---------------------------------------------------------");
-            $this->info("🤖 Procesando: {$bot->name}");
+            $this->info("🤖 Procesando: {$tenant->name}");
 
             // 1. Generar nuevos valores aleatorios manualmente (ya que 'creating' no se dispara en updates)
-            $bot->key = (string) Str::uuid();
-            $bot->secret = Str::random(32);
-            $bot->save();
+            $tenant->key = (string) Str::uuid();
+            $tenant->secret = Str::random(32);
+            $tenant->save();
 
             // 2. Construir la URL del webhook
             // Usamos la estructura: https://dominio/telegram/bot/{key}
-            $webhookUrl = "https://" . rtrim($domain, '/') . "/telegram/bot/{$bot->key}";
+            $webhookUrl = "https://" . rtrim($domain, '/') . "/telegram/bot/{$tenant->key}";
 
             // 3. Notificar a Telegram
-            $response = Http::post("https://api.telegram.org/bot{$bot->token}/setWebhook", [
+            $response = Http::post("https://api.telegram.org/bot{$tenant->token}/setWebhook", [
                 'url' => $webhookUrl,
-                'secret_token' => $bot->secret,
+                'secret_token' => $tenant->secret,
                 'drop_pending_updates' => true,
             ]);
 
             if ($response->successful()) {
                 $this->info("✅ Webhook actualizado con éxito.");
-                $this->line("   🗝️  Nueva Key: {$bot->key}");
-                $this->line("   🔒 Nuevo Secret: {$bot->secret}");
+                $this->line("   🗝️  Nueva Key: {$tenant->key}");
+                $this->line("   🔒 Nuevo Secret: {$tenant->secret}");
                 $this->line("   📍 URL: {$webhookUrl}");
             } else {
-                $this->error("❌ Error en Telegram para {$bot->name}: " . $response->body());
+                $this->error("❌ Error en Telegram para {$tenant->name}: " . $response->body());
             }
         }
 

@@ -13,7 +13,7 @@ class SetTelegramWebhook extends Command
     public function handle()
     {
         // 1. Buscar el bot
-        $bot = TelegramBots::where('name', "@" . $this->argument('id'))->first();
+        $tenant = TelegramBots::where('name', "@" . $this->argument('id'))->first();
 
         // 2. Obtener el dominio del parámetro o del .env
         $inputDomain = $this->option('domain') ?: config('app.url');
@@ -25,13 +25,13 @@ class SetTelegramWebhook extends Command
         $cleanDomain = rtrim(trim($cleanDomain), '/');
 
         // 4. FORZAMOS el HTTPS
-        $webhookUrl = "https://{$cleanDomain}/telegram/bot/{$bot->key}";
+        $webhookUrl = "https://{$cleanDomain}/telegram/bot/{$tenant->key}";
 
-        $this->info("Configurando Webhook para: {$bot->name}");
+        $this->info("Configurando Webhook para: {$tenant->name}");
 
-        $response = Http::post("https://api.telegram.org/bot{$bot->token}/setWebhook", [
+        $response = Http::post("https://api.telegram.org/bot{$tenant->token}/setWebhook", [
             'url' => $webhookUrl,
-            'secret_token' => $bot->secret, // IMPORTANTE: Telegram guardará esto y lo enviará en cada mensaje
+            'secret_token' => $tenant->secret, // IMPORTANTE: Telegram guardará esto y lo enviará en cada mensaje
             'drop_pending_updates' => true,
         ]);
 

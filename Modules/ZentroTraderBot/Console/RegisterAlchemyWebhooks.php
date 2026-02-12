@@ -25,8 +25,8 @@ class RegisterAlchemyWebhooks extends Command
         $domain = $this->option('domain');
 
         $bots = TelegramBots::where('module', $this->argument('module'))->get();
-        foreach ($bots as $bot) {
-            $this->info("🚀 Creando canal para: {$bot->code}");
+        foreach ($bots as $tenant) {
+            $this->info("🚀 Creando canal para: {$tenant->code}");
 
             // IMPORTANTE: Alchemy requiere al menos una dirección o un array vacío según la versión.
             // Si te da error con [], pon una dirección de prueba '0x0000000000000000000000000000000000000000'
@@ -34,7 +34,7 @@ class RegisterAlchemyWebhooks extends Command
             $payload = [
                 'network' => 'MATIC_MAINNET',
                 'webhook_type' => 'ADDRESS_ACTIVITY',
-                'webhook_url' => "https://" . rtrim($domain, '/') . "/webhook/alchemy/{$bot->key}",
+                'webhook_url' => "https://" . rtrim($domain, '/') . "/webhook/alchemy/{$tenant->key}",
                 'addresses' => []
             ];
 
@@ -47,14 +47,14 @@ class RegisterAlchemyWebhooks extends Command
                 $webhookId = $response->json('data.id');
 
                 // Guardamos solo el ID para futuras actualizaciones
-                $data = $bot->data;
+                $data = $tenant->data;
                 $data["alchemy_webhook_id"] = $webhookId;
-                $bot->data = $data;
-                $bot->save();
+                $tenant->data = $data;
+                $tenant->save();
 
                 $this->info("✅ Canal creado. Webhook ID: {$webhookId}");
             } else {
-                $this->error("❌ Error creando webhook para {$bot->code}: " . $response->body());
+                $this->error("❌ Error creando webhook para {$tenant->code}: " . $response->body());
             }
         }
     }

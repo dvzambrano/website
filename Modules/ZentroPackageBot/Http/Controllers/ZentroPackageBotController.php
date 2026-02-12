@@ -68,13 +68,13 @@ class ZentroPackageBotController extends JsonsController
 
     public function mainMenu($actor)
     {
-        $bot = app('active_bot');
+        $tenant = app('active_bot');
 
         $menu = array();
 
         $url = route('telegram-scanner-init', array(
             "gpsrequired" => config('metadata.system.app.zentropackagebot.scanner.gpsrequired'),
-            "botname" => $bot->code
+            "botname" => $tenant->code
         ));
 
         array_push($menu, [

@@ -40,14 +40,14 @@ class TransakController extends Controller implements RampProviderInterface
     public function redirect($action, $key, $secret, $user_id)
     {
         // Recuperamos el bot que el Middleware ya encontró y guardó
-        $bot = app('active_bot');
+        $tenant = app('active_bot');
         // Forzamos la consulta a la base de datos del Tenant
         $suscriptor = Suscriptions::on('tenant')->where("user_id", $user_id)->first();
         if (!$suscriptor || !isset($suscriptor->data["wallet"]["address"])) {
             return Lang::get("zentrotraderbot::bot.prompts.fail.suscriptor");
         }
 
-        $widgetUrl = $this->getWidgetUrl($bot, $suscriptor, strtoupper($action));
+        $widgetUrl = $this->getWidgetUrl($tenant, $suscriptor, strtoupper($action));
 
         if (!$widgetUrl) {
             return Lang::get("zentrotraderbot::bot.prompts.fail.widgeturl");
@@ -155,7 +155,7 @@ class TransakController extends Controller implements RampProviderInterface
         return null;
     }
 
-    public function getWidgetUrl($bot, $suscriptor, $action = "BUY"): ?string
+    public function getWidgetUrl($tenant, $suscriptor, $action = "BUY"): ?string
     {
         $accessToken = $this->getAccessToken();
         if (!$accessToken)
@@ -192,16 +192,16 @@ class TransakController extends Controller implements RampProviderInterface
                         //'fiatCurrency' => 'USD',
                         'themeColor' => '043927',
                         'exchangeScreenTitle' => Lang::get("zentrotraderbot::bot.prompts." . strtolower($action) . ".exchangetitle", [
-                            "name" => $bot->code
+                            "name" => $tenant->code
                         ]),
                         'environment' => $this->environment,
                         'redirectURL' => route('ramp-success', array(
-                            "key" => $bot->key,
-                            "secret" => $bot->secret,
+                            "key" => $tenant->key,
+                            "secret" => $tenant->secret,
                             "user_id" => $suscriptor->user_id
                         )),
                         'partnerCustomerId' => $suscriptor->user_id,
-                        'partnerOrderId' => $bot->id,
+                        'partnerOrderId' => $tenant->id,
                     ]
                 ]);
 

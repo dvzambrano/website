@@ -120,7 +120,7 @@ class TradingViewController extends TelegramBotController
                                 "name" => "suscription_level",
                                 "value" => 1,
                             ],
-                        ], $bot->code);
+                        ], $bot->tenant->code);
                         $this->createTradeOrders($info, $suscriptors, $payload);
                     }
                     if (config('metadata.system.app.zentrotraderbot.tradingview.alert.action.level') > 0) {
@@ -181,7 +181,7 @@ class TradingViewController extends TelegramBotController
                     ),
                 ),
             ),
-            $bot->token,
+            $bot->tenant->token,
             1
         );
 
@@ -205,7 +205,7 @@ class TradingViewController extends TelegramBotController
                         ),
 
                     ),
-                    $bot->token,
+                    $bot->tenant->token,
                     $autodestroy
                 );
             },
@@ -241,7 +241,7 @@ class TradingViewController extends TelegramBotController
                     ),
                 ),
             ),
-            $bot->token
+            $bot->tenant->token
         );
 
         return response()->json(['status' => 'success', 'action' => 'DCA ORDER ADDED', 'tx' => $result['tx_hash']]);
@@ -279,7 +279,7 @@ class TradingViewController extends TelegramBotController
                     ),
                 ),
             ),
-            $bot->token,
+            $bot->tenant->token,
             1
         );
 
@@ -316,7 +316,7 @@ class TradingViewController extends TelegramBotController
                             )
                         )
                     ),
-                    $bot->token,
+                    $bot->tenant->token,
                     $autodestroy
                 );
             },
@@ -350,7 +350,7 @@ class TradingViewController extends TelegramBotController
                     ),
                 ),
             ),
-            $bot->token
+            $bot->tenant->token
         );
 
         return response()->json([

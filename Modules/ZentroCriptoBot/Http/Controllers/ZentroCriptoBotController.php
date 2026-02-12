@@ -66,7 +66,7 @@ class ZentroCriptoBotController extends JsonsController
                 $text = "📖 *¿Cómo usar este bot?*.\n_He aquí los principales elementos que debe conocer:_\n\n";
                 $text .= "1️⃣ *Acceder al menú principal*: /menu\n_Escriba “menu” o simplemente cliquee en el comando_\n";
                 $text .= "2️⃣ *Establecer zona horaria*: /utc\n_Escriba el comando para obtener el asistente correspondiente._\n\n";
-                //$text .= "📚 *Manual de usuario*:\n_Puede encontrar el manual de usuario para REMESADORES aquí:_ [{request()->root()}/" . $bot->code . ".pdf]\n\n";
+                //$text .= "📚 *Manual de usuario*:\n_Puede encontrar el manual de usuario para REMESADORES aquí:_ [{request()->root()}/" . $tenant->code . ".pdf]\n\n";
                 //$text .= "👮‍♂️ *Términos y condiciones*:\n_Para usar nuestro servicio ud debe ACEPTAR nuestros términos que puede examinar aquí:_ [{request()->root()}/TermsAndConditions.pdf]\n*Usar este bot se considera una ACEPTACIÓN IMPLÍCITA*";
                 $reply = array(
                     "text" => $text,
@@ -658,16 +658,16 @@ class ZentroCriptoBotController extends JsonsController
 
     public function mainMenu($actor)
     {
-        $bot = app('active_bot');
+        $tenant = app('active_bot');
 
         $reply = array();
 
-        $text = "👋 *Bienvenido al " . $bot->code . "*!\n\n" .
+        $text = "👋 *Bienvenido al " . $tenant->code . "*!\n\n" .
             "_Este bot esta diseñado para analizar contratos de monedas en varias blockchains_.\n\n";
 
         $menu = array();
 
-        $this->ActorsController->updateData(Actors::class, "user_id", $actor->user_id, "last_bot_callback_data", "", $bot->code);
+        $this->ActorsController->updateData(Actors::class, "user_id", $actor->user_id, "last_bot_callback_data", "", $tenant->code);
 
         $text .= "👇 En qué le puedo ayudar hoy?";
 

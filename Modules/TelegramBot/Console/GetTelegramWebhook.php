@@ -13,11 +13,11 @@ class GetTelegramWebhook extends Command
     public function handle()
     {
         // 1. Buscar el bot
-        $bot = TelegramBots::where('name', "@" . $this->argument('id'))->first();
+        $tenant = TelegramBots::where('name', "@" . $this->argument('id'))->first();
 
-        $this->info("Obteniendo datos del Webhook para: {$bot->name} | {$bot->key}");
+        $this->info("Obteniendo datos del Webhook para: {$tenant->name} | {$tenant->key}");
 
-        $response = Http::get("https://api.telegram.org/bot{$bot->token}/getWebhookinfo");
+        $response = Http::get("https://api.telegram.org/bot{$tenant->token}/getWebhookinfo");
 
         if ($response->successful()) {
             $this->info("✅ ¡Éxito! Datos del Webhook:");

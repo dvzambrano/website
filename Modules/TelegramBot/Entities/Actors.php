@@ -57,13 +57,13 @@ class Actors extends Model
         return false;
     }
 
-    public function getTelegramInfo($bot, $key = false)
+    public function getTelegramInfo($tenant, $key = false)
     {
         $telegram = false;
         if (isset($this->data["telegram"]))
             $telegram = $this->data["telegram"];
         else {
-            $response = json_decode(TelegramController::getUserInfo($this->user_id, $bot->token), true);
+            $response = json_decode(TelegramController::getUserInfo($this->user_id, $tenant->token), true);
             $telegram = $response["result"];
         }
 

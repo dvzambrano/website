@@ -24,18 +24,18 @@ class SyncAlchemyAddresses extends Command
         $alchemyToken = $metadata->value;
 
         $bots = TelegramBots::where('module', $this->argument('module'))->get();
-        foreach ($bots as $bot) {
-            $webhookId = $bot->data['alchemy_webhook_id'] ?? null;
+        foreach ($bots as $tenant) {
+            $webhookId = $tenant->data['alchemy_webhook_id'] ?? null;
 
             if (!$webhookId) {
-                $this->warn("⚠️ El bot {$bot->code} no tiene un Webhook ID.");
+                $this->warn("⚠️ El bot {$tenant->code} no tiene un Webhook ID.");
                 continue;
             }
 
             // --- CONFIGURACIÓN DINÁMICA DE LA CONEXIÓN ---
-            $bot->connectToThisTenant();
+            $tenant->connectToThisTenant();
 
-            $this->info("🔍 Recopilando wallets para el bot: {$bot->code} en la BD: {$bot->database_name}");
+            $this->info("🔍 Recopilando wallets para el bot: {$tenant->code} en la BD: {$tenant->database}");
 
             // Ahora usamos la conexión 'tenant' que acabamos de configurar
             try {
@@ -48,7 +48,7 @@ class SyncAlchemyAddresses extends Command
                     ->toArray();
 
                 if (empty($addresses)) {
-                    $this->warn("ℹ️ No hay wallets registradas para {$bot->code}.");
+                    $this->warn("ℹ️ No hay wallets registradas para {$tenant->code}.");
                     continue;
                 }
 
@@ -67,13 +67,13 @@ class SyncAlchemyAddresses extends Command
                         ]);
 
                 if ($response->successful()) {
-                    $this->info("✅ Wallets sincronizadas para {$bot->code}.");
+                    $this->info("✅ Wallets sincronizadas para {$tenant->code}.");
                 } else {
-                    $this->error("❌ Error en Alchemy para {$bot->code}: " . $response->body());
+                    $this->error("❌ Error en Alchemy para {$tenant->code}: " . $response->body());
                 }
 
             } catch (\Exception $e) {
-                $this->error("❌ Error conectando a la base de datos del bot {$bot->code}: " . $e->getMessage());
+                $this->error("❌ Error conectando a la base de datos del bot {$tenant->code}: " . $e->getMessage());
                 continue;
             }
         }

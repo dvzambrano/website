@@ -8,6 +8,9 @@ php artisan bot:set-webhook ZentroOwnerBot --domain dev.micalme.com
 php artisan bot:reset-all-webhooks --domain dev.micalme.com
 php artisan bot:get-webhook KashioBot
 
+php artisan zentrotraderbot:alchemy-init-webhooks ZentroTraderBot --domain=micalme.com
+php artisan zentrotraderbot:alchemy-sync-wallets ZentroTraderBot
+
 
 
 Formato de alertas recibidas desde TV:

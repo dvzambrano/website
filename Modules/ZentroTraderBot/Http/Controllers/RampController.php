@@ -26,7 +26,7 @@ class RampController extends Controller
     public function redirect($action, $key, $secret, $user_id)
     {
         // Recuperamos el bot que el Middleware ya encontró y guardó
-        $bot = app('active_bot');
+        $tenant = app('active_bot');
         // Forzamos la consulta a la base de datos del Tenant
         $suscriptor = Suscriptions::on('tenant')->where("user_id", $user_id)->first();
         if (!$suscriptor || !isset($suscriptor->data["wallet"]["address"])) {
@@ -37,7 +37,7 @@ class RampController extends Controller
         $providerName = $bot->data['ramp'] ?? 'transak';
         $provider = $this->getProvider($providerName);
 
-        $url = $provider->getWidgetUrl($bot, $suscriptor, strtoupper($action));
+        $url = $provider->getWidgetUrl($tenant, $suscriptor, strtoupper($action));
         Log::info("Ramp success redirect hit: " . json_encode(request()->all()));
         if (!$url) {
             return Lang::get("zentrotraderbot::bot.prompts.fail.widgeturl");
@@ -49,7 +49,7 @@ class RampController extends Controller
     public function success($key, $secret, $user_id)
     {
         // Recuperamos el bot que el Middleware ya encontró y guardó
-        $bot = app('active_bot');
+        $tenant = app('active_bot');
         // Forzamos la consulta a la base de datos del Tenant
         $suscriptor = Suscriptions::on('tenant')->where("user_id", $user_id)->first();
         if (!$suscriptor || !isset($suscriptor->data["wallet"]["address"])) {
@@ -88,7 +88,7 @@ class RampController extends Controller
 
         // Guardamos en la tabla que creamos (ramporders)
         $this->createRamporder(
-            $bot->id,
+            $tenant->id,
             request('orderId'),
             $user_id,
             request('cryptoAmount'),
@@ -96,15 +96,15 @@ class RampController extends Controller
             request()->all()
         );
 
-        return Redirect::to("https://t.me/" . $bot->code);
+        return Redirect::to("https://t.me/" . $tenant->code);
     }
 
     public function processWebhook()
     {
         // Recuperamos el bot que el Middleware ya encontró y guardó
-        $bot = app('active_bot');
+        $tenant = app('active_bot');
         // Decidir el proveedor de RAMP activo para este bot
-        $providerName = $bot->data['ramp'] ?? 'transak';
+        $providerName = $tenant->data['ramp'] ?? 'transak';
         $provider = $this->getProvider($providerName);
 
         $array = $provider->processWebhook(request());
@@ -134,14 +134,14 @@ class RampController extends Controller
         return response()->json(['status' => 'processed'], 200);
     }
 
-    private function createRamporder($bot_id, $orderId, $userId, $amount, $status, $payload)
+    private function createRamporder($botId, $orderId, $userId, $amount, $status, $payload)
     {
         // Guardamos en la tabla que creamos (ramporders)
         return Ramporders::updateOrCreate(
             ['order_id' => $orderId],
             [
                 'user_id' => $userId,
-                'bot_id' => $bot_id,
+                'bot_id' => $botId,
                 'amount' => $amount,
                 'status' => $status,
                 'raw_data' => $payload

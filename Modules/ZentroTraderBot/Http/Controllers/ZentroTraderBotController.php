@@ -33,8 +33,6 @@ class ZentroTraderBotController extends JsonsController
 
     public function processMessage()
     {
-        $bot = app('active_bot');
-
         $array = $this->getCommand($this->message["text"]);
         $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
 
@@ -52,7 +50,7 @@ class ZentroTraderBotController extends JsonsController
             };
 
         $this->strategies["actionmenu"] =
-            function () use ($bot) {
+            function () {
                 if ($this->actor->isLevel(1, $this->tenant->code))
                     return $this->actionMenu();
                 return $this->mainMenu($this->actor);
@@ -200,7 +198,7 @@ class ZentroTraderBotController extends JsonsController
 
     public function mainMenu($actor)
     {
-        $bot = app('active_bot');
+        $tenant = app('active_bot');
 
         $suscriptor = Suscriptions::where("user_id", $actor->user_id)->first();
 
@@ -258,8 +256,8 @@ class ZentroTraderBotController extends JsonsController
                 "text" => "💳 " . Lang::get("zentrotraderbot::bot.options.topup"),
                 "url" => route('ramp-redirect', array(
                     "action" => "buy",
-                    "key" => $bot->key,
-                    "secret" => $bot->secret,
+                    "key" => $tenant->key,
+                    "secret" => $tenant->secret,
                     "user_id" => $actor->user_id
                 ))
             ],
@@ -267,8 +265,8 @@ class ZentroTraderBotController extends JsonsController
                 "text" => "💲 " . Lang::get("zentrotraderbot::bot.options.withdraw"),
                 "url" => route('ramp-redirect', array(
                     "action" => "sell",
-                    "key" => $bot->key,
-                    "secret" => $bot->secret,
+                    "key" => $tenant->key,
+                    "secret" => $tenant->secret,
                     "user_id" => $actor->user_id
                 ))
             ]

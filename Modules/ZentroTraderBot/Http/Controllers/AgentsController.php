@@ -15,8 +15,8 @@ class AgentsController extends ActorsController
         $text = $array["message"]["text"];
 
         // mostrar los meadatos definidos para este suscriptor
-        if (isset($suscriptor->data[$bot->code]) && isset($suscriptor->data[$bot->code]["metadatas"]))
-            foreach ($suscriptor->data[$bot->code]["metadatas"] as $key => $value) {
+        if (isset($suscriptor->data[$bot->tenant->code]) && isset($suscriptor->data[$bot->tenant->code]["metadatas"]))
+            foreach ($suscriptor->data[$bot->tenant->code]["metadatas"] as $key => $value) {
                 $icon = "{$key} ";
                 $text .= "\n{$icon}`" . $value . "`";
             }
@@ -24,9 +24,9 @@ class AgentsController extends ActorsController
         $array["message"]["text"] = $text;
         //var_dump($array["message"]["photo"]);
         if (isset($array["message"]["photo"])) {
-            TelegramController::sendPhoto($array, $bot->token);
+            TelegramController::sendPhoto($array, $bot->tenant->token);
         } else {
-            TelegramController::sendMessage($array, $bot->token);
+            TelegramController::sendMessage($array, $bot->tenant->token);
         }
     }
 

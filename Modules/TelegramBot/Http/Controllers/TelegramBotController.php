@@ -12,12 +12,12 @@ class TelegramBotController extends Controller
         // El Middleware 'tenant.detector' ya hizo el trabajo sucio 
         // de configurar la DB 'tenant' antes de llegar aquí.
         $update = request()->all();
-        $bot = app('active_bot'); // Recuperamos lo que guardó el Middleware
+        $tenant = app('active_bot'); // Recuperamos lo que guardó el Middleware
 
-        $controller = $this->getController($bot->module, $bot->module);
+        $controller = $this->getController($tenant->module, $tenant->module);
         if ($controller) {
             // Pasamos el objeto $bot y el $update (el mensaje de Telegram)
-            return $controller->receiveMessage($bot, $update);
+            return $controller->receiveMessage($tenant, $update);
         }
 
         abort(404, 'Bot handle controller not found');

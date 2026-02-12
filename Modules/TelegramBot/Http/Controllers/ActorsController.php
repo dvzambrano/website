@@ -21,7 +21,7 @@ class ActorsController extends JsonsController
         ]);
 
     }
-    public function suscribe($bot, $user_id, $parent_id)
+    public function suscribe($tenant, $user_id, $parent_id)
     {
         //Log::info("ActorsController suscribe bot:" . json_encode($bot));
 
@@ -30,13 +30,13 @@ class ActorsController extends JsonsController
         if (is_numeric($user_id)) {
             // si no esta suscrito lo agregamos a la BD
             if ($actor == null) {
-                $actor = $this->create($bot->code, $user_id, $parent_id);
+                $actor = $this->create($tenant->code, $user_id, $parent_id);
             }
             // Chequeando si se ha suscrito a otro bot pero no este y añadiendolo
-            if (!isset($actor->data[$bot->code])) {
+            if (!isset($actor->data[$tenant->code])) {
                 $array = $actor->data;
                 // Se envia $textinfo["message"] porq alli viene el parent_id en caso de ser un referido en la forma /start 816767995
-                $array[$bot->code] = Actors::getTemplate(0, $parent_id);
+                $array[$tenant->code] = Actors::getTemplate(0, $parent_id);
                 $actor->data = $array;
                 $actor->save();
             }
@@ -48,13 +48,13 @@ class ActorsController extends JsonsController
             ) {
                 $array = $actor->data;
 
-                $response = json_decode(TelegramController::getUserInfo($actor->user_id, $bot->token), true);
+                $response = json_decode(TelegramController::getUserInfo($actor->user_id, $tenant->token), true);
                 if (isset($response["result"])) {
                     $array["telegram"] = $response["result"];
                     $array["telegram"]["pinned_message"] = false;
                     $array["telegram"]["photo"] = false;
 
-                    $photos = TelegramController::getUserPhotos($actor->user_id, $bot->token);
+                    $photos = TelegramController::getUserPhotos($actor->user_id, $tenant->token);
                     if (count($photos) > 0) {
                         $array["telegram"]["photo"] = $photos[0][count($photos[0]) - 1]["file_id"];
                     }
@@ -211,7 +211,7 @@ class ActorsController extends JsonsController
         return $reply;
     }
 
-    public function notifyRoleChange($bot, $user_id)
+    public function notifyRoleChange($tenant, $user_id)
     {
         // notificar al usuario modificado de nu nuevo rol
         $array = [
@@ -229,7 +229,7 @@ class ActorsController extends JsonsController
                 ]),
             ],
         ];
-        TelegramController::sendMessage($array, $bot->token);
+        TelegramController::sendMessage($array, $tenant->token);
     }
 
     public function getUTCPrompt($bot)

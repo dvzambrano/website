@@ -24,7 +24,7 @@ class TraderWalletController extends WalletController
      */
     public function getWallet(int $userId)
     {
-        $bot = app('active_bot');
+        $tenant = app('active_bot');
 
         // 1. Buscar el Actor por su ID de Telegram (user_id)
         $suscriptor = Suscriptions::where('user_id', $userId)->first();
@@ -61,13 +61,13 @@ class TraderWalletController extends WalletController
 
             $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
             $response = AlchemyController::updateWebhookAddresses(
-                $bot->data["alchemy_webhook_id"],
+                $tenant->data["alchemy_webhook_id"],
                 $authToken,
                 [$wallet["address"]]
             );
             $registered = "";
             if ($response->successful())
-                $registered = " y registrada en en Alchemy webhook ID: " . $bot->data["alchemy_webhook_id"];
+                $registered = " y registrada en en Alchemy webhook ID: " . $tenant->data["alchemy_webhook_id"];
 
             Log::info("✅ Wallet " . $wallet["address"] . " generada en JSON para usuario $userId" . $registered);
 

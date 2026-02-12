@@ -591,7 +591,6 @@ trait UsesTelegramBot
 
     public function notifyUserWithNoRole($user_id, $array)
     {
-        $bot = app('active_bot');
         $actor = $this->AgentsController->getSuscriptor($this, $user_id, true);
 
         // notificando a los administradores de q hay un nuevo usuario por si quieren cambiarle el rol
