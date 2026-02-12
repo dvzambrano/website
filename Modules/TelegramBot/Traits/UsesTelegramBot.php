@@ -272,7 +272,7 @@ trait UsesTelegramBot
                 $response = json_decode(TelegramController::sendMessage(
                     array(
                         "message" => array(
-                            "text" => "🚨 *Iniciando Envío Masivo*\nProgreso: 0 de " . $suscriptors->count() . "\n⏳ Preparando motores...",
+                            "text" => "⏳ *Preparando anuncios*\nSe enviarán anuncios a " . $suscriptors->count() . " suscriptores...",
                             "chat" => array(
                                 "id" => $this->actor->user_id,
                             ),

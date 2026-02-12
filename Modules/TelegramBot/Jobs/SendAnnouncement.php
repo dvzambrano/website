@@ -79,13 +79,14 @@ class SendAnnouncement implements ShouldQueue
                     $interval = 50;
 
                 if ($currentSent % $interval == 0 || $currentSent == $total) {
-                    $status = ($currentSent == $total) ? "✅ *¡Envío Completado!*" : "⏳ *Enviando anuncio...*";
+                    $status = ($currentSent == $total) ? "✅ *¡Envío de anuncios completado!*" : "⏳ *Enviando anuncios...*";
 
                     TelegramController::editMessageText([
                         "message" => [
                             "chat" => ["id" => $data['admin_id']],
                             "message_id" => $this->messageId,
-                            "text" => "🚨 *Progreso del Anuncio*\n\n{$status}\nProgreso: {$currentSent} de {$total} usuarios."
+                            "text" => "{$status}\n" .
+                                "Progreso: {$currentSent} de {$total} anuncios enviados."
                         ]
                     ], $tenant->token);
 
