@@ -160,6 +160,19 @@ class TelegramController extends Controller
         return TelegramController::send($request, $url);
     }
 
+    public static function copyMessage($request, $bot_token)
+    {
+        // chat_id: a quién se lo mandas
+        // from_chat_id: de dónde viene el mensaje original (el chat del admin)
+        // message_id: el ID del mensaje que el admin quiere anunciar
+        $url = "https://api.telegram.org/bot{$bot_token}/copyMessage?" .
+            "chat_id={$request["message"]["chat"]["id"]}&" .
+            "from_chat_id={$request["message"]["from_chat_id"]}&" .
+            "message_id={$request["message"]["message_id"]}";
+
+        return TelegramController::send($request, $url);
+    }
+
     public static function sendPhoto($request, $bot_token)
     {
         $url = "https://api.telegram.org/bot" .

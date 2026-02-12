@@ -320,18 +320,14 @@ trait UsesTelegramBot
                 ], now()->addHours(2));
                 Cache::put("bot_announcement_{$message_id}_sent", 0, now()->addHours(2));
 
-                $text =
-                    "🚨 *" . Lang::get("telegrambot::bot.prompts.announcement.header") . "*\n\n" .
-                    $this->message["text"] . "\n\n" .
-                    "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
-
                 foreach ($suscriptors as $key => $suscriptor) {
                     // Despachamos el job individual
                     SendAnnouncement::dispatch(
                         $this->tenant->id,
                         $suscriptor->user_id,
-                        $text,
+                        $this->message["id"],
                         $message_id,
+                        $this->actor->user_id,
                         1 * 60 // en segundos... se multiplica por 60 para hacerlo en minutos
                     );
                     // ->delay(now()->addMinutes($key * 1)) // para ralentizar y ver como funciona COMENTAR ESTO!!

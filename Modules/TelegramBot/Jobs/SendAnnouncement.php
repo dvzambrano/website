@@ -18,16 +18,18 @@ class SendAnnouncement implements ShouldQueue
 
     protected $tenantId;
     protected $userId;
-    protected $text;
+    protected $originalMessageId;
     protected $messageId;
+    protected $chatId;
     protected $secoundsToDestroy;
 
-    public function __construct($tenantId, $userId, $text, $messageId, $secoundsToDestroy)
+    public function __construct($tenantId, $userId, $originalMessageId, $messageId, $chatId, $secoundsToDestroy)
     {
         $this->tenantId = $tenantId;
         $this->userId = $userId;
-        $this->text = $text;
+        $this->originalMessageId = $originalMessageId;
         $this->messageId = $messageId ?? false;
+        $this->chatId = $chatId;
         $this->secoundsToDestroy = $secoundsToDestroy;
     }
 
@@ -43,20 +45,20 @@ class SendAnnouncement implements ShouldQueue
         // 2. Envío del mensaje y Pin (Tu lógica actual está perfecta)
         $payload = [
             "message" => [
-                "text" => $this->text,
                 "chat" => ["id" => $this->userId],
+                "from_chat_id" => $this->chatId, // El chat desde donde se copia
+                "message_id" => $this->originalMessageId,
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
                         [
                             ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]
                         ]
                     ],
-
                 ]),
             ],
         ];
 
-        $response = json_decode(TelegramController::sendMessage($payload, $tenant->token), true);
+        $response = json_decode(TelegramController::copyMessage($payload, $tenant->token), true);
 
         if (isset($response["result"]["message_id"])) {
             TelegramController::pinMessage([
