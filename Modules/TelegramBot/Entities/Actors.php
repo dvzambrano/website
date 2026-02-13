@@ -86,7 +86,7 @@ class Actors extends Model
         $result = false;
 
         if (isset($this->data[$bot])) {
-            $result = $this->data[$bot]["admin_level"] == $level;
+            $result = (int) $this->data[$bot]["admin_level"] == (int) $level;
         }
 
         return $result;
