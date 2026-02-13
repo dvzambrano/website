@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Lang;
 
@@ -126,6 +127,14 @@ class SendAnnouncement implements ShouldQueue
                     ], $tenant->token);
 
                     if ($currentSent == $total) {
+                        if ($data['reenable_config_delete_prev_messages']) {
+                            $actor = Actors::where('user_id', $this->userId)->first();
+                            $data = $actor->data;
+                            $data[$tenant->code]["config_delete_prev_messages"] = true;
+                            $actor->data = $data;
+                            $actor->save();
+                        }
+
                         // 2. DISPARAR LA AUTODESTRUCCIÓN
                         DeleteTelegramMessage::dispatch(
                             (string) $tenant->token,
