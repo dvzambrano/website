@@ -1248,6 +1248,17 @@ class GutoTradeBotController extends JsonsController
                 return $reply;
             };
 
+        $this->strategies["adminmenu"] =
+            function () {
+                if (
+                    $this->actor->isLevel(1, $this->tenant->code) ||
+                    $this->actor->isLevel(4, $this->tenant->code)
+                )
+                    $reply = $this->adminMenu($this->actor);
+                else
+                    $reply = $this->mainMenu($this->actor);
+            };
+
 
 
         if (isset($this->message["text"]) && $this->message["text"] != "") {
