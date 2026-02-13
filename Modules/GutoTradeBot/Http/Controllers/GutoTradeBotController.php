@@ -1250,7 +1250,10 @@ class GutoTradeBotController extends JsonsController
 
         $this->strategies["adminmenu"] =
             function () use ($tenant) {
-                if ($this->actor->isLevel(1, $this->tenant->code))
+                if (
+                    $this->actor->isLevel(1, $this->tenant->code) ||
+                    $this->actor->isLevel(4, $this->tenant->code)
+                )
                     $reply = $this->adminMenu($this->actor);
                 else
                     $reply = $this->mainMenu($this->actor);
