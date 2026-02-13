@@ -126,7 +126,7 @@ trait UsesTelegramBot
         // eliminar el mensaje q origino esta interaccion del bot
         if (
             $this->message["message_id"] != "" &&
-            !isset($this->message["important"]) &&
+            $this->message["important"] != true &&
             isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])
         ) {
             $array = array(
