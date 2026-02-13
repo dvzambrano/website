@@ -124,7 +124,11 @@ trait UsesTelegramBot
         }
 
         // eliminar el mensaje q origino esta interaccion del bot
-        if ($this->message["message_id"] != "" && isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])) {
+        if (
+            $this->message["message_id"] != "" &&
+            !isset($this->message["important"]) &&
+            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])
+        ) {
             $array = array(
                 "message" => array(
                     "id" => $this->message["message_id"],
@@ -256,6 +260,7 @@ trait UsesTelegramBot
                 break;
 
             case "sendannouncement":
+                $this->message["important"] = true;
                 $response = json_decode(TelegramController::sendMessage(
                     array(
                         "message" => array(
@@ -277,7 +282,6 @@ trait UsesTelegramBot
                 if (isset($response["result"]["message_id"]) && $response["result"]["message_id"] > -1)
                     $message_id = $response["result"]["message_id"];
                 $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "getannouncement-" . $message_id, $this->tenant->code);
-
 
                 // haciendo q no haya respuesta
                 $reply = [
