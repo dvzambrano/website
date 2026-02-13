@@ -1248,6 +1248,13 @@ class GutoTradeBotController extends JsonsController
                 return $reply;
             };
 
+        $this->strategies["adminmenu"] =
+            function () use ($tenant) {
+                Log::info("debug adminmenu getAdminMenu {$tenant->code} actor: {$this->actor->user_id}");
+                $reply = $this->adminMenu($this->actor);
+                return $reply;
+            };
+
 
 
         if (isset($this->message["text"]) && $this->message["text"] != "") {
@@ -1406,8 +1413,6 @@ class GutoTradeBotController extends JsonsController
 
     public function adminMenu($actor)
     {
-        $bot = $this->tenant;
-
         $menu = [];
 
         array_push($menu, [
@@ -1415,6 +1420,7 @@ class GutoTradeBotController extends JsonsController
             ["text" => "💰 Capital", "callback_data" => "/capitals"],
         ]);
         // admin_level = 1 Admnistrador, 4 Admin de capital
+        Log::info("debug adminmenu admin_level: " . $actor->data[$this->tenant->code]["admin_level"]);
         switch ($actor->data[$this->tenant->code]["admin_level"]) {
             case "1":
             case 1:

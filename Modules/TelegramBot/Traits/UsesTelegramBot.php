@@ -514,6 +514,8 @@ trait UsesTelegramBot
 
     public function getAdminMenu($actor, $menu = false)
     {
+
+        Log::info("debug getAdminMenu Trait!!");
         $reply = [];
 
         if (!$menu)
