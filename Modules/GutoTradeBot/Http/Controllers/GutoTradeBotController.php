@@ -1249,7 +1249,7 @@ class GutoTradeBotController extends JsonsController
             };
 
         $this->strategies["adminmenu"] =
-            function () {
+            function () use ($tenant) {
                 if (
                     $this->actor->isLevel(1, $this->tenant->code) ||
                     $this->actor->isLevel(4, $this->tenant->code)
@@ -1257,6 +1257,7 @@ class GutoTradeBotController extends JsonsController
                     $reply = $this->adminMenu($this->actor);
                 else
                     $reply = $this->mainMenu($this->actor);
+                return $reply;
             };
 
 
@@ -1417,8 +1418,6 @@ class GutoTradeBotController extends JsonsController
 
     public function adminMenu($actor)
     {
-        $bot = $this->tenant;
-
         $menu = [];
 
         array_push($menu, [
