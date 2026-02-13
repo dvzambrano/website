@@ -295,12 +295,12 @@ trait UsesTelegramBot
                     );
 
                 $data = $this->actor->data;
-                $reenable_config_delete_prev_messages = false;
+                $delete_original_message = false;
                 if (isset($data[$this->tenant->code]["config_delete_prev_messages"])) {
                     unset($data[$this->tenant->code]["config_delete_prev_messages"]);
-                    $reenable_config_delete_prev_messages = true;
                     $this->actor->data = $data;
                     $this->actor->save();
+                    $delete_original_message = true;
                 }
 
                 $suscriptors = $this->ActorsController->getAllForBot($this->tenant->code);
@@ -326,7 +326,7 @@ trait UsesTelegramBot
                     'total' => $suscriptors->count(),
                     'admin_id' => $this->actor->user_id,
                     'start_time' => now(),
-                    'reenable_config_delete_prev_messages' => $reenable_config_delete_prev_messages
+                    'delete_original_message' => $delete_original_message
                 ], now()->addHours(2));
                 Cache::put("bot_announcement_{$message_id}_sent", 0, now()->addHours(2));
 

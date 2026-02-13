@@ -127,19 +127,13 @@ class SendAnnouncement implements ShouldQueue
                     ], $tenant->token);
 
                     if ($currentSent == $total) {
-                        if ($data['reenable_config_delete_prev_messages']) {
-                            $actor = Actors::where('user_id', $this->userId)->first();
-                            $array = $actor->data;
-                            $array[$tenant->code]["config_delete_prev_messages"] = true;
-                            $actor->data = $array;
-                            $actor->save();
-
-                            // eliminar el mensaje original
-                            DeleteTelegramMessage::dispatch(
-                                (string) $tenant->token,
-                                (int) $data['admin_id'],
-                                (int) $this->originalMessageId
-                            )->delay(now()->addSeconds($this->secoundsToDestroy));
+                        if ($data['delete_original_message']) {
+                            TelegramController::deleteMessage([
+                                "message" => [
+                                    "chat" => ["id" => $data['admin_id']],
+                                    "id" => $this->originalMessageId
+                                ]
+                            ], $tenant->token);
                         }
 
                         // 2. DISPARAR LA AUTODESTRUCCIÓN
