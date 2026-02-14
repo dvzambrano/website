@@ -13,23 +13,33 @@ class ClearLaravel extends Command
     public function handle()
     {
         $this->info('🚀 Iniciando limpieza profunda del proyecto...');
+
+        $this->composerDumpAutoload();
+
         $commands = [
+            'config:clear' => 'Limpiando configuración...',
             'route:clear' => 'Limpiando rutas...',
             'view:clear' => 'Limpiando vistas...',
-            'config:clear' => 'Limpiando configuración...',
             'cache:clear' => 'Limpiando caché de la aplicación...',
+            'event:clear' => 'Limpiando eventos de la aplicación...',
             'route:cache' => 'Cacheando rutas...',
             'config:cache' => 'Cacheando configuración...',
             'optimize' => 'Optimizando framework...',
             'queue:restart' => 'Reiniciando worker...',
             'queue:flush' => 'Limpiando la cola del worker...',
         ];
-
         foreach ($commands as $command => $description) {
             $this->comment($description);
             $this->call($command);
         }
 
+        $this->composerDumpAutoload();
+
+        $this->info('✨ ¡Proyecto reseteado !');
+    }
+
+    public function composerDumpAutoload()
+    {
         $this->info('📦 Ejecutando composer dump-autoload...');
 
         // Ejecutamos el proceso del sistema
@@ -41,7 +51,5 @@ class ClearLaravel extends Command
         } else {
             $this->error('❌ Error al ejecutar composer: ' . $result->errorOutput());
         }
-
-        $this->info('✨ ¡Proyecto reseteado !');
     }
 }
