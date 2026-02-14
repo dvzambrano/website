@@ -128,6 +128,8 @@ php artisan db:seed --class=Modules\\TelegramBot\\Database\\Seeders\\ActorsSeede
 
 
 
+
+
 # Añadimos el repositorio oficial de Laravel como un 'remote' llamado upstream
 git remote add upstream https://github.com/laravel/laravel.git
 # Traemos toda la información de ese repositorio

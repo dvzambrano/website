@@ -3,7 +3,7 @@
 namespace Modules\ZentroPackageBot\Http\Controllers;
 
 use App\Http\Controllers\JsonsController;
-use Modules\Zentro\Services\Codes\QrService;
+use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroPackageBot\Entities\Packages;
 
 class PackagesController extends JsonsController

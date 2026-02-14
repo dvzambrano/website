@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "270c476d1f3d2fa7849de0a8536e5b76",
+    "content-hash": "e3841737a34a157dbb444ff0648d2bdb",
     "packages": [
         {
             "name": "amenadiel/jpgraph",
@@ -8464,6 +8464,57 @@
     ],
     "packages-dev": [
         {
+            "name": "dvzambrano/laravel",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/Laravel.git",
+                "reference": "b06d78153587dbde29c0338997598e4f2b0aee5c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/b06d78153587dbde29c0338997598e4f2b0aee5c",
+                "reference": "b06d78153587dbde29c0338997598e4f2b0aee5c",
+                "shasum": ""
+            },
+            "require": {
+                "amenadiel/jpgraph": "*",
+                "bacon/bacon-qr-code": "^3.0",
+                "laravel/framework": "^12.0",
+                "php": "^8.2",
+                "phpoffice/phpspreadsheet": "^1.29"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Laravel\\Providers\\LaravelServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Laravel\\": ""
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Modulo base para funcionalidades de Laravel",
+            "support": {
+                "source": "https://github.com/dvzambrano/Laravel/tree/main",
+                "issues": "https://github.com/dvzambrano/Laravel/issues"
+            },
+            "time": "2026-02-14T16:53:48+00:00"
+        },
+        {
             "name": "fakerphp/faker",
             "version": "v1.24.1",
             "source": {
@@ -10901,9 +10952,18 @@
             "time": "2025-11-17T20:03:58+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "dvzambrano/laravel",
+            "version": "dev-main",
+            "alias": "1.0.0",
+            "alias_normalized": "1.0.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "dvzambrano/laravel": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

@@ -43,7 +43,7 @@ use Modules\ZentroOwnerBot\Http\Controllers\ZentroOwnerBotController;
 use FurqanSiddiqui\BIP39\BIP39;
 use FurqanSiddiqui\BIP39\Wordlist;
 
-use Modules\Zentro\Services\Office\ExcelService;
+use Modules\Laravel\Services\Office\ExcelService;
 use Modules\ZentroPackageBot\Entities\Packages;
 
 use Modules\ZentroTraderBot\Http\Controllers\RampController;
