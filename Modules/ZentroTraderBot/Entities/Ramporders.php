@@ -3,7 +3,7 @@
 namespace Modules\ZentroTraderBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\TenantTrait;
+use Modules\Laravel\Traits\TenantTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Ramporders extends Model

@@ -2,7 +2,7 @@
 namespace Modules\GutoTradeBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\TenantTrait;
+use Modules\Laravel\Traits\TenantTrait;
 
 class Rates extends Model
 {

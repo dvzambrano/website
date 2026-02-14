@@ -3,7 +3,7 @@
 namespace Modules\ZentroPackageBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\TenantTrait;
+use Modules\Laravel\Traits\TenantTrait;
 
 class Histories extends Model
 {

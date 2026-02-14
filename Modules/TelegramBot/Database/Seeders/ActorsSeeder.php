@@ -6,7 +6,7 @@ namespace Modules\TelegramBot\Database\Seeders;
 use Illuminate\Database\Seeder;
 use Modules\TelegramBot\Entities\Actors;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
-use App\Traits\ModuleTrait;
+use Modules\Laravel\Traits\ModuleTrait;
 
 class ActorsSeeder extends Seeder
 {

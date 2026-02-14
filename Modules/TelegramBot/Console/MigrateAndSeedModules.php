@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 use Modules\TelegramBot\Entities\TelegramBots;
-use App\Traits\DatabaseCommandTrait;
+use Modules\Laravel\Traits\DatabaseCommandTrait;
 
 class MigrateAndSeedModules extends Command
 {

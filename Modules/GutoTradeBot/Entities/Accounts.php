@@ -1,7 +1,7 @@
 <?php
 namespace Modules\GutoTradeBot\Entities;
 
-use App\Traits\TenantTrait;
+use Modules\Laravel\Traits\TenantTrait;
 
 class Accounts extends Jsons
 {

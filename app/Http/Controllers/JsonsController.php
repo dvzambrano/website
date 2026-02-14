@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Traits\ModuleTrait;
+use Modules\Laravel\Traits\ModuleTrait;
 use Modules\TelegramBot\Entities\TelegramBots;
 
 class JsonsController extends Controller

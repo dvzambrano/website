@@ -3,7 +3,7 @@
 namespace Modules\ZentroTraderBot\Entities;
 
 use Modules\TelegramBot\Entities\Actors;
-use App\Traits\TenantTrait;
+use Modules\Laravel\Traits\TenantTrait;
 
 
 class Suscriptions extends Actors
