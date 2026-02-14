@@ -14,28 +14,32 @@ class ClearLaravel extends Command
     {
         $this->info('🚀 Iniciando limpieza profunda del proyecto...');
 
+        // 1. Primero el autoload para que Laravel reconozca posibles clases nuevas tras el merge
         $this->composerDumpAutoload();
+
+        // 2. Limpieza total
+        $this->comment('🧹 Ejecutando limpieza maestra...');
+        $this->call('optimize:clear'); // Limpia config, routes, views y cache de un solo golpe
 
         $commands = [
-            'config:clear' => 'Limpiando configuración...',
-            'route:clear' => 'Limpiando rutas...',
-            'view:clear' => 'Limpiando vistas...',
-            'cache:clear' => 'Limpiando caché de la aplicación...',
-            'event:clear' => 'Limpiando eventos de la aplicación...',
-            'route:cache' => 'Cacheando rutas...',
-            'config:cache' => 'Cacheando configuración...',
-            'optimize' => 'Optimizando framework...',
-            'queue:restart' => 'Reiniciando worker...',
-            'queue:flush' => 'Limpiando la cola del worker...',
+            'event:clear' => 'Limpiando eventos...',
+            'queue:flush' => 'Vaciando colas...',
+            'queue:restart' => 'Reiniciando workers...',
         ];
+
         foreach ($commands as $command => $description) {
             $this->comment($description);
-            $this->call($command);
+            try {
+                $this->call($command);
+            } catch (\Exception $e) {
+                $this->warn("⚠️ No se pudo ejecutar $command (quizás no está configurado).");
+            }
         }
 
+        // 3. Un último dump por si acaso el clear activó algo
         $this->composerDumpAutoload();
 
-        $this->info('✨ ¡Proyecto reseteado !');
+        $this->info('✨ ¡Proyecto reseteado y listo para la acción!');
     }
 
     public function composerDumpAutoload()
