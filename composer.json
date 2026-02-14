@@ -51,9 +51,6 @@
         },
         "exclude-from-classmap": [
             "Modules/**/Database/Migrations"
-        ],
-        "files": [
-            "app/Helpers/ModuleHelper.php"
         ]
     },
     "autoload-dev": {

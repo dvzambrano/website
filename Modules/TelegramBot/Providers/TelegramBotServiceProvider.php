@@ -33,13 +33,6 @@ class TelegramBotServiceProvider extends ServiceProvider
         // Registramos el alias del middleware dinámicamente
         $router->aliasMiddleware('tenant.detector', TenantMiddleware::class);
 
-        // Obtenemos la configuración que ya tienes en el archivo del módulo
-        $moduleConfig = config('telegrambot.database.connection');
-        // La inyectamos dinámicamente en el runtime de Laravel
-        if ($moduleConfig) {
-            config(['database.connections.TelegramBot' => $moduleConfig]);
-        }
-
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
