@@ -125,3 +125,30 @@ php artisan migrate --path=modules/TelegramBot/Database/Migrations
 php artisan db:seed --class=Modules\\TelegramBot\\Database\\Seeders\\ActorsSeeder
 
 
+
+
+
+# Añadimos el repositorio oficial de Laravel como un 'remote' llamado upstream
+git remote add upstream https://github.com/laravel/laravel.git
+# Traemos toda la información de ese repositorio
+git fetch upstream
+
+# Traemos tu carpeta de Módulos (donde está TelegramBot)
+git checkout main -- Modules/
+# Traemos configuraciones específicas si las necesitas
+git checkout main -- config/database.php
+
+Edita el composer.json
+"autoload": {
+    "psr-4": {
+        "App\\": "app/",
+        "Modules\\": "Modules/"
+    }
+}
+
+composer dump-autoload
+php artisan bot:test KashioBot "/start"
+
+
+# Asegúrate de estar en la rama laravel
+git checkout laravel
