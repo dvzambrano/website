@@ -3,12 +3,18 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "laravel/framework": "^13.0",
-        "laravel/tinker": "^3.0"
+        "dvzambrano/laravel": "dev-main as 1.0.0",
+        "dvzambrano/web3": "dev-main as 1.0.0",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^3.0",
+        "nwidart/laravel-modules": "^12.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -18,11 +24,24 @@
         "nunomaduro/collision": "^8.6",
         "phpunit/phpunit": "^11.5.50"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:dvzambrano/laravel.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git@github.com:dvzambrano/web3.git"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "Modules\\": "Modules/",
+            "Modules\\TelegramBot\\": "Modules/TelegramBot/",
+            "Modules\\ZentroTraderBot\\": "Modules/ZentroTraderBot/"
         }
     },
     "autoload-dev": {
@@ -77,7 +96,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "wikimedia/composer-merge-plugin": true
         }
     },
     "minimum-stability": "dev",
