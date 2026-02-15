@@ -12,7 +12,7 @@
  */
 
 Route::prefix('zentrotraderbot')->group(function () {
-    Route::get('/', 'ZentroTraderBotController@index');
+    Route::get('/', 'LandingController@index')->name('zentrotraderbot.landing');
 });
 
 Route::prefix('tradingview')->group(function () {

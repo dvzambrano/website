@@ -2,6 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+use Modules\ZentroTraderBot\Http\Controllers\LandingController;
+
+Route::get('/', [LandingController::class, 'index'])->name('home');
