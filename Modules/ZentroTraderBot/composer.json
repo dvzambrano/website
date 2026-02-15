@@ -1,0 +1,25 @@
+{
+    "name": "dvzambrano/zentrotraderbot",
+    "description": "",
+    "authors": [
+        {
+            "name": "Donel Vazquez Zambrano",
+            "email": "dvzambrano@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "firebase/php-jwt": "^7.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\ZentroTraderBot\\": ""
+        }
+    }
+}

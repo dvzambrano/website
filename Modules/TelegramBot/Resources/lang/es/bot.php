@@ -1,0 +1,111 @@
+<?php
+
+return [
+    "mainmenu" => [
+        "salutation" => "Bienvenido al :bot_name",
+        "referral" => "Enlace de referido",
+        "question" => "¿En qué le puedo ayudar hoy?",
+    ],
+    "adminmenu" => [
+        "header" => "Menú de administrador",
+        "warning" => "Aquí encontrará herramientas útiles para la gestión integral del bot",
+    ],
+    "configmenu" => [
+        "header" => "Menú de configuraciones",
+        "warning" => "Aquí encontrará ajustes del comportamiento del bot",
+    ],
+    "role" => [
+        "admin" => "Admin",
+    ],
+    "options" => [
+        "config" => "Configuración",
+        "help" => "Ayuda",
+        "yes" => "Sí",
+        "no" => "No",
+        "cancel" => "Cancelar",
+        "delete" => "Eliminar",
+        "sendannouncement" => "Anuncio",
+        "viewusers" => "Usuarios suscritos",
+        "backtomainmenu" => "Volver al menú principal",
+        "backtoadminmenu" => "Volver al menú de administrador",
+        "deleteprevmessages" => "Eliminar mensajes previos",
+        "keepprevmessages" => "No eliminar mensajes previos",
+        "timezone" => "Zona horaria :timezone",
+    ],
+    "prompts" => [
+        "whatsnext" => "¿Qué desea hacer ahora?",
+        "chooseoneoption" => "Escoja una de las siguientes opciones",
+        "areyousure" => [
+            "header" => "Solicitud de confirmación",
+            "warning" => "CUIDADO: Esta acción no se puede revertir",
+            "text" => "¿Está seguro que desea continuar?",
+        ],
+        "notimplemented" => [
+            "header" => "Función no implementada",
+            "warning" => "Esta función aun no está lista. Estamos trabajando en ella para sacarla en los próximos días.",
+        ],
+        "announcement" => [
+            "prompt" => "Enviar anuncio",
+            "header" => "ATENCION: Anuncio del sistema",
+            "whatsnext" => "Escriba el anuncio que desea enviar",
+            "preparing" => [
+                "header" => "Preparando anuncios",
+                "warning" => "Se enviarán anuncios a :amount suscriptores...",
+            ],
+            "sending" => [
+                "header" => "Enviando anuncios...",
+                "warning" => "Progreso: :amount de :total anuncios enviados.",
+            ],
+            "sent" => [
+                "header" => "¡Envío completado!",
+                'destroy' => [
+                    "segs" => 'Este mensaje se eliminará en :count segundo|Este mensaje se eliminará en :count segundos',
+                    'mins' => 'Este mensaje se eliminará en :count minuto|Este mensaje se eliminará en :count minutos',
+                ],
+                'duration' => [
+                    "header" => "Tiempo total:",
+                    "segs" => ':count segundo|:count segundos',
+                    'mins' => ':count minuto|:count minutos',
+                ],
+            ],
+        ],
+        "userwithnorole" => [
+            "header" => "Nuevo usuario suscrito al bot",
+            "warning" => "Invitado por",
+        ],
+        "usernamerequired" => [
+            "line1" => "Para usar este bot, por favor configura un nombre de usuario (@usuario) en tu cuenta de Telegram",
+            "line2" => "¿Cómo configurarlo?",
+            "line3" => "Ve a Configuración (o Ajustes)",
+            "line4" => "Selecciona tu perfil y busca la opción Nombre de usuario",
+            "line5" => "Elige un nombre único que comience con @",
+            "line6" => "Una vez que hayas configurado tu nombre de usuario, haz clic en el siguiente botón",
+            "done" => "Listo, ¡ya lo he hecho!",
+        ],
+    ],
+    "errors" => [
+        "header" => "Error",
+        "unrecognizedcommand" => [
+            "text" => "No se que responderle a “:text”",
+            "hint" => "Ud puede interactuar con este bot usando /menu o chequee /ayuda para temas de ayuda",
+        ],
+    ],
+    "scanner" => [
+        "prompt" => "Escanea la etiqueta",
+        "localmode" => "SIN CONEXIÓN - MODO LOCAL",
+        "opencamera" => "Abrir Cámara",
+        "online" => "En Línea",
+        "offline" => "Sin conexión",
+        "synchronizing" => "Sincronizando",
+        "procesing" => "Procesando",
+        "fetch" => [
+            "title" => "¡Logrado!",
+            "desc" => "códigos procesados",
+        ],
+        "localstoragedcodes" => "códigos guardados localmente",
+        "localstorageaction" => "Los códigos se guardarán en el teléfono",
+        "loadinggps" => "Obteniendo ubicación GPS",
+        "gpsdeniedtitle" => "Debe activar y conceder permisos para su ubicación GPS",
+        "retrygps" => "Conceder permisos GPS",
+    ],
+];
