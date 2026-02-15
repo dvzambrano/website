@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Modules\Laravel\Traits\ModuleTrait;
-use Modules\TelegramBot\Entities\TelegramBots;
 
 class JsonsController extends Controller
 {
