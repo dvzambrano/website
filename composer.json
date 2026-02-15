@@ -20,6 +20,7 @@
     },
     "require-dev": {
         "dvzambrano/laravel": "dev-main as 1.0.0",
+        "dvzambrano/web3": "dev-main as 1.0.0",
         "fakerphp/faker": "^1.23",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",
@@ -33,6 +34,10 @@
         {
             "type": "vcs",
             "url": "git@github.com:dvzambrano/laravel.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git@github.com:dvzambrano/web3.git"
         }
     ],
     "autoload": {
@@ -42,7 +47,6 @@
             "Database\\Seeders\\": "database/seeders/",
             "Modules\\Zentro\\": "Modules/Zentro/",
             "Modules\\TelegramBot\\": "Modules/TelegramBot/",
-            "Modules\\Web3\\": "Modules/Web3/",
             "Modules\\GutoTradeBot\\": "Modules/GutoTradeBot/",
             "Modules\\ZentroCriptoBot\\": "Modules/ZentroCriptoBot/",
             "Modules\\ZentroOwnerBot\\": "Modules/ZentroOwnerBot/",
