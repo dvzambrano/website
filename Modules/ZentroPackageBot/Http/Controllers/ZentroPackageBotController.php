@@ -2,7 +2,7 @@
 
 namespace Modules\ZentroPackageBot\Http\Controllers;
 
-use App\Http\Controllers\JsonsController;
+use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\TelegramBot\Traits\UsesTelegramBot;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;

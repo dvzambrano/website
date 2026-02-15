@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\TelegramBot\Entities\TelegramBots;
-use App\Models\Metadatas;
+use Modules\Laravel\Entities\Metadatas;
 use Illuminate\Support\Facades\DB;
 
 class SyncAlchemyAddresses extends Command

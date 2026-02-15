@@ -8115,12 +8115,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Laravel.git",
-                "reference": "97f3da37c06538083349c0a1e5dfed13d205968b"
+                "reference": "12c03017e9de49518db6c10b112bf387e0cf7a05"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/97f3da37c06538083349c0a1e5dfed13d205968b",
-                "reference": "97f3da37c06538083349c0a1e5dfed13d205968b",
+                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/12c03017e9de49518db6c10b112bf387e0cf7a05",
+                "reference": "12c03017e9de49518db6c10b112bf387e0cf7a05",
                 "shasum": ""
             },
             "require": {
@@ -8143,7 +8143,10 @@
             "autoload": {
                 "psr-4": {
                     "Modules\\Laravel\\": ""
-                }
+                },
+                "files": [
+                    "Helpers/ModuleHelper.php"
+                ]
             },
             "license": [
                 "MIT"
@@ -8159,7 +8162,7 @@
                 "source": "https://github.com/dvzambrano/Laravel/tree/main",
                 "issues": "https://github.com/dvzambrano/Laravel/issues"
             },
-            "time": "2026-02-15T12:55:17+00:00"
+            "time": "2026-02-15T14:55:41+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",

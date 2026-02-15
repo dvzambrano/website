@@ -5,7 +5,7 @@ namespace Modules\ZentroTraderBot\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Modules\TelegramBot\Entities\TelegramBots;
-use App\Models\Metadatas;
+use Modules\Laravel\Entities\Metadatas;
 
 class RegisterAlchemyWebhooks extends Command
 {

@@ -3,7 +3,7 @@
 namespace Modules\TelegramBot\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
+use Modules\Laravel\Http\Controllers\Controller;
 
 class TelegramBotController extends Controller
 {

@@ -2,7 +2,7 @@
 
 namespace Modules\GutoTradeBot\Http\Controllers;
 
-use App\Http\Controllers\JsonsController;
+use Modules\Laravel\Http\Controllers\JsonsController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\GutoTradeBot\Entities\Capitals;

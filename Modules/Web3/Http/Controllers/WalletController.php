@@ -2,7 +2,7 @@
 
 namespace Modules\Web3\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
 use Elliptic\EC;
 use kornrunner\Keccak;

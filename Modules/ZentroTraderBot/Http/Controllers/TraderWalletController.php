@@ -2,7 +2,7 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Http\Request; // Necesario para type hinting
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;

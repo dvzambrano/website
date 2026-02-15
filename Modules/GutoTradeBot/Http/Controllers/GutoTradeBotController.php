@@ -4,7 +4,7 @@ namespace Modules\GutoTradeBot\Http\Controllers;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\GraphsController;
 use App\Http\Controllers\TextController;
-use App\Http\Controllers\JsonsController;
+use Modules\Laravel\Http\Controllers\JsonsController;
 use App\Http\Controllers\MathController;
 
 use Carbon\Carbon;

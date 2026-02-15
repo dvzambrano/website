@@ -1,9 +1,10 @@
 <?php
-namespace Database\Seeders;
+namespace Modules\TelegramBot\Database\Seeders;
 
-use App\Models\Metadatas;
+use Modules\Laravel\Entities\Metadatas;
+use Illuminate\Database\Seeder;
 
-class MetadataSeeder extends DatabaseSeeder
+class MetadataSeeder extends Seeder
 {
 
     public function run(): void

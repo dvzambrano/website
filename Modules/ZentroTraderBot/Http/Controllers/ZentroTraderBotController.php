@@ -2,14 +2,14 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
-use App\Models\Metadatas;
+use Modules\Laravel\Entities\Metadatas;
 use Illuminate\Http\Request;
 use Modules\TelegramBot\Entities\Actors;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Http\Controllers\TelegramBotController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
-use App\Http\Controllers\JsonsController;
+use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\TelegramBot\Traits\UsesTelegramBot;
 use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Entities\TelegramBots;

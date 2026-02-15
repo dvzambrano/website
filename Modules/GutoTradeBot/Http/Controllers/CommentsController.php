@@ -2,7 +2,7 @@
 
 namespace Modules\GutoTradeBot\Http\Controllers;
 
-use App\Http\Controllers\JsonsController;
+use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\GutoTradeBot\Entities\Comments;
 use Modules\TelegramBot\Entities\Actors;
 

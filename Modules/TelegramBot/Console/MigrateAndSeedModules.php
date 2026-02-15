@@ -24,10 +24,31 @@ class MigrateAndSeedModules extends Command
 
         // Ejecutar migrate:fresh para la base de datos general
         $this->info('  ℹ️  Running fresh migrations for the main project...');
+
+        // Definimos todas las rutas de migraciones que deben ir a la DB principal
+        $migrationPaths = [
+            'database/migrations', // Las del proyecto local
+            'vendor/dvzambrano/laravel/Database/Migrations', // <--- LAS DE TU PAQUETE
+        ];
+        // Filtramos solo las que existen para evitar errores
+        $existingPaths = array_filter($migrationPaths, function ($path) {
+            return is_dir(base_path($path));
+        });
+
         Artisan::call('migrate:fresh', [
-            '--seed' => true,
-            '--path' => 'database/migrations', // Especificamos la ruta relativa a la raíz
+            '--path' => $existingPaths,
         ], $this->getOutput());
+
+        $packageSeeder = "Modules\\Laravel\\Database\\Seeders\\LaravelDatabaseSeeder";
+        if (class_exists($packageSeeder)) {
+            Artisan::call('db:seed', [
+                '--class' => $packageSeeder
+            ], $this->getOutput());
+            $this->info('  ✅  Base Package seeded successfully.');
+        } else {
+            $this->error("  ❌  Seeder del paquete no encontrado: {$packageSeeder}");
+        }
+        Artisan::call('db:seed', [], $this->getOutput());
 
         $this->info('  🟢  All fresh migrations and seeders for the main project ran successfully.');
         $this->info('');
