@@ -18,16 +18,18 @@ return [
         'get_started' => 'Empezar ahora',
     ],
     'hero' => [
-        'title' => 'Tu cuenta personal en dólares digitales',
-        'subtitle' => 'Protege tu capital de la devaluación de forma segura, rápida y sin complicaciones.',
+        'title' => 'Tu cuenta personal en dólares',
+        'subtitle' => 'Envía, recibe y protege tu dinero sin fronteras. La billetera diseñada para mover tu capital de forma segura, rápida y sin complicaciones.',
         'cta' => 'Crear una cuenta',
     ],
     'about' => [
         'title' => '¿Quiénes somos?',
+        'subtitle' => 'Aliados y Tecnología que respaldan tu cuenta',
         'description' => 'Kashio es la evolución de tu billetera personal, diseñada para darte estabilidad financiera en un entorno digital.',
         'card_1' => [
             'title' => 'Balance en USD',
-            'text' => 'Mantén tus ahorros en activos estables como USDT y USDC, protegidos de la volatilidad del mercado local.',
+            'text1' => 'Mantén tus ahorros en activos estables protegidos de la volatilidad del mercado local.',
+            'text2' => 'Tus ahorros siempre en dólares, protegidos de la devaluación y la inestabilidad local. Disfruta de libertad total sobre tu dinero: consulta tu balance y gestiona tus fondos en cualquier momento, desde cualquier lugar y con la simplicidad que mereces.',
         ],
         'card_2' => [
             'title' => 'Disponibilidad 24/7',
@@ -37,12 +39,16 @@ return [
     'features' => [
         'title' => 'Todo lo que necesitas para gestionar tu capital',
         'list' => [
-            'feature_1' => 'Cero volatilidad',
+            'feature_1' => 'Cero volatilidad manteniendo tu saldo en activos estables (Stablecoins).',
             'feature_2' => 'Interfaz intuitiva',
-            'feature_3' => 'Historial detallado',
+            'feature_31' => 'Historial detallado disponible para ayudarte en tu gestión.',
+            'feature_32' => 'Historial detallado de cada movimiento y cambio de balance en tu cuenta.',
             'feature_4' => 'Seguridad de grado bancario',
+            'feature_4header' => 'Seguridad de Fondos',
+
             'feature_5' => 'Soporte prioritario',
             'feature_6' => 'Acceso multi-dispositivo',
+            'tab3' => 'Kashio no retiene tu dinero durante el proceso de compra; Transak liquida directamente a tu balance personal.',
         ],
     ],
     'payments' => [
@@ -51,9 +57,19 @@ return [
         'tab3' => 'Transak',
         'subtitle' => '¿Cómo fondear tu cuenta?',
         'transak_notice' => 'Kashio utiliza la pasarela de Transak para garantizar depósitos seguros y directos.',
+        'transak_h4' => 'Integración con Transak',
+        'step_1_header' => 'Selecciona el monto a depositar',
         'step_1' => 'Selecciona el monto a depositar',
+        'step_2_header' => 'Carga Directa',
         'step_2' => 'Paga con tu moneda local vía Transak',
+        'step_3_header' => 'Recibe tus dólares en tu balance de Kashio',
         'step_3' => 'Recibe tus dólares en tu balance de Kashio',
+    ],
+
+    'counts' => [
+        'users' => 'Usuarios',
+        'trans' => 'Transacciones',
+        'security' => 'Seguridad',
     ],
     'faq' => [
         'title' => 'Preguntas Frecuentes',
@@ -92,12 +108,26 @@ return [
     ],
     'footer' => [
         'title' => 'Suscríbete a nuestro boletín',
+        'subtitle' => 'Recibe actualizaciones sobre el ecosistema Kashio y nuevas formas de proteger tu capital.',
         'contact' => 'Soporte Kashio',
+        'email' => 'Tu correo electrónico',
+        'suscribeme' => 'Suscribirme',
         'description' => 'La plataforma líder para la gestión de tus activos digitales respaldada por ZentroTrader.',
+        'terms' => 'Términos de servicio',
+        'policy' => 'Política de privacidad',
+        'faq' => 'Preguntas Frecuentes',
+        'support' => [
+            'title' => 'Soporte Global Kashio',
+            'subtitle' => ' Respaldado por ZentroTrader',
+            'email' => ' Email:',
+            'contact' => 'soporte@kashio.com',
+        ],
+        'rights' => 'Todos los derechos reservados.',
     ],
     'pricing' => [
         'title' => 'Planes y Beneficios',
         'currency' => '$',
+        'recommended' => 'Recomendado',
         'plans' => [
             [
                 'name' => 'Básico',
