@@ -114,7 +114,7 @@
         <section id="about" class="about">
 
         @include('telegrambot::partials.telegram-login', [
-'bot' => 'ZentroTraderBot',
+'bot' => 'KashioBot',
 'callback' => route('telegram.callback'),
 'size' => 'large' 
 ])
