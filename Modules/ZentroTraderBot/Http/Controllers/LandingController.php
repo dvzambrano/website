@@ -10,7 +10,7 @@ class LandingController extends Controller
     public function index()
     {
         // Leemos el bot para el q esta trabajando esta pagina:
-        $bot_name = config('zentrotraderbot.name', 'KashioBot');
+        $bot_name = config('zentrotraderbot.bot', 'KashioBot');
         // Leemos el tema configurado (por defecto flexstart)
         $theme = config('zentrotraderbot.theme', 'FlexStart');
 
