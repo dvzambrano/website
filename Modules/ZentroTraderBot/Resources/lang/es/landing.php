@@ -16,6 +16,9 @@ return [
         'wallet' => 'Planes',
         'contact' => 'Contacto',
         'get_started' => 'Empezar ahora',
+        'user' => [
+            'identifiedas' => 'Identificado como',
+        ],
     ],
     'hero' => [
         'title' => 'Tu cuenta personal en dólares',

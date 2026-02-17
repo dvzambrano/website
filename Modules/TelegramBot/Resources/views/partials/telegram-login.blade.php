@@ -21,7 +21,8 @@ Uso:
             @endif
 
             <div class="text-start">
-                <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1;">Identificado como</small>
+                <small class="text-muted d-block"
+                    style="font-size: 0.7rem; line-height: 1;">{{ __('zentrotraderbot::landing.menu.user.identifiedas') }}</small>
                 <span class="fw-bold text-dark">{{ $user['name'] }}</span>
             </div>
 
