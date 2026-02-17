@@ -25,10 +25,8 @@ Route::prefix('telegram')->group(function () {
     Route::get('/scanner/{gpsrequired}/{botname}/{instance?}', 'TelegramBotController@initScanner')->name('telegram-scanner-init');
     Route::post('/scanner/store', 'TelegramBotController@storeScan')->name('telegram-scanner-store');
 
-    // Ruta para autenticacion con Telegram
-    Route::get('/auth/{key}', 'TelegramController@loginCallback')
-        ->middleware('telegrambot.detector')
-        ->name('telegram.callback');
+
+    // Esta ruta siempre debe estar antes de '/auth/{key}'
     Route::get('/auth/logout', function () {
         // 1. Cierra la sesión del Guard de Laravel (si existiera)
         Auth::logout();
@@ -36,12 +34,11 @@ Route::prefix('telegram')->group(function () {
         request()->session()->invalidate();
         // 3. Regenera el token CSRF para evitar ataques de fijación de sesión
         request()->session()->regenerateToken();
-
-        // Forzamos al navegador a no cachear la redirección
-        return redirect('/')
-            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+        return redirect('/');
     })->name('telegram.logout');
+    // Ruta para autenticacion con Telegram
+    Route::get('/auth/{key}', 'TelegramController@loginCallback')
+        ->middleware('telegrambot.detector')
+        ->name('telegram.callback');
 
 });
