@@ -90,10 +90,9 @@
                     <div data-aos="fade-up" data-aos-delay="600">
                         <div class="text-center text-lg-start">
                             @include('telegrambot::partials.telegram-login', [
-'bot' => 'KashioBot',
-'callback' => route('telegram.callback'),
-'size' => 'medium' 
-])
+                                'bot'  => $bot, // Pasamos el objeto que vino del controlador
+                                'size' => 'medium'
+                            ])
                         </div>
                     </div>
                 </div>

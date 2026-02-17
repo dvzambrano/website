@@ -377,40 +377,40 @@ class TelegramController extends Controller
     }
     public function loginCallback(Request $request)
     {
+        $botToken = $request->attributes->get('bot_token');
         $auth_data = $request->all();
 
-
-
-        // 1. Validar integridad de los datos
-        if (!$this->checkAuthorization($auth_data)) {
-            //return redirect('/login')->with('error', 'Error de autenticación de Telegram');
+        if (!$this->checkTelegramAuthorization($auth_data, $botToken)) {
+            return redirect('/')->with('error', 'Fallo de integridad.');
         }
 
-        /*
-        // 2. Buscar o crear usuario
-        // Nota: Guardamos el telegram_id para vincularlo con el bot de Kashio
-        $user = User::updateOrCreate(
-            ['telegram_id' => $auth_data['id']],
-            [
-                'name' => $auth_data['first_name'] . ($auth_data['last_name'] ?? ''),
+        // En lugar de base de datos, guardamos en la sesión de Laravel
+        session([
+            'telegram_user' => [
+                'id' => $auth_data['id'],
+                'name' => $auth_data['first_name'] . ' ' . ($auth_data['last_name'] ?? ''),
                 'username' => $auth_data['username'] ?? null,
                 'photo_url' => $auth_data['photo_url'] ?? null,
-                'password' => bcrypt(str_random(24)), // Password dummy
             ]
-        );
-
-        Auth::login($user, true);
-        */
+        ]);
 
         return redirect()->intended('/');
     }
 
-    protected function checkAuthorization($auth_data)
+    protected function checkTelegramAuthorization($auth_data, $botToken)
     {
         Log::error("TelegramController checkAuthorization: " . json_encode($auth_data));
-
-        if (!isset($auth_data['hash']))
-            return false;
+        /*
+        {
+    "id": "1741391257",
+    "first_name": "Crypto",
+    "last_name": "Dev",
+    "username": "criptodev1981",
+    "photo_url": "https:\/\/t.me\/i\/userpic\/320\/OTuPwnXNYWQdvow2ThDsPptkNZ6mYYJV80hnQpR8mSM.jpg",
+    "auth_date": "1771339825",
+    "hash": "048d49f88eceab46dbf338fe3152eb72796d08d9f30681b092f6b8ea9946253f"
+}
+        */
 
         $check_hash = $auth_data['hash'];
         unset($auth_data['hash']);
@@ -422,15 +422,9 @@ class TelegramController extends Controller
         sort($data_check_arr);
         $data_check_string = implode("\n", $data_check_arr);
 
-        // Usamos el token que ya tienes para ZentroTraderBot
-        $secret_key = hash('sha256', config('services.telegram.bot_token'), true);
+        $secret_key = hash('sha256', $botToken, true);
         $hash = hash_hmac('sha256', $data_check_string, $secret_key);
 
-        if (strcmp($hash, $check_hash) !== 0)
-            return false;
-        if ((time() - $auth_data['auth_date']) > 86400)
-            return false; // Expira en 24h
-
-        return true;
+        return hash_equals($hash, $check_hash);
     }
 }
