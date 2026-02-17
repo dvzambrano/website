@@ -68,9 +68,15 @@
 
                    @include('laravel::partials.language-selector', ['module' => 'ZentroTraderBot'])
 
-                    <li><a class="getstarted scrollto" href="#about">
-                            {{ __('zentrotraderbot::landing.menu.get_started') }}
-                        </a></li>
+                  
+
+                    <li>
+                         @include('telegrambot::partials.telegram-login', [
+'bot' => 'KashioBot',
+'callback' => route('telegram.callback'),
+'size' => 'medium' 
+])
+                    </li>
                 </ul>
                 <i class="bi bi-list mobile-nav-toggle"></i>
             </nav>
@@ -112,12 +118,6 @@
     <main id="main">
         <!-- ======= About Section ======= -->
         <section id="about" class="about">
-
-        @include('telegrambot::partials.telegram-login', [
-'bot' => 'KashioBot',
-'callback' => route('telegram.callback'),
-'size' => 'small' 
-])
 
             <div class="container" data-aos="fade-up">
                 <div class="row gx-0">
