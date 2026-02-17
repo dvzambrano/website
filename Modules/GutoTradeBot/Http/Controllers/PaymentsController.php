@@ -2,8 +2,8 @@
 
 namespace Modules\GutoTradeBot\Http\Controllers;
 
-use App\Http\Controllers\FileController;
-use App\Http\Controllers\MathController;
+use Modules\Laravel\Http\Controllers\FileController;
+use Modules\Laravel\Http\Controllers\MathController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Modules\GutoTradeBot\Entities\Agents;

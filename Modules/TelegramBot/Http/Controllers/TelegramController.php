@@ -4,7 +4,7 @@ namespace Modules\TelegramBot\Http\Controllers;
 
 use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\FileController;
+use Modules\Laravel\Http\Controllers\FileController;
 use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
 
 class TelegramController extends Controller

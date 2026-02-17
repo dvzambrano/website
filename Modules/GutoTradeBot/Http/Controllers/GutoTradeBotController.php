@@ -1,11 +1,11 @@
 <?php
 namespace Modules\GutoTradeBot\Http\Controllers;
 
-use App\Http\Controllers\FileController;
-use App\Http\Controllers\GraphsController;
-use App\Http\Controllers\TextController;
+use Modules\Laravel\Http\Controllers\FileController;
+use Modules\Laravel\Http\Controllers\GraphsController;
+use Modules\Laravel\Http\Controllers\TextController;
 use Modules\Laravel\Http\Controllers\JsonsController;
-use App\Http\Controllers\MathController;
+use Modules\Laravel\Http\Controllers\MathController;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
