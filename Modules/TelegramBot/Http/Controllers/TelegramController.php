@@ -394,7 +394,7 @@ class TelegramController extends Controller
             ]
         ]);
 
-        return redirect()->intended('/');
+        return redirect()->intended('/dashboard');
     }
 
     protected function checkTelegramAuthorization($auth_data, $botToken)

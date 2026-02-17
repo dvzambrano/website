@@ -52,7 +52,7 @@ Route::prefix('telegram')->group(function () {
                     'photo_url' => 'https://via.placeholder.com/150'
                 ]
             ]);
-            return redirect('/')->with('info', 'Sesión de desarrollo iniciada');
+            return redirect('/dashboard')->with('info', 'Sesión de desarrollo iniciada');
         }
 
         // 3. Si alguien intenta entrar desde kashio.micalme.com, recibe un 403 fulminante
