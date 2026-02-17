@@ -4,7 +4,9 @@ Uso:
 'bot' => $botModel, // Pasamos el objeto completo del bot
 ])
 --}}
-
+<div>
+    Estamos usando {{ $bot->code }}.
+</div>
 <div id="telegram-login-container" class="d-flex justify-content-center align-items-center my-3">
     @if(session()->has('telegram_user'))
         @php $user = session('telegram_user'); @endphp
