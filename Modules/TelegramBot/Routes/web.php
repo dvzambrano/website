@@ -37,8 +37,13 @@ Route::prefix('telegram')->group(function () {
         return redirect('/');
     })->name('telegram.logout');
     // Esta ruta siempre debe estar antes de '/auth/{key}'
-    if (app()->environment('local')) {
-        Route::get('/auth/dev', function () {
+    Route::get('/auth/dev', function () {
+        // 1. Verificación triple de seguridad
+        $isLocalHost = in_array(request()->getHost(), ['localhost', '127.0.0.1']);
+        $isLocalEnv = app()->isLocal();
+
+        // 2. Solo si AMBAS son ciertas permitimos el acceso
+        if ($isLocalHost && $isLocalEnv) {
             session([
                 'telegram_user' => [
                     'id' => '12345678',
@@ -48,8 +53,11 @@ Route::prefix('telegram')->group(function () {
                 ]
             ]);
             return redirect('/')->with('info', 'Sesión de desarrollo iniciada');
-        });
-    }
+        }
+
+        // 3. Si alguien intenta entrar desde kashio.micalme.com, recibe un 403 fulminante
+        abort(403, 'Acción no permitida en producción.');
+    });
     // Ruta para autenticacion con Telegram
     Route::get('/auth/{key}', 'TelegramController@loginCallback')
         ->middleware('telegrambot.detector')
