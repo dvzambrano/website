@@ -4,9 +4,8 @@ namespace Modules\TelegramBot\Http\Controllers;
 
 use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\FileController;
+use Modules\Laravel\Http\Controllers\FileController;
 use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
-//use Modules\Laravel\Http\Controllers\
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -376,7 +375,7 @@ class TelegramController extends Controller
             "url" => request()->root() . FileController::$AUTODESTROY_DIR . "/" . $filename,
         );
     }
-    public function handleCallback(Request $request)
+    public function loginCallback(Request $request)
     {
         $auth_data = $request->all();
 

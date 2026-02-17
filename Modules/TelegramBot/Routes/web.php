@@ -26,7 +26,7 @@ Route::prefix('telegram')->group(function () {
     Route::post('/scanner/store', 'TelegramBotController@storeScan')->name('telegram-scanner-store');
 
     // Ruta para autenticacion con Telegram
-    Route::get('/auth/callback', [TelegramAuthController::class, 'handleCallback'])
+    Route::get('/auth/callback', 'TelegramController@loginCallback')
         ->name('telegram.callback');
 
 });
