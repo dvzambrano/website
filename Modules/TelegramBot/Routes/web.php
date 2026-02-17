@@ -36,7 +36,12 @@ Route::prefix('telegram')->group(function () {
         request()->session()->invalidate();
         // 3. Regenera el token CSRF para evitar ataques de fijación de sesión
         request()->session()->regenerateToken();
-        return redirect('/');
+
+        // Forzamos al navegador a no cachear la redirección
+        return redirect('/')
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
     })->name('telegram.logout');
 
 });
