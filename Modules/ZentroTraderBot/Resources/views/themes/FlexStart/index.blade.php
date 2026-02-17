@@ -40,24 +40,6 @@
 
             <nav id="navbar" class="navbar">
                 <ul>
-                    <li class="dropdown">
-                        <a href="{{ route('zentrotraderbot.landing') }}">
-                            <span><i class="bi bi-globe"></i> {{ strtoupper(App::getLocale()) }}</span>
-                            <i class="bi bi-chevron-down"></i>
-                        </a>
-                        <ul>
-                            <li>
-                                <a href="{{ route('laravel.setlocale', 'es') }}">
-                                    <img src="https://flagcdn.com/w20/es.png" class="me-2" alt="ES"> Español
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('laravel.setlocale', 'en') }}">
-                                    <img src="https://flagcdn.com/w20/gb.png" class="me-2" alt="EN"> English
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
                     <li><a class="nav-link scrollto active" href="#hero">
                             {{ __('zentrotraderbot::landing.menu.home') }}
                         </a></li>
@@ -81,6 +63,9 @@
                     <li><a class="nav-link scrollto" href="#contact">
                             {{ __('zentrotraderbot::landing.footer.contact') }}
                         </a></li>
+
+
+                   @include('laravel::partials.language-selector', ['module' => 'ZentroTraderBot'])
 
                     <li><a class="getstarted scrollto" href="#about">
                             {{ __('zentrotraderbot::landing.menu.get_started') }}
@@ -132,8 +117,8 @@
 
                     <div class="col-lg-6 d-flex flex-column justify-content-center" data-aos="fade-up" data-aos-delay="200">
                         <div class="content">
-                            <h3>{{ __('zentrotraderbot::landing.about.title') }}</h3>
-                            <h2>{{ __('zentrotraderbot::landing.about.description') }}</h2>
+                            <h3>{{ __('zentrotraderbot::landing.about.title', ['name' => __('zentrotraderbot::landing.title')]) }}</h3>
+                            <h2>{{ __('zentrotraderbot::landing.about.description', ['name' => __('zentrotraderbot::landing.title')]) }}</h2>
                             <p>
                                 {{ __('zentrotraderbot::landing.about.card_1.text2') }}
                             </p>
@@ -155,7 +140,6 @@
                 <div class="container" data-aos="fade-up">
 
                     <header class="section-header">
-                        <h2>{{ __('zentrotraderbot::landing.about.title') }}</h2>
                         <p>{{ __('zentrotraderbot::landing.features.title') }}</p>
                     </header>
 
@@ -290,7 +274,7 @@
 
                             <div class="tab-content">
                                 <div class="tab-pane fade show active" id="tab1">
-                                    <p>{{ __('zentrotraderbot::landing.payments.transak_notice') }}</p>
+                                    <p>{{ __('zentrotraderbot::landing.payments.transak_notice', ['name' => __('zentrotraderbot::landing.title')]) }}</p>
                                     <div class="d-flex align-items-center mb-2">
                                         <i class="bi bi-check2"></i>
                                         <h4>{{ __('zentrotraderbot::landing.payments.step_1') }}</h4>
@@ -301,7 +285,7 @@
                                     </div>
                                     <div class="d-flex align-items-center mb-2">
                                         <i class="bi bi-check2"></i>
-                                        <h4>{{ __('zentrotraderbot::landing.payments.step_3') }}</h4>
+                                        <h4>{{ __('zentrotraderbot::landing.payments.step_3', ['name' => __('zentrotraderbot::landing.title')]) }}</h4>
                                     </div>
                                 </div>
                                 <div class="tab-pane fade show" id="tab2">
@@ -313,7 +297,7 @@
                                 </div>
 
                                 <div class="tab-pane fade show" id="tab3">
-                                    <p>{{ __('zentrotraderbot::landing.features.list.tab3') }}</p>
+                                    <p>{{ __('zentrotraderbot::landing.about.description', ['name' => __('zentrotraderbot::landing.title')]) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -337,7 +321,7 @@
                                         <i class="ri-bank-card-line"></i>
                                         <div>
                                             <h4>{{ __('zentrotraderbot::landing.payments.transak_h4') }}</h4>
-                                            <p>{{ __('zentrotraderbot::landing.payments.transak_notice') }}</p>
+                                            <p>{{ __('zentrotraderbot::landing.payments.transak_notice', ['name' => __('zentrotraderbot::landing.title')]) }}</p>
                                         </div>
                                     </div>
 
@@ -487,7 +471,7 @@
 
             <div class="row">
                 @php 
-                                                                            // Dividimos las preguntas en dos grupos para las dos columnas
+                                                                                                // Dividimos las preguntas en dos grupos para las dos columnas
                     $faqGroups = array_chunk(__('zentrotraderbot::landing.faq.questions'), 3); 
                 @endphp
 
@@ -529,7 +513,9 @@
 
             <header class="section-header">
                 <h2>{{ __('zentrotraderbot::landing.menu.features') }}</h2>
-                <p>{{ __('zentrotraderbot::landing.portfolio.title') }}</p>
+                <p>
+                {{ __('zentrotraderbot::landing.portfolio.title', ['name' => __('zentrotraderbot::landing.title')]) }}
+                </p>
             </header>
 
             <div class="row" data-aos="fade-up" data-aos-delay="100">
@@ -616,7 +602,10 @@
 
             <header class="section-header">
                 <h2>{{ __('zentrotraderbot::landing.footer.contact') }}</h2>
-                <p>{{ __('zentrotraderbot::landing.team.title') }}</p>
+                <p>
+                 {{ __('zentrotraderbot::landing.team.title', ['name' => __('zentrotraderbot::landing.title')]) }}
+                </p>
+
             </header>
 
             <div class="row gy-4 justify-content-center">
@@ -824,7 +813,8 @@
                     <div class="row justify-content-center">
                         <div class="col-lg-12 text-center">
                             <h4>{{ __('zentrotraderbot::landing.footer.title') }}</h4>
-                            <p>{{ __('zentrotraderbot::landing.footer.subtitle') }}</p>
+                            <p>{{ __('zentrotraderbot::landing.footer.subtitle', ['name' => __('zentrotraderbot::landing.title')]) }}</p>
+
                         </div>
                         <div class="col-lg-6">
                             <form action="" method="post">
@@ -870,8 +860,8 @@
                         </div>
 
                         <div class="col-lg-3 col-md-12 footer-contact text-center text-md-start">
-                            <h4>{{ __('zentrotraderbot::landing.footer.contact') }}</h4>
-                            <p>{{ __('zentrotraderbot::landing.footer.support.title') }}<br>
+                            <h4>{{ __('zentrotraderbot::landing.footer.contact', ['name' => __('zentrotraderbot::landing.title')]) }}</h4>
+                            <p>{{ __('zentrotraderbot::landing.footer.support.title', ['name' => __('zentrotraderbot::landing.title')]) }} <br>
                                 {{ __('zentrotraderbot::landing.footer.support.subtitle') }}<br><br>
                                 <strong>{{ __('zentrotraderbot::landing.footer.support.email') }}</strong> {{ __('zentrotraderbot::landing.footer.support.contact') }}<br>
                             </p>

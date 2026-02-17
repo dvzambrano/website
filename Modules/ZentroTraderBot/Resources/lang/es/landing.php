@@ -10,7 +10,7 @@ return [
 
     'menu' => [
         'home' => 'Inicio',
-        'about' => 'Sobre nosotros',
+        'about' => '¿Qué es?',
         'features' => 'Características',
         'steps' => 'Servicios',
         'wallet' => 'Planes',
@@ -23,13 +23,13 @@ return [
         'cta' => 'Crear una cuenta',
     ],
     'about' => [
-        'title' => '¿Quiénes somos?',
+        'title' => '¿Qué es :name?',
         'subtitle' => 'Aliados y Tecnología que respaldan tu cuenta',
-        'description' => 'Kashio es la evolución de tu billetera personal, diseñada para darte estabilidad financiera en un entorno digital.',
+        'description' => ':name es una billetera digital integrada en Telegram.',
         'card_1' => [
             'title' => 'Balance en USD',
             'text1' => 'Mantén tus ahorros en activos estables protegidos de la volatilidad del mercado local.',
-            'text2' => 'Tus ahorros siempre en dólares, protegidos de la devaluación y la inestabilidad local. Disfruta de libertad total sobre tu dinero: consulta tu balance y gestiona tus fondos en cualquier momento, desde cualquier lugar y con la simplicidad que mereces.',
+            'text2' => 'Está diseñada para mantener la simplicidad  de mantener dólares digitales y disponer de ellos sin restricciones y de manera desentralizada; de forma que siempre tengas el control de tu capital.',
         ],
         'card_2' => [
             'title' => 'Disponibilidad 24/7',
@@ -48,7 +48,7 @@ return [
 
             'feature_5' => 'Soporte prioritario',
             'feature_6' => 'Acceso multi-dispositivo',
-            'tab3' => 'Kashio no retiene tu dinero durante el proceso de compra; Transak liquida directamente a tu balance personal.',
+            'tab3' => ':name no retiene tu dinero durante el proceso de compra; Transak liquida directamente a tu balance personal.',
         ],
     ],
     'payments' => [
@@ -56,14 +56,13 @@ return [
         'tab2' => 'Seguridad',
         'tab3' => 'Transak',
         'subtitle' => '¿Cómo fondear tu cuenta?',
-        'transak_notice' => 'Kashio utiliza la pasarela de Transak para garantizar depósitos seguros y directos.',
+        'transak_notice' => ':name utiliza la pasarela de Transak para garantizar depósitos seguros y directos.',
         'transak_h4' => 'Integración con Transak',
         'step_1_header' => 'Selecciona el monto a depositar',
         'step_1' => 'Selecciona el monto a depositar',
         'step_2_header' => 'Carga Directa',
         'step_2' => 'Paga con tu moneda local vía Transak',
-        'step_3_header' => 'Recibe tus dólares en tu balance de Kashio',
-        'step_3' => 'Recibe tus dólares en tu balance de Kashio',
+        'step_3' => 'Recibe tus dólares en tu balance de :name',
     ],
 
     'counts' => [
@@ -76,7 +75,7 @@ return [
         'questions' => [
             [
                 'id' => '1',
-                'question' => '¿Qué es exactamente una cuenta Kashio?',
+                'question' => '¿Qué es exactamente una cuenta?',
                 'answer' => 'Es un espacio seguro donde tu capital se mantiene en dólares digitales para evitar la devaluación. Es la evolución de tu billetera personal respaldada por ZentroTrader.'
             ],
             [
@@ -87,7 +86,7 @@ return [
             [
                 'id' => '3',
                 'question' => '¿Es seguro operar con Transak?',
-                'answer' => 'Sí, Transak es una plataforma líder regulada. Kashio nunca almacena tus datos bancarios; solo recibimos el depósito final para acreditarlo a tu cuenta.'
+                'answer' => 'Sí, Transak es una plataforma líder regulada. Nosotros nunca almacenamos tus datos bancarios; solo recibimos el depósito final para acreditarlo a tu cuenta.'
             ],
             [
                 'id' => '4',
@@ -96,7 +95,7 @@ return [
             ],
             [
                 'id' => '5',
-                'question' => '¿Kashio cobra comisiones de mantenimiento?',
+                'question' => '¿Hay comisiones de mantenimiento?',
                 'answer' => 'Contamos con un plan básico gratuito para que protejas tu dinero sin costos fijos. Solo aplicamos comisiones mínimas en operaciones de gestión de capital avanzadas.'
             ],
             [
@@ -108,8 +107,8 @@ return [
     ],
     'footer' => [
         'title' => 'Suscríbete a nuestro boletín',
-        'subtitle' => 'Recibe actualizaciones sobre el ecosistema Kashio y nuevas formas de proteger tu capital.',
-        'contact' => 'Soporte Kashio',
+        'subtitle' => 'Recibe actualizaciones sobre el ecosistema :name y nuevas formas de proteger tu capital.',
+        'contact' => 'Contáctenos',
         'email' => 'Tu correo electrónico',
         'suscribeme' => 'Suscribirme',
         'description' => 'La plataforma líder para la gestión de tus activos digitales respaldada por ZentroTrader.',
@@ -117,7 +116,7 @@ return [
         'policy' => 'Política de privacidad',
         'faq' => 'Preguntas Frecuentes',
         'support' => [
-            'title' => 'Soporte Global Kashio',
+            'title' => 'Soporte Global :name',
             'subtitle' => ' Respaldado por ZentroTrader',
             'email' => ' Email:',
             'contact' => 'soporte@kashio.com',
@@ -183,25 +182,25 @@ return [
             ],
             [
                 'date' => '10 de Febrero, 2026',
-                'title' => 'Guía paso a paso: Cómo fondear tu cuenta Kashio usando Transak.',
+                'title' => 'Guía paso a paso: Cómo fondear tu cuenta usando Transak.',
                 'img' => 'assets/img/blog/blog-2.jpg',
                 'link' => '#',
             ],
             [
                 'date' => '05 de Febrero, 2026',
-                'title' => 'Seguridad Blockchain: Cómo protegemos tus activos en Kashio.',
+                'title' => 'Seguridad Blockchain: Cómo protegemos tus activos.',
                 'img' => 'assets/img/blog/blog-3.jpg',
                 'link' => '#',
             ],
         ]
     ],
     'team' => [
-        'title' => 'El equipo detrás de Kashio',
+        'title' => 'El equipo detrás de :name',
         'members' => [
             [
-                'name' => 'Donel Zambrano',
+                'name' => 'John Doe',
                 'role' => 'Founder & Lead Developer',
-                'desc' => 'Arquitecto principal de Kashio y ZentroTrader. Experto en democratizar el acceso a cuentas estables en USD digitales.',
+                'desc' => 'Arquitecto principal.',
                 'img' => 'assets/img/team/team-1.jpg',
                 'twitter' => '#',
                 'linkedin' => '#',
@@ -209,9 +208,9 @@ return [
                 'instagram' => '#'
             ],
             [
-                'name' => 'Soporte Kashio',
+                'name' => 'Jane Smith',
                 'role' => 'Atención al Cliente',
-                'desc' => 'Equipo dedicado a asistirte en tus procesos de carga vía Transak y gestión de balance en tiempo real.',
+                'desc' => 'Equipo dedicado a asistirte en tus procesos de carga y gestión de balance en tiempo real.',
                 'img' => 'assets/img/team/team-2.jpg',
                 'twitter' => '#',
                 'linkedin' => '#',
@@ -219,7 +218,7 @@ return [
                 'instagram' => '#'
             ],
             [
-                'name' => 'ZentroTrader Tech',
+                'name' => 'Micalme',
                 'role' => 'Infraestructura & Seguridad',
                 'desc' => 'Especialistas en tecnología blockchain encargados de la custodia y seguridad de tus activos digitales.',
                 'img' => 'assets/img/team/team-3.jpg',
@@ -234,14 +233,14 @@ return [
         'title' => 'Lo que dicen nuestros usuarios',
         'items' => [
             [
-                'quote' => 'Desde que uso Kashio, no me preocupo por la devaluación. Tener mis ahorros en USD digitales me da una tranquilidad que no tenía antes.',
+                'quote' => 'Desde que uso este sistema, no me preocupo por la devaluación. Tener mis ahorros en USD digitales me da una tranquilidad que no tenía antes.',
                 'name' => 'Ricardo M.',
                 'role' => 'Usuario Particular',
                 'img' => 'assets/img/testimonials/testimonials-1.jpg',
                 'stars' => 5
             ],
             [
-                'quote' => 'Increíble lo fácil que es recargar con Transak. En pocos minutos pasé mi moneda local a dólares en mi cuenta personal de Kashio.',
+                'quote' => 'Increíble lo fácil que es recargar con Transak. En pocos minutos pasé mi moneda local a dólares en mi cuenta.',
                 'name' => 'Sara W.',
                 'role' => 'Freelancer',
                 'img' => 'assets/img/testimonials/testimonials-2.jpg',
@@ -264,7 +263,7 @@ return [
         ]
     ],
     'portfolio' => [
-        'title' => 'Conoce la interfaz de tu cuenta Kashio',
+        'title' => 'Conoce la interfaz de tu cuenta :name',
         'filters' => [
             'all' => 'Todo',
             'app' => 'App Móvil',
@@ -300,7 +299,7 @@ return [
         'title' => '¿Tienes dudas sobre tu cuenta USD?',
         'info' => [
             'address_title' => 'Sede Central',
-            'address_text' => 'ZentroTrader Tech, Soporte Global Kashio',
+            'address_text' => 'Micalme, Soporte Global',
             'phone_title' => 'Llámanos',
             'phone_text' => '+1 234 567 890',
             'email_title' => 'Escríbenos',

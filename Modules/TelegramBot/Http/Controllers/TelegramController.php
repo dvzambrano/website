@@ -6,6 +6,9 @@ use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\FileController;
 use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
+//use Modules\Laravel\Http\Controllers\
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TelegramController extends Controller
 {
@@ -372,5 +375,59 @@ class TelegramController extends Controller
             "extension" => $array[1],
             "url" => request()->root() . FileController::$AUTODESTROY_DIR . "/" . $filename,
         );
+    }
+    public function handleCallback(Request $request)
+    {
+        $auth_data = $request->all();
+
+        // 1. Validar integridad de los datos
+        if (!$this->checkAuthorization($auth_data)) {
+            return redirect('/login')->with('error', 'Error de autenticación de Telegram');
+        }
+
+        /*
+        // 2. Buscar o crear usuario
+        // Nota: Guardamos el telegram_id para vincularlo con el bot de Kashio
+        $user = User::updateOrCreate(
+            ['telegram_id' => $auth_data['id']],
+            [
+                'name' => $auth_data['first_name'] . ($auth_data['last_name'] ?? ''),
+                'username' => $auth_data['username'] ?? null,
+                'photo_url' => $auth_data['photo_url'] ?? null,
+                'password' => bcrypt(str_random(24)), // Password dummy
+            ]
+        );
+
+        Auth::login($user, true);
+        */
+
+        return redirect()->intended('/dashboard');
+    }
+
+    protected function checkAuthorization($auth_data)
+    {
+        if (!isset($auth_data['hash']))
+            return false;
+
+        $check_hash = $auth_data['hash'];
+        unset($auth_data['hash']);
+
+        $data_check_arr = [];
+        foreach ($auth_data as $key => $value) {
+            $data_check_arr[] = $key . '=' . $value;
+        }
+        sort($data_check_arr);
+        $data_check_string = implode("\n", $data_check_arr);
+
+        // Usamos el token que ya tienes para ZentroTraderBot
+        $secret_key = hash('sha256', config('services.telegram.bot_token'), true);
+        $hash = hash_hmac('sha256', $data_check_string, $secret_key);
+
+        if (strcmp($hash, $check_hash) !== 0)
+            return false;
+        if ((time() - $auth_data['auth_date']) > 86400)
+            return false; // Expira en 24h
+
+        return true;
     }
 }
