@@ -46,9 +46,9 @@ Route::prefix('telegram')->group(function () {
         if ($isLocalHost && $isLocalEnv) {
             session([
                 'telegram_user' => [
-                    'id' => '12345678',
+                    'id' => '816767995',
                     'name' => '(Dev Mode)',
-                    'username' => 'devuser',
+                    'username' => 'dvzambrano',
                     'photo_url' => 'https://via.placeholder.com/150'
                 ]
             ]);

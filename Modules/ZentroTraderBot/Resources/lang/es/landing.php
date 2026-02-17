@@ -18,6 +18,11 @@ return [
         'get_started' => 'Empezar ahora',
         'user' => [
             'identifiedas' => 'Identificado como',
+            'myaccount' => 'Mi cuenta',
+            'greeting' => 'Hola :name',
+            'balance' => 'Balance',
+            'lastoperations' => 'Últimas :amount operaciones',
+            'nooperations' => 'No hay operaciones recientes',
         ],
     ],
     'hero' => [

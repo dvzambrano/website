@@ -40,6 +40,8 @@
 
             <nav id="navbar" class="navbar">
                 <ul>
+                   @include('laravel::partials.language-selector', ['module' => 'ZentroTraderBot'])
+
                     <li><a class="nav-link scrollto active" href="#hero">
                             {{ __('zentrotraderbot::landing.menu.home') }}
                         </a></li>
@@ -64,7 +66,27 @@
                             {{ __('zentrotraderbot::landing.footer.contact') }}
                         </a></li>                         
 
-                   @include('laravel::partials.language-selector', ['module' => 'ZentroTraderBot'])
+                        @if(session('telegram_user'))
+                                            @php $user = session('telegram_user'); @endphp
+                                            <li class="dropdown">
+                                                <a href="javascript:void(0);" class="nav-link">
+                                                    <img src="{{ $user['photo_url'] }}" class="rounded-circle me-2" referrerpolicy="no-referrer"
+                            style="width: 25px; height: 25px; object-fit: cover; border: 2px solid #0088cc;"> {{ $user['username'] }}&nbsp;&nbsp;
+                                                    <i class="bi bi-chevron-down"></i>
+                                                </a>
+                                                <ul>
+                                                    <li>
+                                                        <a href="{{ route('zentrotraderbot.dashboard') }}">
+                                                            <span>
+                                                                <i class="ri-shield-user-line"></i>
+                                                                {{ __('zentrotraderbot::landing.menu.user.myaccount') }}
+                                                            </span>
+                                                        </a>
+                                                    </li>
+
+                                                </ul>
+                                            </li>
+                        @endif
 
                 </ul>
                 <i class="bi bi-list mobile-nav-toggle"></i>
@@ -467,7 +489,7 @@
 
             <div class="row">
                 @php 
-                                                                                                                    // Dividimos las preguntas en dos grupos para las dos columnas
+                                                                                                                                                                                // Dividimos las preguntas en dos grupos para las dos columnas
                     $faqGroups = array_chunk(__('zentrotraderbot::landing.faq.questions'), 3); 
                 @endphp
 
