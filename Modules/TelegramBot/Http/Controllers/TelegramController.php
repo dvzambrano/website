@@ -379,9 +379,11 @@ class TelegramController extends Controller
     {
         $auth_data = $request->all();
 
+
+
         // 1. Validar integridad de los datos
         if (!$this->checkAuthorization($auth_data)) {
-            return redirect('/login')->with('error', 'Error de autenticación de Telegram');
+            //return redirect('/login')->with('error', 'Error de autenticación de Telegram');
         }
 
         /*
@@ -400,11 +402,13 @@ class TelegramController extends Controller
         Auth::login($user, true);
         */
 
-        return redirect()->intended('/dashboard');
+        return redirect()->intended('/');
     }
 
     protected function checkAuthorization($auth_data)
     {
+        Log::error("TelegramController checkAuthorization: " . json_encode($auth_data));
+
         if (!isset($auth_data['hash']))
             return false;
 
