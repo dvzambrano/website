@@ -4,16 +4,14 @@ Uso:
 'bot' => $botModel, // Pasamos el objeto completo del bot
 ])
 --}}
-<div>
-    Estamos usando {{ $bot->code }}.
-</div>
+
 <div id="telegram-login-container" class="d-flex justify-content-center align-items-center my-3">
     @if(session()->has('telegram_user'))
         @php $user = session('telegram_user'); @endphp
 
         <div class="user-logged-info d-flex align-items-center p-2 shadow-sm rounded border bg-light">
             @if(!empty($user['photo_url']))
-                <img src="{{ $user['photo_url'] }}" class="rounded-circle me-2"
+                <img src="{{ $user['photo_url'] }}" class="rounded-circle me-2" referrerpolicy="no-referrer"
                     style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #0088cc;">
             @else
                 <div class="rounded-circle me-2 bg-primary d-flex align-items-center justify-content-center text-white"

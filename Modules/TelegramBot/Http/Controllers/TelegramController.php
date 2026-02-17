@@ -399,7 +399,7 @@ class TelegramController extends Controller
 
     protected function checkTelegramAuthorization($auth_data, $botToken)
     {
-        Log::error("TelegramController checkAuthorization: " . json_encode($auth_data));
+        //Log::error("TelegramController checkAuthorization: " . json_encode($auth_data));
         /*
         {
     "id": "1741391257",
