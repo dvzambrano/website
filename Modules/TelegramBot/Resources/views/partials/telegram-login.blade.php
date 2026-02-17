@@ -6,7 +6,7 @@ Uso:
 --}}
 
 <div id="telegram-login-container" class="d-flex justify-content-center align-items-center my-3">
-    @if(session()->has('telegram_user'))
+    @if(session('telegram_user'))
         @php $user = session('telegram_user'); @endphp
 
         <div class="user-logged-info d-flex align-items-center p-2 shadow-sm rounded border bg-light">

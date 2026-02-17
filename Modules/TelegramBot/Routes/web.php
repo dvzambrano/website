@@ -31,6 +31,7 @@ Route::prefix('telegram')->group(function () {
         ->name('telegram.callback');
     Route::get('/auth/logout', function () {
         session()->forget('telegram_user');
+        session()->regenerate();
         return redirect('/');
     })->name('telegram.logout');
 
