@@ -40,9 +40,6 @@
 
             <nav id="navbar" class="navbar">
                 <ul>
-
-                   @include('laravel::partials.language-selector', ['module' => 'ZentroTraderBot'])
-
                     <li><a class="nav-link scrollto active" href="#hero">
                             {{ __('zentrotraderbot::landing.menu.home') }}
                         </a></li>
@@ -65,16 +62,9 @@
 
                     <li><a class="nav-link scrollto" href="#contact">
                             {{ __('zentrotraderbot::landing.footer.contact') }}
-                        </a></li>
+                        </a></li>                         
 
-                        @if(session('telegram_user'))
-                    <li>
-                         @include('telegrambot::partials.telegram-login', [
-                                'bot'  => $bot, // Pasamos el objeto que vino del controlador
-                                'size' => 'small'
-                            ])
-                    </li>
-                    @endif
+                   @include('laravel::partials.language-selector', ['module' => 'ZentroTraderBot'])
 
                 </ul>
                 <i class="bi bi-list mobile-nav-toggle"></i>
@@ -95,6 +85,7 @@
                     <h2 data-aos="fade-up" data-aos-delay="400">
                         {{ __('zentrotraderbot::landing.hero.subtitle') }}
                     </h2>
+                    <br>
                     <div data-aos="fade-up" data-aos-delay="600">
                         <div class="text-center text-lg-start">
                             @include('telegrambot::partials.telegram-login', [
