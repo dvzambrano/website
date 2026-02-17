@@ -30,8 +30,12 @@ Route::prefix('telegram')->group(function () {
         ->middleware('telegrambot.detector')
         ->name('telegram.callback');
     Route::get('/auth/logout', function () {
-        session()->forget('telegram_user');
-        session()->regenerate();
+        // 1. Cierra la sesión del Guard de Laravel (si existiera)
+        Auth::logout();
+        // 2. Invalida la sesión del usuario en el servidor (borra TODO lo guardado)
+        request()->session()->invalidate();
+        // 3. Regenera el token CSRF para evitar ataques de fijación de sesión
+        request()->session()->regenerateToken();
         return redirect('/');
     })->name('telegram.logout');
 
