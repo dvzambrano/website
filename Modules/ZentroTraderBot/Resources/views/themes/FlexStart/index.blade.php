@@ -116,7 +116,7 @@
         @include('telegrambot::partials.telegram-login', [
 'bot' => 'KashioBot',
 'callback' => route('telegram.callback'),
-'size' => 'large' 
+'size' => 'small' 
 ])
 
             <div class="container" data-aos="fade-up">

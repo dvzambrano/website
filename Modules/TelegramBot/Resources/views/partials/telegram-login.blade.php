@@ -1,9 +1,7 @@
 {{--
-Uso: @include('telegrambot::partials.telegram-login', [
-'bot' => 'KashioBot',
-'callback' => route('telegram.callback'),
-'size' => 'large' {{-- small, medium, large --}}
-])
+Uso: @include('telegrambot::partials.telegram-login', ['bot' => 'KashioBot', 'callback' =>
+route('telegram.callback'),'size' => 'large'])
+'size' => small, medium, large
 --}}
 
 <div id="telegram-login-container" class="d-flex justify-content-center my-3">
