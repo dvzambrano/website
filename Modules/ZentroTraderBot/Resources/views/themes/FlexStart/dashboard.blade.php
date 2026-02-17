@@ -91,9 +91,9 @@
                         <br>
 
                         <h6 class="text-start fw-bold mb-3">
-                            @if (count($transactions) > 1)
+                            @if (count($transactions) > 0)
                                 <i class="ri-history-line me-1"></i>
-                                {{ __('zentrotraderbot::landing.menu.user.lastoperations', ['amount' => count($transactions)]) }}
+                                {{ trans_choice("zentrotraderbot::landing.menu.user.lastoperations", count($transactions), ['count' => count($transactions)]) }}
                             @endif
                         </h6>
 
@@ -128,7 +128,8 @@
                         <div class="d-grid gap-2 mt-4">
                             {{-- Botón para ir al Bot --}}
                             <a href="https://t.me/{{ $bot->code }}" class="btn btn-primary btn-lg">
-                                <i class="bi bi-send-fill me-2"></i> Operar en Telegram
+                                <i class="bi bi-send-fill me-2"></i>
+                                {{ __('zentrotraderbot::landing.menu.user.openbot', ['name' => $bot->code]) }}
                             </a>
                         </div>
                     </div>

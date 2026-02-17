@@ -21,8 +21,9 @@ return [
             'myaccount' => 'Mi cuenta',
             'greeting' => 'Hola :name',
             'balance' => 'Balance',
-            'lastoperations' => 'Últimas :amount operaciones',
             'nooperations' => 'No hay operaciones recientes',
+            'lastoperations' => ':count operación realizada|Últimas :count operaciones',
+            'openbot' => 'Ir a :name',
         ],
     ],
     'hero' => [

@@ -43,9 +43,6 @@ class LandingController extends Controller
             ['type' => 'in', 'concept' => 'Recarga FIAT', 'amount' => random_int(50, 200), 'date' => 'Hace 2 horas'],
             ['type' => 'out', 'concept' => 'Swap USDC a MATIC', 'amount' => 45.20, 'date' => 'Ayer'],
         ];
-        $transactions = [
-            ['type' => 'in', 'concept' => 'Saldo acreditado', 'amount' => random_int(10, 200), 'date' => 'Hace 1 minuto'],
-        ];
 
         return view("zentrotraderbot::themes.{$this->theme}.dashboard", [
             'balance' => $balance,
