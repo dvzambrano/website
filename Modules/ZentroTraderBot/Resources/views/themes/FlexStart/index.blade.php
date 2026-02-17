@@ -63,7 +63,8 @@
                     <li><a class="nav-link scrollto" href="#contact">
                             {{ __('zentrotraderbot::landing.footer.contact') }}
                         </a></li>
-
+                        
+                         
 
                    @include('laravel::partials.language-selector', ['module' => 'ZentroTraderBot'])
 
@@ -111,6 +112,12 @@
     <main id="main">
         <!-- ======= About Section ======= -->
         <section id="about" class="about">
+
+        @include('telegrambot::partials.telegram-login', [
+'bot' => 'ZentroTraderBot',
+'callback' => route('telegram.callback'),
+'size' => 'large' 
+])
 
             <div class="container" data-aos="fade-up">
                 <div class="row gx-0">
