@@ -3,6 +3,8 @@ Uso:
 @include('telegrambot::partials.telegram-login', [
 'bot' => $botModel, // Pasamos el objeto completo del bot
 ])
+
+'size' => small, medium, large
 --}}
 
 <div id="telegram-login-container" class="d-flex justify-content-center align-items-center my-3">
