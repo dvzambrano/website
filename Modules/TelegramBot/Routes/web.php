@@ -36,9 +36,22 @@ Route::prefix('telegram')->group(function () {
         request()->session()->regenerateToken();
         return redirect('/');
     })->name('telegram.logout');
+    // Esta ruta siempre debe estar antes de '/auth/{key}'
+    if (app()->environment('local')) {
+        Route::get('/auth/dev', function () {
+            session([
+                'telegram_user' => [
+                    'id' => '12345678',
+                    'name' => '(Dev Mode)',
+                    'username' => 'devuser',
+                    'photo_url' => 'https://via.placeholder.com/150'
+                ]
+            ]);
+            return redirect('/')->with('info', 'Sesión de desarrollo iniciada');
+        });
+    }
     // Ruta para autenticacion con Telegram
     Route::get('/auth/{key}', 'TelegramController@loginCallback')
         ->middleware('telegrambot.detector')
         ->name('telegram.callback');
-
 });
