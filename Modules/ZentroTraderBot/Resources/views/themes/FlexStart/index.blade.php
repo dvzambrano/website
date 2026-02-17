@@ -63,8 +63,8 @@
                     <li><a class="nav-link scrollto" href="#contact">
                             {{ __('zentrotraderbot::landing.footer.contact') }}
                         </a></li>
-
-
+                        
+                         
 
                    @include('laravel::partials.language-selector', ['module' => 'ZentroTraderBot'])
 
@@ -89,9 +89,8 @@
                     </h2>
                     <div data-aos="fade-up" data-aos-delay="600">
                         <div class="text-center text-lg-start">
-                            <pre>{{ print_r(session()->all()) }}</pre>
                             @include('telegrambot::partials.telegram-login', [
-                                'bot' => $bot, // Pasamos el objeto que vino del controlador
+                                'bot'  => $bot, // Pasamos el objeto que vino del controlador
                                 'size' => 'medium'
                             ])
                         </div>
@@ -469,7 +468,7 @@
 
             <div class="row">
                 @php 
-                                                                                                                    // Dividimos las preguntas en dos grupos para las dos columnas
+                                                                                                // Dividimos las preguntas en dos grupos para las dos columnas
                     $faqGroups = array_chunk(__('zentrotraderbot::landing.faq.questions'), 3); 
                 @endphp
 
