@@ -56,7 +56,122 @@ class TestController extends Controller
         $this->GutoTradeTestBot = TelegramBots::where('name', "@GutoTradeTestBot")->first();
     }
 
+    /**
+     * Prueba todas las funciones principales de TelegramController.
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function test(Request $request)
+    {
+        $bot_token = $this->GutoTradeTestBot ? $this->GutoTradeTestBot->token : $request->input('bot_token');
+        $chat_id = $request->input('chat_id', 816767995); // ID de chat de prueba
+        $user_id = $request->input('user_id', 816767995); // ID de usuario de prueba
+        $file_id = $request->input('file_id'); // file_id de prueba para exportFileLocally
+        $document_id = $request->input('document_id'); // document_id de prueba
+        $photo_id = $request->input('photo_id'); // photo_id de prueba
+        $media = $request->input('media'); // media de prueba para sendMediaGroup
+
+        $message = [
+            'chat' => ['id' => $chat_id],
+            'text' => 'Mensaje de prueba ' . now(),
+        ];
+
+        $results = [];
+
+        // 1. Enviar un mensaje y guardar el message_id
+        $results['sendMessage'] = json_decode(TelegramController::sendMessage(['message' => $message], $bot_token), true);
+        $message_id = $results['sendMessage']['result']['message_id'] ?? null;
+
+        // 2. Editar el mensaje enviado
+        if ($message_id) {
+            $editMessage = $message;
+            $editMessage['message_id'] = $message_id;
+            $editMessage['text'] = 'Mensaje editado ' . now();
+            $results['editMessageText'] = json_decode(TelegramController::editMessageText(['message' => $editMessage], $bot_token), true);
+        }
+
+        // 3. Copiar el mensaje enviado
+        if ($message_id) {
+            $copyMessage = [
+                'chat' => ['id' => $chat_id],
+                'from_chat_id' => $chat_id,
+                'message_id' => $message_id,
+            ];
+            $results['copyMessage'] = json_decode(TelegramController::copyMessage(['message' => $copyMessage], $bot_token), true);
+        }
+
+        // 4. ForwardMessage: reenviar el mensaje recién enviado (sin borrarlo antes)
+        if ($message_id) {
+            $forwardMessage = [
+                'chat' => ['id' => $chat_id],
+                'from' => ['id' => $chat_id],
+                'message_id' => $message_id,
+            ];
+            $results['forwardMessage'] = json_decode(TelegramController::forwardMessage(['message' => $forwardMessage], $bot_token), true);
+        }
+
+        // 5. Borrar el mensaje enviado (después de reenviarlo)
+        if ($message_id) {
+            $deleteMessage = [
+                'chat' => ['id' => $chat_id],
+                'id' => $message_id,
+            ];
+            $results['deleteMessage'] = json_decode(TelegramController::deleteMessage(['message' => $deleteMessage], $bot_token), true);
+        }
+
+        // 6. PinMessage (requiere un message_id válido, pero el mensaje ya fue reenviado y borrado, así que se omite para evitar error)
+
+        // 7. sendPhoto (requiere un photo válido)
+        if ($photo_id) {
+            $photoMessage = [
+                'chat' => ['id' => $chat_id],
+                'photo' => $photo_id,
+                'text' => 'Foto de prueba',
+            ];
+            $results['sendPhoto'] = json_decode(TelegramController::sendPhoto(['message' => $photoMessage], $bot_token), true);
+        }
+
+        // 8. sendMediaGroup (requiere media válido)
+        if ($media) {
+            $mediaMessage = [
+                'chat' => ['id' => $chat_id],
+                'media' => $media,
+            ];
+            $results['sendMediaGroup'] = json_decode(TelegramController::sendMediaGroup(['message' => $mediaMessage], $bot_token), true);
+        }
+
+        // 9. sendDocument (requiere document válido)
+        if ($document_id) {
+            $docMessage = [
+                'chat' => ['id' => $chat_id],
+                'document' => $document_id,
+            ];
+            $results['sendDocument'] = json_decode(TelegramController::sendDocument(['message' => $docMessage], $bot_token), true);
+        }
+
+        // getBotInfo
+        $results['getBotInfo'] = json_decode(TelegramController::getBotInfo($bot_token), true);
+
+        // getUserInfo
+        $results['getUserInfo'] = json_decode(TelegramController::getUserInfo($user_id, $bot_token), true);
+
+        // getUserPhotos: fuerza el id 816767995 para asegurar datos
+        $results['getUserPhotos'] = TelegramController::getUserPhotos(816767995, $bot_token);
+
+        // getFileUrl (requiere file_id válido)
+        if ($file_id) {
+            $results['getFileUrl'] = json_decode(TelegramController::getFileUrl($file_id, $bot_token), true);
+        }
+
+        // exportFileLocally (requiere file_id válido)
+        if ($file_id) {
+            $results['exportFileLocally'] = TelegramController::exportFileLocally($file_id, $bot_token);
+        }
+
+        dd($results);
+    }
+
+    public function test2(Request $request)
     {
         app()->instance('active_bot', $this->GutoTradeTestBot);
         $bot = new GutoTradeBotController();

@@ -6,7 +6,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
 
-    <!-- Favicons -->
+    {{--  Favicons --}}
     <link href="assets/img/favicon.png" rel="icon">
     <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
@@ -82,16 +82,16 @@
                         <div x-show="view === 'balance'" x-transition>
                             <div class="card balance-card shadow-sm p-4">
 
-                                <!--
-                                                                                <a href="{{ url('/') }}" class="logo d-flex align-items-center">
-                                                                                    <img src="assets/img/logo.png" alt="Kashio Logo">
-                                                                                </a>
-                                                                                <h4 class="text-muted">
-                                                                                    👋
-                                                                                    {{ __('zentrotraderbot::landing.menu.user.greeting', ['name' => session('telegram_user')['name']]) }}
-                                                                                </h4>
-                                                                                <hr>
-                                                                                -->
+                                {{-- 
+                                <a href="{{ url('/') }}" class="logo d-flex align-items-center">
+                                    <img src="assets/img/logo.png" alt="Kashio Logo">
+                                </a>
+                                <h4 class="text-muted">
+                                    👋
+                                    {{ __('zentrotraderbot::landing.menu.user.greeting', ['name' => session('telegram_user')['name']]) }}
+                                </h4>
+                                <hr>
+                                --}}
                                 <p class="text-secondary mb-1 text-end">
                                     <a href="{{ route('telegram.logout') }}" class="ms-3 text-danger" title="Salir">
                                         <i class="bi bi-x-circle"></i>
@@ -108,11 +108,10 @@
 
                                 <h6 class="text-start fw-bold mb-3">
                                     @if (count($transactions) > 0)
-
                                         <a href="javascript:void(0);location.reload();" class="ms-3" title="Actualizar">
                                             <i class="ri-restart-line"></i>
                                         </a>
-                                        {{ trans_choice("zentrotraderbot::landing.menu.user.lastoperations", count($transactions), ['count' => count($transactions)]) }}
+                                        {{ trans_choice('zentrotraderbot::landing.menu.user.lastoperations', count($transactions), ['count' => count($transactions)]) }}
                                     @endif
                                 </h6>
 
@@ -184,19 +183,23 @@
                                     {{ __('zentrotraderbot::landing.menu.user.wallet.receive.scaninfo') }}
                                 </p>
 
-                                <?php $user = session('telegram_user');
-    $wallet_address = url("/pay") . "/" . $user['username']; ?>
+                                @php
+                                    $user = session('telegram_user');
+                                    $wallet_address = url('/pay') . '/' . $user['username'];
+                                @endphp
                                 <div class="bg-white d-inline-block">
                                     <div class="bg-white d-inline-block mb-4 position-relative shadow-sm rounded-3">
                                         <div id="qr-container">
-                                            {!! $qrService->generateSvg($wallet_address, 220) !!}
+                                            {!! $qrService->generateSvg($wallet_address, 220) !!} {{-- Si el contenido es
+                                            seguro, mantener {!! !!} --}}
                                         </div>
 
                                         <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle"
                                             style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
 
                                             <img src="{{ $user['photo_url'] }}" class="rounded-circle"
-                                                style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                                style="width: 100%; height: 100%; object-fit: cover; display: block;"
+                                                alt="Foto de usuario">
 
                                         </div>
                                     </div>
