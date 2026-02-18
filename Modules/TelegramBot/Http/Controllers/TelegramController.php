@@ -640,6 +640,11 @@ class TelegramController extends Controller
                 }
             }
 
+            // If we are sending a caption but no parse_mode specified, default to Markdown
+            if (isset($extra['caption']) && !isset($extra['parse_mode'])) {
+                $extra['parse_mode'] = 'Markdown';
+            }
+
             $request = Http::attach($fieldName, $contents, $basename)->asMultipart();
             $form = array_merge(['chat_id' => $chat_id], $extra);
             $retry = $request->post($uploadUrl, $form);
