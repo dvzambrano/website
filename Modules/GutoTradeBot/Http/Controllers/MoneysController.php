@@ -701,16 +701,14 @@ class MoneysController extends JsonsController
         }
 
         return array(
-            "message" => array(
-                "text" => $text,
-                "photo" => $extra_capture && isset($money->data["previous_screenshot"]) ? $money->data["previous_screenshot"] : $money->screenshot,
-                "chat" => array(
-                    "id" => $to_id,
-                ),
-                "reply_markup" => json_encode([
-                    "inline_keyboard" => $menu ? $menu : array(),
-                ]),
+            "text" => $text,
+            "photo" => $extra_capture && isset($money->data["previous_screenshot"]) ? $money->data["previous_screenshot"] : $money->screenshot,
+            "chat" => array(
+                "id" => $to_id,
             ),
+            "reply_markup" => json_encode([
+                "inline_keyboard" => $menu ? $menu : array(),
+            ]),
         );
     }
 
