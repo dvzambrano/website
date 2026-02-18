@@ -255,12 +255,25 @@ class TelegramController extends Controller
      */
     public static function sendMediaGroup($request, $bot_token)
     {
+        $chat_id = $request["message"]["chat"]["id"];
+        $media = $request["message"]["media"] ?? null;
+
+        // Normalizar media: puede venir como arreglo o como JSON string
+        if (is_string($media)) {
+            $decoded = json_decode($media, true);
+            $media = is_array($decoded) ? $decoded : $media;
+        }
+
+        // Aseguramos que la API reciba un JSON válido en el campo 'media' del formulario
+        $mediaPayload = is_array($media) ? json_encode($media) : $media;
+
         $url = self::buildTelegramUrl($bot_token, 'sendMediaGroup', [
-            'chat_id' => $request["message"]["chat"]["id"],
-            'media' => $request["message"]["media"]
+            'chat_id' => $chat_id,
         ]);
 
-        return TelegramController::send($request, $url);
+        return TelegramController::send($request, $url, 1, [
+            'media' => $mediaPayload,
+        ]);
     }
 
     /**
@@ -323,12 +336,15 @@ class TelegramController extends Controller
      */
     public static function forwardMessage($request, $bot_token)
     {
-        $url = self::buildTelegramUrl($bot_token, 'forwardMessage');
-        return TelegramController::send($request, $url, 1, [
+        // Construir la URL con parámetros para asegurar que existe la '?' antes de añadir '&parse_mode'
+        $url = self::buildTelegramUrl($bot_token, 'forwardMessage', [
             'chat_id' => $request["message"]["chat"]["id"],
             'from_chat_id' => $request["message"]["from"]["id"],
             'message_id' => $request["message"]["message_id"],
         ]);
+
+        // Enviar sin cuerpo adicional (los parámetros ya están en la URL)
+        return TelegramController::send($request, $url);
     }
 
     public static function getBotInfo($bot_token)
@@ -418,12 +434,16 @@ class TelegramController extends Controller
             $bot_token .
             "/getFile?file_id={$fileId}";
         try {
-            $response = file_get_contents($url);
-            return $response;
-
+            $response = Http::withOptions(['verify' => true, 'timeout' => 10])->get($url);
+            if ($response->successful()) {
+                return $response->body();
+            }
+            Log::warning("TelegramController getFileUrl HTTP status {$response->status()} for URL: {$url}");
         } catch (\Throwable $th) {
-            //Log::error("TelegramController getFileUrl: " . $th->getTraceAsString());
+            Log::error("TelegramController getFileUrl error: " . $th->getMessage());
         }
+
+        return false;
     }
 
     public static function getFile($filePath, $bot_token)
