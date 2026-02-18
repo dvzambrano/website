@@ -23,7 +23,7 @@ return [
             'balance' => 'Balance',
             'nooperations' => 'No hay operaciones recientes',
             'lastoperations' => ':count operación realizada|Últimas :count operaciones',
-            'openbot' => 'Ir a :name',
+            'openbot' => 'ENVIAR',
         ],
     ],
     'hero' => [
