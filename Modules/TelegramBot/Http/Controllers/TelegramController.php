@@ -274,12 +274,20 @@ class TelegramController extends Controller
             ]);
 
             $photoUrl = $request['message']['photo'] ?? null;
+            // gather extra parameters that we want to keep (buttons, reply_to, etc.)
+            $extras = ['caption' => $request['message']['text'] ?? ''];
+            if (!empty($request['message']['reply_markup'])) {
+                $extras['reply_markup'] = $request['message']['reply_markup'];
+            }
+            if (!empty($request['message']['reply_to_message_id'])) {
+                $extras['reply_to_message_id'] = $request['message']['reply_to_message_id'];
+            }
             $result = self::manualUpload(
                 $bot_token,
                 $request['message']['chat']['id'],
                 $photoUrl,
                 'photo',
-                ['caption' => $request['message']['text'] ?? '']
+                $extras
             );
             if ($result !== false) {
                 return $result;
@@ -348,9 +356,18 @@ class TelegramController extends Controller
             ]);
 
             // try to download each media item and resend multipart
+            // also preserve extras (reply_markup / reply_to)
+            $extras = [];
+            if (!empty($request['message']['reply_markup'])) {
+                $extras['reply_markup'] = $request['message']['reply_markup'];
+            }
+            if (!empty($request['message']['reply_to_message_id'])) {
+                $extras['reply_to_message_id'] = $request['message']['reply_to_message_id'];
+            }
+
             $multipart = Http::withOptions(['timeout' => 10]);
             $finalUrl = "https://api.telegram.org/bot{$bot_token}/sendMediaGroup";
-            $form = ['chat_id' => $chat_id];
+            $form = array_merge(['chat_id' => $chat_id], $extras);
             foreach ($media as $idx => $item) {
                 if (!empty($item['media']) && filter_var($item['media'], FILTER_VALIDATE_URL)) {
                     try {
@@ -397,29 +414,27 @@ class TelegramController extends Controller
             && isset($array['description'])
             && str_contains($array['description'], 'failed to get HTTP URL content')
         ) {
-            Log::warning('sendDocument remote fetch failed; attempting manual upload', ['request' => $request, 'response' => $array]);
-            $docUrl = $request['message']['document'] ?? null;
-            if ($docUrl && filter_var($docUrl, FILTER_VALIDATE_URL)) {
-                try {
-                    $dl = Http::timeout(10)->get($docUrl);
-                    if ($dl->successful()) {
-                        $contents = $dl->body();
-                        $name = pathinfo(parse_url($docUrl, PHP_URL_PATH), PATHINFO_BASENAME) ?: 'file.dat';
-                        $uploadUrl = "https://api.telegram.org/bot{$bot_token}/sendDocument";
-                        $retry = Http::attach('document', $contents, $name)
-                            ->asMultipart()
-                            ->post($uploadUrl, [
-                                'chat_id' => $request['message']['chat']['id'],
-                            ]);
-                        if ($retry->successful()) {
-                            return $retry->body();
-                        }
-                        Log::warning('sendDocument manual upload failed', ['status' => $retry->status(), 'body' => $retry->body()]);
-                    }
-                } catch (\Throwable $th) {
-                    Log::error('sendDocument download error', ['message' => $th->getMessage()]);
-                }
+            // collect extras similar to sendPhoto
+            $extras = [];
+            if (!empty($request['message']['reply_markup'])) {
+                $extras['reply_markup'] = $request['message']['reply_markup'];
             }
+            if (!empty($request['message']['reply_to_message_id'])) {
+                $extras['reply_to_message_id'] = $request['message']['reply_to_message_id'];
+            }
+
+            $docUrl = $request['message']['document'] ?? null;
+            $result = self::manualUpload(
+                $bot_token,
+                $request['message']['chat']['id'],
+                $docUrl,
+                'document',
+                $extras
+            );
+            if ($result !== false) {
+                return $result;
+            }
+            Log::warning('sendDocument recovery failed');
             return json_encode(['ok' => false, 'description' => 'manual sendDocument failed']);
         }
 
@@ -613,6 +628,17 @@ class TelegramController extends Controller
             $contents = $dl->body();
             $basename = pathinfo(parse_url($fileUrl, PHP_URL_PATH), PATHINFO_BASENAME) ?: 'file';
             $uploadUrl = "https://api.telegram.org/bot{$bot_token}/send{$fieldName}";
+
+            // filter extras: remove null entries
+            foreach ($extra as $k => $v) {
+                if ($v === null) {
+                    unset($extra[$k]);
+                    continue;
+                }
+                if ($k === 'reply_markup' && is_array($v)) {
+                    $extra[$k] = json_encode($v);
+                }
+            }
 
             $request = Http::attach($fieldName, $contents, $basename)->asMultipart();
             $form = array_merge(['chat_id' => $chat_id], $extra);
