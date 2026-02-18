@@ -180,16 +180,16 @@
                                         alt="QR Address" class="img-fluid" style="width: 180px;">
                                     --}}
                                    <div class="bg-white p-3 d-inline-block mb-4 position-relative shadow-sm rounded-3">
-                                        <div id="qr-container">
-                                            {!! $qrService->generateSvg($wallet_address, 220) !!}
+                                        <div id="qr-container" style="padding: 10px; background: white;">
+                                            {!! $qrService->generateSvg($wallet_address, 200) !!}
                                         </div>
 
-                                        <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle"
-                                            style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                        <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle shadow"
+                                            style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: 10;">
                                             
                                             <img src="{{ $user['photo_url'] }}" 
                                                 class="rounded-circle" 
-                                                style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                                style="width: 100%; height: 100%; object-fit: cover;">
                                                 
                                         </div>
                                     </div>
