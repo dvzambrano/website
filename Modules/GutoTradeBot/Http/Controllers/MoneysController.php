@@ -288,8 +288,8 @@ class MoneysController extends JsonsController
         } else {
             $reply = $this->badCaptionReply($bot, "Sin descripción", $type);
         }
-        Log::debug("MoneysController processMoney reply " . json_encode($reply) . "\n");
 
+        Log::debug("MoneysController processMoney reply " . json_encode($reply) . "\n");
         return $reply;
     }
 
