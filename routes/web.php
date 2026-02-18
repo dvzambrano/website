@@ -38,10 +38,10 @@ Route::get('/cache', function () {
 Route::get('/test/{name?}', [TestController::class, 'test'])->name('test-byname');
 
 Route::prefix('logs')->group(function () {
-    Route::get('/clear', 'App\Http\Controllers\FileController@clearLog')->name('clear-logs');
-    Route::get('/{type?}/{amount?}', 'App\Http\Controllers\FileController@readLog')->name('read-logs');
+    Route::get('/clear', 'Modules\Laravel\Http\Controllers\FileController@clearLog')->name('clear-logs');
+    Route::get('/{type?}/{amount?}', 'Modules\Laravel\Http\Controllers\FileController@readLog')->name('read-logs');
 });
-Route::get('/report/{format}/{name}', 'App\Http\Controllers\FileController@renderAndDestroy')->name('report-byname');
+Route::get('/report/{format}/{name}', 'Modules\Laravel\Http\Controllers\FileController@renderAndDestroy')->name('report-byname');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
