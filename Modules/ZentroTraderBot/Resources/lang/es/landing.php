@@ -21,6 +21,9 @@ return [
             'myaccount' => 'Mi cuenta',
             'greeting' => 'Hola :name',
             'balance' => 'Balance',
+            'logout' => 'Salir',
+            'refresh' => 'Actualizar',
+            'photo_alt' => 'Foto de usuario',
             'nooperations' => 'No hay operaciones recientes',
             'lastoperations' => ':count operación realizada|Últimas :count operaciones',
             'openbot' => 'ENVIAR',
@@ -29,7 +32,19 @@ return [
                     'header' => 'Recibir saldo en :name',
                     'scaninfo' => 'Escanee este código o copie su enlace de pago',
                     'share' => 'Compartir',
+                    'button' => 'RECIBIR',
+                    'copied' => 'Dirección copiada al portapapeles',
                     'shareinfo' => 'También puede enviar este enlace a otra persona para que complete el depósito por Ud',
+                    'share_menu' => [
+                        'title' => 'Compartir dirección de pago',
+                        'whatsapp' => 'WhatsApp',
+                        'facebook' => 'Facebook',
+                        'twitter' => 'Twitter',
+                        'email' => 'Email',
+                        'sms' => 'SMS',
+                        'telegram' => 'Telegram',
+                        'message' => 'Mi dirección de pago en :name:',
+                    ],
                 ],
             ],
         ],
@@ -58,8 +73,7 @@ return [
         'list' => [
             'feature_1' => 'Cero volatilidad manteniendo tu saldo en activos estables (Stablecoins).',
             'feature_2' => 'Interfaz intuitiva',
-            'feature_31' => 'Historial detallado disponible para ayudarte en tu gestión.',
-            'feature_32' => 'Historial detallado de cada movimiento y cambio de balance en tu cuenta.',
+            'feature_3' => 'Historial detallado de cada movimiento y cambio de balance en tu cuenta.',
             'feature_4' => 'Seguridad de grado bancario',
             'feature_4header' => 'Seguridad de Fondos',
 
@@ -311,6 +325,11 @@ return [
             ],
             // Puedes añadir más elementos aquí siguiendo la misma estructura
         ]
+    ],
+    'services' => [
+        'support' => 'Soporte Técnico',
+        'history' => 'Historial Detallado',
+        'no_volatility' => 'Cero Volatilidad',
     ],
     'contact' => [
         'title' => '¿Tienes dudas sobre tu cuenta USD?',
