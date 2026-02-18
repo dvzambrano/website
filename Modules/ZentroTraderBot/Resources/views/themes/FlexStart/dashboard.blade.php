@@ -181,7 +181,7 @@
                                     --}}
                                    <div class="bg-white p-3 d-inline-block mb-4 position-relative shadow-sm rounded-3">
                                         <div id="qr-container" style="background: white;">
-                                            {!! $qrService->generateSvg($payment_url, 200) !!}
+                                            {!! $qrService->generateSvg($wallet_address, 200) !!}
                                         </div>
 
                                         <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle shadow-sm"
