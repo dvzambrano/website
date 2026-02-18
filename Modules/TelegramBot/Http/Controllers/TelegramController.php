@@ -121,6 +121,8 @@ class TelegramController extends Controller
                 'headers' => [
                     'Content-Type' => 'application/x-www-form-urlencoded',
                 ],
+                // ensure we don't hang indefinitely
+                'timeout' => 10,
             ];
             $http = Http::withOptions($options);
             if ($data) {
@@ -128,7 +130,27 @@ class TelegramController extends Controller
             } else {
                 $response = $http->post($url);
             }
-            return $response->body();
+            // log non-successful HTTP codes
+            if (!$response->successful()) {
+                Log::warning("TelegramController send HTTP failure", [
+                    'status' => $response->status(),
+                    'url' => $url,
+                    'body' => $response->body(),
+                ]);
+            }
+            $body = $response->body();
+            if (trim($body) === '') {
+                Log::warning("TelegramController send empty body", ['url' => $url]);
+                // return a generic failure JSON so callers can handle it
+                return json_encode(['ok' => false, 'description' => 'empty response from telegram']);
+            }
+            // attempt to validate json
+            json_decode($body);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::warning("TelegramController send invalid JSON", ['body' => $body, 'url' => $url]);
+                // still return the raw body so higher layers can inspect
+            }
+            return $body;
 
         } catch (\Throwable $th) {
             $array = TelegramController::analizeUrl($url);
@@ -239,7 +261,17 @@ class TelegramController extends Controller
         $response = TelegramController::send($request, $url);
         $array = json_decode($response, true);
 
-        if (isset($array["result"]) && isset($array["result"]["message_id"]) && $array["result"]["message_id"] == 0) {
+        if (!$array || !isset($array["result"])) {
+            Log::warning('sendPhoto unexpected response', [
+                'url' => $url,
+                'response' => $response,
+                'request' => $request,
+            ]);
+            // fallback to sending plain text message so caller always has something
+            return TelegramController::sendMessage($request, $bot_token);
+        }
+
+        if (isset($array["result"]["message_id"]) && $array["result"]["message_id"] == 0) {
             return TelegramController::sendMessage($request, $bot_token);
         }
 
