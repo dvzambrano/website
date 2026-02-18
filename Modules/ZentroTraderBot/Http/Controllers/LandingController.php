@@ -4,16 +4,20 @@ namespace Modules\ZentroTraderBot\Http\Controllers;
 
 use Illuminate\Routing\Controller;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\Laravel\Services\Codes\QrService;
 
 class LandingController extends Controller
 {
     private $bot;
 
     private $theme;
+    private $qrService;
 
     public function __construct()
     {
         $this->theme = config('zentrotraderbot.theme', 'FlexStart');
+
+        $this->qrService = new QrService();
 
         $this->bot = TelegramBots::where(
             'name',
@@ -47,6 +51,7 @@ class LandingController extends Controller
         return view("zentrotraderbot::themes.{$this->theme}.dashboard", [
             'balance' => $balance,
             'transactions' => $transactions,
+            'qrService' => $this->qrService,
             'bot' => $this->bot
         ]);
     }

@@ -170,23 +170,36 @@
                                 <p class="text-secondary small">Solo envía <strong>USDC (Polygon)</strong> a esta dirección
                                 </p>
 
-                                @php $wallet_address = "wallet"; @endphp
+                                @php 
+                                $user = session('telegram_user'); 
+                                $wallet_address = url("/pay") . "/" . $user['username']; 
+                                @endphp
                                 <div class="bg-white p-3 d-inline-block rounded-3 shadow-sm mb-4">
                                     {{-- Aquí va el QR generado. Por ahora un placeholder
                                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ $wallet_address }}"
                                         alt="QR Address" class="img-fluid" style="width: 180px;">
                                     --}}
-                                    aqui va el QR
+                                    <div class="bg-white p-3 d-inline-block mb-4 position-relative">
+                                        <div id="qr-container">
+                                            {!! $qrService->generateSvg($wallet_address, 220) !!}
+                                        </div>
+
+                                        <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle shadow-sm"
+                                            style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                            <img src="{{ $user['photo_url']  }}" style="width: 35px; height: 35px; object-fit: contain;">
+                                        </div>
+                                    </div>
+
+                                    <div class="input-group mb-3">
+                                        <input type="text" id="walletAddr"
+                                            class="form-control bg-light border-0 text-center small"
+                                            value="{{ $wallet_address }}" readonly>
+                                        <button class="btn btn-primary" id="btnCopy" onclick="copyAddress()">
+                                            <i id="copyIcon" class="ri-file-copy-line"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div class="input-group mb-3">
-                                    <input type="text" id="walletAddr"
-                                        class="form-control bg-light border-0 text-center small"
-                                        value="{{ $wallet_address }}" readonly>
-                                    <button class="btn btn-primary" id="btnCopy" onclick="copyAddress()">
-                                        <i id="copyIcon" class="ri-file-copy-line"></i>
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
