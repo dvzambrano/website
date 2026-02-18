@@ -179,14 +179,18 @@
                                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ $wallet_address }}"
                                         alt="QR Address" class="img-fluid" style="width: 180px;">
                                     --}}
-                                    <div class="bg-white p-3 d-inline-block mb-4 position-relative">
+                                   <div class="bg-white p-3 d-inline-block mb-4 position-relative shadow-sm rounded-3">
                                         <div id="qr-container">
                                             {!! $qrService->generateSvg($wallet_address, 220) !!}
                                         </div>
 
-                                        <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle shadow-sm"
-                                            style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
-                                            <img src="{{ $user['photo_url']  }}" style="width: 35px; height: 35px; object-fit: contain;">
+                                        <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle"
+                                            style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                            
+                                            <img src="{{ $user['photo_url'] }}" 
+                                                class="rounded-circle" 
+                                                style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                                
                                         </div>
                                     </div>
 
