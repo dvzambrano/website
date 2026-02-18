@@ -2,7 +2,7 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use kornrunner\Ethereum\Transaction;

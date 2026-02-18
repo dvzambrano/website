@@ -3,7 +3,7 @@
 namespace Modules\TelegramBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\ModuleTrait;
+use Modules\Laravel\Traits\ModuleTrait;
 
 class TelegramNestedNotifications extends Model
 {

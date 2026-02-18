@@ -2,21 +2,42 @@
 
 namespace Modules\TelegramBot\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\FileController;
+use Modules\Laravel\Http\Controllers\FileController;
 use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 
 class TelegramController extends Controller
 {
+    /**
+     * Construye una URL para la API de Telegram.
+     *
+     * @param string $bot_token
+     * @param string $method
+     * @param array $params
+     * @return string
+     */
+    private static function buildTelegramUrl($bot_token, $method, $params = [])
+    {
+        $base = "https://api.telegram.org/bot{$bot_token}/{$method}";
+        if (!empty($params)) {
+            $base .= '?' . http_build_query($params);
+        }
+        return $base;
+    }
+
     public static function analizeUrl($url)
     {
         // Primero, utilizamos parse_url para obtener la parte del "path"
         $array = parse_url($url);
         $array["url"] = $url;
-        // Ahora obtenemos el "path" completo
-        // Luego, usamos explode para dividir la cadena y obtener solo el último segmento
-        $array["path_parts"] = explode('/', $array['path']);
+        // Usamos Str::of para explotar el path
+        $array["path_parts"] = Str::of($array['path'])->explode('/')->toArray();
         // Si hay una query string, la extraemos
         $query = [];
         if (isset($array['query'])) {
@@ -62,26 +83,29 @@ class TelegramController extends Controller
     }
 
     // ["result":["message_id":ID]] ID = 0 ERROR; ID = -1 DEMO
+    /**
+     * Envía una petición a la API de Telegram.
+     *
+     * @param array $request
+     * @param string $url
+     * @param int $attempt
+     * @param array|bool $data
+     * @return string
+     */
     public static function send($request, $url, $attempt = 1, $data = false)
     {
         try {
             // si es DEMO escribimos en la consola y retornamos message_id -1
             if (isset($request["demo"]) && $request["demo"] == true) {
-                echo "message = ";
-                var_dump(
-                    array(
-                        "url" => $url,
-                        "message" => $request["message"],
-                    )
-                );
-
-                return json_encode(
-                    array(
-                        "result" => array(
-                            "message_id" => -1,
-                        ),
-                    )
-                );
+                Log::debug('message = ', [
+                    'url' => $url,
+                    'message' => $request["message"]
+                ]);
+                return response()->json([
+                    'result' => [
+                        'message_id' => -1,
+                    ],
+                ])->getContent();
             }
 
             $url .= "&parse_mode=Markdown";
@@ -93,15 +117,40 @@ class TelegramController extends Controller
                 $url .= "&reply_markup={$reply_markup}";
             }
 
-            $response = file_get_contents($url, false, stream_context_create([
-                'http' => [
-                    'method' => 'POST',
-                    'header' => "Content-Type: application/x-www-form-urlencoded",
-                    'content' => $data ? http_build_query($data) : false,
+            $options = [
+                'headers' => [
+                    'Content-Type' => 'application/x-www-form-urlencoded',
                 ],
-            ]));
-
-            return $response;
+                // ensure we don't hang indefinitely
+                'timeout' => 10,
+            ];
+            $http = Http::withOptions($options);
+            if ($data) {
+                $response = $http->asForm()->post($url, $data);
+            } else {
+                $response = $http->post($url);
+            }
+            // log non-successful HTTP codes
+            if (!$response->successful()) {
+                Log::warning("TelegramController send HTTP failure", [
+                    'status' => $response->status(),
+                    'url' => $url,
+                    'body' => $response->body(),
+                ]);
+            }
+            $body = $response->body();
+            if (trim($body) === '') {
+                Log::warning("TelegramController send empty body", ['url' => $url]);
+                // return a generic failure JSON so callers can handle it
+                return json_encode(['ok' => false, 'description' => 'empty response from telegram']);
+            }
+            // attempt to validate json
+            json_decode($body);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::warning("TelegramController send invalid JSON", ['body' => $body, 'url' => $url]);
+                // still return the raw body so higher layers can inspect
+            }
+            return $body;
 
         } catch (\Throwable $th) {
             $array = TelegramController::analizeUrl($url);
@@ -110,24 +159,30 @@ class TelegramController extends Controller
             //Log::error("TelegramController TraceAsString: " . $th->getTraceAsString());
 
             // si hay algun error retornamos message_id 0
-            return json_encode(
-                array(
-                    "result" => array(
-                        "message_id" => 0,
-                        "text" => $th->getMessage(),
-                    ),
-                )
-            );
+            return response()->json([
+                'result' => [
+                    'message_id' => 0,
+                    'text' => $th->getMessage(),
+                ],
+            ])->getContent();
         }
 
     }
 
+    /**
+     * Envía un mensaje de texto a un chat de Telegram.
+     *
+     * @param array $request
+     * @param string $bot_token
+     * @param int $autodestroy
+     * @return string
+     */
     public static function sendMessage($request, $bot_token, $autodestroy = 0)
     {
-        $url = "https://api.telegram.org/bot" .
-            $bot_token .
-            "/sendMessage?chat_id={$request["message"]["chat"]["id"]}" .
-            "&text=" . urlencode($request["message"]["text"]);
+        $url = self::buildTelegramUrl($bot_token, 'sendMessage', [
+            'chat_id' => $request["message"]["chat"]["id"],
+            'text' => $request["message"]["text"]
+        ]);
 
         $response = TelegramController::send($request, $url);
 
@@ -147,103 +202,297 @@ class TelegramController extends Controller
         return $response;
     }
 
+    /**
+     * Edita el texto de un mensaje ya enviado.
+     *
+     * @param array $request
+     * @param string $bot_token
+     * @return string
+     */
     public static function editMessageText($request, $bot_token)
     {
         // Estructura básica: chat_id, message_id y el nuevo texto
-        $url = "https://api.telegram.org/bot" .
-            $bot_token .
-            "/editMessageText?chat_id={$request["message"]["chat"]["id"]}" .
-            "&message_id={$request["message"]["message_id"]}" .
-            "&text=" . urlencode($request["message"]["text"]);
+        $url = self::buildTelegramUrl($bot_token, 'editMessageText', [
+            'chat_id' => $request["message"]["chat"]["id"],
+            'message_id' => $request["message"]["message_id"],
+            'text' => $request["message"]["text"]
+        ]);
 
         // Reutilizamos tu método send que ya maneja parse_mode, reply_markup y logs de errores
         return TelegramController::send($request, $url);
     }
 
+    /**
+     * Copia un mensaje de un chat a otro.
+     *
+     * @param array $request
+     * @param string $bot_token
+     * @return string
+     */
     public static function copyMessage($request, $bot_token)
     {
         // chat_id: a quién se lo mandas
         // from_chat_id: de dónde viene el mensaje original (el chat del admin)
         // message_id: el ID del mensaje que el admin quiere anunciar
-        $url = "https://api.telegram.org/bot{$bot_token}/copyMessage?" .
-            "chat_id={$request["message"]["chat"]["id"]}&" .
-            "from_chat_id={$request["message"]["from_chat_id"]}&" .
-            "message_id={$request["message"]["message_id"]}";
+        $url = self::buildTelegramUrl($bot_token, 'copyMessage', [
+            'chat_id' => $request["message"]["chat"]["id"],
+            'from_chat_id' => $request["message"]["from_chat_id"],
+            'message_id' => $request["message"]["message_id"]
+        ]);
 
         return TelegramController::send($request, $url);
     }
 
+    /**
+     * Envía una foto a un chat de Telegram.
+     *
+     * @param array $request
+     * @param string $bot_token
+     * @return string
+     */
     public static function sendPhoto($request, $bot_token)
     {
-        $url = "https://api.telegram.org/bot" .
-            $bot_token .
-            "/sendPhoto?chat_id={$request["message"]["chat"]["id"]}" .
-            "&photo={$request["message"]["photo"]}" .
-            "&caption=" . urlencode($request["message"]["text"]);
+        $url = self::buildTelegramUrl($bot_token, 'sendPhoto', [
+            'chat_id' => $request["message"]["chat"]["id"],
+            'photo' => $request["message"]["photo"],
+            'caption' => $request["message"]["text"]
+        ]);
 
         $response = TelegramController::send($request, $url);
         $array = json_decode($response, true);
 
-        if (isset($array["result"]) && isset($array["result"]["message_id"]) && $array["result"]["message_id"] == 0) {
+        // if Telegram could not fetch the URL, try uploading ourselves
+        if (
+            isset($array['ok']) && $array['ok'] === false
+            && isset($array['description'])
+            && str_contains($array['description'], 'failed to get HTTP URL content')
+        ) {
+            Log::warning('sendPhoto remote fetch failed; attempting manual upload', [
+                'url' => $url,
+                'description' => $array['description'],
+                'photo' => $request['message']['photo'] ?? null,
+            ]);
+
+            $photoUrl = $request['message']['photo'] ?? null;
+            // gather extra parameters that we want to keep (buttons, reply_to, etc.)
+            $extras = ['caption' => $request['message']['text'] ?? ''];
+            if (!empty($request['message']['reply_markup'])) {
+                $extras['reply_markup'] = $request['message']['reply_markup'];
+            }
+            if (!empty($request['message']['reply_to_message_id'])) {
+                $extras['reply_to_message_id'] = $request['message']['reply_to_message_id'];
+            }
+            $result = self::manualUpload(
+                $bot_token,
+                $request['message']['chat']['id'],
+                $photoUrl,
+                'photo',
+                $extras
+            );
+            if ($result !== false) {
+                return $result;
+            }
+
+            // if recovery fails, fall back to text
+            return TelegramController::sendMessage($request, $bot_token);
+        }
+
+        if (!$array || !isset($array['result'])) {
+            Log::warning('sendPhoto unexpected response', [
+                'url' => $url,
+                'response' => $response,
+                'request' => $request,
+            ]);
+            // fallback to sending plain text message so caller always has something
+            return TelegramController::sendMessage($request, $bot_token);
+        }
+
+        if (isset($array['result']['message_id']) && $array['result']['message_id'] == 0) {
             return TelegramController::sendMessage($request, $bot_token);
         }
 
         return $response;
     }
 
+    /**
+     * Envía un grupo de medios a un chat de Telegram.
+     *
+     * @param array $request
+     * @param string $bot_token
+     * @return string
+     */
     public static function sendMediaGroup($request, $bot_token)
     {
-        $url = "https://api.telegram.org/bot" .
-            $bot_token .
-            "/sendMediaGroup?chat_id={$request["message"]["chat"]["id"]}" .
-            "&media={$request["message"]["media"]}";
+        $chat_id = $request["message"]["chat"]["id"];
+        $media = $request["message"]["media"] ?? null;
 
-        return TelegramController::send($request, $url);
+        // Normalizar media: puede venir como arreglo o como JSON string
+        if (is_string($media)) {
+            $decoded = json_decode($media, true);
+            $media = is_array($decoded) ? $decoded : $media;
+        }
+
+        // Aseguramos que la API reciba un JSON válido en el campo 'media' del formulario
+        $mediaPayload = is_array($media) ? json_encode($media) : $media;
+
+        $url = self::buildTelegramUrl($bot_token, 'sendMediaGroup', [
+            'chat_id' => $chat_id,
+        ]);
+
+        $response = TelegramController::send($request, $url, 1, [
+            'media' => $mediaPayload,
+        ]);
+
+        $array = json_decode($response, true);
+        if (
+            isset($array['ok']) && $array['ok'] === false
+            && isset($array['description'])
+            && str_contains($array['description'], 'failed to get HTTP URL content')
+        ) {
+            Log::warning('sendMediaGroup remote fetch failed; attempting manual upload', [
+                'url' => $url,
+                'description' => $array['description'],
+                'media' => $media,
+            ]);
+
+            // try to download each media item and resend multipart
+            // also preserve extras (reply_markup / reply_to)
+            $extras = [];
+            if (!empty($request['message']['reply_markup'])) {
+                $extras['reply_markup'] = $request['message']['reply_markup'];
+            }
+            if (!empty($request['message']['reply_to_message_id'])) {
+                $extras['reply_to_message_id'] = $request['message']['reply_to_message_id'];
+            }
+
+            $multipart = Http::withOptions(['timeout' => 10]);
+            $finalUrl = "https://api.telegram.org/bot{$bot_token}/sendMediaGroup";
+            $form = array_merge(['chat_id' => $chat_id], $extras);
+            foreach ($media as $idx => $item) {
+                if (!empty($item['media']) && filter_var($item['media'], FILTER_VALIDATE_URL)) {
+                    try {
+                        $dl = Http::timeout(10)->get($item['media']);
+                        if ($dl->successful()) {
+                            $contents = $dl->body();
+                            $name = "media{$idx}." . (pathinfo(parse_url($item['media'], PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg');
+                            $multipart = $multipart->attach("media{$idx}", $contents, $name);
+                        }
+                    } catch (\Throwable $th) {
+                        Log::error('sendMediaGroup download error', ['message' => $th->getMessage()]);
+                    }
+                }
+            }
+            $retry = $multipart->asMultipart()->post($finalUrl, $form);
+            if ($retry->successful()) {
+                return $retry->body();
+            }
+            Log::warning('sendMediaGroup manual upload failed', ['status' => $retry->status(), 'body' => $retry->body()]);
+            return json_encode(['ok' => false, 'description' => 'manual sendMediaGroup failed']);
+        }
+
+        return $response;
     }
 
+    /**
+     * Envía un documento a un chat de Telegram.
+     *
+     * @param array $request
+     * @param string $bot_token
+     * @return string
+     */
     public static function sendDocument($request, $bot_token)
     {
-        $url = "https://api.telegram.org/bot" .
-            $bot_token .
-            "/sendDocument?chat_id={$request["message"]["chat"]["id"]}" .
-            "&document={$request["message"]["document"]}"
-            //."&caption=" . urlencode($request["message"]["text"])
-        ;
+        $url = self::buildTelegramUrl($bot_token, 'sendDocument', [
+            'chat_id' => $request["message"]["chat"]["id"],
+            'document' => $request["message"]["document"]
+        ]);
 
-        return TelegramController::send($request, $url);
+        $response = TelegramController::send($request, $url);
+        $array = json_decode($response, true);
+        if (
+            isset($array['ok']) && $array['ok'] === false
+            && isset($array['description'])
+            && str_contains($array['description'], 'failed to get HTTP URL content')
+        ) {
+            // collect extras similar to sendPhoto
+            $extras = [];
+            if (!empty($request['message']['reply_markup'])) {
+                $extras['reply_markup'] = $request['message']['reply_markup'];
+            }
+            if (!empty($request['message']['reply_to_message_id'])) {
+                $extras['reply_to_message_id'] = $request['message']['reply_to_message_id'];
+            }
+
+            $docUrl = $request['message']['document'] ?? null;
+            $result = self::manualUpload(
+                $bot_token,
+                $request['message']['chat']['id'],
+                $docUrl,
+                'document',
+                $extras
+            );
+            if ($result !== false) {
+                return $result;
+            }
+            Log::warning('sendDocument recovery failed');
+            return json_encode(['ok' => false, 'description' => 'manual sendDocument failed']);
+        }
+
+        return $response;
 
     }
+    /**
+     * Fija un mensaje en un chat de Telegram.
+     *
+     * @param array $request
+     * @param string $bot_token
+     * @return string
+     */
     public static function pinMessage($request, $bot_token)
     {
-        $url = "https://api.telegram.org/bot" .
-            $bot_token .
-            "/pinChatMessage?chat_id={$request["message"]["chat"]["id"]}" .
-            "&message_id={$request["message"]["message_id"]}";
+        $url = self::buildTelegramUrl($bot_token, 'pinChatMessage', [
+            'chat_id' => $request["message"]["chat"]["id"],
+            'message_id' => $request["message"]["message_id"]
+        ]);
 
         return TelegramController::send($request, $url);
     }
 
+    /**
+     * Elimina un mensaje de un chat de Telegram.
+     *
+     * @param array $request
+     * @param string $bot_token
+     * @return string
+     */
     public static function deleteMessage($request, $bot_token)
     {
-        $url = "https://api.telegram.org/bot" .
-            $bot_token .
-            "/deleteMessage?chat_id={$request["message"]["chat"]["id"]}" .
-            "&message_id={$request["message"]["id"]}";
+        $url = self::buildTelegramUrl($bot_token, 'deleteMessage', [
+            'chat_id' => $request["message"]["chat"]["id"],
+            'message_id' => $request["message"]["id"]
+        ]);
 
         return TelegramController::send($request, $url);
     }
 
+    /**
+     * Reenvía un mensaje de un chat a otro.
+     *
+     * @param array $request
+     * @param string $bot_token
+     * @return string
+     */
     public static function forwardMessage($request, $bot_token)
     {
-        $url = "https://api.telegram.org/bot" .
-            $bot_token .
-            "/forwardMessage";
-
-        return TelegramController::send($request, $url, 1, [
+        // Construir la URL con parámetros para asegurar que existe la '?' antes de añadir '&parse_mode'
+        $url = self::buildTelegramUrl($bot_token, 'forwardMessage', [
             'chat_id' => $request["message"]["chat"]["id"],
             'from_chat_id' => $request["message"]["from"]["id"],
             'message_id' => $request["message"]["message_id"],
         ]);
+
+        // Enviar sin cuerpo adicional (los parámetros ya están en la URL)
+        return TelegramController::send($request, $url);
     }
 
     public static function getBotInfo($bot_token)
@@ -254,13 +503,13 @@ class TelegramController extends Controller
             "/getMe";
 
         try {
-            $response = file_get_contents($url);
-
+            $response = Http::get($url);
+            return $response->body();
         } catch (\Throwable $th) {
             //Log::error("TelegramController getBotInfo: " . $th->getTraceAsString());
         }
 
-        return $response;
+        return false;
     }
 
     public static function getUserInfo($userId, $bot_token)
@@ -277,9 +526,8 @@ class TelegramController extends Controller
         );
 
         try {
-            $response = file_get_contents($url);
-
-            $json = json_decode($response, true);
+            $response = Http::get($url);
+            $json = $response->json();
 
             // Formando un text personalizado con los datos del usuario
             $text = "👤 ";
@@ -311,9 +559,8 @@ class TelegramController extends Controller
             $bot_token .
             "/getUserProfilePhotos?user_id={$userId}";
         try {
-            $response = file_get_contents($url);
-            return $response;
-
+            $response = Http::get($url);
+            return $response->body();
         } catch (\Throwable $th) {
             //Log::error("TelegramController getFileUrl: " . $th->getTraceAsString());
         }
@@ -335,12 +582,16 @@ class TelegramController extends Controller
             $bot_token .
             "/getFile?file_id={$fileId}";
         try {
-            $response = file_get_contents($url);
-            return $response;
-
+            $response = Http::withOptions(['verify' => true, 'timeout' => 10])->get($url);
+            if ($response->successful()) {
+                return $response->body();
+            }
+            Log::warning("TelegramController getFileUrl HTTP status {$response->status()} for URL: {$url}");
         } catch (\Throwable $th) {
-            //Log::error("TelegramController getFileUrl: " . $th->getTraceAsString());
+            Log::error("TelegramController getFileUrl error: " . $th->getMessage());
         }
+
+        return false;
     }
 
     public static function getFile($filePath, $bot_token)
@@ -349,9 +600,62 @@ class TelegramController extends Controller
             $bot_token .
             "/{$filePath}";
 
-        $contents = file_get_contents($url);
+        $response = Http::get($url);
+        return $response->body();
+    }
 
-        return $contents;
+    /**
+     * Descarga un recurso remoto y lo sube al bot en un solo paso.
+     *
+     * @param string $bot_token
+     * @param int $chat_id
+     * @param string $fileUrl URL que Telegram no pudo alcanzar
+     * @param string $fieldName nombre del campo en el formulario (photo/document/media)
+     * @param array $extra parámetros adicionales para el formulario
+     * @return string|false respuesta del API o false si la recuperación falló
+     */
+    private static function manualUpload($bot_token, $chat_id, $fileUrl, $fieldName, $extra = [])
+    {
+        if (!$fileUrl || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+        try {
+            $dl = Http::timeout(10)->get($fileUrl);
+            if (!$dl->successful()) {
+                Log::warning('manualUpload download failed', ['status' => $dl->status(), 'url' => $fileUrl]);
+                return false;
+            }
+            $contents = $dl->body();
+            $basename = pathinfo(parse_url($fileUrl, PHP_URL_PATH), PATHINFO_BASENAME) ?: 'file';
+            $uploadUrl = "https://api.telegram.org/bot{$bot_token}/send{$fieldName}";
+
+            // filter extras: remove null entries
+            foreach ($extra as $k => $v) {
+                if ($v === null) {
+                    unset($extra[$k]);
+                    continue;
+                }
+                if ($k === 'reply_markup' && is_array($v)) {
+                    $extra[$k] = json_encode($v);
+                }
+            }
+
+            // If we are sending a caption but no parse_mode specified, default to Markdown
+            if (isset($extra['caption']) && !isset($extra['parse_mode'])) {
+                $extra['parse_mode'] = 'Markdown';
+            }
+
+            $request = Http::attach($fieldName, $contents, $basename)->asMultipart();
+            $form = array_merge(['chat_id' => $chat_id], $extra);
+            $retry = $request->post($uploadUrl, $form);
+            if ($retry->successful()) {
+                return $retry->body();
+            }
+            Log::warning('manualUpload post failed', ['status' => $retry->status(), 'body' => $retry->body()]);
+        } catch (\Throwable $th) {
+            Log::error('manualUpload exception', ['message' => $th->getMessage(), 'url' => $fileUrl]);
+        }
+        return false;
     }
 
     public static function exportFileLocally($fileId, $bot_token)
@@ -361,16 +665,69 @@ class TelegramController extends Controller
         $filePath = $response["result"]["file_path"];
         $imageUrl = "https://api.telegram.org/file/bot{$bot_token}/{$filePath}";
         // Descargar y guardar la imagen localmente
-        $imageContent = file_get_contents($imageUrl);
+        $response = Http::get($imageUrl);
+        $imageContent = $response->body();
         $filename = FileController::getFileNameAsUnixTime("jpg", 1, "HOURS");
-        file_put_contents(public_path() . FileController::$AUTODESTROY_DIR . "/" . $filename, $imageContent);
+        Storage::disk('public')->put(FileController::$AUTODESTROY_DIR . "/" . $filename, $imageContent);
 
 
-        $array = explode(".", $filename);
-        return array(
-            "filename" => $array[0],
-            "extension" => $array[1],
-            "url" => request()->root() . FileController::$AUTODESTROY_DIR . "/" . $filename,
-        );
+        $array = Str::of($filename)->explode('.')->toArray();
+        return [
+            'filename' => $array[0],
+            'extension' => $array[1],
+            'url' => request()->root() . FileController::$AUTODESTROY_DIR . "/" . $filename,
+        ];
+    }
+    public function loginCallback(Request $request)
+    {
+        $botToken = $request->attributes->get('bot_token');
+        $auth_data = $request->all();
+
+        if (!$this->checkTelegramAuthorization($auth_data, $botToken)) {
+            return redirect('/')->with('error', 'Fallo de integridad.');
+        }
+
+        // En lugar de base de datos, guardamos en la sesión de Laravel
+        session([
+            'telegram_user' => [
+                'id' => $auth_data['id'],
+                'name' => $auth_data['first_name'] . ' ' . ($auth_data['last_name'] ?? ''),
+                'username' => $auth_data['username'] ?? null,
+                'photo_url' => $auth_data['photo_url'] ?? null,
+            ]
+        ]);
+
+        return redirect()->intended('/dashboard');
+    }
+
+    protected function checkTelegramAuthorization($auth_data, $botToken)
+    {
+        //Log::error("TelegramController checkAuthorization: " . json_encode($auth_data));
+        /*
+        {
+    "id": "1741391257",
+    "first_name": "Crypto",
+    "last_name": "Dev",
+    "username": "criptodev1981",
+    "photo_url": "https:\/\/t.me\/i\/userpic\/320\/OTuPwnXNYWQdvow2ThDsPptkNZ6mYYJV80hnQpR8mSM.jpg",
+    "auth_date": "1771339825",
+    "hash": "048d49f88eceab46dbf338fe3152eb72796d08d9f30681b092f6b8ea9946253f"
+}
+        */
+
+        $check_hash = $auth_data['hash'];
+        unset($auth_data['hash']);
+
+        $data_check_arr = [];
+        foreach ($auth_data as $key => $value) {
+            $data_check_arr[] = $key . '=' . $value;
+        }
+        Arr::sort($data_check_arr);
+        $data_check_string = collect($data_check_arr)->implode("\n");
+
+        $secret_key = hash('sha256', $botToken, true);
+        $hash = hash_hmac('sha256', $data_check_string, $secret_key);
+
+        return hash_equals($hash, $check_hash);
     }
 }

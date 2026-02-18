@@ -2,7 +2,7 @@
 namespace Modules\ZentroPackageBot\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Metadatas;
+use Modules\Laravel\Entities\Metadatas;
 
 class MetadataSeeder extends Seeder
 {

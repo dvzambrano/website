@@ -4,6 +4,8 @@ namespace Modules\TelegramBot\Database\Seeders;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
+use Modules\TelegramBot\Database\Seeders\MetadataSeeder;
+
 
 class TelegramBotDatabaseSeeder extends Seeder
 {
@@ -19,6 +21,7 @@ class TelegramBotDatabaseSeeder extends Seeder
         // $this->call("OthersTableSeeder");
 
         $this->call(ActorsSeeder::class);
+        $this->call(MetadataSeeder::class);
 
         $this->call(TelegramBotsSeeder::class);
     }

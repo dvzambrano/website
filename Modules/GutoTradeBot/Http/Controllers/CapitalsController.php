@@ -2,7 +2,7 @@
 
 namespace Modules\GutoTradeBot\Http\Controllers;
 
-use App\Http\Controllers\FileController;
+use Modules\Laravel\Http\Controllers\FileController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

@@ -2,14 +2,14 @@
 
 namespace Modules\ZentroOwnerBot\Http\Controllers;
 
-use App\Http\Controllers\JsonsController;
+use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\TelegramBot\Traits\UsesTelegramBot;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Lang;
 
-use Modules\Zentro\Entities\sfSecurity;
+use Modules\Laravel\Entities\sfSecurity;
 
 class ZentroOwnerBotController extends JsonsController
 {

@@ -1,11 +1,11 @@
 <?php
 namespace Modules\GutoTradeBot\Http\Controllers;
 
-use App\Http\Controllers\FileController;
-use App\Http\Controllers\GraphsController;
-use App\Http\Controllers\TextController;
-use App\Http\Controllers\JsonsController;
-use App\Http\Controllers\MathController;
+use Modules\Laravel\Http\Controllers\FileController;
+use Modules\Laravel\Http\Controllers\GraphsController;
+use Modules\Laravel\Http\Controllers\TextController;
+use Modules\Laravel\Http\Controllers\JsonsController;
+use Modules\Laravel\Http\Controllers\MathController;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -1280,7 +1280,7 @@ class GutoTradeBotController extends JsonsController
                 if (isset($this->actor->data[$tenant->code]["last_bot_callback_data"]))
                     $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
                 $array = $this->getCommand($command);
-                Log::info("GutoTradeBotController photo or document with command='{$command}' " . json_encode($array));
+                //Log::info("GutoTradeBotController photo or document with command='{$command}' " . json_encode($array));
 
                 switch ($array["command"]) {
                     case "getsenderpaymentscreenshot":

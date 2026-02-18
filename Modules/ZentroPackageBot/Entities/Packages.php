@@ -5,7 +5,7 @@ namespace Modules\ZentroPackageBot\Entities;
 use Illuminate\Database\Console\Migrations\StatusCommand;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Traits\TenantTrait;
+use Modules\Laravel\Traits\TenantTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use PhpParser\Node\Stmt\Static_;
 

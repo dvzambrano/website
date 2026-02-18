@@ -1,7 +1,7 @@
 <?php
 namespace Modules\TelegramBot\Http\Controllers;
 
-use App\Http\Controllers\JsonsController;
+use Modules\Laravel\Http\Controllers\JsonsController;
 use Carbon\Carbon;
 use Modules\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\DB;

@@ -1,10 +1,13 @@
 {
-    "message_id": 2731,
+    "message_id": 3396,
     "from": {
-        "id": 7543090584,
-        "is_bot": true,
-        "first_name": "GutoTradeTestBot",
-        "username": "GutoTradeTestBot"
+        "id": 816767995,
+        "is_bot": false,
+        "first_name": "Donel",
+        "last_name": "Vazquez Zambrano",
+        "username": "dvzambrano",
+        "language_code": "es",
+        "is_premium": true
     },
     "chat": {
         "id": 816767995,
@@ -13,60 +16,30 @@
         "username": "dvzambrano",
         "type": "private"
     },
-    "date": 1770855069,
+    "date": 1771434512,
     "photo": [
         {
-            "file_id": "AgACAgEAAxkBAAIKj2mM_p_HfmApXH_vg2FQr2W_FQ0jAAKLC2sbDptoRO5gZ9NJ_Nz6AQADAgADcwADOgQ",
-            "file_unique_id": "AQADiwtrGw6baER4",
-            "file_size": 869,
-            "width": 40,
+            "file_id": "AgACAgEAAxkBAAIM-2mV4hXARU_ZzTYdzlIChFsD88UsAAI1DGsbwzyxRJ5pRlSRi1nvAQADAgADcwADOgQ",
+            "file_unique_id": "AQADNQxrG8M8sUR4",
+            "file_size": 897,
+            "width": 73,
             "height": 90
         },
         {
-            "file_id": "AgACAgEAAxkBAAIKj2mM_p_HfmApXH_vg2FQr2W_FQ0jAAKLC2sbDptoRO5gZ9NJ_Nz6AQADAgADbQADOgQ",
-            "file_unique_id": "AQADiwtrGw6baERy",
-            "file_size": 7301,
-            "width": 144,
+            "file_id": "AgACAgEAAxkBAAIM-2mV4hXARU_ZzTYdzlIChFsD88UsAAI1DGsbwzyxRJ5pRlSRi1nvAQADAgADbQADOgQ",
+            "file_unique_id": "AQADNQxrG8M8sURy",
+            "file_size": 12940,
+            "width": 258,
             "height": 320
         },
         {
-            "file_id": "AgACAgEAAxkBAAIKj2mM_p_HfmApXH_vg2FQr2W_FQ0jAAKLC2sbDptoRO5gZ9NJ_Nz6AQADAgADeAADOgQ",
-            "file_unique_id": "AQADiwtrGw6baER9",
-            "file_size": 21889,
-            "width": 360,
-            "height": 800
-        },
-        {
-            "file_id": "AgACAgEAAxkBAAIKj2mM_p_HfmApXH_vg2FQr2W_FQ0jAAKLC2sbDptoRO5gZ9NJ_Nz6AQADAgADeQADOgQ",
-            "file_unique_id": "AQADiwtrGw6baER-",
-            "file_size": 34357,
-            "width": 576,
-            "height": 1280
+            "file_id": "AgACAgEAAxkBAAIM-2mV4hXARU_ZzTYdzlIChFsD88UsAAI1DGsbwzyxRJ5pRlSRi1nvAQADAgADeAADOgQ",
+            "file_unique_id": "AQADNQxrG8M8sUR9",
+            "file_size": 14588,
+            "width": 291,
+            "height": 361
         }
     ],
-    "caption": "\ud83d\udcb0 Reenvio de pago en revisi\u00f3n\n\ud83c\udd94 3\n\n\ud83e\udeaa A nombre de:\n\ud83d\udc64 SIN DATOS: 0 \ud83d\udcb6\n\ud83d\udcc5 Fecha: 2026-02-12 00:11:09\n\n\ud83d\udc68\ud83c\udffb\u200d\ud83d\udcbb Reportado por:\n\ud83d\udc64 Donel Vazquez Zambrano \n\u2709\ufe0f @dvzambrano \n\ud83c\udd94 816767995\n\n\ud83d\udc47 Qu\u00e9 desea hacer?",
-    "caption_entities": [
-        {
-            "offset": 0,
-            "length": 1,
-            "type": "text_link",
-            "url": "tg:\/\/metadata?id=3"
-        },
-        { "offset": 4, "length": 27, "type": "bold" },
-        { "offset": 35, "length": 1, "type": "code" },
-        { "offset": 38, "length": 34, "type": "bold" },
-        { "offset": 76, "length": 5, "type": "bold" },
-        { "offset": 157, "length": 11, "type": "mention" },
-        { "offset": 173, "length": 9, "type": "code" }
-    ],
-    "reply_markup": {
-        "inline_keyboard": [
-            [
-                {
-                    "text": "\u2196\ufe0f Volver al men\u00fa principal",
-                    "callback_data": "menu"
-                }
-            ]
-        ]
-    }
+    "caption": "Prueba 100",
+    "text": ""
 }

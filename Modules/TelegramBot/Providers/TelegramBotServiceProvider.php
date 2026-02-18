@@ -10,6 +10,8 @@ use Modules\TelegramBot\Console\ResetTelegramWebhooks;
 use Modules\TelegramBot\Console\BotSimulate;
 use Illuminate\Routing\Router;
 use Modules\TelegramBot\Middleware\TenantMiddleware;
+use Modules\TelegramBot\Middleware\TelegramBotDataMiddleware;
+use Modules\TelegramBot\Middleware\TelegramIsAuthenticatedMiddleware;
 
 class TelegramBotServiceProvider extends ServiceProvider
 {
@@ -32,6 +34,8 @@ class TelegramBotServiceProvider extends ServiceProvider
     {
         // Registramos el alias del middleware dinámicamente
         $router->aliasMiddleware('tenant.detector', TenantMiddleware::class);
+        $router->aliasMiddleware('telegrambot.detector', TelegramBotDataMiddleware::class);
+        $router->aliasMiddleware('telegrambot.auth', TelegramIsAuthenticatedMiddleware::class);
 
         $this->registerTranslations();
         $this->registerConfig();

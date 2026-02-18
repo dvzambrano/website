@@ -23,8 +23,5 @@ class DatabaseSeeder extends Seeder
             'password' => 'test@example.com'
         ]);
         */
-
-        $this->call(MetadataTypesSeeder::class);
-        $this->call(MetadataSeeder::class);
     }
 }

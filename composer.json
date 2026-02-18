@@ -19,6 +19,8 @@
         "wikimedia/composer-merge-plugin": "^2.1"
     },
     "require-dev": {
+        "dvzambrano/laravel": "dev-main as 1.0.0",
+        "dvzambrano/web3": "dev-main as 1.0.0",
         "fakerphp/faker": "^1.23",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",
@@ -28,6 +30,16 @@
         "nunomaduro/collision": "^8.6",
         "phpunit/phpunit": "^11.5.50"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:dvzambrano/laravel.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git@github.com:dvzambrano/web3.git"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "App\\": "app/",
@@ -35,7 +47,6 @@
             "Database\\Seeders\\": "database/seeders/",
             "Modules\\Zentro\\": "Modules/Zentro/",
             "Modules\\TelegramBot\\": "Modules/TelegramBot/",
-            "Modules\\Web3\\": "Modules/Web3/",
             "Modules\\GutoTradeBot\\": "Modules/GutoTradeBot/",
             "Modules\\ZentroCriptoBot\\": "Modules/ZentroCriptoBot/",
             "Modules\\ZentroOwnerBot\\": "Modules/ZentroOwnerBot/",
@@ -44,9 +55,6 @@
         },
         "exclude-from-classmap": [
             "Modules/**/Database/Migrations"
-        ],
-        "files": [
-            "app/Helpers/ModuleHelper.php"
         ]
     },
     "autoload-dev": {

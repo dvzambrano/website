@@ -1,0 +1,22 @@
+<?php
+namespace Modules\TelegramBot\Database\Seeders;
+
+use Modules\Laravel\Entities\Metadatas;
+use Illuminate\Database\Seeder;
+
+class MetadataSeeder extends Seeder
+{
+
+    public function run(): void
+    {
+        //  Seeders to this Module
+        // -------------------------------------------------------------------------------
+        Metadatas::create([
+            'name' => 'app_telegram_bot_owner',
+            'value' => '816767995',
+            'comment' => 'Propietario del bot de Telegram',
+            'metadatatype' => 1,
+            'is_visible' => 1,
+        ]);
+    }
+}

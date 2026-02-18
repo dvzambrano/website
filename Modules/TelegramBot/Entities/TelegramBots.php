@@ -3,7 +3,7 @@
 namespace Modules\TelegramBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\ModuleTrait;
+use Modules\Laravel\Traits\ModuleTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;

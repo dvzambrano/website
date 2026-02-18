@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\GraphsController;
+use Modules\Laravel\Http\Controllers\GraphsController;
 use Carbon\Carbon;
 use DOMDocument;
 use Illuminate\Http\Request;
@@ -29,7 +29,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use App\Http\Controllers\FileController;
+use Modules\Laravel\Http\Controllers\FileController;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Modules\GutoTradeBot\Jobs\CheckEmails;
@@ -43,7 +43,7 @@ use Modules\ZentroOwnerBot\Http\Controllers\ZentroOwnerBotController;
 use FurqanSiddiqui\BIP39\BIP39;
 use FurqanSiddiqui\BIP39\Wordlist;
 
-use Modules\Zentro\Services\Office\ExcelService;
+use Modules\Laravel\Services\Office\ExcelService;
 use Modules\ZentroPackageBot\Entities\Packages;
 
 use Modules\ZentroTraderBot\Http\Controllers\RampController;

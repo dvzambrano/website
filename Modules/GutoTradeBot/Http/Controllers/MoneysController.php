@@ -2,7 +2,7 @@
 
 namespace Modules\GutoTradeBot\Http\Controllers;
 
-use App\Http\Controllers\JsonsController;
+use Modules\Laravel\Http\Controllers\JsonsController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\GutoTradeBot\Entities\Capitals;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use App\Http\Controllers\FileController;
+use Modules\Laravel\Http\Controllers\FileController;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
@@ -157,7 +157,7 @@ class MoneysController extends JsonsController
 
         if (isset(request("message")["caption"])) {
             $caption = $this->processCaption(request("message")["caption"]);
-            //Log::info("GutoTradeBotController processMoney caption " . json_encode($caption) . "\n");
+            //Log::debug("MoneysController processMoney caption " . json_encode($caption) . "\n");
 
             // Guardar el pago en la BD
             if ($caption["success"] && isset($caption["fullname"]) && isset($caption["amount"])) {
@@ -179,6 +179,7 @@ class MoneysController extends JsonsController
                     $sender = 2;
                 }
 
+                //Log::debug("MoneysController processMoney type = {$type}\n");
                 try {
                     switch ($type) {
                         case 1:
@@ -288,6 +289,7 @@ class MoneysController extends JsonsController
             $reply = $this->badCaptionReply($bot, "Sin descripción", $type);
         }
 
+        //Log::debug("MoneysController processMoney reply " . json_encode($reply) . "\n");
         return $reply;
     }
 
@@ -699,16 +701,14 @@ class MoneysController extends JsonsController
         }
 
         return array(
-            "message" => array(
-                "text" => $text,
-                "photo" => $extra_capture && isset($money->data["previous_screenshot"]) ? $money->data["previous_screenshot"] : $money->screenshot,
-                "chat" => array(
-                    "id" => $to_id,
-                ),
-                "reply_markup" => json_encode([
-                    "inline_keyboard" => $menu ? $menu : array(),
-                ]),
+            "text" => $text,
+            "photo" => $extra_capture && isset($money->data["previous_screenshot"]) ? $money->data["previous_screenshot"] : $money->screenshot,
+            "chat" => array(
+                "id" => $to_id,
             ),
+            "reply_markup" => json_encode([
+                "inline_keyboard" => $menu ? $menu : array(),
+            ]),
         );
     }
 

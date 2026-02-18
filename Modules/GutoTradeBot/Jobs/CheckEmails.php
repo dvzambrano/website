@@ -11,11 +11,11 @@ use Illuminate\Queue\SerializesModels;
 use Webklex\IMAP\Facades\Client;
 use Carbon\Carbon;
 use Modules\GutoTradeBot\Http\Controllers\GutoTradeBotController;
-use App\Http\Controllers\GraphsController;
-use App\Http\Controllers\FileController;
+use Modules\Laravel\Http\Controllers\GraphsController;
+use Modules\Laravel\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Log;
 use Modules\GutoTradeBot\Entities\Moneys;
-use App\Http\Controllers\TextController;
+use Modules\Laravel\Http\Controllers\TextController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
 
