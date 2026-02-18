@@ -16,154 +16,6 @@
     <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
 
-    <!-- Custom Toast Styles -->
-    <style>
-        .custom-toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #28a745;
-            color: white;
-            padding: 16px 24px;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 9999;
-            font-size: 14px;
-            animation: slideIn 0.3s ease-in-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-
-            to {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-        }
-
-        .custom-toast.hide {
-            animation: slideOut 0.3s ease-in-out forwards;
-        }
-
-        /* Share Menu Styles */
-        .share-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .share-overlay.active {
-            display: flex;
-        }
-
-        .share-modal {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            animation: slideUp 0.3s ease-in-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .share-modal h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #333;
-        }
-
-        .share-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .share-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 16px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background: #f9f9f9;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            text-decoration: none;
-        }
-
-        .share-btn:hover {
-            background: #f0f0f0;
-            border-color: #0088cc;
-            color: #0088cc;
-        }
-
-        .share-btn i {
-            font-size: 18px;
-        }
-
-        .share-close {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .share-close button {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .share-close button:hover {
-            color: #333;
-        }
-    </style>
-
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
@@ -241,8 +93,7 @@
                                 <hr>
                                 --}}
                                 <p class="text-secondary mb-1 text-end">
-                                    <a href="{{ route('telegram.logout') }}" class="ms-3 text-danger"
-                                        title="{{ __('zentrotraderbot::landing.menu.user.logout') }}">
+                                    <a href="{{ route('telegram.logout') }}" class="ms-3 text-danger" title="Salir">
                                         <i class="bi bi-x-circle"></i>
                                     </a>
                                 </p>
@@ -257,8 +108,7 @@
 
                                 <h6 class="text-start fw-bold mb-3">
                                     @if (count($transactions) > 0)
-                                        <a href="javascript:void(0);location.reload();" class="ms-3"
-                                            title="{{ __('zentrotraderbot::landing.menu.user.refresh') }}">
+                                        <a href="javascript:void(0);location.reload();" class="ms-3" title="Actualizar">
                                             <i class="ri-restart-line"></i>
                                         </a>
                                         {{ trans_choice('zentrotraderbot::landing.menu.user.lastoperations', count($transactions), ['count' => count($transactions)]) }}
@@ -301,8 +151,7 @@
                                             {{-- Cambiamos el link por un botón de Alpine --}}
                                             <button @click="view = 'receive'"
                                                 class="btn btn-light btn-lg w-100 shadow-sm border fw-bold">
-                                                <i class="ri-qr-scan-2-line me-2"></i>
-                                                {{ __('zentrotraderbot::landing.menu.user.wallet.receive.button') }}
+                                                <i class="ri-qr-scan-2-line me-2"></i> RECIBIR
                                             </button>
                                         </div>
                                         <div class="col-6">
@@ -350,7 +199,7 @@
 
                                             <img src="{{ $user['photo_url'] }}" class="rounded-circle"
                                                 style="width: 100%; height: 100%; object-fit: cover; display: block;"
-                                                alt="{{ __('zentrotraderbot::landing.menu.user.photo_alt') }}">
+                                                alt="Foto de usuario">
 
                                         </div>
                                     </div>
@@ -373,7 +222,7 @@
                                 </div>
                                 <div class="d-grid gap-2 mt-4">
                                     <div class="row g-2 mb-2">
-                                        <button onclick="openShareMenu()"
+                                        <button onclick="copyAddress()"
                                             class="btn btn-light btn-lg w-100 shadow-sm border fw-bold">
                                             {{ __('zentrotraderbot::landing.menu.user.wallet.receive.share') }}
                                         </button>
@@ -388,160 +237,32 @@
         </div>
     </section>
 
-    <!-- Share Modal -->
-    <div id="shareOverlay" class="share-overlay">
-        <div class="share-modal">
-            <div class="share-close">
-                <button onclick="closeShareMenu()">&times;</button>
-            </div>
-            <h3>{{ __('zentrotraderbot::landing.menu.user.wallet.receive.share_menu.title') }}</h3>
-            <div class="share-options">
-                <button class="share-btn" onclick="shareVia('whatsapp')">
-                    <i class="bi bi-whatsapp"></i>
-                    <span>{{ __('zentrotraderbot::landing.menu.user.wallet.receive.share_menu.whatsapp') }}</span>
-                </button>
-                <button class="share-btn" onclick="shareVia('facebook')">
-                    <i class="bi bi-facebook"></i>
-                    <span>{{ __('zentrotraderbot::landing.menu.user.wallet.receive.share_menu.facebook') }}</span>
-                </button>
-                <button class="share-btn" onclick="shareVia('twitter')">
-                    <i class="bi bi-twitter"></i>
-                    <span>{{ __('zentrotraderbot::landing.menu.user.wallet.receive.share_menu.twitter') }}</span>
-                </button>
-                <button class="share-btn" onclick="shareVia('email')">
-                    <i class="bi bi-envelope"></i>
-                    <span>{{ __('zentrotraderbot::landing.menu.user.wallet.receive.share_menu.email') }}</span>
-                </button>
-                <button class="share-btn" onclick="shareVia('sms')">
-                    <i class="bi bi-chat-dots"></i>
-                    <span>{{ __('zentrotraderbot::landing.menu.user.wallet.receive.share_menu.sms') }}</span>
-                </button>
-                <button class="share-btn" onclick="shareVia('telegram')">
-                    <i class="bi bi-telegram"></i>
-                    <span>{{ __('zentrotraderbot::landing.menu.user.wallet.receive.share_menu.telegram') }}</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script src="assets/vendor/aos/aos.js"></script>
     <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/main.js"></script>
 
     <script>
-        // Simple toast notification system (no external dependencies)
-        function showToast(message, duration = 3000) {
-            const toast = document.createElement('div');
-            toast.className = 'custom-toast';
-            toast.textContent = message;
-            document.body.appendChild(toast);
+        function copyAddress() {
+            const copyText = document.getElementById("walletAddr");
+            const btn = document.getElementById("btnCopy");
+            const icon = document.getElementById("copyIcon");
 
-            setTimeout(() => {
-                toast.classList.add('hide');
+            // Copiar al portapapeles
+            navigator.clipboard.writeText(copyText.value).then(() => {
+                // 1. Guardar clases originales
+                const originalBtnClass = btn.className;
+                const originalIconClass = icon.className;
+
+                // 2. Aplicar estado "Éxito"
+                btn.classList.replace('btn-primary', 'btn-success');
+                icon.className = 'ri-check-line'; // El icono del "tick"
+
+                // 3. Revertir después de 3 segundos
                 setTimeout(() => {
-                    document.body.removeChild(toast);
-                }, 300);
-            }, duration);
-        }
-
-        function openShareMenu() {
-            const overlay = document.getElementById('shareOverlay');
-            overlay.classList.add('active');
-        }
-
-        function closeShareMenu() {
-            const overlay = document.getElementById('shareOverlay');
-            overlay.classList.remove('active');
-        }
-
-        function shareVia(platform) {
-            const walletAddr = document.getElementById('walletAddr').value;
-            const appName = '{{ __('zentrotraderbot::landing.title') }}';
-            const message =
-                '{{ __('zentrotraderbot::landing.menu.user.wallet.receive.share_menu.message', ['name' => ':name']) }}'
-                .replace(':name', appName);
-            const fullText = `${message} ${walletAddr}`;
-
-            let shareUrl = '';
-
-            switch (platform) {
-                case 'whatsapp':
-                    shareUrl = `https://wa.me/?text=${encodeURIComponent(fullText)}`;
-                    break;
-                case 'facebook':
-                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(walletAddr)}`;
-                    break;
-                case 'twitter':
-                    shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(fullText)}`;
-                    break;
-                case 'email':
-                    shareUrl = `mailto:?subject=${encodeURIComponent(appName)}&body=${encodeURIComponent(fullText)}`;
-                    break;
-                case 'sms':
-                    shareUrl = `sms:?body=${encodeURIComponent(fullText)}`;
-                    break;
-                case 'telegram':
-                    shareUrl =
-                        `https://t.me/share/url?url=${encodeURIComponent(walletAddr)}&text=${encodeURIComponent(message)}`;
-                    break;
-                case 'copy':
-                    navigator.clipboard.writeText(walletAddr).then(() => {
-                        showToast('{{ __('zentrotraderbot::landing.menu.user.wallet.receive.copied') }}', 2000);
-                        closeShareMenu();
-                    }).catch(() => {
-                        showToast('Error al copiar', 2000);
-                    });
-                    return;
-            }
-
-            if (shareUrl) {
-                window.open(shareUrl, '_blank');
-                closeShareMenu();
-            }
-        }
-
-        // Close modal when clicking overlay
-        document.addEventListener('DOMContentLoaded', function() {
-            const overlay = document.getElementById('shareOverlay');
-            overlay.addEventListener('click', function(e) {
-                if (e.target === overlay) {
-                    closeShareMenu();
-                }
+                    btn.className = originalBtnClass;
+                    icon.className = originalIconClass;
+                }, 1000);
             });
-
-            window.copyAddress = function() {
-                const copyText = document.getElementById("walletAddr");
-                const btn = document.getElementById("btnCopy");
-                const icon = document.getElementById("copyIcon");
-
-                if (!copyText || !btn || !icon) {
-                    console.error('Required elements not found');
-                    return;
-                }
-
-                // Copiar al portapapeles
-                navigator.clipboard.writeText(copyText.value).then(() => {
-                    // 1. Guardar clases originales
-                    const originalBtnClass = btn.className;
-                    const originalIconClass = icon.className;
-
-                    // 2. Aplicar estado "Éxito"
-                    btn.classList.replace('btn-primary', 'btn-success');
-                    icon.className = 'ri-check-line'; // El icono del "tick"
-
-                    // 3. Mostrar notificación personalizada
-                    showToast('{{ __('zentrotraderbot::landing.menu.user.wallet.receive.copied') }}',
-                        3000);
-
-                    // 4. Revertir después de 1 segundo
-                    setTimeout(() => {
-                        btn.className = originalBtnClass;
-                        icon.className = originalIconClass;
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Clipboard copy failed:', err);
-                    showToast('Error al copiar', 2000);
-                });
-            };
-        });
+        }
     </script>
 @endsection

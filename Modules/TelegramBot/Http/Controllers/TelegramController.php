@@ -97,10 +97,11 @@ class TelegramController extends Controller
         try {
             // si es DEMO escribimos en la consola y retornamos message_id -1
             if (isset($request["demo"]) && $request["demo"] == true) {
-                Log::debug('message = ', [
-                    'url' => $url,
-                    'message' => $request["message"]
+                var_dump([
+                    "url" => $url,
+                    "message" => $request["message"],
                 ]);
+
                 return response()->json([
                     'result' => [
                         'message_id' => -1,
