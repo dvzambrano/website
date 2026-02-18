@@ -1280,7 +1280,7 @@ class GutoTradeBotController extends JsonsController
                 if (isset($this->actor->data[$tenant->code]["last_bot_callback_data"]))
                     $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
                 $array = $this->getCommand($command);
-                Log::info("GutoTradeBotController photo or document with command='{$command}' " . json_encode($array));
+                //Log::info("GutoTradeBotController photo or document with command='{$command}' " . json_encode($array));
 
                 switch ($array["command"]) {
                     case "getsenderpaymentscreenshot":
