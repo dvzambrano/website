@@ -32,21 +32,34 @@ class OfferObserver
                 ]);
                 */
 
-                dispatch(function () use ($message_id, $chat_id, $bot_token) {
-                    $array = array(
-                        "message" => array(
-                            "id" => $message_id,
-                            "chat" => array(
-                                "id" => config('metadata.system.app.zentrotraderbot.telegram.community.group'),
-                            ),
-                        ),
-                    );
-                    $controller = new TelegramController();
-                    $controller->sendMessage($array, $bot_token);
+                // Enviar notificación directamente (evita usar variables indefinidas en closure)
+                $communityChat = config('metadata.system.app.zentrotraderbot.telegram.community.group');
+                $botToken = config('metadata.system.app.zentrotraderbot.telegram.bot_token') ?? null;
 
-                    $this->notifyOnTelegram($info, $payload, );
-                    //app_zentrotraderbot_telegram_community_group
-                })->delay(now()->addMinutes($autodestroy));
+                $text = "🚀 Nueva oferta detectada: {$offer->amount} USD vía {$offer->payment_method}";
+                $payload = [
+                    'message' => [
+                        'chat' => ['id' => $communityChat],
+                        'text' => $text,
+                    ],
+                ];
+
+                // Intentamos enviar si tenemos token configurado
+                if ($botToken) {
+                    TelegramController::sendMessage($payload, $botToken);
+                } else {
+                    // Fallback: intentar enviar al usuario directamente si no hay token global
+                    $userChat = $alert->user->telegram_id;
+                    if ($userChat) {
+                        $personalPayload = [
+                            'message' => [
+                                'chat' => ['id' => $userChat],
+                                'text' => $text,
+                            ],
+                        ];
+                        TelegramController::sendMessage($personalPayload, $botToken);
+                    }
+                }
 
 
             }

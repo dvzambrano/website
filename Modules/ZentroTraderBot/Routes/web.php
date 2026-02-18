@@ -11,8 +11,15 @@
 |
  */
 
+
+Route::get('/', 'LandingController@index')->name('zentrotraderbot.landing');
+Route::get('/dashboard', 'LandingController@dashboard')
+    ->middleware(['web', 'telegrambot.auth'])
+    ->name('zentrotraderbot.dashboard');
+
 Route::prefix('zentrotraderbot')->group(function () {
-    Route::get('/', 'ZentroTraderBotController@index');
+    //Route::get('/', 'LandingController@index')->name('zentrotraderbot.landing');
+    //Route::get('/dashboard', 'LandingController@dashboard')->name('zentrotraderbot.dashboard');
 });
 
 Route::prefix('tradingview')->group(function () {
