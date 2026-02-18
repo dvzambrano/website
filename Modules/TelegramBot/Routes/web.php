@@ -47,9 +47,9 @@ Route::prefix('telegram')->group(function () {
             session([
                 'telegram_user' => [
                     'id' => '816767995',
-                    'name' => '(Dev Mode)',
+                    'name' => 'Donel Vazquez Zambrano',
                     'username' => 'dvzambrano',
-                    'photo_url' => 'https://via.placeholder.com/150'
+                    'photo_url' => 'assets/img/avatar.jpg'
                 ]
             ]);
             return redirect('/dashboard')->with('info', 'Sesión de desarrollo iniciada');

@@ -24,6 +24,14 @@ return [
             'nooperations' => 'No hay operaciones recientes',
             'lastoperations' => ':count operación realizada|Últimas :count operaciones',
             'openbot' => 'ENVIAR',
+            'wallet' => [
+                'receive' => [
+                    'header' => 'Recibir saldo en :name',
+                    'scaninfo' => 'Escanee este código o copie su enlace de pago',
+                    'share' => 'Compartir',
+                    'shareinfo' => 'También puede enviar este enlace a otra persona para que complete el depósito por Ud',
+                ],
+            ],
         ],
     ],
     'hero' => [

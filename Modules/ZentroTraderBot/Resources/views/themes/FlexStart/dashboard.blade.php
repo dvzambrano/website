@@ -81,16 +81,25 @@
                     <div x-data="{ view: 'balance' }">
                         <div x-show="view === 'balance'" x-transition>
                             <div class="card balance-card shadow-sm p-4">
-                                <a href="{{ url('/') }}" class="logo d-flex align-items-center">
-                                    <img src="assets/img/logo.png" alt="Kashio Logo">
-                                </a>
-                                <h4 class="text-muted">
-                                    👋
-                                    {{ __('zentrotraderbot::landing.menu.user.greeting', ['name' => session('telegram_user')['name']]) }}
-                                </h4>
-                                <hr>
+
+                                <!--
+                                                                                <a href="{{ url('/') }}" class="logo d-flex align-items-center">
+                                                                                    <img src="assets/img/logo.png" alt="Kashio Logo">
+                                                                                </a>
+                                                                                <h4 class="text-muted">
+                                                                                    👋
+                                                                                    {{ __('zentrotraderbot::landing.menu.user.greeting', ['name' => session('telegram_user')['name']]) }}
+                                                                                </h4>
+                                                                                <hr>
+                                                                                -->
+                                <p class="text-secondary mb-1 text-end">
+                                    <a href="{{ route('telegram.logout') }}" class="ms-3 text-danger" title="Salir">
+                                        <i class="bi bi-x-circle"></i>
+                                    </a>
+                                </p>
                                 <p class="text-secondary mb-1">
                                     {{ __('zentrotraderbot::landing.menu.user.balance') }}
+
                                 </p>
                                 <h4 class="display-4 fw-bold text-primary">
                                     {{ number_format($balance, 2) }} <small class="fs-4">USD</small>
@@ -99,7 +108,10 @@
 
                                 <h6 class="text-start fw-bold mb-3">
                                     @if (count($transactions) > 0)
-                                        <i class="ri-history-line me-1"></i>
+
+                                        <a href="javascript:void(0);location.reload();" class="ms-3" title="Actualizar">
+                                            <i class="ri-restart-line"></i>
+                                        </a>
                                         {{ trans_choice("zentrotraderbot::landing.menu.user.lastoperations", count($transactions), ['count' => count($transactions)]) }}
                                     @endif
                                 </h6>
@@ -135,13 +147,12 @@
                                 </div>
 
                                 <div class="d-grid gap-2 mt-4">
-
-                                    <div class="row g-2 mb-2"> {{-- g-2 es para un espacio pequeño entre columnas --}}
+                                    <div class="row g-2 mb-2">
                                         <div class="col-6">
                                             {{-- Cambiamos el link por un botón de Alpine --}}
                                             <button @click="view = 'receive'"
                                                 class="btn btn-light btn-lg w-100 shadow-sm border fw-bold">
-                                                <i class="ri-qr-code-line me-1 text-primary"></i> RECIBIR
+                                                <i class="ri-qr-scan-2-line me-2"></i> RECIBIR
                                             </button>
                                         </div>
                                         <div class="col-6">
@@ -163,47 +174,54 @@
                                     <button @click="view = 'balance'" class="btn btn-sm btn-light rounded-circle">
                                         <i class="ri-arrow-left-line"></i>
                                     </button>
-                                    <h5 class="mb-0 fw-bold">Recibir USDC</h5>
+                                    <h4 class="mb-0 fw-bold">
+                                        {{ __('zentrotraderbot::landing.menu.user.wallet.receive.header', ['name' => __('zentrotraderbot::landing.title')]) }}
+                                    </h4>
                                     <div style="width: 32px;"></div> {{-- Espaciador para centrar --}}
                                 </div>
 
-                                <p class="text-secondary small">Solo envía <strong>USDC (Polygon)</strong> a esta dirección
+                                <p class="text-secondary small">
+                                    {{ __('zentrotraderbot::landing.menu.user.wallet.receive.scaninfo') }}
                                 </p>
 
-                                @php 
-                                $user = session('telegram_user'); 
-                                $wallet_address = url("/pay") . "/" . $user['username']; 
-                                $photo_url = $user['photo_url'];
-
-                                //$wallet_address = "https://kashio.micalme.com/pay/criptodev1981";
-                                //$photo_url = "https://t.me/i/userpic/320/OTuPwnXNYWQdvow2ThDsPptkNZ6mYYJV80hnQpR8mSM.jpg";
-                                @endphp
-                                <div class="bg-white p-3 d-inline-block rounded-3 shadow-sm mb-4">
-                                    {{-- Aquí va el QR generado. Por ahora un placeholder
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ $wallet_address }}"
-                                        alt="QR Address" class="img-fluid" style="width: 180px;">
-                                    --}}
-                                   <div class="bg-white p-3 d-inline-block mb-4 position-relative shadow-sm rounded-3">
+                                <?php $user = session('telegram_user');
+    $wallet_address = url("/pay") . "/" . $user['username']; ?>
+                                <div class="bg-white d-inline-block">
+                                    <div class="bg-white d-inline-block mb-4 position-relative shadow-sm rounded-3">
                                         <div id="qr-container">
                                             {!! $qrService->generateSvg($wallet_address, 220) !!}
                                         </div>
 
                                         <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle"
                                             style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                            
-                                            <img src="{{ $photo_url }}" 
-                                                class="rounded-circle" 
+
+                                            <img src="{{ $user['photo_url'] }}" class="rounded-circle"
                                                 style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                                                
+
                                         </div>
                                     </div>
 
-                                    <div class="input-group mb-3">
-                                        <input type="text" id="walletAddr"
-                                            class="form-control bg-light border-0 text-center small"
+
+                                    <p class="text-secondary small">
+                                        {{ __('zentrotraderbot::landing.menu.user.wallet.receive.shareinfo') }}
+                                    </p>
+
+                                    <div class="input-group mb-3 p-3 ">
+                                        <button class="btn" onclick="copyAddress()">
+                                            <i class="ri-global-line"></i>
+                                        </button>
+                                        <input type="text" id="walletAddr" class="form-control bg-light border-0 small"
                                             value="{{ $wallet_address }}" readonly>
                                         <button class="btn btn-primary" id="btnCopy" onclick="copyAddress()">
                                             <i id="copyIcon" class="ri-file-copy-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-2 mt-4">
+                                    <div class="row g-2 mb-2">
+                                        <button onclick="copyAddress()"
+                                            class="btn btn-light btn-lg w-100 shadow-sm border fw-bold">
+                                            {{ __('zentrotraderbot::landing.menu.user.wallet.receive.share') }}
                                         </button>
                                     </div>
                                 </div>
