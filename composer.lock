@@ -749,12 +749,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Laravel.git",
-                "reference": "f79391e42c6b95a5824158fc2865d4ff5e99a83a"
+                "reference": "8bcfae55a96b5d76201143dabd1bb0aee00670ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/f79391e42c6b95a5824158fc2865d4ff5e99a83a",
-                "reference": "f79391e42c6b95a5824158fc2865d4ff5e99a83a",
+                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/8bcfae55a96b5d76201143dabd1bb0aee00670ff",
+                "reference": "8bcfae55a96b5d76201143dabd1bb0aee00670ff",
                 "shasum": ""
             },
             "require": {
@@ -796,7 +796,7 @@
                 "source": "https://github.com/dvzambrano/Laravel/tree/main",
                 "issues": "https://github.com/dvzambrano/Laravel/issues"
             },
-            "time": "2026-02-18T00:41:09+00:00"
+            "time": "2026-02-18T10:28:37+00:00"
         },
         {
             "name": "dvzambrano/web3",
@@ -8708,16 +8708,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "11.5.53",
+            "version": "11.5.54",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "a997a653a82845f1240d73ee73a8a4e97e4b0607"
+                "reference": "eb7d132e95d824bbfd728eb2c8589191424f178a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/a997a653a82845f1240d73ee73a8a4e97e4b0607",
-                "reference": "a997a653a82845f1240d73ee73a8a4e97e4b0607",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/eb7d132e95d824bbfd728eb2c8589191424f178a",
+                "reference": "eb7d132e95d824bbfd728eb2c8589191424f178a",
                 "shasum": ""
             },
             "require": {
@@ -8790,7 +8790,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.53"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.54"
             },
             "funding": [
                 {
@@ -8814,7 +8814,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-10T12:28:25+00:00"
+            "time": "2026-02-18T08:57:05+00:00"
         },
         {
             "name": "sebastian/cli-parser",

@@ -173,6 +173,10 @@
                                 @php 
                                 $user = session('telegram_user'); 
                                 $wallet_address = url("/pay") . "/" . $user['username']; 
+                                $photo_url = $user['photo_url'];
+
+                                //$wallet_address = "https://kashio.micalme.com/pay/criptodev1981";
+                                //$photo_url = "https://t.me/i/userpic/320/OTuPwnXNYWQdvow2ThDsPptkNZ6mYYJV80hnQpR8mSM.jpg";
                                 @endphp
                                 <div class="bg-white p-3 d-inline-block rounded-3 shadow-sm mb-4">
                                     {{-- Aquí va el QR generado. Por ahora un placeholder
@@ -180,16 +184,17 @@
                                         alt="QR Address" class="img-fluid" style="width: 180px;">
                                     --}}
                                    <div class="bg-white p-3 d-inline-block mb-4 position-relative shadow-sm rounded-3">
-                                        <div id="qr-container" style="background: white;">
-                                            {!! $qrService->generateSvg($wallet_address, 200) !!}
+                                        <div id="qr-container">
+                                            {!! $qrService->generateSvg($wallet_address, 220) !!}
                                         </div>
 
-                                        <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle shadow-sm"
-                                            style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid white;">
+                                        <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle"
+                                            style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                                             
-                                            <img src="{{ $user['photo_url'] }}" 
+                                            <img src="{{ $photo_url }}" 
                                                 class="rounded-circle" 
-                                                style="width: 100%; height: 100%; object-fit: cover;">
+                                                style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                                
                                         </div>
                                     </div>
 
