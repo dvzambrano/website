@@ -121,6 +121,8 @@ class TelegramController extends Controller
                 'headers' => [
                     'Content-Type' => 'application/x-www-form-urlencoded',
                 ],
+                // ensure we don't hang indefinitely
+                'timeout' => 10,
             ];
             $http = Http::withOptions($options);
             if ($data) {
@@ -128,7 +130,27 @@ class TelegramController extends Controller
             } else {
                 $response = $http->post($url);
             }
-            return $response->body();
+            // log non-successful HTTP codes
+            if (!$response->successful()) {
+                Log::warning("TelegramController send HTTP failure", [
+                    'status' => $response->status(),
+                    'url' => $url,
+                    'body' => $response->body(),
+                ]);
+            }
+            $body = $response->body();
+            if (trim($body) === '') {
+                Log::warning("TelegramController send empty body", ['url' => $url]);
+                // return a generic failure JSON so callers can handle it
+                return json_encode(['ok' => false, 'description' => 'empty response from telegram']);
+            }
+            // attempt to validate json
+            json_decode($body);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::warning("TelegramController send invalid JSON", ['body' => $body, 'url' => $url]);
+                // still return the raw body so higher layers can inspect
+            }
+            return $body;
 
         } catch (\Throwable $th) {
             $array = TelegramController::analizeUrl($url);
@@ -239,7 +261,53 @@ class TelegramController extends Controller
         $response = TelegramController::send($request, $url);
         $array = json_decode($response, true);
 
-        if (isset($array["result"]) && isset($array["result"]["message_id"]) && $array["result"]["message_id"] == 0) {
+        // if Telegram could not fetch the URL, try uploading ourselves
+        if (
+            isset($array['ok']) && $array['ok'] === false
+            && isset($array['description'])
+            && str_contains($array['description'], 'failed to get HTTP URL content')
+        ) {
+            Log::warning('sendPhoto remote fetch failed; attempting manual upload', [
+                'url' => $url,
+                'description' => $array['description'],
+                'photo' => $request['message']['photo'] ?? null,
+            ]);
+
+            $photoUrl = $request['message']['photo'] ?? null;
+            // gather extra parameters that we want to keep (buttons, reply_to, etc.)
+            $extras = ['caption' => $request['message']['text'] ?? ''];
+            if (!empty($request['message']['reply_markup'])) {
+                $extras['reply_markup'] = $request['message']['reply_markup'];
+            }
+            if (!empty($request['message']['reply_to_message_id'])) {
+                $extras['reply_to_message_id'] = $request['message']['reply_to_message_id'];
+            }
+            $result = self::manualUpload(
+                $bot_token,
+                $request['message']['chat']['id'],
+                $photoUrl,
+                'photo',
+                $extras
+            );
+            if ($result !== false) {
+                return $result;
+            }
+
+            // if recovery fails, fall back to text
+            return TelegramController::sendMessage($request, $bot_token);
+        }
+
+        if (!$array || !isset($array['result'])) {
+            Log::warning('sendPhoto unexpected response', [
+                'url' => $url,
+                'response' => $response,
+                'request' => $request,
+            ]);
+            // fallback to sending plain text message so caller always has something
+            return TelegramController::sendMessage($request, $bot_token);
+        }
+
+        if (isset($array['result']['message_id']) && $array['result']['message_id'] == 0) {
             return TelegramController::sendMessage($request, $bot_token);
         }
 
@@ -271,9 +339,58 @@ class TelegramController extends Controller
             'chat_id' => $chat_id,
         ]);
 
-        return TelegramController::send($request, $url, 1, [
+        $response = TelegramController::send($request, $url, 1, [
             'media' => $mediaPayload,
         ]);
+
+        $array = json_decode($response, true);
+        if (
+            isset($array['ok']) && $array['ok'] === false
+            && isset($array['description'])
+            && str_contains($array['description'], 'failed to get HTTP URL content')
+        ) {
+            Log::warning('sendMediaGroup remote fetch failed; attempting manual upload', [
+                'url' => $url,
+                'description' => $array['description'],
+                'media' => $media,
+            ]);
+
+            // try to download each media item and resend multipart
+            // also preserve extras (reply_markup / reply_to)
+            $extras = [];
+            if (!empty($request['message']['reply_markup'])) {
+                $extras['reply_markup'] = $request['message']['reply_markup'];
+            }
+            if (!empty($request['message']['reply_to_message_id'])) {
+                $extras['reply_to_message_id'] = $request['message']['reply_to_message_id'];
+            }
+
+            $multipart = Http::withOptions(['timeout' => 10]);
+            $finalUrl = "https://api.telegram.org/bot{$bot_token}/sendMediaGroup";
+            $form = array_merge(['chat_id' => $chat_id], $extras);
+            foreach ($media as $idx => $item) {
+                if (!empty($item['media']) && filter_var($item['media'], FILTER_VALIDATE_URL)) {
+                    try {
+                        $dl = Http::timeout(10)->get($item['media']);
+                        if ($dl->successful()) {
+                            $contents = $dl->body();
+                            $name = "media{$idx}." . (pathinfo(parse_url($item['media'], PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg');
+                            $multipart = $multipart->attach("media{$idx}", $contents, $name);
+                        }
+                    } catch (\Throwable $th) {
+                        Log::error('sendMediaGroup download error', ['message' => $th->getMessage()]);
+                    }
+                }
+            }
+            $retry = $multipart->asMultipart()->post($finalUrl, $form);
+            if ($retry->successful()) {
+                return $retry->body();
+            }
+            Log::warning('sendMediaGroup manual upload failed', ['status' => $retry->status(), 'body' => $retry->body()]);
+            return json_encode(['ok' => false, 'description' => 'manual sendMediaGroup failed']);
+        }
+
+        return $response;
     }
 
     /**
@@ -290,7 +407,38 @@ class TelegramController extends Controller
             'document' => $request["message"]["document"]
         ]);
 
-        return TelegramController::send($request, $url);
+        $response = TelegramController::send($request, $url);
+        $array = json_decode($response, true);
+        if (
+            isset($array['ok']) && $array['ok'] === false
+            && isset($array['description'])
+            && str_contains($array['description'], 'failed to get HTTP URL content')
+        ) {
+            // collect extras similar to sendPhoto
+            $extras = [];
+            if (!empty($request['message']['reply_markup'])) {
+                $extras['reply_markup'] = $request['message']['reply_markup'];
+            }
+            if (!empty($request['message']['reply_to_message_id'])) {
+                $extras['reply_to_message_id'] = $request['message']['reply_to_message_id'];
+            }
+
+            $docUrl = $request['message']['document'] ?? null;
+            $result = self::manualUpload(
+                $bot_token,
+                $request['message']['chat']['id'],
+                $docUrl,
+                'document',
+                $extras
+            );
+            if ($result !== false) {
+                return $result;
+            }
+            Log::warning('sendDocument recovery failed');
+            return json_encode(['ok' => false, 'description' => 'manual sendDocument failed']);
+        }
+
+        return $response;
 
     }
     /**
@@ -454,6 +602,60 @@ class TelegramController extends Controller
 
         $response = Http::get($url);
         return $response->body();
+    }
+
+    /**
+     * Descarga un recurso remoto y lo sube al bot en un solo paso.
+     *
+     * @param string $bot_token
+     * @param int $chat_id
+     * @param string $fileUrl URL que Telegram no pudo alcanzar
+     * @param string $fieldName nombre del campo en el formulario (photo/document/media)
+     * @param array $extra parámetros adicionales para el formulario
+     * @return string|false respuesta del API o false si la recuperación falló
+     */
+    private static function manualUpload($bot_token, $chat_id, $fileUrl, $fieldName, $extra = [])
+    {
+        if (!$fileUrl || !filter_var($fileUrl, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+        try {
+            $dl = Http::timeout(10)->get($fileUrl);
+            if (!$dl->successful()) {
+                Log::warning('manualUpload download failed', ['status' => $dl->status(), 'url' => $fileUrl]);
+                return false;
+            }
+            $contents = $dl->body();
+            $basename = pathinfo(parse_url($fileUrl, PHP_URL_PATH), PATHINFO_BASENAME) ?: 'file';
+            $uploadUrl = "https://api.telegram.org/bot{$bot_token}/send{$fieldName}";
+
+            // filter extras: remove null entries
+            foreach ($extra as $k => $v) {
+                if ($v === null) {
+                    unset($extra[$k]);
+                    continue;
+                }
+                if ($k === 'reply_markup' && is_array($v)) {
+                    $extra[$k] = json_encode($v);
+                }
+            }
+
+            // If we are sending a caption but no parse_mode specified, default to Markdown
+            if (isset($extra['caption']) && !isset($extra['parse_mode'])) {
+                $extra['parse_mode'] = 'Markdown';
+            }
+
+            $request = Http::attach($fieldName, $contents, $basename)->asMultipart();
+            $form = array_merge(['chat_id' => $chat_id], $extra);
+            $retry = $request->post($uploadUrl, $form);
+            if ($retry->successful()) {
+                return $retry->body();
+            }
+            Log::warning('manualUpload post failed', ['status' => $retry->status(), 'body' => $retry->body()]);
+        } catch (\Throwable $th) {
+            Log::error('manualUpload exception', ['message' => $th->getMessage(), 'url' => $fileUrl]);
+        }
+        return false;
     }
 
     public static function exportFileLocally($fileId, $bot_token)
