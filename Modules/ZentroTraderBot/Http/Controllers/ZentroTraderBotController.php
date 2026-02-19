@@ -165,13 +165,16 @@ class ZentroTraderBotController extends JsonsController
 
                 $wc = new TraderWalletController();
 
-                try {
-                    $tokenSymbol = $array["pieces"][count($array["pieces"]) - 1];
-                    $toAddress = $array["pieces"][count($array["pieces"])];
-                    $amount = null;
-                    if (count($array["pieces"]) == 3)
-                        $amount = $array["pieces"][1];
 
+                try {
+                    $pieces = $array["pieces"];
+                    $count = count($pieces);
+                    $tokenSymbol = $pieces[$count - 1];
+                    $toAddress = $pieces[$count - 2];
+                    $amount = null;
+                    if ($count == 4) {
+                        $amount = $pieces[1];
+                    }
                     $result = $wc->withdraw($this->actor->user_id, $toAddress, $tokenSymbol, $amount);
 
                     if (isset($result["explorer"]))

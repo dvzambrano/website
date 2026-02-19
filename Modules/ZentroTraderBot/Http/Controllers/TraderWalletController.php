@@ -118,13 +118,14 @@ class TraderWalletController extends WalletController
      * - Detecta EIP-1559 vs Legacy.
      * - Límites de gas seguros para contratos/exchanges.
      */
-    public function withdraw(int $userId, string $toAddress, string $tokenSymbol, ?float $amount = null)
+    // Sobrecarga para aceptar userId y extraer el privateKey antes de delegar
+    public function withdraw($privateKey, string $toAddress, string $tokenSymbol, ?float $amount = null)
     {
-        // NORMALIZACIÓN: Forzamos mayúsculas
+        // Si el primer parámetro es un int, se asume userId y se extrae la clave
+        if (is_int($privateKey)) {
+            $privateKey = $this->getDecryptedPrivateKey($privateKey);
+        }
         $tokenSymbol = strtoupper($tokenSymbol);
-
-        $privateKey = $this->getDecryptedPrivateKey($userId);
-
         return parent::withdraw($privateKey, $toAddress, $tokenSymbol, $amount);
     }
 }
