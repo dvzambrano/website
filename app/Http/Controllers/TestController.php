@@ -47,19 +47,46 @@ use Modules\Laravel\Services\Office\ExcelService;
 use Modules\ZentroPackageBot\Entities\Packages;
 
 use Modules\ZentroTraderBot\Http\Controllers\RampController;
+use Modules\Web3\Http\Controllers\AlchemyController;
+use Modules\Laravel\Entities\Metadatas;
+use Modules\Web3\Services\Web3MathService;
 
 class TestController extends Controller
 {
     private $GutoTradeTestBot;
+    private $ZentroTraderBot;
+
     public function __construct()
     {
         $this->GutoTradeTestBot = TelegramBots::where('name', "@GutoTradeTestBot")->first();
+        $this->ZentroTraderBot = TelegramBots::where('name', "@ZentroTraderBot")->first();
     }
 
     public function test(Request $request)
     {
-        $this->testTelegramController();
+        $this->testWalletController();
+        //$this->testTelegramController();
         die;
+    }
+
+    public function testWalletController()
+    {
+        $metadata = Metadatas::where('name', "app_zentrotraderbot_alchemy_authtoken")->first();
+
+        $address = "0xd2531438b90232f4Aab4DDfC6f146474e84E1Ea1";
+        $authToken = "-5xql5LZ7h1WLUW4n1pma";
+        $usdcContract = config('web3.tokens.USDC.address');
+        $balances = AlchemyController::getTokenBalances($authToken, $address, [$usdcContract]);
+        $humanBal = "0.0";
+        if (is_array($balances) && count($balances)) {
+            foreach ($balances as $i => $bal) {
+                $hexBal = $bal['tokenBalance'] ?? '0x0';
+                // Conversión humana
+                $humanBal = Web3MathService::hexToDecimal($hexBal, 6);
+            }
+        }
+
+        dd($authToken, $address, $usdcContract, $balances, $humanBal);
     }
 
     /**

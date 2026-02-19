@@ -90,7 +90,12 @@ class TraderWalletController extends WalletController
         if (!$suscriptor || !isset($suscriptor->data['wallet']['address'])) {
             return ['status' => 'error', 'message' => 'No tienes wallet configurada.'];
         }
+
         $address = $suscriptor->data['wallet']['address'];
+        $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
+        $usdcContract = config('web3.tokens.USDC.address');
+        $balances = AlchemyController::getTokenBalances($authToken, $address, [$usdcContract]);
+
 
         return parent::getBalance($address, $networkSymbol);
     }
