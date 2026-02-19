@@ -52,28 +52,16 @@ class LandingController extends Controller
 
         // 3. Obtener Balance REAL (específicamente de USDC en Polygon)
         // El método getBalance que tienes devuelve el portfolio
-        $balanceData = $walletController->getBalance($userId, 'USDC');
-        dd($balanceData);
+        $usdcBalance = $walletController->getBalance($userId);
 
-        // Extraemos el valor numérico de la respuesta (ajusta según tu config/web3.php)
-        // Asumiendo que 'Polygon' es el nombre en tu config
-        $usdcBalance = $balanceData['portfolio']['Polygon']['assets']['USDC'] ?? 0;
-
-        // 4. Obtener Transacciones (Usando Alchemy)
-        // Como AlchemyController ya lo tienes integrado para webhooks, 
-        // podemos usar su API para traer el historial.
-        $transactions = $this->getRecentTransactions($balanceData['address']);
-
-        $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
-        //AlchemyController::getRecentTransactions($authToken, $balanceData['address']);
+        // 4. Obtener Transacciones 
+        $transactions = $this->getRecentTransactions($userId);
 
         return view("zentrotraderbot::themes.{$this->theme}.dashboard", [
             'balance' => $usdcBalance,
             'transactions' => $transactions,
-            'wallet_address' => $balanceData['address'],
             'qrService' => $this->qrService,
-            'bot' => $this->bot,
-            'user' => $telegramUser
+            'bot' => $this->bot
         ]);
     }
 }

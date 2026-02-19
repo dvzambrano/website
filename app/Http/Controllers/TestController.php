@@ -86,7 +86,10 @@ class TestController extends Controller
             }
         }
 
-        dd($authToken, $address, $usdcContract, $balances, $humanBal);
+
+        $txs = AlchemyController::getRecentTransactions($authToken, $address, ["erc20"], [$usdcContract]);
+
+        dd($authToken, $address, $usdcContract, $balances, $humanBal, $txs);
     }
 
     /**

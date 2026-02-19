@@ -269,19 +269,19 @@
                                     {{-- Aquí mapearás tus transacciones de la blockchain --}}
                                     @forelse($transactions ?? [] as $tx)
                                         <div class="list-group-item d-flex align-items-center transaction-item">
-                                            <div class="icon-box {{ $tx['type'] == 'in' ? 'bg-light-success text-success' : 'bg-light-danger text-danger' }}"
-                                                style="background-color: {{ $tx['type'] == 'in' ? '#e1f7ec' : '#fce8e8' }};">
+                                            <div class="icon-box {{ $tx['human']['type'] == 'in' ? 'bg-light-success text-success' : 'bg-light-danger text-danger' }}"
+                                                style="background-color: {{ $tx['human']['type'] == 'in' ? '#e1f7ec' : '#fce8e8' }};">
                                                 <i
-                                                    class="{{ $tx['type'] == 'in' ? 'ri-arrow-left-down-line' : 'ri-arrow-right-up-line' }} fs-5"></i>
+                                                    class="{{ $tx['human']['type'] == 'in' ? 'ri-arrow-left-down-line' : 'ri-arrow-right-up-line' }} fs-5"></i>
                                             </div>
                                             <div class="flex-grow-1">
-                                                <h6 class="mb-0 fw-bold">{{ $tx['concept'] }}</h6>
-                                                <small class="text-muted">{{ $tx['date'] }}</small>
+                                                <h6 class="mb-0 fw-bold">concepto"</h6>
+                                                <small class="text-muted">{{ $tx['human']['date'] }}</small>
                                             </div>
                                             <div class="text-end">
                                                 <span
-                                                    class="fw-bold {{ $tx['type'] == 'in' ? 'text-success' : 'text-danger' }}">
-                                                    {{ $tx['type'] == 'in' ? '+' : '-' }}
+                                                    class="fw-bold {{ $tx['human']['type'] == 'in' ? 'text-success' : 'text-danger' }}">
+                                                    {{ $tx['human']['type'] == 'in' ? '+' : '-' }}
                                                     ${{ number_format($tx['amount'], 2) }}
                                                 </span>
                                             </div>
