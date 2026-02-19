@@ -708,28 +708,46 @@ class TelegramController extends Controller
         //Log::error("TelegramController checkAuthorization: " . json_encode($auth_data));
         /*
         {
-    "id": "1741391257",
-    "first_name": "Crypto",
-    "last_name": "Dev",
-    "username": "criptodev1981",
-    "photo_url": "https:\/\/t.me\/i\/userpic\/320\/OTuPwnXNYWQdvow2ThDsPptkNZ6mYYJV80hnQpR8mSM.jpg",
-    "auth_date": "1771339825",
-    "hash": "048d49f88eceab46dbf338fe3152eb72796d08d9f30681b092f6b8ea9946253f"
-}
+            "id": "1741391257",
+            "first_name": "Crypto",
+            "last_name": "Dev",
+            "username": "criptodev1981",
+            "photo_url": "https:\/\/t.me\/i\/userpic\/320\/OTuPwnXNYWQdvow2ThDsPptkNZ6mYYJV80hnQpR8mSM.jpg",
+            "auth_date": "1771339825",
+            "hash": "048d49f88eceab46dbf338fe3152eb72796d08d9f30681b092f6b8ea9946253f"
+        }
         */
 
-        $check_hash = $auth_data['hash'];
-        unset($auth_data['hash']);
-
-        $data_check_arr = [];
-        foreach ($auth_data as $key => $value) {
-            $data_check_arr[] = $key . '=' . $value;
+        if (!isset($auth_data['hash'])) {
+            return false;
         }
-        Arr::sort($data_check_arr);
-        $data_check_string = collect($data_check_arr)->implode("\n");
 
+        $check_hash = $auth_data['hash'];
+
+        // 1. Extraer el hash y limpiar datos nulos
+        $data_check_arr = collect($auth_data)
+            ->except(['hash']) // Quitamos el hash
+            ->filter()         // Quitamos valores nulos/vacíos
+            ->map(function ($value, $key) {
+                // Importante: Telegram envía las URLs de fotos sin escapar las barras
+                // Nos aseguramos de que el valor sea el string puro
+                return $key . '=' . $value;
+            })
+            ->sort() // Ordenar alfabéticamente los strings "key=value"
+            ->values();
+
+        // 2. Crear el string de verificación con saltos de línea
+        $data_check_string = $data_check_arr->implode("\n");
+
+        // 3. Generar la clave secreta (SHA256 del Bot Token en binario)
         $secret_key = hash('sha256', $botToken, true);
+
+        // 4. Calcular el HMAC
         $hash = hash_hmac('sha256', $data_check_string, $secret_key);
+
+        // DEBUG para comparar (Solo en desarrollo)
+        // Log::debug("Check String:\n" . $data_check_string);
+        // Log::debug("Calculated: $hash vs Original: $check_hash");
 
         return hash_equals($hash, $check_hash);
     }
