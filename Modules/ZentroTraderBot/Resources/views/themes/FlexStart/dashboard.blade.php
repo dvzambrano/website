@@ -275,14 +275,15 @@
                                                     class="{{ $tx['human']['type'] == 'in' ? 'ri-arrow-left-down-line' : 'ri-arrow-right-up-line' }} fs-5"></i>
                                             </div>
                                             <div class="flex-grow-1">
-                                                <h6 class="mb-0 fw-bold">concepto"</h6>
-                                                <small class="text-muted">{{ $tx['human']['date'] }}</small>
+                                                <h6 class="mb-0 fw-bold">{{ $tx['human']['date'] }}</h6>
+                                                <small
+                                                    class="text-muted">{{ $tx['human']['type'] == 'in' ? $tx['from'] : $tx['to'] }}</small>
                                             </div>
                                             <div class="text-end">
                                                 <span
                                                     class="fw-bold {{ $tx['human']['type'] == 'in' ? 'text-success' : 'text-danger' }}">
                                                     {{ $tx['human']['type'] == 'in' ? '+' : '-' }}
-                                                    ${{ number_format($tx['amount'], 2) }}
+                                                    ${{ number_format($tx['human']['value'], 2) }}
                                                 </span>
                                             </div>
                                         </div>
@@ -291,6 +292,7 @@
                                             <small>
                                                 {{ __('zentrotraderbot::landing.menu.user.nooperations') }}
                                             </small>
+                                            <br><br><br><br><br><br><br><br><br><br><br><br>
                                         </div>
                                     @endforelse
                                 </div>

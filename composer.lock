@@ -804,15 +804,16 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Web3.git",
-                "reference": "d26c1d57b36889bcbb4d625bb0f3c48bfdf0a529"
+                "reference": "762191ae83ea12fc27b3d473769b69c1f4630e50"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/d26c1d57b36889bcbb4d625bb0f3c48bfdf0a529",
-                "reference": "d26c1d57b36889bcbb4d625bb0f3c48bfdf0a529",
+                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/762191ae83ea12fc27b3d473769b69c1f4630e50",
+                "reference": "762191ae83ea12fc27b3d473769b69c1f4630e50",
                 "shasum": ""
             },
             "require": {
+                "dvzambrano/laravel": "dev-main as 1.0.0",
                 "furqansiddiqui/bip32-keypair-php": "^0.3.7",
                 "furqansiddiqui/bip39-mnemonic-php": "^0.1.7",
                 "kornrunner/ethereum-offline-raw-tx": "^0.9.0",
@@ -852,7 +853,7 @@
                 "source": "https://github.com/dvzambrano/Web3/tree/main",
                 "issues": "https://github.com/dvzambrano/Web3/issues"
             },
-            "time": "2026-02-19T19:26:26+00:00"
+            "time": "2026-02-19T20:29:25+00:00"
         },
         {
             "name": "egulias/email-validator",

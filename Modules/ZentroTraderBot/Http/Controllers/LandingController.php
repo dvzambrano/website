@@ -2,10 +2,9 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
-use Illuminate\Routing\Controller;
+use Modules\Laravel\Http\Controllers\Controller;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Laravel\Services\Codes\QrService;
-use Modules\Web3\Http\Controllers\AlchemyController;
 
 class LandingController extends Controller
 {
@@ -16,6 +15,8 @@ class LandingController extends Controller
 
     public function __construct()
     {
+        parent::__construct();
+
         $this->theme = config('zentrotraderbot.theme', 'FlexStart');
 
         $this->qrService = new QrService();
@@ -55,7 +56,8 @@ class LandingController extends Controller
         $usdcBalance = $walletController->getBalance($userId);
 
         // 4. Obtener Transacciones 
-        $transactions = $this->getRecentTransactions($userId);
+        $transactions = $walletController->getRecentTransactions($userId);
+        //$transactions = [];
 
         return view("zentrotraderbot::themes.{$this->theme}.dashboard", [
             'balance' => $usdcBalance,
