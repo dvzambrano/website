@@ -685,8 +685,10 @@ class TelegramController extends Controller
         $auth_data = $request->all();
 
         if (!$this->checkTelegramAuthorization($auth_data, $botToken)) {
+            Log::debug("TelegramController loginCallback !checkTelegramAuthorization: " . json_encode($botToken) . json_encode($auth_data));
             return redirect('/')->with('error', 'Fallo de integridad.');
         }
+        Log::debug("TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($botToken) . json_encode($auth_data));
 
         // En lugar de base de datos, guardamos en la sesión de Laravel
         session([
