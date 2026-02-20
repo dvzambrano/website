@@ -701,13 +701,17 @@ class TelegramController extends Controller
         try {
             // Obtenemos la lista de fotos del usuario
             $photos = self::getUserPhotos($auth_data['id'], $bot_token);
-            if (isset($photos[0])) {
-                // Tomamos la versión más pequeña/mediana para ahorrar ancho de banda [0]
+            if (!empty($photos) && isset($photos[0][0]['file_id'])) {
                 $fileId = $photos[0][0]['file_id'];
 
-                // Obtenemos la info del archivo para sacar el path
-                $fileInfo = json_decode(self::getFile($fileId, $bot_token), true);
-                $avatarPath = $fileInfo['result']['file_path'] ?? null;
+                // PASO B: Consultar a Telegram dónde está ese archivo físicamente
+                // Usamos getFileUrl porque este SÍ llama a 'botTOKEN/getFile'
+                $fileResponse = json_decode(self::getFileUrl($fileId, $bot_token), true);
+
+                if (isset($fileResponse['ok']) && $fileResponse['ok']) {
+                    // Esto nos dará algo como "userphotos/file_5.jpg"
+                    $avatarPath = $fileResponse['result']['file_path'];
+                }
             }
         } catch (\Exception $e) {
             Log::error("Error obteniendo avatar de Telegram: " . $e->getMessage());
