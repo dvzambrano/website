@@ -773,10 +773,15 @@ class TelegramController extends Controller
         return hash_equals($hash, $check_hash);
     }
 
-    public function proxyAvatar($bot_token, $filePath)
+    public function proxyAvatar($filePath = null)
     {
-        // Recuperamos el token desde la configuración o el active_bot
-        $bot_token = config('zentro.bot_token');
+        if (!$filePath)
+            abort(404);
+
+        // Usamos el token del bot activo en el sistema
+        $bot = app('active_bot');
+        $bot_token = $bot->token;
+
         $url = "https://api.telegram.org/file/bot{$bot_token}/{$filePath}";
 
         // Hacemos la petición a Telegram desde el servidor
