@@ -693,7 +693,7 @@ class TelegramController extends Controller
         // En lugar de base de datos, guardamos en la sesión de Laravel
         session([
             'telegram_user' => [
-                'id' => $auth_data['id'],
+                'user_id' => $auth_data['id'],
                 'name' => $auth_data['first_name'] . ' ' . ($auth_data['last_name'] ?? ''),
                 'username' => $auth_data['username'] ?? null,
                 'photo_url' => $auth_data['photo_url'] ?? null,

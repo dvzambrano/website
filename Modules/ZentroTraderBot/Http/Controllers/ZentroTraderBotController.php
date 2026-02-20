@@ -203,36 +203,21 @@ class ZentroTraderBotController extends JsonsController
     {
         $tenant = app('active_bot');
 
-        $suscriptor = Suscriptions::where("user_id", $actor->user_id)->first();
+        $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
 
         $wallet = array();
-        // si el usuario no tiene wallet es recien suscrito y hay q completar su estructura
-        if (!isset($suscriptor->data["wallet"])) {
-            // crear el suscriptor para poderle generar wallet
-            $actor = Actors::where("user_id", $this->actor->user_id)->first();
-            $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
-            if (!$suscriptor)
-                $suscriptor = new Suscriptions($actor->toArray());
-            $suscriptor->data = array(
-                // poner datos aqui para multientidad del bot y de su wallet
-            );
-            $suscriptor->save();
-
-            $wc = new TraderWalletController();
-            $wallet = $wc->getWallet($this->actor->user_id);
+        if (!$suscriptor) {
+            $suscriptor = new Suscriptions($actor->toArray());
+            $wallet = $suscriptor->getWallet();
             if (isset($wallet["address"])) {
-                $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
-                $array = $suscriptor->data;
-                $array["admin_level"] = 0;
-                $array["suscription_level"] = 0;
-                $array["last_bot_callback_data"] = 0;
-                $suscriptor->data = $array;
-                $suscriptor->save();
-            }
+                // notificando a aministradores de nuevo usuario sin rol
+                $array = $this->AgentsController->getRoleMenu($actor->user_id, 0);
+                array_push($array["menu"], [["text" => "❌ " . Lang::get("telegrambot::bot.options.delete"), "callback_data" => "confirmation|deleteuser-{$actor->user_id}|menu"]]);
+                $this->notifyUserWithNoRole($actor->user_id, $array);
 
-            $array = $this->AgentsController->getRoleMenu($actor->user_id, 0);
-            array_push($array["menu"], [["text" => "❌ " . Lang::get("telegrambot::bot.options.delete"), "callback_data" => "confirmation|deleteuser-{$actor->user_id}|menu"]]);
-            $this->notifyUserWithNoRole($actor->user_id, $array);
+                // Es necesario recargarlo porq en el getWallet se actualizaron datos!!
+                $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
+            }
         } else
             $wallet = $suscriptor->data["wallet"];
         $description = "";

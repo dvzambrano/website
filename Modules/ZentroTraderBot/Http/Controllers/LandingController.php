@@ -5,6 +5,9 @@ namespace Modules\ZentroTraderBot\Http\Controllers;
 use Modules\Laravel\Http\Controllers\Controller;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Laravel\Services\Codes\QrService;
+use Modules\ZentroTraderBot\Entities\Suscriptions;
+
+use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 
 class LandingController extends Controller
 {
@@ -27,6 +30,9 @@ class LandingController extends Controller
         )->first();
 
         $this->bot->connectToThisTenant();
+
+        // Opcional: Compartir la config con el resto de la app
+        app()->instance('active_bot', $this->bot);
     }
     public function index()
     {
@@ -46,17 +52,34 @@ class LandingController extends Controller
     {
         // 1. Obtener el ID de Telegram del usuario desde la sesión
         $telegramUser = session('telegram_user');
-        $userId = $telegramUser['id'];
+
+        $controller = new ZentroTraderBotController();
+        $controller->receiveMessage($this->bot, [
+            'message' => [
+                'message_id' => "",
+                'text' => "/start",
+                'chat' => [
+                    'id' => $telegramUser['user_id'],
+                    'type' => "web"
+                ],
+                'from' => [
+                    'id' => $telegramUser['user_id']
+                ]
+            ]
+        ]);
+
+        // tiene q ir aqui abajo porq arriba se esta simulando el comando /start del bot q suscribe al usuario y le crea su wallet
+        $suscriptor = Suscriptions::where("user_id", $telegramUser['user_id'])->first();
 
         // 2. Instanciar el controlador de Wallets
         $walletController = new TraderWalletController();
 
         // 3. Obtener Balance REAL (específicamente de USDC en Polygon)
         // El método getBalance que tienes devuelve el portfolio
-        $usdcBalance = $walletController->getBalance($userId);
+        $usdcBalance = $walletController->getBalance($suscriptor);
 
         // 4. Obtener Transacciones 
-        $transactions = $walletController->getRecentTransactions($userId);
+        $transactions = $walletController->getRecentTransactions($suscriptor);
         //$transactions = [];
 
         return view("zentrotraderbot::themes.{$this->theme}.dashboard", [
