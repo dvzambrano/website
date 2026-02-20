@@ -2,9 +2,12 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
-use Illuminate\Routing\Controller;
+use Modules\Laravel\Http\Controllers\Controller;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Laravel\Services\Codes\QrService;
+use Modules\ZentroTraderBot\Entities\Suscriptions;
+
+use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 
 class LandingController extends Controller
 {
@@ -15,6 +18,8 @@ class LandingController extends Controller
 
     public function __construct()
     {
+        parent::__construct();
+
         $this->theme = config('zentrotraderbot.theme', 'FlexStart');
 
         $this->qrService = new QrService();
@@ -23,6 +28,11 @@ class LandingController extends Controller
             'name',
             '@' . config('zentrotraderbot.bot', 'KashioBot')
         )->first();
+
+        $this->bot->connectToThisTenant();
+
+        // Opcional: Compartir la config con el resto de la app
+        app()->instance('active_bot', $this->bot);
     }
     public function index()
     {
@@ -40,16 +50,40 @@ class LandingController extends Controller
 
     public function dashboard()
     {
-        $balance = random_int(10, 3000);
+        // 1. Obtener el ID de Telegram del usuario desde la sesión
+        $telegramUser = session('telegram_user');
 
-        $transactions = [
-            ['type' => 'in', 'concept' => 'Saldo acreditado', 'amount' => random_int(10, 200), 'date' => 'Hace 1 minuto'],
-            ['type' => 'in', 'concept' => 'Recarga FIAT', 'amount' => random_int(50, 200), 'date' => 'Hace 2 horas'],
-            ['type' => 'out', 'concept' => 'Swap USDC a MATIC', 'amount' => 45.20, 'date' => 'Ayer'],
-        ];
+        $controller = new ZentroTraderBotController();
+        $controller->receiveMessage($this->bot, [
+            'message' => [
+                'message_id' => "",
+                'text' => "/start",
+                'chat' => [
+                    'id' => $telegramUser['user_id'],
+                    'type' => "web"
+                ],
+                'from' => [
+                    'id' => $telegramUser['user_id']
+                ]
+            ]
+        ]);
+
+        // tiene q ir aqui abajo porq arriba se esta simulando el comando /start del bot q suscribe al usuario y le crea su wallet
+        $suscriptor = Suscriptions::where("user_id", $telegramUser['user_id'])->first();
+
+        // 2. Instanciar el controlador de Wallets
+        $walletController = new TraderWalletController();
+
+        // 3. Obtener Balance REAL (específicamente de USDC en Polygon)
+        // El método getBalance que tienes devuelve el portfolio
+        $usdcBalance = $walletController->getBalance($suscriptor);
+
+        // 4. Obtener Transacciones 
+        $transactions = $walletController->getRecentTransactions($suscriptor);
+        //$transactions = [];
 
         return view("zentrotraderbot::themes.{$this->theme}.dashboard", [
-            'balance' => $balance,
+            'balance' => $usdcBalance,
             'transactions' => $transactions,
             'qrService' => $this->qrService,
             'bot' => $this->bot

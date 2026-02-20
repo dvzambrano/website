@@ -2,97 +2,82 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
-use Modules\Laravel\Http\Controllers\Controller;
-use Illuminate\Http\Request; // Necesario para type hinting
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http; // Necesario para rpcCall
-use Elliptic\EC;
-use kornrunner\Keccak;
-use Illuminate\Encryption\Encrypter;
-use Illuminate\Contracts\Encryption\DecryptException;
-use kornrunner\Ethereum\Transaction;
-use kornrunner\Ethereum\EIP1559Transaction;
 use Modules\Web3\Http\Controllers\WalletController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\AlchemyController;
+use Modules\Web3\Services\Web3MathService;
 
 class TraderWalletController extends WalletController
 {
     /**
      * Se llama cuando el usuario inicia el bot (/start).
      */
-    public function getWallet(int $userId)
+    public function getWallet($tenant)
     {
-        $tenant = app('active_bot');
-
-        // 1. Buscar el Actor por su ID de Telegram (user_id)
-        $suscriptor = Suscriptions::where('user_id', $userId)->first();
-
-        // Si no existe el actor, retornamos error (o lo creamos según tu lógica)
-        if (!$suscriptor) {
-            // $suscriptor = Suscriptions::create(['user_id' => $userId, 'data' => []]); 
-            return ['status' => 'error', 'message' => 'Usuario no registrado en el sistema.'];
-        }
-
-        $currentData = $suscriptor->data ?? [];
-
-        // Validación: Si ya tiene wallet, devolvemos la existente
-        if (isset($currentData['wallet']['address'])) {
-            return [
-                'status' => 'exists',
-                'address' => $currentData['wallet']['address']
-            ];
-        }
+        $wallet = null;
 
         try {
             $wallet = $this->generateWallet();
 
-            // 3. GUARDADO SEGURO EN JSON
-            $walletData = [
-                'address' => $wallet["address"],
-                'private_key' => Crypt::encryptString($wallet["private_key"]), // 🔒 ENCRIPTADO
-                'created_at' => now()->toIso8601String()
-            ];
-
-            $currentData['wallet'] = $walletData;
-            $suscriptor->data = $currentData;
-            $suscriptor->save();
-
             $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
-            $response = AlchemyController::updateWebhookAddresses(
+            AlchemyController::updateWebhookAddresses(
                 $tenant->data["alchemy_webhook_id"],
                 $authToken,
                 [$wallet["address"]]
             );
-            $registered = "";
-            if ($response->successful())
-                $registered = " y registrada en en Alchemy webhook ID: " . $tenant->data["alchemy_webhook_id"];
 
-            Log::info("✅ Wallet " . $wallet["address"] . " generada en JSON para usuario $userId" . $registered);
-
-            return ['status' => 'created', 'address' => $wallet["address"]];
+            return $wallet;
 
         } catch (\Exception $e) {
             Log::error("❌ Error generando wallet: " . $e->getMessage());
-            return ['status' => 'error', 'message' => 'Error interno de criptografía'];
         }
+
+        return $wallet;
     }
 
     /**
      * CONSULTAR SALDO (ESTANDARIZADO)
-     * Siempre devuelve una estructura 'portfolio' consistente.
+     * - Devuelve el balance de USDC en Polygon.
+     * - Si no hay wallet, devuelve error específico.
+     * - Si hay wallet pero no balance, devuelve 0.0 sin error.
      */
-    public function getBalance($userId, $networkSymbol = null)
+    public function getBalance($suscriptor, $networkSymbol = null)
     {
         // 1. Obtener Wallet
-        $suscriptor = Suscriptions::where('user_id', $userId)->first();
         if (!$suscriptor || !isset($suscriptor->data['wallet']['address'])) {
             return ['status' => 'error', 'message' => 'No tienes wallet configurada.'];
         }
-        $address = $suscriptor->data['wallet']['address'];
 
-        return parent::getBalance($address, $networkSymbol);
+        $address = $suscriptor->data['wallet']['address'];
+        $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
+        $usdcContract = config('web3.tokens.USDC.address');
+        $balances = AlchemyController::getTokenBalances($authToken, $address, [$usdcContract]);
+        $humanBal = "0.0";
+        if (is_array($balances) && count($balances)) {
+            foreach ($balances as $bal) {
+                $hexBal = $bal['tokenBalance'] ?? '0x0';
+                // Conversión humana
+                $humanBal = Web3MathService::hexToDecimal($hexBal, 6);
+            }
+        }
+
+        return $humanBal;
+    }
+    public function getRecentTransactions($suscriptor, $networkSymbol = null)
+    {
+        // 1. Obtener Wallet
+        if (!$suscriptor || !isset($suscriptor->data['wallet']['address'])) {
+            return ['status' => 'error', 'message' => 'No tienes wallet configurada.'];
+        }
+
+        $address = $suscriptor->data['wallet']['address'];
+        $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
+        //app_zentrotraderbot_alchemy_authtoken
+        $usdcContract = config('web3.tokens.USDC.address');
+
+        return AlchemyController::getRecentTransactions($authToken, $address, ["erc20"], [$usdcContract], 5);
     }
 
     /**
@@ -118,13 +103,14 @@ class TraderWalletController extends WalletController
      * - Detecta EIP-1559 vs Legacy.
      * - Límites de gas seguros para contratos/exchanges.
      */
-    public function withdraw(int $userId, string $toAddress, string $tokenSymbol, ?float $amount = null)
+    // Sobrecarga para aceptar userId y extraer el privateKey antes de delegar
+    public function withdraw($privateKey, string $toAddress, string $tokenSymbol, ?float $amount = null)
     {
-        // NORMALIZACIÓN: Forzamos mayúsculas
+        // Si el primer parámetro es un int, se asume userId y se extrae la clave
+        if (is_int($privateKey)) {
+            $privateKey = $this->getDecryptedPrivateKey($privateKey);
+        }
         $tokenSymbol = strtoupper($tokenSymbol);
-
-        $privateKey = $this->getDecryptedPrivateKey($userId);
-
         return parent::withdraw($privateKey, $toAddress, $tokenSymbol, $amount);
     }
 }
