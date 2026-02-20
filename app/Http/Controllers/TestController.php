@@ -68,8 +68,8 @@ class TestController extends Controller
 
     public function test(Request $request)
     {
-        //$metadata = Metadatas::where('name', "app_zentrotraderbot_alchemy_authtoken")->first();
-        //dd($metadata->value);
+        $metadata = Metadatas::where('name', "app_zentrotraderbot_alchemy_authtoken")->first();
+        dd($metadata->value);
 
         $this->testWalletController();
         //$this->testTelegramController();
