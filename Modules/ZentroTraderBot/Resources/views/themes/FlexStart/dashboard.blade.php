@@ -358,10 +358,6 @@
                                             @else
                                                 <img src="assets/img/logo.png" class="rounded-circle"
                                                     style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                                                <img src="{{ route('avatar.proxy', ['bot_token' => $bot->token, 'file_path' => session('telegram_user.photo_url')]) }}"
-                                                    referrerpolicy="no-referrer" class="rounded-circle"
-                                                    style="width: 100%; height: 100%; object-fit: cover; display: block;"
-                                                    alt="{{ __('zentrotraderbot::landing.menu.user.photo_alt') }}">
                                             @endif
 
                                         </div>
