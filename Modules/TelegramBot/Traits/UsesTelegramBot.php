@@ -88,12 +88,18 @@ trait UsesTelegramBot
         // Obteniendo al actor suscrito o suscribiedolo si no lo esta
         $this->actor = $this->ActorsController->suscribe($bot, $this->message["from"]["id"], $textinfo["message"]);
 
-        // si trae pinned_message significa q solo se esta tratando de pinear un mensaje y no lleva respuesta
-        if (isset($this->message["pinned_message"]))
-            return response()->json(["message" => "OK"], 200);
-
         // Finalmente se procesa la peticion recibida
         $this->reply = $this->processMessage();
+
+        // Valorando casos q no requieren respuesta
+        if (
+            isset($this->message["pinned_message"]) // solo se esta tratando de pinear un mensaje
+            || isset($this->message["connected_website"])  // es un login con ese usuario en la web
+            || isset($this->message["auth_date"])  // es una autorizacion de usuario en la web
+            || $this->message['chat']['type'] == 'web' // es una simulacion desde la web
+        )
+            return response()->json(["message" => "OK"], 200);
+
         $log = "TelegramBotController {$type} reply from " . $this->tenant->code;
         Log::info("{$log} to {$logfrom}" . json_encode($this->reply) . "\n");
         // Armando la respuesta correspondiente:
