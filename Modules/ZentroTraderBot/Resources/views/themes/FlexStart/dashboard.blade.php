@@ -350,7 +350,8 @@
                                         <div class="position-absolute top-50 start-50 translate-middle bg-white p-1 rounded-circle"
                                             style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
 
-                                            <img src="{{ $user['photo_url'] }}" class="rounded-circle"
+                                            <img src="{{ $user['photo_url'] }}" referrerpolicy="no-referrer"
+                                                class="rounded-circle"
                                                 style="width: 100%; height: 100%; object-fit: cover; display: block;"
                                                 alt="{{ __('zentrotraderbot::landing.menu.user.photo_alt') }}">
 
