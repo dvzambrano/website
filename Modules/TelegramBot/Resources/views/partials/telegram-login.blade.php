@@ -13,7 +13,7 @@ Uso:
 
         <div class="user-logged-info d-flex align-items-center p-2 shadow-sm rounded border bg-light">
             @if (!empty($user['photo_url']))
-                <img src="{{ route('avatar.proxy', ['file_path' => session('telegram_user.photo_url'), 'bot_token' => $bot->token]) }}"
+                <img src="{{ route('avatar.proxy', ['bot_token' => $bot->token, 'file_path' => session('telegram_user.photo_url')] }}"
                     class="rounded-circle me-2" referrerpolicy="no-referrer"
                     style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #0088cc;">
             @else
