@@ -70,7 +70,7 @@
                         @php $user = session('telegram_user'); @endphp
                         <li class="dropdown">
                             <a href="javascript:void(0);" class="nav-link">
-                                <img src="{{ route('avatar.proxy', ['bot_token' => $bot->token, 'file_path' => session('telegram_user.photo_url')] }}"
+                                <img src="{{ route('avatar.proxy', ['bot_token' => $bot->token, 'file_path' => session('telegram_user.photo_url')]) }}"
                                     class="rounded-circle me-2" referrerpolicy="no-referrer"
                                     style="width: 25px; height: 25px; object-fit: cover; border: 2px solid #0088cc;">
                                 {{ $user['username'] }}&nbsp;&nbsp;
