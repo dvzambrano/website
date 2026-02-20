@@ -602,7 +602,13 @@ class TelegramController extends Controller
             "/{$filePath}";
 
         $response = Http::get($url);
-        return $response->body();
+
+        if ($response->successful()) {
+            return $response->body();
+        }
+
+        Log::error("Fallo al descargar archivo de Telegram: " . $url);
+        return null;
     }
 
     /**
@@ -778,18 +784,15 @@ class TelegramController extends Controller
         if (!$filePath)
             abort(404);
 
-        $url = "https://api.telegram.org/file/bot{$bot_token}/{$filePath}";
+        // LLAMAMOS AL NUEVO MÉTODO
+        $content = self::getFile($filePath, $bot_token);
 
-        // Hacemos la petición a Telegram desde el servidor
-        $response = Http::get($url);
-
-        if (!$response->successful()) {
-            abort(404);
+        if (!$content) {
+            abort(404, "No se pudo obtener el contenido del avatar.");
         }
 
-        // Retornamos la imagen con el Content-Type correcto
-        return response($response->body())
-            ->header('Content-Type', $response->header('Content-Type'))
-            ->header('Cache-Control', 'public, max-age=86400'); // Cacheamos 24h para no saturar
+        return response($content)
+            ->header('Content-Type', 'image/jpeg') // Telegram suele enviar jpg
+            ->header('Cache-Control', 'public, max-age=86400');
     }
 }
