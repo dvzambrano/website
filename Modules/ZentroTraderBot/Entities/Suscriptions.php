@@ -15,6 +15,16 @@ class Suscriptions extends Actors
 
     protected $table = "suscriptions";
 
+    public function actor()
+    {
+        // Vinculamos por el user_id que ambos comparten
+        return $this->hasOne(Actors::class, 'user_id', 'user_id');
+    }
+    public function getActor()
+    {
+        return $this->actor ? $this->actor : null;
+    }
+
     public function getWallet()
     {
         $currentData = $this->data ?? [];

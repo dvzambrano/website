@@ -681,14 +681,32 @@ class TelegramController extends Controller
     }
     public function loginCallback(Request $request)
     {
-        $botToken = $request->attributes->get('bot_token');
+        $bot_token = $request->attributes->get('bot_token');
         $auth_data = $request->all();
 
-        if (!$this->checkTelegramAuthorization($auth_data, $botToken)) {
-            Log::debug("TelegramController loginCallback !checkTelegramAuthorization: " . json_encode($botToken) . json_encode($auth_data));
+        if (!$this->checkTelegramAuthorization($auth_data, $bot_token)) {
+            //Log::debug("TelegramController loginCallback !checkTelegramAuthorization: " . json_encode($bot_token) . json_encode($auth_data));
             return redirect('/')->with('error', 'Fallo de integridad.');
         }
-        Log::debug("TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($botToken) . json_encode($auth_data));
+        //Log::debug("TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($bot_token) . json_encode($auth_data));
+
+        // 2. Obtener el file_path de la foto de perfil (sin descargar el archivo)
+        $avatarPath = null;
+        try {
+            // Obtenemos la lista de fotos del usuario
+            $photosResponse = json_decode(self::getUserPhotos($auth_data['id'], $bot_token), true);
+
+            if (isset($photosResponse['result']['photos'][0])) {
+                // Tomamos la versión más pequeña/mediana para ahorrar ancho de banda [0]
+                $fileId = $photosResponse['result']['photos'][0][0]['file_id'];
+
+                // Obtenemos la info del archivo para sacar el path
+                $fileInfo = json_decode(self::getFile($fileId, $bot_token), true);
+                $avatarPath = $fileInfo['result']['file_path'] ?? null;
+            }
+        } catch (\Exception $e) {
+            Log::error("Error obteniendo avatar de Telegram: " . $e->getMessage());
+        }
 
         // En lugar de base de datos, guardamos en la sesión de Laravel
         session([
@@ -696,14 +714,18 @@ class TelegramController extends Controller
                 'user_id' => $auth_data['id'],
                 'name' => $auth_data['first_name'] . ' ' . ($auth_data['last_name'] ?? ''),
                 'username' => $auth_data['username'] ?? null,
-                'photo_url' => $auth_data['photo_url'] ?? null,
+                'photo_url' => $avatarPath, // Guardamos solo la ruta: "userphotos/file_5.jpg"
             ]
         ]);
+
+        // Opcional: Si quieres usar el sistema de Auth de Laravel sin DB (Login virtual)
+        // $user = new \App\Models\User(['id' => $auth_data['id'], 'name' => $auth_data['first_name']]);
+        // auth()->login($user);
 
         return redirect()->intended('/dashboard');
     }
 
-    protected function checkTelegramAuthorization($auth_data, $botToken)
+    protected function checkTelegramAuthorization($auth_data, $bot_token)
     {
         //Log::error("TelegramController checkAuthorization: " . json_encode($auth_data));
         /*
@@ -740,7 +762,7 @@ class TelegramController extends Controller
         $data_check_string = $data_check_arr->implode("\n");
 
         // 3. Generar la clave secreta (SHA256 del Bot Token en binario)
-        $secret_key = hash('sha256', $botToken, true);
+        $secret_key = hash('sha256', $bot_token, true);
 
         // 4. Calcular el HMAC
         $hash = hash_hmac('sha256', $data_check_string, $secret_key);
@@ -750,5 +772,24 @@ class TelegramController extends Controller
         // Log::debug("Calculated: $hash vs Original: $check_hash");
 
         return hash_equals($hash, $check_hash);
+    }
+
+    public function proxyAvatar($bot_token, $filePath)
+    {
+        // Recuperamos el token desde la configuración o el active_bot
+        $bot_token = config('zentro.bot_token');
+        $url = "https://api.telegram.org/file/bot{$bot_token}/{$filePath}";
+
+        // Hacemos la petición a Telegram desde el servidor
+        $response = Http::get($url);
+
+        if (!$response->successful()) {
+            abort(404);
+        }
+
+        // Retornamos la imagen con el Content-Type correcto
+        return response($response->body())
+            ->header('Content-Type', $response->header('Content-Type'))
+            ->header('Cache-Control', 'public, max-age=86400'); // Cacheamos 24h para no saturar
     }
 }
