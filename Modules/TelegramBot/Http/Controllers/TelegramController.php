@@ -773,14 +773,10 @@ class TelegramController extends Controller
         return hash_equals($hash, $check_hash);
     }
 
-    public function proxyAvatar($filePath = null)
+    public function proxyAvatar($bot_token, $filePath = null)
     {
         if (!$filePath)
             abort(404);
-
-        // Usamos el token del bot activo en el sistema
-        $bot = app('active_bot');
-        $bot_token = $bot->token;
 
         $url = "https://api.telegram.org/file/bot{$bot_token}/{$filePath}";
 

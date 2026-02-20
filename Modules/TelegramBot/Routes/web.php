@@ -21,7 +21,7 @@ Route::prefix('telegram')->group(function () {
         ->name('telegram-bot-webhhok');
 
     // Ruta para servir avatares de Telegram a través de nuestro servidor
-    Route::get('/avatar/{file_path?}', 'TelegramController@proxyAvatar')
+    Route::get('/avatar/{bot_token}/{file_path?}', 'TelegramController@proxyAvatar')
         ->where('file_path', '.*') // Permite que la ruta incluya barras /
         ->name('avatar.proxy');
 
