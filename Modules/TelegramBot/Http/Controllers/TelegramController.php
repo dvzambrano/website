@@ -694,11 +694,10 @@ class TelegramController extends Controller
         $avatarPath = null;
         try {
             // Obtenemos la lista de fotos del usuario
-            $photosResponse = json_decode(self::getUserPhotos($auth_data['id'], $bot_token), true);
-
-            if (isset($photosResponse['result']['photos'][0])) {
+            $photos = self::getUserPhotos($auth_data['id'], $bot_token);
+            if (isset($photos[0])) {
                 // Tomamos la versión más pequeña/mediana para ahorrar ancho de banda [0]
-                $fileId = $photosResponse['result']['photos'][0][0]['file_id'];
+                $fileId = $photos[0][0]['file_id'];
 
                 // Obtenemos la info del archivo para sacar el path
                 $fileInfo = json_decode(self::getFile($fileId, $bot_token), true);

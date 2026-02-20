@@ -56,6 +56,7 @@ class TestController extends Controller
 {
     private $GutoTradeTestBot;
     private $ZentroTraderBot;
+    private $KashioBot;
 
     public function __construct()
     {
@@ -64,6 +65,7 @@ class TestController extends Controller
 
         $this->GutoTradeTestBot = TelegramBots::where('name', "@GutoTradeTestBot")->first();
         $this->ZentroTraderBot = TelegramBots::where('name', "@ZentroTraderBot")->first();
+        $this->KashioBot = TelegramBots::where('name', "@KashioBot")->first();
     }
 
     public function test(Request $request)
