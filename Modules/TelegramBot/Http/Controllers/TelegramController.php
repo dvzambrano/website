@@ -697,7 +697,7 @@ class TelegramController extends Controller
         //Log::debug("TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($bot_token) . json_encode($auth_data));
 
         // 2. Obtener el file_path de la foto de perfil (sin descargar el archivo)
-        $avatarPath = "userphotos/file_5.jpg";
+        $avatarPath = null;
         try {
             // Obtenemos la lista de fotos del usuario
             $photos = self::getUserPhotos($auth_data['id'], $bot_token);
