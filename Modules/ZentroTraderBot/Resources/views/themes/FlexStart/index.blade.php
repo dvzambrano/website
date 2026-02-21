@@ -226,25 +226,25 @@
         <section id="counts" class="counts">
             <div class="container" data-aos="fade-up">
 
-                <div class="row gy-4">
+                <div class="row gy-4 justify-content-center">
 
                     <div class="col-lg-3 col-md-6">
                         <div class="count-box">
-                            <i class="bi bi-emoji-smile"></i>
+                            <i class="bi bi-people" style="color: #bb0852;"></i>
                             <div>
-                                <span data-purecounter-start="0" data-purecounter-end="232" data-purecounter-duration="1"
+                                <span data-purecounter-start="0" data-purecounter-end="679" data-purecounter-duration="1"
                                     class="purecounter"></span>
                                 <p>{{ __('zentrotraderbot::landing.counts.users') }}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-4 col-md-6">
                         <div class="count-box">
                             <i class="bi bi-journal-richtext" style="color: #ee6c20;"></i>
                             <div>
-                                <span data-purecounter-start="0" data-purecounter-end="521" data-purecounter-duration="1"
-                                    class="purecounter"></span>
+                                <span data-purecounter-start="0" data-purecounter-end="9234"
+                                    data-purecounter-duration="1" class="purecounter"></span>
                                 <p>{{ __('zentrotraderbot::landing.counts.trans') }}</p>
                             </div>
                         </div>
@@ -254,21 +254,9 @@
                         <div class="count-box">
                             <i class="bi bi-headset" style="color: #15be56;"></i>
                             <div>
-                                <span data-purecounter-start="0" data-purecounter-end="1463"
-                                    data-purecounter-duration="1" class="purecounter"></span>
-                                <p>{{ __('zentrotraderbot::landing.footer.contact') }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-md-6">
-                        <div class="count-box">
-                            <i class="bi bi-shield-check" style="color: #bb0852;"></i>
-                            <div>
-                                <span data-purecounter-start="0" data-purecounter-end="100" data-purecounter-duration="1"
+                                <span data-purecounter-start="0" data-purecounter-end="131" data-purecounter-duration="1"
                                     class="purecounter"></span>
-
-                                <p>{{ __('zentrotraderbot::landing.counts.security') }}</p>
+                                <p>{{ __('zentrotraderbot::landing.counts.tickets') }}</p>
                             </div>
                         </div>
                     </div>
@@ -323,33 +311,52 @@
 
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="tab1">
-                                <p>{{ __('zentrotraderbot::landing.payments.transak_notice', ['name' => __('zentrotraderbot::landing.title')]) }}
-                                </p>
+                                <p>{{ __('zentrotraderbot::landing.payments.topup.title') }}</p>
                                 <div class="d-flex align-items-center mb-2">
                                     <i class="bi bi-check2"></i>
-                                    <h4>{{ __('zentrotraderbot::landing.payments.step_1') }}</h4>
+                                    <h4>{{ __('zentrotraderbot::landing.payments.topup.step_1') }}</h4>
                                 </div>
                                 <div class="d-flex align-items-center mb-2">
                                     <i class="bi bi-check2"></i>
-                                    <h4>{{ __('zentrotraderbot::landing.payments.step_2') }}</h4>
+                                    <h4>{{ __('zentrotraderbot::landing.payments.topup.step_2') }}</h4>
                                 </div>
                                 <div class="d-flex align-items-center mb-2">
                                     <i class="bi bi-check2"></i>
-                                    <h4>{{ __('zentrotraderbot::landing.payments.step_3', ['name' => __('zentrotraderbot::landing.title')]) }}
+                                    <h4>{{ __('zentrotraderbot::landing.payments.topup.step_3') }}
                                     </h4>
                                 </div>
                             </div>
                             <div class="tab-pane fade show" id="tab2">
-                                <p>{{ __('zentrotraderbot::landing.about.card_2.text') }}</p>
+                                <p>{{ __('zentrotraderbot::landing.payments.limitless.title') }}</p>
                                 <div class="d-flex align-items-center mb-2">
                                     <i class="bi bi-check2"></i>
-                                    <h4>{{ __('zentrotraderbot::landing.features.list.feature_4') }}</h4>
+                                    <h4>{{ __('zentrotraderbot::landing.payments.limitless.step_1') }}</h4>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-check2"></i>
+                                    <h4>{{ __('zentrotraderbot::landing.payments.limitless.step_2') }}</h4>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-check2"></i>
+                                    <h4>{{ __('zentrotraderbot::landing.payments.limitless.step_3') }}
+                                    </h4>
                                 </div>
                             </div>
-
                             <div class="tab-pane fade show" id="tab3">
-                                <p>{{ __('zentrotraderbot::landing.about.description', ['name' => __('zentrotraderbot::landing.title')]) }}
-                                </p>
+                                <p>{{ __('zentrotraderbot::landing.payments.bridges.title') }}</p>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-check2"></i>
+                                    <h4>{{ __('zentrotraderbot::landing.payments.bridges.step_1') }}</h4>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-check2"></i>
+                                    <h4>{{ __('zentrotraderbot::landing.payments.bridges.step_2') }}</h4>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-check2"></i>
+                                    <h4>{{ __('zentrotraderbot::landing.payments.bridges.step_3') }}
+                                    </h4>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -358,36 +365,6 @@
                         <img src="assets/img/features-2.png" class="img-fluid" alt="">
                     </div>
 
-                </div>
-                <div class="row feature-icons" data-aos="fade-up">
-                    <h3>{{ __('zentrotraderbot::landing.features.title') }}</h3>
-
-                    <div class="row">
-                        <div class="col-xl-4 text-center" data-aos="fade-right" data-aos-delay="100">
-                            <img src="assets/img/features-3.png" class="img-fluid p-4" alt="">
-                        </div>
-
-                        <div class="col-xl-8 d-flex content">
-                            <div class="row align-self-center gy-4">
-                                <div class="col-md-6 icon-box" data-aos="fade-up">
-                                    <i class="ri-bank-card-line"></i>
-                                    <div>
-                                        <h4>{{ __('zentrotraderbot::landing.payments.transak_h4') }}</h4>
-                                        <p>{{ __('zentrotraderbot::landing.payments.transak_notice', ['name' => __('zentrotraderbot::landing.title')]) }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 icon-box" data-aos="fade-up" data-aos-delay="100">
-                                    <i class="ri-stack-line"></i>
-                                    <div>
-                                        <h4>{{ __('zentrotraderbot::landing.about.card_1.title') }}</h4>
-                                        <p>{{ __('zentrotraderbot::landing.about.card_1.text1') }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -401,7 +378,7 @@
 
                 <header class="section-header">
                     <h2>{{ __('zentrotraderbot::landing.menu.steps') }}</h2>
-                    <p>{{ __('zentrotraderbot::landing.about.description', ['name' => __('zentrotraderbot::landing.title')]) }}
+                    <p>{{ __('zentrotraderbot::landing.services.title') }}
                     </p>
                 </header>
 
@@ -409,49 +386,50 @@
 
                     <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
                         <div class="service-box blue">
-                            <i class="ri-bank-card-line icon"></i>
-                            <h3>{{ __('zentrotraderbot::landing.payments.step_2_header') }}</h3>
-                            <p>{{ __('zentrotraderbot::landing.payments.step_2') }}</p>
+                            <i class="bi bi-phone-flip icon"></i>
+                            <h3>{{ __('zentrotraderbot::landing.services.aplications.title') }}</h3>
+                            <p>{{ __('zentrotraderbot::landing.services.aplications.text', ['name' => __('zentrotraderbot::landing.title')]) }}
+                            </p>
                         </div>
                     </div>
 
                     <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
                         <div class="service-box orange">
-                            <i class="ri-money-dollar-circle-line icon"></i>
-                            <h3>{{ __('zentrotraderbot::landing.about.card_1.title') }}</h3>
-                            <p>{{ __('zentrotraderbot::landing.about.card_1.text1') }}</p>
-                        </div>
-                    </div>
-
-                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
-                        <div class="service-box green">
-                            <i class="ri-shield-user-line icon"></i>
-                            <h3>{{ __('zentrotraderbot::landing.features.list.feature_4header') }}</h3>
-                            <p>{{ __('zentrotraderbot::landing.features.list.feature_4') }}</p>
+                            <i class="bi bi-terminal icon"></i>
+                            <h3>{{ __('zentrotraderbot::landing.services.commands.title') }}</h3>
+                            <p>{{ __('zentrotraderbot::landing.services.commands.text') }}</p>
                         </div>
                     </div>
 
                     <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
                         <div class="service-box red">
-                            <i class="ri-customer-service-2-line icon"></i>
-                            <h3>{{ __('zentrotraderbot::landing.services.support') }}</h3>
-                            <p>{{ __('zentrotraderbot::landing.features.list.feature_3') }}</p>
+                            <i class="bi bi-chat-left-dots icon"></i>
+                            <h3>{{ __('zentrotraderbot::landing.services.notifications.title') }}</h3>
+                            <p>{{ __('zentrotraderbot::landing.services.notifications.text') }}</p>
                         </div>
                     </div>
 
                     <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
                         <div class="service-box purple">
-                            <i class="ri-file-list-3-line icon"></i>
-                            <h3>{{ __('zentrotraderbot::landing.services.history') }}</h3>
-                            <p>{{ __('zentrotraderbot::landing.features.list.feature_3') }}</p>
+                            <i class="bi bi-shield-check icon"></i>
+                            <h3>{{ __('zentrotraderbot::landing.services.security.title') }}</h3>
+                            <p>{{ __('zentrotraderbot::landing.services.security.text') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="600">
+                        <div class="service-box purple">
+                            <i class="bi bi-person-lines-fill icon"></i>
+                            <h3>{{ __('zentrotraderbot::landing.services.contactlist.title') }}</h3>
+                            <p>{{ __('zentrotraderbot::landing.services.contactlist.text') }}</p>
                         </div>
                     </div>
 
                     <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="700">
                         <div class="service-box pink">
-                            <i class="ri-line-chart-line icon"></i>
-                            <h3>{{ __('zentrotraderbot::landing.services.no_volatility') }}</h3>
-                            <p>{{ __('zentrotraderbot::landing.features.list.feature_1') }}</p>
+                            <i class="bi bi-patch-question icon"></i>
+                            <h3>{{ __('zentrotraderbot::landing.services.support.title') }}</h3>
+                            <p>{{ __('zentrotraderbot::landing.services.support.text', ['name' => __('zentrotraderbot::landing.title')]) }}
                         </div>
                     </div>
 
@@ -472,7 +450,7 @@
                     <p>{{ __('zentrotraderbot::landing.pricing.title') }}</p>
                 </header>
 
-                <div class="row gy-4" data-aos="fade-left">
+                <div class="row gy-4 justify-content-center" data-aos="fade-left">
 
                     @foreach (__('zentrotraderbot::landing.pricing.plans') as $plan)
                         <div class="col-lg-3 col-md-6" data-aos="zoom-in" data-aos-delay="100">
@@ -485,7 +463,7 @@
                                 <div class="price">
                                     <sup>{{ __('zentrotraderbot::landing.pricing.currency') }}</sup>{{ $plan['price'] }}<span>
                                         /
-                                        mes</span>
+                                        {{ __('zentrotraderbot::landing.pricing.time') }}</span>
                                 </div>
 
                                 <img src="{{ $plan['img'] }}" class="img-fluid" alt="{{ $plan['name'] }}">
@@ -527,7 +505,8 @@
                 <div class="row">
                     @php
                         // Dividimos las preguntas en dos grupos para las dos columnas
-                        $faqGroups = array_chunk(__('zentrotraderbot::landing.faq.questions'), 3);
+                        $faqGroups = array_chunk(__('zentrotraderbot::landing.faq.questions'), 1);
+                        $index = 0;
                     @endphp
 
                     @foreach ($faqGroups as $index => $group)
@@ -539,14 +518,14 @@
                                         <h2 class="accordion-header">
                                             <button class="accordion-button collapsed" type="button"
                                                 data-bs-toggle="collapse"
-                                                data-bs-target="#faq-content-{{ $item['id'] }}">
-                                                {{ $item['question'] }}
+                                                data-bs-target="#faq-content-{{ $index }}">
+                                                {{ str_replace(':name', __('zentrotraderbot::landing.title'), $item['question']) }}
                                             </button>
                                         </h2>
-                                        <div id="faq-content-{{ $item['id'] }}" class="accordion-collapse collapse"
+                                        <div id="faq-content-{{ $index }}" class="accordion-collapse collapse"
                                             data-bs-parent="#faqlist{{ $index + 1 }}">
                                             <div class="accordion-body">
-                                                {{ $item['answer'] }}
+                                                {{ str_replace(':name', __('zentrotraderbot::landing.title'), $item['answer']) }}
                                             </div>
                                         </div>
                                     </div>
@@ -554,6 +533,9 @@
 
                             </div>
                         </div>
+                        @php
+                            $index++;
+                        @endphp
                     @endforeach
 
                 </div>
@@ -564,54 +546,55 @@
         <!-- End F.A.Q Section -->
 
         <!-- ======= Portfolio Section ======= -->
-        <section id="portfolio" class="portfolio">
+        <!--
+                    <section id="portfolio" class="portfolio">
 
-            <div class="container" data-aos="fade-up">
+                        <div class="container" data-aos="fade-up">
 
-                <header class="section-header">
-                    <h2>{{ __('zentrotraderbot::landing.menu.features') }}</h2>
-                    <p>
-                        {{ __('zentrotraderbot::landing.portfolio.title', ['name' => __('zentrotraderbot::landing.title')]) }}
-                    </p>
-                </header>
+                            <header class="section-header">
+                                <p>
+                                    {{ __('zentrotraderbot::landing.portfolio.title', ['name' => __('zentrotraderbot::landing.title')]) }}
+                                </p>
+                            </header>
 
-                <div class="row" data-aos="fade-up" data-aos-delay="100">
-                    <div class="col-lg-12 d-flex justify-content-center">
-                        <ul id="portfolio-flters">
-                            <li data-filter="*" class="filter-active">
-                                {{ __('zentrotraderbot::landing.portfolio.filters.all') }}</li>
-                            <li data-filter=".filter-app">{{ __('zentrotraderbot::landing.portfolio.filters.app') }}</li>
-                            <li data-filter=".filter-card">{{ __('zentrotraderbot::landing.portfolio.filters.card') }}
-                            </li>
-                            <li data-filter=".filter-web">{{ __('zentrotraderbot::landing.portfolio.filters.web') }}</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="row gy-4 portfolio-container" data-aos="fade-up" data-aos-delay="200">
-
-                    @foreach (__('zentrotraderbot::landing.portfolio.items') as $item)
-                        <div class="col-lg-4 col-md-6 portfolio-item {{ $item['category'] }}">
-                            <div class="portfolio-wrap">
-                                <img src="{{ $item['img'] }}" class="img-fluid" alt="{{ $item['title'] }}">
-                                <div class="portfolio-info">
-                                    <h4>{{ $item['title'] }}</h4>
-                                    <p>{{ $item['category_label'] }}</p>
-                                    <div class="portfolio-links">
-                                        <a href="{{ $item['img'] }}" data-gallery="portfolioGallery"
-                                            class="portfokio-lightbox" title="{{ $item['desc'] }}"><i
-                                                class="bi bi-plus"></i></a>
-                                    </div>
+                            <div class="row" data-aos="fade-up" data-aos-delay="100">
+                                <div class="col-lg-12 d-flex justify-content-center">
+                                    <ul id="portfolio-flters">
+                                        <li data-filter="*" class="filter-active">
+                                            {{ __('zentrotraderbot::landing.portfolio.filters.all') }}</li>
+                                        <li data-filter=".filter-app">{{ __('zentrotraderbot::landing.portfolio.filters.app') }}</li>
+                                        <li data-filter=".filter-card">{{ __('zentrotraderbot::landing.portfolio.filters.card') }}
+                                        </li>
+                                        <li data-filter=".filter-web">{{ __('zentrotraderbot::landing.portfolio.filters.web') }}</li>
+                                    </ul>
                                 </div>
                             </div>
+
+                            <div class="row gy-4 portfolio-container" data-aos="fade-up" data-aos-delay="200">
+
+                                @foreach (__('zentrotraderbot::landing.portfolio.items') as $item)
+    <div class="col-lg-4 col-md-6 portfolio-item {{ $item['category'] }}">
+                                        <div class="portfolio-wrap">
+                                            <img src="{{ $item['img'] }}" class="img-fluid" alt="{{ $item['title'] }}">
+                                            <div class="portfolio-info">
+                                                <h4>{{ $item['title'] }}</h4>
+                                                <p>{{ $item['category_label'] }}</p>
+                                                <div class="portfolio-links">
+                                                    <a href="{{ $item['img'] }}" data-gallery="portfolioGallery"
+                                                        class="portfokio-lightbox" title="{{ $item['desc'] }}"><i
+                                                            class="bi bi-plus"></i></a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+    @endforeach
+
+                            </div>
+
                         </div>
-                    @endforeach
 
-                </div>
-
-            </div>
-
-        </section>
+                    </section>
+                -->
         <!-- End Portfolio Section -->
 
         <!-- ======= Testimonials Section ======= -->
@@ -620,8 +603,6 @@
             <div class="container" data-aos="fade-up">
 
                 <header class="section-header">
-                    <h2>{{ __('zentrotraderbot::landing.menu.about', ['name' => __('zentrotraderbot::landing.title')]) }}
-                    </h2>
                     <p>{{ __('zentrotraderbot::landing.testimonials.title') }}</p>
                 </header>
 
