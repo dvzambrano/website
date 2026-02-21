@@ -20,7 +20,7 @@ class TelegramBotController extends Controller
 
         // Validación básica
         if (!$tenant || !isset($tenant->module)) {
-            Log::error('Active bot not found or invalid module', ['tenant' => $tenant]);
+            Log::error('🆘 TelegramBotController handle: Active bot not found or invalid module', ['tenant' => $tenant]);
             abort(404, 'Bot handle controller not found');
         }
 
@@ -62,7 +62,7 @@ class TelegramBotController extends Controller
                 'instance' => $instance
             ]);
         }
-        Log::warning("Controller not found: $controller", ['botname' => $botname, 'instance' => $instance]);
+        Log::error("🆘  TelegramBotController getController Error: Controller $controller not found ", ['botname' => $botname, 'instance' => $instance]);
         return false;
     }
 
@@ -74,7 +74,7 @@ class TelegramBotController extends Controller
     {
         $codes = request("codes"); // array
         if (!is_array($codes)) {
-            Log::error('Received codes are not valid', ['codes' => $codes]);
+            Log::error('🆘 TelegramBotController storeScan: Received codes are not valid', ['codes' => $codes]);
             return response()->json(['success' => false, 'error' => 'Invalid codes'], 400);
         }
 
@@ -82,7 +82,7 @@ class TelegramBotController extends Controller
         parse_str(request("initData"), $tgData);
         $user = json_decode($tgData['user'] ?? '{}');
         if (!isset($user->id)) {
-            Log::error('Could not extract user from initData', ['initData' => request("initData")]);
+            Log::error('🆘 TelegramBotController storeScan: Could not extract user from initData', ['initData' => request("initData")]);
             return response()->json(['success' => false, 'error' => 'Invalid user'], 400);
         }
 
@@ -116,7 +116,7 @@ class TelegramBotController extends Controller
             try {
                 return call_user_func_array([$controller, $method], $params);
             } catch (\Throwable $e) {
-                Log::error("Error executing $method", array_merge($logContext, [
+                Log::error("🆘  TelegramBotController callControllerMethod: Error executing $method", array_merge($logContext, [
                     'exception' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]));
@@ -125,7 +125,7 @@ class TelegramBotController extends Controller
                 return null;
             }
         }
-        Log::warning("Method $method not found in controller", $logContext);
+        Log::error("🆘  TelegramBotController callControllerMethod: Method $method not found in controller", $logContext);
         if ($abortMsg)
             abort(404, $abortMsg);
         return null;

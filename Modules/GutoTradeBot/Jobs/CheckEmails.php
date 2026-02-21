@@ -172,7 +172,7 @@ class CheckEmails implements ShouldQueue
                             ),
                         );
                         $response = TelegramController::sendPhoto($array, $bot->tenant->token);
-                        Log::info("CheckEmails sendtogroup message = " . json_encode($array["message"]) . " response = " . json_encode($response) . "\n");
+                        Log::info("✅ CheckEmails sendtogroup message = " . json_encode($array["message"]) . " response = " . json_encode($response) . "\n");
                         $array = json_decode($response, true);
                         if (isset($array["result"]) && isset($array["result"]["message_id"]) && $array["result"]["message_id"] > 0) {
                             $payment = $bot->PaymentsController->create(
@@ -232,7 +232,7 @@ class CheckEmails implements ShouldQueue
                 // Desconectarse del servidor IMAP
                 $client->disconnect();
             } catch (\Throwable $th) {
-                Log::error("CheckEmails job ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()}");
+                Log::error("🆘 CheckEmails job ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()}");
             }
 
         }

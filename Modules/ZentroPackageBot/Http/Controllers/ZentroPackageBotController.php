@@ -99,7 +99,7 @@ class ZentroPackageBotController extends JsonsController
 
     public function afterScan($user_id, $codes)
     {
-        Log::info("User {$user_id} scanned: " . json_encode($codes));
+        Log::info("✅ User {$user_id} scanned: " . json_encode($codes));
 
         $completed = 0;
         $summarytext = "";

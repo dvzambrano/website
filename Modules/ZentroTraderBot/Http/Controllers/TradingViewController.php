@@ -27,7 +27,7 @@ class TradingViewController extends TelegramBotController
                 // Comparamos el "secret" de la URL con el que guardaste en el .env
                 $mySecret = config('zentrotraderbot.tv_webhook_secret') ?? env('TRADINGVIEW_WEBHOOK_SECRET');
                 if ($secret !== $mySecret) {
-                    Log::warning("⛔ Intento de acceso no autorizado al Webhook. IP: " . $request->ip());
+                    Log::warning("⚠️ Intento de acceso no autorizado al Webhook. IP: " . $request->ip());
                     return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
                 }
         */
@@ -42,11 +42,11 @@ class TradingViewController extends TelegramBotController
         }
 
         // 3. 📝 LOGUEAR (Para ver qué nos llega)
-        $text = "📡 TradingViewController webhook for " . $request["alert"];
+        $text = "TradingViewController webhook for " . $request["alert"];
         if (isset($request["user"]))
             $text .= " " . $request["user"];
         $text .= ": ";
-        Log::info($text, $data);
+        Log::debug("🐞  " . $text, $data);
 
         $bot = new ZentroTraderBotController("ZentroTraderBot");
 
@@ -84,7 +84,7 @@ class TradingViewController extends TelegramBotController
         ];
 
         // Escribiendo en el Log lo recibido para debug
-        Log::info("TradingViewController webhook for {$info['alert']}: " . json_encode($info));
+        Log::info("✅ TradingViewController webhook for {$info['alert']}: " . json_encode($info));
 
         if (isset($info["additionalData"]) && is_array($info["additionalData"])) {
 
@@ -165,7 +165,7 @@ class TradingViewController extends TelegramBotController
         $balanceAvailable = (float) ($assets[$quote] ?? 0);
 
         if ($balanceAvailable <= 0) {
-            Log::info("⚠️ Saldo insuficiente de $quote.");
+            Log::debug("🐞  TradingViewController openLongPosition: Saldo insuficiente de $quote.");
             return response()->json(['status' => 'skipped', 'message' => "Sin saldo en $quote"]);
         }
 

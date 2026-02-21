@@ -439,7 +439,7 @@ class TestController extends Controller
                         ),
                     );
                     $response = TelegramController::sendPhoto($array, $bot->token);
-                    Log::info("CheckEmails sendtogroup message = " . json_encode($array["message"]) . " response = " . json_encode($response) . "\n");
+                    Log::info("✅ CheckEmails sendtogroup message = " . json_encode($array["message"]) . " response = " . json_encode($response) . "\n");
 
 
                 } else {
@@ -452,7 +452,7 @@ class TestController extends Controller
             // Desconectarse del servidor IMAP
             $client->disconnect();
         } catch (\Throwable $th) {
-            Log::error("CheckEmails job ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()}");
+            Log::error("🆘 CheckEmails job ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()}");
         }
 
 
