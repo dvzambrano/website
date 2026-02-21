@@ -97,10 +97,11 @@ class TelegramController extends Controller
         try {
             // si es DEMO escribimos en la consola y retornamos message_id -1
             if (isset($request["demo"]) && $request["demo"] == true) {
-                Log::debug('message = ', [
-                    'url' => $url,
-                    'message' => $request["message"]
+                var_dump([
+                    "url" => $url,
+                    "message" => $request["message"],
                 ]);
+
                 return response()->json([
                     'result' => [
                         'message_id' => -1,
@@ -601,7 +602,13 @@ class TelegramController extends Controller
             "/{$filePath}";
 
         $response = Http::get($url);
-        return $response->body();
+
+        if ($response->successful()) {
+            return $response->body();
+        }
+
+        Log::error("Fallo al descargar archivo de Telegram: " . $url);
+        return null;
     }
 
     /**
@@ -680,54 +687,116 @@ class TelegramController extends Controller
     }
     public function loginCallback(Request $request)
     {
-        $botToken = $request->attributes->get('bot_token');
+        $bot_token = $request->attributes->get('bot_token');
         $auth_data = $request->all();
 
-        if (!$this->checkTelegramAuthorization($auth_data, $botToken)) {
+        if (!$this->checkTelegramAuthorization($auth_data, $bot_token)) {
+            //Log::debug("TelegramController loginCallback !checkTelegramAuthorization: " . json_encode($bot_token) . json_encode($auth_data));
             return redirect('/')->with('error', 'Fallo de integridad.');
+        }
+        //Log::debug("TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($bot_token) . json_encode($auth_data));
+
+        // 2. Obtener el file_path de la foto de perfil (sin descargar el archivo)
+        $avatarPath = null;
+        try {
+            // Obtenemos la lista de fotos del usuario
+            $photos = self::getUserPhotos($auth_data['id'], $bot_token);
+            if (!empty($photos) && isset($photos[0][0]['file_id'])) {
+                $fileId = $photos[0][0]['file_id'];
+
+                // PASO B: Consultar a Telegram dónde está ese archivo físicamente
+                // Usamos getFileUrl porque este SÍ llama a 'botTOKEN/getFile'
+                $fileResponse = json_decode(self::getFileUrl($fileId, $bot_token), true);
+
+                if (isset($fileResponse['ok']) && $fileResponse['ok']) {
+                    // Esto nos dará algo como "userphotos/file_5.jpg"
+                    $avatarPath = $fileResponse['result']['file_path'];
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error("Error obteniendo avatar de Telegram: " . $e->getMessage());
         }
 
         // En lugar de base de datos, guardamos en la sesión de Laravel
         session([
             'telegram_user' => [
-                'id' => $auth_data['id'],
+                'user_id' => $auth_data['id'],
                 'name' => $auth_data['first_name'] . ' ' . ($auth_data['last_name'] ?? ''),
                 'username' => $auth_data['username'] ?? null,
-                'photo_url' => $auth_data['photo_url'] ?? null,
+                'photo_url' => $avatarPath, // Guardamos solo la ruta: "userphotos/file_5.jpg"
             ]
         ]);
+
+        // Opcional: Si quieres usar el sistema de Auth de Laravel sin DB (Login virtual)
+        // $user = new \App\Models\User(['id' => $auth_data['id'], 'name' => $auth_data['first_name']]);
+        // auth()->login($user);
 
         return redirect()->intended('/dashboard');
     }
 
-    protected function checkTelegramAuthorization($auth_data, $botToken)
+    protected function checkTelegramAuthorization($auth_data, $bot_token)
     {
         //Log::error("TelegramController checkAuthorization: " . json_encode($auth_data));
         /*
         {
-    "id": "1741391257",
-    "first_name": "Crypto",
-    "last_name": "Dev",
-    "username": "criptodev1981",
-    "photo_url": "https:\/\/t.me\/i\/userpic\/320\/OTuPwnXNYWQdvow2ThDsPptkNZ6mYYJV80hnQpR8mSM.jpg",
-    "auth_date": "1771339825",
-    "hash": "048d49f88eceab46dbf338fe3152eb72796d08d9f30681b092f6b8ea9946253f"
-}
+            "id": "1741391257",
+            "first_name": "Crypto",
+            "last_name": "Dev",
+            "username": "criptodev1981",
+            "photo_url": "https:\/\/t.me\/i\/userpic\/320\/OTuPwnXNYWQdvow2ThDsPptkNZ6mYYJV80hnQpR8mSM.jpg",
+            "auth_date": "1771339825",
+            "hash": "048d49f88eceab46dbf338fe3152eb72796d08d9f30681b092f6b8ea9946253f"
+        }
         */
 
-        $check_hash = $auth_data['hash'];
-        unset($auth_data['hash']);
-
-        $data_check_arr = [];
-        foreach ($auth_data as $key => $value) {
-            $data_check_arr[] = $key . '=' . $value;
+        if (!isset($auth_data['hash'])) {
+            return false;
         }
-        Arr::sort($data_check_arr);
-        $data_check_string = collect($data_check_arr)->implode("\n");
 
-        $secret_key = hash('sha256', $botToken, true);
+        $check_hash = $auth_data['hash'];
+
+        // 1. Extraer el hash y limpiar datos nulos
+        $data_check_arr = collect($auth_data)
+            ->except(['hash']) // Quitamos el hash
+            ->filter()         // Quitamos valores nulos/vacíos
+            ->map(function ($value, $key) {
+                // Importante: Telegram envía las URLs de fotos sin escapar las barras
+                // Nos aseguramos de que el valor sea el string puro
+                return $key . '=' . $value;
+            })
+            ->sort() // Ordenar alfabéticamente los strings "key=value"
+            ->values();
+
+        // 2. Crear el string de verificación con saltos de línea
+        $data_check_string = $data_check_arr->implode("\n");
+
+        // 3. Generar la clave secreta (SHA256 del Bot Token en binario)
+        $secret_key = hash('sha256', $bot_token, true);
+
+        // 4. Calcular el HMAC
         $hash = hash_hmac('sha256', $data_check_string, $secret_key);
 
+        // DEBUG para comparar (Solo en desarrollo)
+        // Log::debug("Check String:\n" . $data_check_string);
+        // Log::debug("Calculated: $hash vs Original: $check_hash");
+
         return hash_equals($hash, $check_hash);
+    }
+
+    public function proxyAvatar($bot_token, $filePath = null)
+    {
+        if (!$filePath)
+            abort(404);
+
+        // LLAMAMOS AL NUEVO MÉTODO
+        $content = self::getFile($filePath, $bot_token);
+
+        if (!$content) {
+            abort(404, "No se pudo obtener el contenido del avatar.");
+        }
+
+        return response($content)
+            ->header('Content-Type', 'image/jpeg') // Telegram suele enviar jpg
+            ->header('Cache-Control', 'public, max-age=86400');
     }
 }

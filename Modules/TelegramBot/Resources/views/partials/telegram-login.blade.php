@@ -8,12 +8,13 @@ Uso:
 --}}
 
 <div id="telegram-login-container" class="d-flex justify-content-center align-items-center my-3">
-    @if(session('telegram_user'))
+    @if (session('telegram_user'))
         @php $user = session('telegram_user'); @endphp
 
         <div class="user-logged-info d-flex align-items-center p-2 shadow-sm rounded border bg-light">
-            @if(!empty($user['photo_url']))
-                <img src="{{ $user['photo_url'] }}" class="rounded-circle me-2" referrerpolicy="no-referrer"
+            @if (!empty($user['photo_url']))
+                <img src="{{ route('avatar.proxy', ['bot_token' => $bot->token, 'file_path' => session('telegram_user.photo_url')]) }}"
+                    class="rounded-circle me-2" referrerpolicy="no-referrer"
                     style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #0088cc;">
             @else
                 <div class="rounded-circle me-2 bg-primary d-flex align-items-center justify-content-center text-white"
@@ -34,11 +35,11 @@ Uso:
             </a>
         </div>
     @else
-        <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="{{ $bot->code }}" {{-- El
+        <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="{{ $bot->code }}"
+            {{-- El
             username para el botón --}} data-size="{{ $size ?? 'large' }}" data-radius="{{ $radius ?? '10' }}" {{-- La URL
             de retorno usa la KEY interna, no el username --}}
-            data-auth-url="{{ route('telegram.callback', ['key' => $bot->key]) }}" data-request-access="write">
-            </script>
+            data-auth-url="{{ route('telegram.callback', ['key' => $bot->key]) }}" data-request-access="write"></script>
     @endif
 </div>
 

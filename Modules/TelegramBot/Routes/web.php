@@ -20,6 +20,11 @@ Route::prefix('telegram')->group(function () {
         ->middleware('tenant.detector')
         ->name('telegram-bot-webhhok');
 
+    // Ruta para servir avatares de Telegram a través de nuestro servidor
+    Route::get('/avatar/{bot_token}/{file_path?}', 'TelegramController@proxyAvatar')
+        ->where('file_path', '.*') // Permite que la ruta incluya barras /
+        ->name('avatar.proxy');
+
     // Ruta para el WebApp de escaneo
     // URL final ejemplo: https://tudominio.com/telegram/scanner
     Route::get('/scanner/{gpsrequired}/{botname}/{instance?}', 'TelegramBotController@initScanner')->name('telegram-scanner-init');
@@ -46,7 +51,7 @@ Route::prefix('telegram')->group(function () {
         if ($isLocalHost && $isLocalEnv) {
             session([
                 'telegram_user' => [
-                    'id' => '816767995',
+                    'user_id' => '816767995',
                     'name' => 'Donel Vazquez Zambrano',
                     'username' => 'dvzambrano',
                     'photo_url' => 'assets/img/avatar.jpg'

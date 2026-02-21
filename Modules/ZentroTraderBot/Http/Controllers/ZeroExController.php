@@ -10,6 +10,7 @@ use kornrunner\Ethereum\EIP1559Transaction;
 use Elliptic\EC;
 use kornrunner\Keccak;
 use Modules\Web3\Traits\BlockchainTools;
+use Modules\Web3\Services\Web3MathService;
 
 class ZeroExController extends Controller
 {
@@ -370,5 +371,24 @@ class ZeroExController extends Controller
         }
         Log::error("⏰ Timeout esperando confirmación.");
         return false;
+    }
+
+    // ----- Compatibilidad con API anterior (wrappers mínimos) -----
+    protected function formatTokenBalance($hex, $decimals)
+    {
+        return Web3MathService::hexToDecimal($hex, $decimals);
+    }
+
+    protected function hexToDecString($hex)
+    {
+        return Web3MathService::hexToDecimal($hex, 0);
+    }
+
+    protected function formatDecimalAsHex($decimal, $decimals = 0)
+    {
+        if (is_string($decimal) && str_starts_with($decimal, '0x'))
+            return $decimal;
+
+        return '0x' . ltrim(Web3MathService::decimalToHex((string) $decimal, $decimals), '0x');
     }
 }

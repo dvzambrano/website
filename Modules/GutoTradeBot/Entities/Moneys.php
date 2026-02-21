@@ -80,7 +80,8 @@ class Moneys extends Jsons
             if ($show_owner_id) {
                 if ($this->sender_id && $this->sender_id > 0) {
                     $suscriptor = $bot->AgentsController->getSuscriptor($bot, $this->sender_id, true);
-                    $text .= "👨🏻‍💻 Reportado por:\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n";
+                    if ($suscriptor && $suscriptor->id > 0)
+                        $text .= "👨🏻‍💻 Reportado por:\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n";
                 }
 
                 if (
