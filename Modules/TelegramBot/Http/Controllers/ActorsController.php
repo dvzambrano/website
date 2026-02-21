@@ -23,7 +23,7 @@ class ActorsController extends JsonsController
     }
     public function suscribe($tenant, $user_id, $parent_id)
     {
-        //Log::info("ActorsController suscribe bot:" . json_encode($bot));
+        //Log::info("✅ ActorsController suscribe bot:" . json_encode($bot));
 
         // Valorando suscripcion del actor q nos esta escribiendo
         $actor = $this->getFirst(Actors::class, "user_id", "=", $user_id);

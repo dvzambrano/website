@@ -72,7 +72,7 @@ class TransakController extends Controller implements RampProviderInterface
         $array = array();
         $payload = $request->all();
         // Logueamos siempre para auditoría interna
-        Log::info("Transak Webhook - Evento recibido:" . json_encode($payload));
+        Log::debug("🐞 TransakController processWebhook: Evento recibido " . json_encode($payload));
 
         try {
             $token = $request->getContent();
@@ -101,7 +101,7 @@ class TransakController extends Controller implements RampProviderInterface
                 $array["status"] = $data['status'];
                 $array["payload"] = $payload;
 
-                Log::info("Transak ORDER Update - User: " . $array["userId"] . " - Order: " . $array["orderId"] . "" . " - Status: " . $array["status"]);
+                Log::debug("🐞 TransakController processWebhook: ORDER Update - User: " . $array["userId"] . " - Order: " . $array["orderId"] . "" . " - Status: " . $array["status"]);
             }
 
             // Los eventos de KYC empiezan por "USER_" (ej: USER_KYC_APPROVED)
@@ -110,12 +110,12 @@ class TransakController extends Controller implements RampProviderInterface
                 $array["userId"] = $data['partnerCustomerId'];
                 $array["status"] = $data['kycStatus'];
 
-                Log::info("Transak KYC Update - User: " . $array["userId"] . " - Status: " . $array["status"]);
+                Log::debug("🐞 TransakController processWebhook: KYC Update - User: " . $array["userId"] . " - Status: " . $array["status"]);
             }
 
 
         } catch (\Exception $e) {
-            Log::error("Transak Webhook Error: " . $e->getMessage());
+            Log::error("🆘 TransakController processWebhook Error: " . $e->getMessage());
         }
 
         return $array;
@@ -147,9 +147,9 @@ class TransakController extends Controller implements RampProviderInterface
                 }
             }
 
-            Log::error("Error Transak Access Token: " . $response->body());
+            Log::error("🆘 TransakController getAccessToken Error: " . $response->body());
         } catch (\Exception $e) {
-            Log::error("Excepción en Transak Token: " . $e->getMessage());
+            Log::error("🆘 TransakController getAccessToken Exception: " . $e->getMessage());
         }
 
         return null;
@@ -206,7 +206,7 @@ class TransakController extends Controller implements RampProviderInterface
                 ]);
 
         if ($response->failed()) {
-            Log::error("Error Transak Session: " . $response->body());
+            Log::error("🆘 TransakController getWidgetUrl Error: " . $response->body());
             return null;
         }
 

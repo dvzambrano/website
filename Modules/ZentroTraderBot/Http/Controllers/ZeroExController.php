@@ -35,7 +35,7 @@ class ZeroExController extends Controller
         $activeWalletAddress = $this->deriveAddress($activePrivateKey);
 
         if ($log)
-            Log::info("👤 Iniciando Swap para usuario: $activeWalletAddress: $amount $from -> $to");
+            Log::debug("🐞 ZeroExController swap: Iniciando Swap para usuario $activeWalletAddress: $amount $from -> $to");
 
         // 2. CARGA DE CONFIGURACIÓN
         $tokens = config('web3.tokens');
@@ -68,7 +68,7 @@ class ZeroExController extends Controller
         try {
             $quote = $this->getZeroExQuote($chainId, $sellTokenAddress, $buyTokenAddress, $amountInWei, $activeWalletAddress);
         } catch (\Exception $e) {
-            Log::error("❌ Error Quote: " . $e->getMessage());
+            Log::error("🆘 ZeroExController swap Error: " . $e->getMessage());
             throw $e;
         }
 
@@ -76,10 +76,10 @@ class ZeroExController extends Controller
         if (isset($quote['issues']['allowance'])) {
             $requiredSpender = $quote['issues']['allowance']['spender'];
 
-            $text = "🛑 *Falta permiso*. _Aprobando a_: `$requiredSpender`...";
+            $text = "✋ *Falta permiso*. _Aprobando a_: `$requiredSpender`...";
             $nofifyFn($text, 1);
             if ($log)
-                Log::info($text);
+                Log::debug("🐞 " . $text);
 
             $approveTxHash = $this->sendApproveTransaction(
                 $rpcUrl,
@@ -94,13 +94,13 @@ class ZeroExController extends Controller
             $text = "📨 _TX Approve enviada:_ `$approveTxHash`. _Esperando confirmacion..._";
             $nofifyFn($text, 1);
             if ($log)
-                Log::info($text);
+                Log::debug("🐞 " . $text);
 
             if ($this->waitForConfirmation($rpcUrl, $approveTxHash, $nofifyFn, $log)) {
                 $text = "🔄 *Aprobación confirmada*. _Reintentando Swap..._";
                 $nofifyFn($text, 1);
                 if ($log)
-                    Log::info($text);
+                    Log::debug("🐞 " . $text);
 
                 // RECURSIVIDAD: Pasamos la misma clave privada
                 return $this->swap($from, $to, $amount, $userPrivateKey, $nofifyFn, $log);
@@ -109,7 +109,7 @@ class ZeroExController extends Controller
             }
         }
         if ($log)
-            Log::info("✅ Permisos OK. Ejecutando Swap...");
+            Log::debug("🐞 ZeroExController swap:Permisos OK. Ejecutando Swap...");
 
         // 7. EJECUCIÓN DEL SWAP
         try {
@@ -118,7 +118,7 @@ class ZeroExController extends Controller
             $text = "⏳ _TX Enviada:_ `$txHash`";
             $nofifyFn($text, 1);
             if ($log)
-                Log::info($text);
+                Log::debug("🐞 " . $text);
 
             // 5. ⏳ ESPERAR CONFIRMACIÓN (Mining...)
             $confirmed = $this->waitForConfirmation($rpcUrl, $txHash, $nofifyFn, $log);
@@ -145,7 +145,7 @@ class ZeroExController extends Controller
             $text = "🎉 *SWAP EXITOSO*. Recibidos: +$receivedAmount $to";
             $nofifyFn($text, 1);
             if ($log)
-                Log::info($text);
+                Log::debug("🐞 " . $text);
 
             return [
                 'status' => 'SWAPPED',
@@ -156,7 +156,7 @@ class ZeroExController extends Controller
                 'message' => "Operación completada: $amount $from -> $to"
             ];
         } catch (\Exception $e) {
-            Log::error("❌ Error Crítico: " . $e->getMessage());
+            Log::error("🆘 ZeroExController swap Exception: " . $e->getMessage());
             throw $e;
         }
     }
@@ -194,7 +194,7 @@ class ZeroExController extends Controller
         $rpcUrl = $networkConfig['rpc_url'];
 
         if ($log)
-            Log::info("🕵️‍♂️ Diagnóstico en {$networkConfig['name']} para $walletAddress");
+            Log::debug("🐞 ZeroExController diagnoseWallet: Diagnóstico en {$networkConfig['name']} para $walletAddress");
 
         // Saldo Nativo
         $nativeBalanceHex = $this->rpcCall($rpcUrl, 'eth_getBalance', [$walletAddress, 'latest'], true);
@@ -337,7 +337,7 @@ class ZeroExController extends Controller
             $turboGasPrice = bcmul(number_format($currentGasPriceDec, 0, '.', ''), '2.0', 0);
 
             if ($log)
-                Log::info("🔥 Modo Turbo ($chainId): Gas subido a $turboGasPrice Wei.");
+                Log::debug("🐞 ZeroExController sendApproveTransaction: Modo Turbo ($chainId) - Gas subido a $turboGasPrice Wei.");
 
             $tx = new Transaction($nonceHex, $this->formatDecimalAsHex($turboGasPrice), $gasLimitHex, $tokenAddress, '0x0', $data);
         }
@@ -357,19 +357,19 @@ class ZeroExController extends Controller
                     $text = "✅ _TX Confirmada_ `$txHash`";
                     $nofifyFn($text, 1);
                     if ($log)
-                        Log::info($text);
+                        Log::debug("🐞 " . $text);
                     return true;
                 } else {
                     $text = "❌ *TX Fallo* _(Reverted)_.";
                     $nofifyFn($text, 1);
                     if ($log)
-                        Log::info($text);
+                        Log::debug("🐞 " . $text);
                     return false;
                 }
             }
             sleep(10); // Esperar 10 segundos antes de volver a preguntar
         }
-        Log::error("⏰ Timeout esperando confirmación.");
+        Log::error("🆘 ZeroExController waitForConfirmation Timeout");
         return false;
     }
 
