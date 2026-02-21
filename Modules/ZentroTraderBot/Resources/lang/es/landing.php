@@ -82,6 +82,7 @@ return [
         "list" => [
             "feature_1" => "Tú decides cuándo y dónde.",
             "feature_2" => "Lo que haces con tu capital es asunto tuyo.",
+            'feature_4' => 'Seguridad de vanguardia.',
             "feature_5" => "Tú decides quién sabe qué sobre tus finanzas.",
             "feature_3" => "Sin algoritmos bloqueando tus fondos por 'actividad inusual'",
         ],

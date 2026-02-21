@@ -82,6 +82,7 @@ return [
         "list" => [
             "feature_1" => "You decide when and where.",
             "feature_2" => "What you do with your capital is your business.",
+            'feature_4' => 'State-of-the-art security.',
             "feature_5" => "You decide who knows what about your finances.",
             "feature_3" => "No algorithms blocking your funds for 'unusual activity'.",
         ],
