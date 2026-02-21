@@ -84,7 +84,7 @@ class CoingeckoController extends JsonsController
             }
 
         } else {
-            Log::error("CoingeckoController getHistory response status: " . $response->status());
+            Log::error("🆘 CoingeckoController getHistory response status: " . $response->status());
         }
 
         return $rate;

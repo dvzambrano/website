@@ -67,7 +67,7 @@ class GutoTradeBotController extends JsonsController
         $tenant = app('active_bot');
 
         $array = $this->getCommand($this->message["text"]);
-        //Log::info("GutoTradeBotController getCommand " . json_encode($array));
+        //Log::info("✅ GutoTradeBotController getCommand " . json_encode($array));
 
         $this->strategies["/help"] =
             $this->strategies["help"] =
@@ -139,8 +139,8 @@ class GutoTradeBotController extends JsonsController
                             "Reporte de pago encontrado"
                         );
                     } catch (\Throwable $th) {
-                        Log::error("GutoTradeBotController /buscar ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()}");
-                        //Log::error("GutoTradeBotController TraceAsString: " . $th->getTraceAsString());
+                         Log::error("🆘 GutoTradeBotController /buscar ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()}");
+                        // Log::error("🆘 GutoTradeBotController TraceAsString: " . $th->getTraceAsString());
 
                         $reply = [
                             "text" => "😬 *Ha ocurrido un error {$th->getCode()}*\n_{$th->getMessage()}_",
@@ -1139,7 +1139,7 @@ class GutoTradeBotController extends JsonsController
                     $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
                 $array = $this->getCommand($command);
 
-                //Log::info("GutoTradeBotController promptpaymentcomment " . json_encode($array));
+                //Log::info("✅ GutoTradeBotController promptpaymentcomment " . json_encode($array));
     
                 $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
 
@@ -1280,7 +1280,7 @@ class GutoTradeBotController extends JsonsController
                 if (isset($this->actor->data[$tenant->code]["last_bot_callback_data"]))
                     $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
                 $array = $this->getCommand($command);
-                //Log::info("GutoTradeBotController photo or document with command='{$command}' " . json_encode($array));
+                //Log::info("✅ GutoTradeBotController photo or document with command='{$command}' " . json_encode($array));
 
                 switch ($array["command"]) {
                     case "getsenderpaymentscreenshot":
@@ -1319,7 +1319,7 @@ class GutoTradeBotController extends JsonsController
                         // NO BORRAR ESTE CASE: Sirve para reenviar pagos desde otras cuentas de telegram
                         $message = request()->input('message', []);
 
-                        //Log::info("GutoTradeBotController getforwardedpaymentscreenshot message = " . json_encode($message));
+                        //Log::info("✅ GutoTradeBotController getforwardedpaymentscreenshot message = " . json_encode($message));
 
                         unset($message["text"]);
                         if (!isset($message["message_id"]))
@@ -1758,7 +1758,7 @@ class GutoTradeBotController extends JsonsController
 
         if (isset($message["reply_to_message"])) {
             $message = $message["reply_to_message"];
-            //Log::info("GutoTradeBotController getIdOfRepliedMessage " . json_encode($message));
+            //Log::info("✅ GutoTradeBotController getIdOfRepliedMessage " . json_encode($message));
 
             // Los mensajes con foto usan 'caption_entities', los de texto 'entities'
             $entities = $message['caption_entities'] ?? $message['entities'] ?? [];

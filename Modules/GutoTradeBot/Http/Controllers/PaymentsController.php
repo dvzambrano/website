@@ -33,7 +33,7 @@ class PaymentsController extends MoneysController
         $data["capital"] = $bot->ProfitsController->getSpended($amount);
 
         /*
-        Log::info("PaymentsController create args " . json_encode([
+        Log::info("✅ PaymentsController create args " . json_encode([
             'amount' => $amount,
             'comment' => $comment,
             'screenshot' => $screenshot,
@@ -672,7 +672,7 @@ class PaymentsController extends MoneysController
             ],
 
         ], $tenant->code);
-        Log::info("PaymentsController getUnconfirmedMenuForUsers (" . $tenant->code . ") " . json_encode($senders->toArray()));
+        Log::info("✅ PaymentsController getUnconfirmedMenuForUsers (" . $tenant->code . ") " . json_encode($senders->toArray()));
 
         $menu = array();
         $total = 0;
@@ -828,7 +828,7 @@ class PaymentsController extends MoneysController
                 ) {
                     $text .= "\n\n👉 @{$response['result']['formated_username']}";
                 }
-                //Log::info("PaymentsController getUnliquidated subject: " . json_encode($subject->data[$tenant->code]));
+                //Log::info("✅ PaymentsController getUnliquidated subject: " . json_encode($subject->data[$tenant->code]));
                 if (
                     isset($subject->data[$tenant->code]["metadatas"]) &&
                     isset($subject->data[$tenant->code]["metadatas"]["wallet"]) &&

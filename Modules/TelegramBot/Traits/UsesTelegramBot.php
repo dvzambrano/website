@@ -40,7 +40,7 @@ trait UsesTelegramBot
                 app()->instance('active_bot', $bot);
             }
         } catch (\Exception $e) {
-            Log::error("🆘 UsesTelegramBot receiveMessage Error:" . $e->getMessage());
+            Log::error("🆘  UsesTelegramBot receiveMessage Error:" . $e->getMessage());
         }
 
         $this->message = array();
@@ -147,7 +147,7 @@ trait UsesTelegramBot
     }
     public function getProcessedMessage($array = false)
     {
-        // Log::debug("🐞 UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
+        // Log::debug("🐞  UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
 
         // validando q el usuario tenga un @username
         if (

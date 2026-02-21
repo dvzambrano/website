@@ -38,7 +38,7 @@ class RampController extends Controller
         $provider = $this->getProvider($providerName);
 
         $url = $provider->getWidgetUrl($tenant, $suscriptor, strtoupper($action));
-        Log::debug("🐞 RampController redirect: success redirect hit " . json_encode(request()->all()));
+        Log::debug("🐞  RampController redirect: success redirect hit " . json_encode(request()->all()));
         if (!$url) {
             return Lang::get("zentrotraderbot::bot.prompts.fail.widgeturl");
         }

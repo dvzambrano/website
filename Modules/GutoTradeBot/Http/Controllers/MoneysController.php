@@ -157,7 +157,7 @@ class MoneysController extends JsonsController
 
         if (isset(request("message")["caption"])) {
             $caption = $this->processCaption(request("message")["caption"]);
-            //Log::debug("MoneysController processMoney caption " . json_encode($caption) . "\n");
+            //Log::debug("🐞 MoneysController processMoney caption " . json_encode($caption) . "\n");
 
             // Guardar el pago en la BD
             if ($caption["success"] && isset($caption["fullname"]) && isset($caption["amount"])) {
@@ -179,7 +179,7 @@ class MoneysController extends JsonsController
                     $sender = 2;
                 }
 
-                //Log::debug("MoneysController processMoney type = {$type}\n");
+                //Log::debug("🐞 MoneysController processMoney type = {$type}\n");
                 try {
                     switch ($type) {
                         case 1:
@@ -269,7 +269,7 @@ class MoneysController extends JsonsController
                             break;
                     }
                 } catch (\Throwable $th) {
-                    Log::error("MoneysController processMoney ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()} TraceAsString: " . $th->getTraceAsString());
+                    Log::error("🆘 MoneysController processMoney ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()} TraceAsString: " . $th->getTraceAsString());
                     $reply = [
                         "text" => "😬 *Ha ocurrido un error {$th->getCode()}*\n_{$th->getMessage()}_",
                         "reply_markup" => json_encode([
@@ -289,7 +289,7 @@ class MoneysController extends JsonsController
             $reply = $this->badCaptionReply($bot, "Sin descripción", $type);
         }
 
-        //Log::debug("MoneysController processMoney reply " . json_encode($reply) . "\n");
+        //Log::debug("🐞 MoneysController processMoney reply " . json_encode($reply) . "\n");
         return $reply;
     }
 

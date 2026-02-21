@@ -31,7 +31,7 @@ class TraderWalletController extends WalletController
             return $wallet;
 
         } catch (\Exception $e) {
-            Log::error("🆘 TraderWalletController getWallet: Error generando wallet: " . $e->getMessage());
+            Log::error("🆘  TraderWalletController getWallet: Error generando wallet: " . $e->getMessage());
         }
 
         return $wallet;

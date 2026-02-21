@@ -173,7 +173,7 @@ class ZentroCriptoBotController extends JsonsController
                 $error = "ZentroCriptoBotController analizeToken ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()}\n";
                 Log::error($error . " => " . json_encode($response));
 
-                //Log::info("ZentroCriptoBotController processMessage " . $this->message["chat"]["type"]);
+                //Log::info("✅ ZentroCriptoBotController processMessage " . $this->message["chat"]["type"]);
                 $error .= "`{$contract}`\n\n🆔 *{$this->message['chat']['type']}* `{$this->message['chat']['id']}`:";
                 if (isset($this->message['chat']['title'])) {
                     $error .= "\nℹ️ *{$this->message['chat']['title']}*";
@@ -186,7 +186,7 @@ class ZentroCriptoBotController extends JsonsController
                 }
                 $error .= "\n" . json_encode($response);
 
-                //Log::info("TelegramBotController callback_query for {$botname} from {$controller->message['chat']['type']} {$controller->message['chat']['id']}: " . json_encode($request["callback_query"]));
+                //Log::info("✅ TelegramBotController callback_query for {$botname} from {$controller->message['chat']['type']} {$controller->message['chat']['id']}: " . json_encode($request["callback_query"]));
 
                 $request["message"] = array(
                     "text" => "🐞 {$error}",

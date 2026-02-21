@@ -156,8 +156,8 @@ class TelegramController extends Controller
         } catch (\Throwable $th) {
             $array = TelegramController::analizeUrl($url);
             $method = $array["path_parts"][count($array["path_parts"]) - 1];
-            Log::error("🆘 TelegramController {$method} attempt {$attempt}, CODE: {$th->getCode()}, line {$th->getLine()}, URL: {$url}, Message: {$th->getMessage()}");
-            //Log::error("🆘 TelegramController TraceAsString: " . $th->getTraceAsString());
+            Log::error("🆘  TelegramController {$method} attempt {$attempt}, CODE: {$th->getCode()}, line {$th->getLine()}, URL: {$url}, Message: {$th->getMessage()}");
+            //  Log::error("🆘  TelegramController TraceAsString: " . $th->getTraceAsString());
 
             // si hay algun error retornamos message_id 0
             return response()->json([
@@ -507,7 +507,7 @@ class TelegramController extends Controller
             $response = Http::get($url);
             return $response->body();
         } catch (\Throwable $th) {
-            //Log::error("🆘 TelegramController getBotInfo: " . $th->getTraceAsString());
+            //  Log::error("🆘  TelegramController getBotInfo: " . $th->getTraceAsString());
         }
 
         return false;
@@ -548,7 +548,7 @@ class TelegramController extends Controller
             $json["result"]["full_info"] = $text;
 
         } catch (\Throwable $th) {
-            //Log::error("🆘 TelegramController getUserInfo: " . $th->getTraceAsString());
+            //  Log::error("🆘  TelegramController getUserInfo: " . $th->getTraceAsString());
         }
 
         return json_encode($json);
@@ -563,7 +563,7 @@ class TelegramController extends Controller
             $response = Http::get($url);
             return $response->body();
         } catch (\Throwable $th) {
-            //Log::error("🆘 TelegramController getFileUrl: " . $th->getTraceAsString());
+            //  Log::error("🆘  TelegramController getFileUrl: " . $th->getTraceAsString());
         }
     }
 
@@ -589,7 +589,7 @@ class TelegramController extends Controller
             }
             Log::warning("⚠️ TelegramController getFileUrl HTTP status {$response->status()} for URL: {$url}");
         } catch (\Throwable $th) {
-            Log::error("🆘 TelegramController getFileUrl error: " . $th->getMessage());
+            Log::error("🆘  TelegramController getFileUrl error: " . $th->getMessage());
         }
 
         return false;
@@ -607,7 +607,7 @@ class TelegramController extends Controller
             return $response->body();
         }
 
-        Log::error("🆘 TelegramController getFile: Fallo al descargar archivo de Telegram: " . $url);
+        Log::error("🆘  TelegramController getFile: Fallo al descargar archivo de Telegram: " . $url);
         return null;
     }
 
@@ -691,10 +691,10 @@ class TelegramController extends Controller
         $auth_data = $request->all();
 
         if (!$this->checkTelegramAuthorization($auth_data, $bot_token)) {
-            //Log::debug("🐞 TelegramController loginCallback !checkTelegramAuthorization: " . json_encode($bot_token) . json_encode($auth_data));
+            //Log::debug("🐞  TelegramController loginCallback !checkTelegramAuthorization: " . json_encode($bot_token) . json_encode($auth_data));
             return redirect('/')->with('error', 'Fallo de integridad.');
         }
-        //Log::debug("🐞 TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($bot_token) . json_encode($auth_data));
+        //Log::debug("🐞  TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($bot_token) . json_encode($auth_data));
 
         // 2. Obtener el file_path de la foto de perfil (sin descargar el archivo)
         $avatarPath = null;
@@ -714,7 +714,7 @@ class TelegramController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            Log::error("🆘 TelegramController loginCallback: Error obteniendo avatar: " . $e->getMessage());
+            Log::error("🆘  TelegramController loginCallback: Error obteniendo avatar: " . $e->getMessage());
         }
 
         // En lugar de base de datos, guardamos en la sesión de Laravel
@@ -736,7 +736,7 @@ class TelegramController extends Controller
 
     protected function checkTelegramAuthorization($auth_data, $bot_token)
     {
-        //Log::error("🆘 TelegramController checkAuthorization: " . json_encode($auth_data));
+        //  Log::error("🆘  TelegramController checkAuthorization: " . json_encode($auth_data));
         /*
         {
             "id": "1741391257",
@@ -777,8 +777,8 @@ class TelegramController extends Controller
         $hash = hash_hmac('sha256', $data_check_string, $secret_key);
 
         // DEBUG para comparar (Solo en desarrollo)
-        // Log::debug("🐞 TelegramController checkTelegramAuthorization Check String:\n" . $data_check_string);
-        // Log::debug("🐞 TelegramController checkTelegramAuthorization Calculated: $hash vs Original: $check_hash");
+        // Log::debug("🐞  TelegramController checkTelegramAuthorization Check String:\n" . $data_check_string);
+        // Log::debug("🐞  TelegramController checkTelegramAuthorization Calculated: $hash vs Original: $check_hash");
 
         return hash_equals($hash, $check_hash);
     }

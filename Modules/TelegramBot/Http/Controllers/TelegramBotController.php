@@ -62,7 +62,7 @@ class TelegramBotController extends Controller
                 'instance' => $instance
             ]);
         }
-        Log::error("🆘 TelegramBotController getController Error: Controller $controller not found ", ['botname' => $botname, 'instance' => $instance]);
+        Log::error("🆘  TelegramBotController getController Error: Controller $controller not found ", ['botname' => $botname, 'instance' => $instance]);
         return false;
     }
 
@@ -116,7 +116,7 @@ class TelegramBotController extends Controller
             try {
                 return call_user_func_array([$controller, $method], $params);
             } catch (\Throwable $e) {
-                Log::error("🆘 TelegramBotController callControllerMethod: Error executing $method", array_merge($logContext, [
+                Log::error("🆘  TelegramBotController callControllerMethod: Error executing $method", array_merge($logContext, [
                     'exception' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]));
@@ -125,7 +125,7 @@ class TelegramBotController extends Controller
                 return null;
             }
         }
-        Log::error("🆘 TelegramBotController callControllerMethod: Method $method not found in controller", $logContext);
+        Log::error("🆘  TelegramBotController callControllerMethod: Method $method not found in controller", $logContext);
         if ($abortMsg)
             abort(404, $abortMsg);
         return null;
