@@ -55,7 +55,7 @@ class ProcessBlockchainActivity
 
         $bot = TelegramBots::where('key', $activity['tenantCode'])->first();
         if (!$bot) {
-            Log::error("ProcessBlockchainActivity handle event: " . $activity['tenantCode']);
+            Log::error("🆘 ProcessBlockchainActivity handle event: " . $activity['tenantCode']);
             return;
         }
 

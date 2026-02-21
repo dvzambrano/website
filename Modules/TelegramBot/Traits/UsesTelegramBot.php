@@ -40,7 +40,7 @@ trait UsesTelegramBot
                 app()->instance('active_bot', $bot);
             }
         } catch (\Exception $e) {
-            Log::error("UsesTelegramBot receiveMessage Error:" . $e->getMessage());
+            Log::error("🆘 UsesTelegramBot receiveMessage Error:" . $e->getMessage());
         }
 
         $this->message = array();
@@ -79,7 +79,7 @@ trait UsesTelegramBot
             //(no chat info)
             return response()->json(["message" => "OK"], 200);
         }
-        Log::info("{$log} from {$logfrom}" . json_encode($this->message));
+        Log::info("✅ {$log} from {$logfrom}" . json_encode($this->message));
 
         // analizando la informacion del texto obtenido en el $request
         // no se hace una validacion de $this->message["text"] vacio pues afecta en elvio de archivos a GutoTradeBot
@@ -101,7 +101,7 @@ trait UsesTelegramBot
             return response()->json(["message" => "OK"], 200);
 
         $log = "TelegramBotController {$type} reply from " . $this->tenant->code;
-        Log::info("{$log} to {$logfrom}" . json_encode($this->reply) . "\n");
+        Log::info("✅ {$log} to {$logfrom}" . json_encode($this->reply) . "\n");
         // Armando la respuesta correspondiente:
         $array = array(
             "message" => array(
@@ -147,7 +147,7 @@ trait UsesTelegramBot
     }
     public function getProcessedMessage($array = false)
     {
-        //Log::info("UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
+        // Log::debug("🐞 UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
 
         // validando q el usuario tenga un @username
         if (
