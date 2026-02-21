@@ -47,7 +47,7 @@
                         </a></li>
 
                     <li><a class="nav-link scrollto" href="#about">
-                            {{ __('zentrotraderbot::landing.menu.about') }}
+                            {{ __('zentrotraderbot::landing.menu.about', ['name' => __('zentrotraderbot::landing.title')]) }}
                         </a></li>
 
                     <li><a class="nav-link scrollto" href="#features">
@@ -148,7 +148,25 @@
                             <h2>{{ __('zentrotraderbot::landing.about.description', ['name' => __('zentrotraderbot::landing.title')]) }}
                             </h2>
                             <p>
-                                {{ __('zentrotraderbot::landing.about.card_1.text2') }}
+                                {{ __('zentrotraderbot::landing.about.card_1.text2.line1') }}
+                            </p>
+                            <div class="d-flex align-items-center mb-2">
+                                <h5>{{ __('zentrotraderbot::landing.about.card_1.text2.case1') }}</h5>
+                            </div>
+                            <p>
+                                {{ __('zentrotraderbot::landing.about.card_1.text2.text1', ['name' => __('zentrotraderbot::landing.title')]) }}
+                            </p>
+                            <div class="d-flex align-items-center mb-2">
+                                <h5>{{ __('zentrotraderbot::landing.about.card_1.text2.case2') }}</h5>
+                            </div>
+                            <p>
+                                {{ __('zentrotraderbot::landing.about.card_1.text2.text2') }}
+                            </p>
+                            <div class="d-flex align-items-center mb-2">
+                                <h5>{{ __('zentrotraderbot::landing.about.card_1.text2.case3') }}</h5>
+                            </div>
+                            <p>
+                                {{ __('zentrotraderbot::landing.about.card_1.text2.text3', ['name' => __('zentrotraderbot::landing.title')]) }}
                             </p>
                         </div>
                     </div>
@@ -602,7 +620,8 @@
             <div class="container" data-aos="fade-up">
 
                 <header class="section-header">
-                    <h2>{{ __('zentrotraderbot::landing.menu.about') }}</h2>
+                    <h2>{{ __('zentrotraderbot::landing.menu.about', ['name' => __('zentrotraderbot::landing.title')]) }}
+                    </h2>
                     <p>{{ __('zentrotraderbot::landing.testimonials.title') }}</p>
                 </header>
 
@@ -736,7 +755,8 @@
             <div class="container" data-aos="fade-up">
 
                 <header class="section-header">
-                    <h2>{{ __('zentrotraderbot::landing.menu.about') }}</h2>
+                    <h2>{{ __('zentrotraderbot::landing.menu.about', ['name' => __('zentrotraderbot::landing.title')]) }}
+                    </h2>
                     <p>{{ __('zentrotraderbot::landing.blog.title') }}</p>
                 </header>
 
@@ -903,12 +923,14 @@
                     </div>
 
                     <div class="col-lg-2 col-12 footer-links">
-                        <h4>{{ __('zentrotraderbot::landing.menu.about') }}</h4>
+                        <h4>{{ __('zentrotraderbot::landing.menu.about', ['name' => __('zentrotraderbot::landing.title')]) }}
+                        </h4>
                         <ul>
                             <li><i class="bi bi-chevron-right"></i> <a
                                     href="#hero">{{ __('zentrotraderbot::landing.menu.home') }}</a></li>
                             <li><i class="bi bi-chevron-right"></i> <a
-                                    href="#about">{{ __('zentrotraderbot::landing.menu.about') }}</a></li>
+                                    href="#about">{{ __('zentrotraderbot::landing.menu.about', ['name' => __('zentrotraderbot::landing.title')]) }}</a>
+                            </li>
                             <li><i class="bi bi-chevron-right"></i> <a
                                     href="#services">{{ __('zentrotraderbot::landing.menu.steps') }}</a></li>
                             <li><i class="bi bi-chevron-right"></i> <a
