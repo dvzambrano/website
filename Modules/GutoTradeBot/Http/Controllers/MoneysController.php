@@ -231,7 +231,8 @@ class MoneysController extends JsonsController
                                 // Si es enviado por un REMESADOR se notifica a los admins4 para q asignen o confirmen
                                 case '2':
                                 case 2:
-                                    Log::debug("🐞 MoneysController processMoney notificationsConfig =" . json_encode($bot->data["notifications"]["payments"]["new"]));
+                                    Log::debug("🐞 MoneysController processMoney notificationsConfig =" . json_encode($bot->tenant->data["notifications"]["payments"]["new"]));
+
                                     if (
                                         isset($bot->data["notifications"]["payments"]["new"]["fromremesador"]["tocapitals"]) &&
                                         $bot->data["notifications"]["payments"]["new"]["fromremesador"]["tocapitals"] == 1
