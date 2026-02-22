@@ -7365,12 +7365,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Laravel.git",
-                "reference": "972ff7ef68e3994dd884c4616f8d09ba1694e860"
+                "reference": "58395965ca6649c71a4af44bbfc99c71809a0f23"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/972ff7ef68e3994dd884c4616f8d09ba1694e860",
-                "reference": "972ff7ef68e3994dd884c4616f8d09ba1694e860",
+                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/58395965ca6649c71a4af44bbfc99c71809a0f23",
+                "reference": "58395965ca6649c71a4af44bbfc99c71809a0f23",
                 "shasum": ""
             },
             "require": {
@@ -7412,7 +7412,7 @@
                 "source": "https://github.com/dvzambrano/Laravel/tree/main",
                 "issues": "https://github.com/dvzambrano/Laravel/issues"
             },
-            "time": "2026-02-18T10:55:56+00:00"
+            "time": "2026-02-22T20:08:26+00:00"
         },
         {
             "name": "dvzambrano/web3",
@@ -7420,15 +7420,16 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Web3.git",
-                "reference": "79044f6743a0634d4d912efd0cab09c19ce61474"
+                "reference": "762191ae83ea12fc27b3d473769b69c1f4630e50"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/79044f6743a0634d4d912efd0cab09c19ce61474",
-                "reference": "79044f6743a0634d4d912efd0cab09c19ce61474",
+                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/762191ae83ea12fc27b3d473769b69c1f4630e50",
+                "reference": "762191ae83ea12fc27b3d473769b69c1f4630e50",
                 "shasum": ""
             },
             "require": {
+                "dvzambrano/laravel": "dev-main as 1.0.0",
                 "furqansiddiqui/bip32-keypair-php": "^0.3.7",
                 "furqansiddiqui/bip39-mnemonic-php": "^0.1.7",
                 "kornrunner/ethereum-offline-raw-tx": "^0.9.0",
@@ -7436,6 +7437,9 @@
                 "laravel/framework": "^12.0",
                 "php": "^8.2",
                 "simplito/elliptic-php": "^1.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.9"
             },
             "default-branch": true,
             "type": "library",
@@ -7465,7 +7469,7 @@
                 "source": "https://github.com/dvzambrano/Web3/tree/main",
                 "issues": "https://github.com/dvzambrano/Web3/issues"
             },
-            "time": "2026-02-15T15:20:10+00:00"
+            "time": "2026-02-19T20:29:25+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
