@@ -498,7 +498,7 @@ class CustomTestController extends BaseController
         );
         dd($similarity);
 
-        dd($bot->data["notifications"]);
+        dd($bot->tenant->data["notifications"]);
         //$bot->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "/utc", $bot->data["info"]["username"]);
         $array = array(
             "notifications" => array(

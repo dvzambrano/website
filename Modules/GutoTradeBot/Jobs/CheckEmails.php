@@ -196,8 +196,8 @@ class CheckEmails implements ShouldQueue
                             // Notificar en el bot
                             $title = "Nuevo reporte automático";
                             if (
-                                isset($bot->data["notifications"]["payments"]["new"]["frombot"]["tocapitals"]) &&
-                                $bot->data["notifications"]["payments"]["new"]["frombot"]["tocapitals"] == 1
+                                isset($bot->tenant->data["notifications"]["payments"]["new"]["frombot"]["tocapitals"]) &&
+                                $bot->tenant->data["notifications"]["payments"]["new"]["frombot"]["tocapitals"] == 1
                             )
                                 $bot->PaymentsController->notifyToCapitals(
                                     $bot,
@@ -206,8 +206,8 @@ class CheckEmails implements ShouldQueue
                                     $title
                                 );
                             if (
-                                isset($bot->data["notifications"]["payments"]["new"]["frombot"]["togestors"]) &&
-                                $bot->data["notifications"]["payments"]["new"]["frombot"]["togestors"] == 1
+                                isset($bot->tenant->data["notifications"]["payments"]["new"]["frombot"]["togestors"]) &&
+                                $bot->tenant->data["notifications"]["payments"]["new"]["frombot"]["togestors"] == 1
                             )
                                 $bot->PaymentsController->notifyToGestors(
                                     $bot,
