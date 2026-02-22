@@ -179,7 +179,7 @@ class MoneysController extends JsonsController
                     $sender = 2;
                 }
 
-                Log::debug("🐞 MoneysController processMoney type = {$type}\n");
+                //Log::debug("🐞 MoneysController processMoney type = {$type}\n");
                 try {
                     switch ($type) {
                         case 1:
@@ -199,8 +199,8 @@ class MoneysController extends JsonsController
                             // Si es un reporte enviado por un admin4 se notifica a los admin1 para q confirmen
                             if (
                                 $sender == 4 &&
-                                isset($bot->data["notifications"]["capitals"]["new"]["togestors"]) &&
-                                $bot->data["notifications"]["capitals"]["new"]["togestors"] == 1
+                                isset($bot->tenant->data["notifications"]["capitals"]["new"]["togestors"]) &&
+                                $bot->tenant->data["notifications"]["capitals"]["new"]["togestors"] == 1
                             )
                                 $bot->CapitalsController->notifyToGestors($bot, $capital);
 
@@ -231,18 +231,17 @@ class MoneysController extends JsonsController
                                 // Si es enviado por un REMESADOR se notifica a los admins4 para q asignen o confirmen
                                 case '2':
                                 case 2:
-                                    Log::debug("🐞 MoneysController processMoney notificationsConfig =" . json_encode($bot->tenant->data["notifications"]["payments"]["new"]));
-
+                                    //Log::debug("🐞 MoneysController processMoney notificationsConfig =" . json_encode($bot->tenant->data["notifications"]["payments"]["new"]));
                                     if (
-                                        isset($bot->data["notifications"]["payments"]["new"]["fromremesador"]["tocapitals"]) &&
-                                        $bot->data["notifications"]["payments"]["new"]["fromremesador"]["tocapitals"] == 1
+                                        isset($bot->tenant->data["notifications"]["payments"]["new"]["fromremesador"]["tocapitals"]) &&
+                                        $bot->tenant->data["notifications"]["payments"]["new"]["fromremesador"]["tocapitals"] == 1
                                     )
                                         $bot->PaymentsController->notifyToCapitals($bot, $payment, $similar_message, "Nuevo reporte de pago");
                                     // si es sospechoso se notifica ademas a los admin1
                                     if (
                                         (
-                                            isset($bot->data["notifications"]["payments"]["new"]["fromremesador"]["togestors"]) &&
-                                            $bot->data["notifications"]["payments"]["new"]["fromremesador"]["togestors"] == 1
+                                            isset($bot->tenant->data["notifications"]["payments"]["new"]["fromremesador"]["togestors"]) &&
+                                            $bot->tenant->data["notifications"]["payments"]["new"]["fromremesador"]["togestors"] == 1
                                         ) ||
                                         $similar_message != ""
                                     ) {
@@ -255,8 +254,8 @@ class MoneysController extends JsonsController
                                 case '4':
                                 case 4:
                                     if (
-                                        isset($bot->data["notifications"]["payments"]["new"]["fromcapital"]["togestors"]) &&
-                                        $bot->data["notifications"]["payments"]["new"]["fromcapital"]["togestors"] == 1
+                                        isset($bot->tenant->data["notifications"]["payments"]["new"]["fromcapital"]["togestors"]) &&
+                                        $bot->tenant->data["notifications"]["payments"]["new"]["fromcapital"]["togestors"] == 1
                                     )
                                         $bot->PaymentsController->notifyToGestors($bot, $payment, false, "Nuevo reporte de pago");
                                     break;
