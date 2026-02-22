@@ -749,12 +749,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Laravel.git",
-                "reference": "a3ab36b28cd0c8dd59d71f8839fb95a6fcecc3f4"
+                "reference": "58395965ca6649c71a4af44bbfc99c71809a0f23"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/a3ab36b28cd0c8dd59d71f8839fb95a6fcecc3f4",
-                "reference": "a3ab36b28cd0c8dd59d71f8839fb95a6fcecc3f4",
+                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/58395965ca6649c71a4af44bbfc99c71809a0f23",
+                "reference": "58395965ca6649c71a4af44bbfc99c71809a0f23",
                 "shasum": ""
             },
             "require": {
@@ -796,7 +796,7 @@
                 "source": "https://github.com/dvzambrano/Laravel/tree/main",
                 "issues": "https://github.com/dvzambrano/Laravel/issues"
             },
-            "time": "2026-02-21T21:11:58+00:00"
+            "time": "2026-02-22T20:08:26+00:00"
         },
         {
             "name": "dvzambrano/web3",
