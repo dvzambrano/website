@@ -11,38 +11,6 @@ Route::get('/', function () {
     return view('templates.Gp.layout');
 })->name('home');
 
-
-Route::get('/cache', function () {
-    //dd(config('database.connections.TelegramBot'));
-    echo 'Intentando borrar cache<br/>';
-    $array = array(
-        'route:cache',
-        'cache:clear',
-        'config:clear',
-        'config:cache',
-        'view:clear',
-        'optimize',
-        /* 
-        Comente esto porq me estaba dando error luego en localhost 
-        la solucion era ejecutar manualmente composer dumpautoload 
-        */
-        //'optimize:clear',  
-        'route:clear',
-    );
-    foreach ($array as $line) {
-        $code = Artisan::call($line);
-        echo $line . ': ' . $code . '<br/>';
-    }
-    die('Hecho!');
-});
-Route::get('/test/{name?}', [TestController::class, 'test'])->name('test-byname');
-
-Route::prefix('logs')->group(function () {
-    Route::get('/clear', 'Modules\Laravel\Http\Controllers\FileController@clearLog')->name('clear-logs');
-    Route::get('/{type?}/{amount?}', 'Modules\Laravel\Http\Controllers\FileController@readLog')->name('read-logs');
-});
-Route::get('/report/{format}/{name}', 'Modules\Laravel\Http\Controllers\FileController@renderAndDestroy')->name('report-byname');
-
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified', '2fa'])->name('dashboard');

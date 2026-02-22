@@ -48,7 +48,9 @@ use Modules\ZentroPackageBot\Entities\Packages;
 
 use Modules\ZentroTraderBot\Http\Controllers\RampController;
 
-class TestController extends Controller
+use Modules\Laravel\Http\Controllers\TestController as BaseController;
+
+class CustomTestController extends BaseController
 {
     private $GutoTradeTestBot;
     public function __construct()
@@ -56,8 +58,30 @@ class TestController extends Controller
         $this->GutoTradeTestBot = TelegramBots::where('name', "@GutoTradeTestBot")->first();
     }
 
-    public function test(Request $request)
+    public function botdata($request)
     {
+        $bot = TelegramBots::where('name', "@" . $request["bot"])->first();
+        if ($bot)
+            dd($bot->data);
+
+        // Aquí podrías instanciar tus otros controladores y probarlos
+        return response()->json([
+            "status" => "no bot found",
+        ]);
+    }
+
+    public function test(Request $request, $name = null)
+    {
+        // 1. Si se pasó un nombre y el método existe en esta clase...
+        if ($name && method_exists($this, $name)) {
+            // Ejecutamos el método dinámicamente y retornamos su respuesta
+            return $this->{$name}($request);
+        }
+
+        // 2. Si no hay nombre o el método no existe, ejecutamos la lógica base del paquete
+        return parent::test($request);
+
+
         app()->instance('active_bot', $this->GutoTradeTestBot);
         $bot = new GutoTradeBotController();
 
