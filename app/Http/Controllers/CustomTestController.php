@@ -1,58 +1,15 @@
 <?php
 namespace App\Http\Controllers;
 
-use Modules\Laravel\Http\Controllers\GraphsController;
-use Carbon\Carbon;
-use DOMDocument;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Modules\GutoTradeBot\Entities\Capitals;
-use Modules\GutoTradeBot\Entities\Moneys;
-use Modules\GutoTradeBot\Entities\Profits;
-use Modules\GutoTradeBot\Entities\Payments;
-use Modules\GutoTradeBot\Entities\Rates;
-use Modules\GutoTradeBot\Http\Controllers\CapitalsController;
-use Modules\GutoTradeBot\Http\Controllers\GutoTradeBotController;
-use Modules\GutoTradeBot\Http\Controllers\PaymentsController;
-use Modules\GutoTradeBot\Http\Controllers\ProfitsController;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
-use Modules\GutoTradeBot\Http\Controllers\CoingeckoController;
-use Webklex\IMAP\Facades\Client;
-use Modules\TelegramBot\Entities\Actors;
 use Modules\TelegramBot\Entities\TelegramBots;
-use Illuminate\Support\Facades\Log;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Color;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use Modules\Laravel\Http\Controllers\FileController;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use Modules\GutoTradeBot\Jobs\CheckEmails;
-use Illuminate\Support\Facades\Storage;
-use Modules\ZentroTraderBot\Entities\Suscriptions;
-use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
-use Modules\Web3\Http\Controllers\WalletController;
-use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
-use Modules\ZentroOwnerBot\Http\Controllers\ZentroOwnerBotController;
-
-use FurqanSiddiqui\BIP39\BIP39;
-use FurqanSiddiqui\BIP39\Wordlist;
-
-use Modules\Laravel\Services\Office\ExcelService;
-use Modules\ZentroPackageBot\Entities\Packages;
-
-use Modules\ZentroTraderBot\Http\Controllers\RampController;
 use Modules\Web3\Http\Controllers\AlchemyController;
-use Modules\Laravel\Entities\Metadatas;
 use Modules\Web3\Services\Web3MathService;
-use Modules\Laravel\Http\Controllers\Controller;
 
-class TestController extends Controller
+use Modules\Laravel\Http\Controllers\TestController as BaseController;
+
+class CustomTestController extends BaseController
 {
     private $GutoTradeTestBot;
     private $ZentroTraderBot;
@@ -68,15 +25,18 @@ class TestController extends Controller
         $this->KashioBot = TelegramBots::where('name', "@KashioBot")->first();
     }
 
-    public function test(Request $request)
+    public function test(Request $request, $name = null)
     {
-        $metadata = Metadatas::where('name', "app_zentrotraderbot_alchemy_authtoken")->first();
-        dd($metadata->value);
+        // 1. Si se pasó un nombre y el método existe en esta clase...
+        if ($name && method_exists($this, $name)) {
+            // Ejecutamos el método dinámicamente y retornamos su respuesta
+            return $this->{$name}($request);
+        }
 
-        $this->testWalletController();
-        //$this->testTelegramController();
-        die;
+        // 2. Si no hay nombre o el método no existe, ejecutamos la lógica base del paquete
+        return parent::test($request);
     }
+
 
     public function testWalletController()
     {
