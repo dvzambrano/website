@@ -16,6 +16,9 @@ Route::get('/', 'LandingController@index')->name('zentrotraderbot.landing');
 Route::get('/dashboard', 'LandingController@dashboard')
     ->middleware(['web', 'telegrambot.auth'])
     ->name('zentrotraderbot.dashboard');
+Route::get('/pay/{user}', 'LandingController@pay')
+    //->middleware(['web'])
+    ->name('zentrotraderbot.pay');
 
 Route::prefix('zentrotraderbot')->group(function () {
     //Route::get('/', 'LandingController@index')->name('zentrotraderbot.landing');
@@ -34,5 +37,9 @@ Route::prefix('tradingview')->group(function () {
 Route::prefix('ramp')->group(function () {
     Route::get('{action}/{key}/{secret}/{user_id}', 'RampController@redirect')->middleware('tenant')->name('ramp-redirect');
     Route::get('/success/{key}/{secret}/{user_id}', 'RampController@success')->middleware('tenant')->name('ramp-success');
+    Route::post('/webhook', 'RampController@processWebhook')->name('ramp-webhook');
+});
+
+Route::prefix('trondealer')->group(function () {
     Route::post('/webhook', 'RampController@processWebhook')->name('ramp-webhook');
 });

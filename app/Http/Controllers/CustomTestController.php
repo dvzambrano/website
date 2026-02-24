@@ -42,7 +42,7 @@ class CustomTestController extends BaseController
     {
         $address = "0xd2531438b90232f4Aab4DDfC6f146474e84E1Ea1";
         $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
-        $usdcContract = config('web3.tokens.USDC.address');
+        $usdcContract = config('web3.networks.POL.tokens.USDC.address');
         $balances = AlchemyController::getTokenBalances($authToken, $address, [$usdcContract]);
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {
@@ -54,7 +54,7 @@ class CustomTestController extends BaseController
         }
 
 
-        $txs = AlchemyController::getRecentTransactions($authToken, $address, ["erc20"], [$usdcContract]);
+        $txs = AlchemyController::getRecentTransactions($authToken, $address, "POL", ["erc20"], [$usdcContract]);
 
         dd($authToken, $address, $usdcContract, $balances, $humanBal, $txs);
     }

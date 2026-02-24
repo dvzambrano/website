@@ -89,4 +89,15 @@ class LandingController extends Controller
             'bot' => $this->bot
         ]);
     }
+
+    public function pay()
+    {
+        // 1. Obtener el ID de Telegram del usuario desde la sesión
+        $telegramUser = session('telegram_user');
+
+        return view("zentrotraderbot::themes.{$this->theme}.pay", [
+            'qrService' => $this->qrService,
+            'bot' => $this->bot
+        ]);
+    }
 }

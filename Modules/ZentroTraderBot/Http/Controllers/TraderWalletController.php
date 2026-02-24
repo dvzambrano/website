@@ -52,7 +52,7 @@ class TraderWalletController extends WalletController
 
         $address = $suscriptor->data['wallet']['address'];
         $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
-        $usdcContract = config('web3.tokens.USDC.address');
+        $usdcContract = config('web3.networks.POL.tokens.USDC.address');
         $balances = AlchemyController::getTokenBalances($authToken, $address, [$usdcContract]);
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {
@@ -75,7 +75,7 @@ class TraderWalletController extends WalletController
         $address = $suscriptor->data['wallet']['address'];
         $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
         //app_zentrotraderbot_alchemy_authtoken
-        $usdcContract = config('web3.tokens.USDC.address');
+        $usdcContract = config('web3.networks.POL.tokens.USDC.address');
 
         return AlchemyController::getRecentTransactions($authToken, $address, ["erc20"], [$usdcContract], 5);
     }
@@ -104,7 +104,7 @@ class TraderWalletController extends WalletController
      * - Límites de gas seguros para contratos/exchanges.
      */
     // Sobrecarga para aceptar userId y extraer el privateKey antes de delegar
-    public function withdraw($privateKey, string $toAddress, string $tokenSymbol, ?float $amount = null)
+    public function withdraw($privateKey, string $networkKey, string $tokenSymbol, string $toAddress, ?float $amount = null)
     {
         // Si el primer parámetro es un int, se asume userId y se extrae la clave
         if (is_int($privateKey)) {
