@@ -6,6 +6,7 @@ use Modules\Laravel\Http\Controllers\Controller;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
+use Modules\Web3\Http\Controllers\DeBridgeController;
 
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 
@@ -34,21 +35,8 @@ class LandingController extends Controller
         // Opcional: Compartir la config con el resto de la app
         app()->instance('active_bot', $this->bot);
     }
-    public function index()
-    {
-        // Si no existe, podrías lanzar un error o cargar uno por defecto
-        if (!$this->bot) {
-            abort(404, 'Bot no configurado');
-        }
 
-        // Retornamos la vista dinámica
-        return view("zentrotraderbot::themes.{$this->theme}.index", [
-            'bot' => $this->bot
-        ]);
-
-    }
-
-    public function dashboard()
+    public function getSuscriptor()
     {
         // 1. Obtener el ID de Telegram del usuario desde la sesión
         $telegramUser = session('telegram_user');
@@ -69,7 +57,26 @@ class LandingController extends Controller
         ]);
 
         // tiene q ir aqui abajo porq arriba se esta simulando el comando /start del bot q suscribe al usuario y le crea su wallet
-        $suscriptor = Suscriptions::where("user_id", $telegramUser['user_id'])->first();
+        return Suscriptions::where("user_id", $telegramUser['user_id'])->first();
+    }
+
+    public function index()
+    {
+        // Si no existe, podrías lanzar un error o cargar uno por defecto
+        if (!$this->bot) {
+            abort(404, 'Bot no configurado');
+        }
+
+        // Retornamos la vista dinámica
+        return view("zentrotraderbot::themes.{$this->theme}.index", [
+            'bot' => $this->bot
+        ]);
+
+    }
+
+    public function dashboard()
+    {
+        $suscriptor = $this->getSuscriptor();
 
         // 2. Instanciar el controlador de Wallets
         $walletController = new TraderWalletController();
@@ -92,12 +99,67 @@ class LandingController extends Controller
 
     public function pay()
     {
-        // 1. Obtener el ID de Telegram del usuario desde la sesión
-        $telegramUser = session('telegram_user');
+        $suscriptor = $this->getSuscriptor();
+        //dd($suscriptor->getWallet()["address"]);
+
+        $bridge = new DeBridgeController();
+
+        //dd(config('web3'));
+
+        $routes = $bridge->getSupportedRoutesTo();
+        //dd($routes);
+
+
 
         return view("zentrotraderbot::themes.{$this->theme}.pay", [
-            'qrService' => $this->qrService,
-            'bot' => $this->bot
+            'userWallet' => $suscriptor->getWallet()["address"],
+            'availableRoutes' => $routes, // Pasamos la data a la vista
+            'bot' => $this->bot // Datos del bot para el branding
         ]);
+    }
+
+    // PASO 1: Obtener rutas soportadas
+    public function getRoutes()
+    {
+        $bridge = new DeBridgeController();
+        // Obtenemos rutas que terminan en Polygon (137)
+        $routes = $bridge->getSupportedRoutesTo(137);
+        return response()->json($routes);
+    }
+
+    // PASO 2: Obtener Estimación
+    public function getQuote(Request $request)
+    {
+
+        $bridge = new DeBridgeController();
+
+        $quote = $bridge->getEstimation(
+            $request->srcChainId,
+            $request->srcToken,
+            $request->amount, // Cantidad a enviar
+            137,              // Polygon
+            '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359' // USDC
+        );
+        return response()->json($quote);
+    }
+
+    // PASO 3: Crear Orden (Generar Data para firmar)
+    public function createOrder(Request $request)
+    {
+
+
+        $bridge = new DeBridgeController();
+
+        // Preparamos la orden para que el dinero llegue a la wallet del usuario
+        $order = $bridge->createOrder(
+            $request->srcChainId,
+            $request->srcToken,
+            $request->amount,
+            137,
+            '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359',
+            $request->userWallet // ReceiverAddress en destino
+        );
+
+        return response()->json($order);
     }
 }

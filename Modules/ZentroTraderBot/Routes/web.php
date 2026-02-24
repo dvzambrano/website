@@ -16,9 +16,23 @@ Route::get('/', 'LandingController@index')->name('zentrotraderbot.landing');
 Route::get('/dashboard', 'LandingController@dashboard')
     ->middleware(['web', 'telegrambot.auth'])
     ->name('zentrotraderbot.dashboard');
-Route::get('/pay/{user}', 'LandingController@pay')
-    //->middleware(['web'])
-    ->name('zentrotraderbot.pay');
+Route::prefix('pay')->group(function () {
+    // PASO 1: Obtener redes y tokens disponibles
+    Route::get('/routes', 'LandingController@getRoutes')
+        ->name('pay.api.routes');
+
+    // PASO 2: Obtener la cotización (Cuanto llega a Kashio)
+    Route::get('/quote', 'LandingController@getQuote')
+        ->name('pay.api.quote');
+
+    // PASO 3: Crear la orden final (Obtener el objeto de transacción para firmar)
+    Route::post('/order', 'LandingController@createOrder')
+        ->name('pay.api.order');
+
+    // Vista principal del asistente (Donde el usuario aterriza desde Telegram)
+    Route::get('/{user}', 'LandingController@pay')
+        ->name('zentrotraderbot.pay');
+});
 
 Route::prefix('zentrotraderbot')->group(function () {
     //Route::get('/', 'LandingController@index')->name('zentrotraderbot.landing');
