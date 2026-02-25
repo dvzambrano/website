@@ -7,7 +7,7 @@ use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\DeBridgeController;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
 
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 

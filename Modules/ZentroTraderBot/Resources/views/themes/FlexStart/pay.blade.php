@@ -121,6 +121,23 @@
         .space-y-8>*+* {
             margin-top: 2rem;
         }
+
+        .hover-bg-light:hover {
+            background-color: #f1f5f9 !important;
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+
+        .kashio-list-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+
+        .fw-black {
+            font-weight: 900;
+        }
     </style>
 @endsection
 
@@ -163,49 +180,71 @@
                                 </p>
                             </div>
 
-                            <div id="payment-section" class="hidden space-y-8 text-start">
-                                <div>
-                                    <label class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-2 d-block"
+                            <div id="payment-section" class="hidden" x-data="{ step: 'list', selectedAsset: null, amount: '' }"
+                                @asset-selected.window="selectedAsset = $event.detail; step = 'amount'; amount = '';">
+
+                                <div x-show="step === 'list'" x-transition>
+                                    <label class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-3 d-block"
                                         style="font-size: 10px;">
-                                        Origen del Pago
+                                        Selecciona un activo para depositar
                                     </label>
-                                    <div class="asset-selector-box">
-                                        <img id="selected-asset-logo" src="" class="hidden"
+
+                                    <div id="assets-list-container" class="list-group list-group-flush text-start mb-4">
+                                    </div>
+
+                                    <button onclick="location.reload()"
+                                        class="btn btn-link w-100 text-slate-400 text-uppercase fw-bold text-decoration-none"
+                                        style="font-size: 11px;">
+                                        Cancelar y salir
+                                    </button>
+                                </div>
+
+                                <div x-show="step === 'amount'" x-transition style="display: none;">
+                                    <div class="d-flex align-items-center mb-4">
+                                        <button @click="step = 'list'" class="btn btn-sm btn-light rounded-circle me-3">
+                                            <i class="fas fa-arrow-left"></i>
+                                        </button>
+                                        <h6 class="mb-0 fw-bold">Configurar Depósito</h6>
+                                    </div>
+
+                                    <div class="asset-selector-box mb-4">
+                                        <img :src="selectedAsset?.logo"
                                             style="width: 32px; height: 32px; border-radius: 50%;">
-                                        <div style="flex: 1;">
-                                            <select id="asset-selector" onchange="updateQuote()"
-                                                class="form-select border-0 bg-transparent shadow-none fw-bold"
-                                                style="cursor:pointer;">
-                                            </select>
+                                        <div class="flex-grow-1">
+                                            <span class="d-block fw-bold" x-text="selectedAsset?.symbol"></span>
+                                            <span class="text-slate-400 small"
+                                                x-text="'Saldo: ' + selectedAsset?.balance"></span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-primary fw-bold"
+                                            @click="amount = selectedAsset?.balance; updateQuoteManual()">MAX</button>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label
+                                            class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-2 d-block"
+                                            style="font-size: 10px;">Monto a enviar</label>
+                                        <input type="number" x-model="amount" @input.debounce.500ms="updateQuoteManual()"
+                                            class="form-control form-control-lg border-2 fw-bold text-center"
+                                            placeholder="0.00">
+                                    </div>
+
+                                    <div id="quote-card" class="quote-container mb-4 hidden">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="small fw-bold text-slate-400 text-uppercase">Tú envías</span>
+                                            <span id="txt-send-amount" class="small fw-bold text-dark">-</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between pb-3 border-bottom mb-3">
+                                            <span class="small fw-bold text-slate-400 text-uppercase">Recibes en
+                                                Polygon</span>
+                                            <span id="txt-receive-amount"
+                                                class="h4 mb-0 fw-black text-primary">Calculando...</span>
                                         </div>
                                     </div>
+
+                                    <button id="btn-pay" disabled onclick="executeSwap()" class="btn-kashio-primary">
+                                        Confirmar y Pagar
+                                    </button>
                                 </div>
-
-                                <div id="quote-card" class="quote-container hidden">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="small fw-bold text-slate-400 text-uppercase">Vas a pagar</span>
-                                        <span id="txt-send-amount" class="small fw-bold text-dark">-</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between pb-3 border-bottom mb-3">
-                                        <span class="small fw-bold text-slate-400 text-uppercase">Recibes en Polygon</span>
-                                        <span id="txt-receive-amount"
-                                            class="h4 mb-0 fw-black text-primary">Calculando...</span>
-                                    </div>
-                                    <div class="d-flex gap-2 text-primary small" style="font-size: 10px; opacity: 0.8;">
-                                        <i class="fas fa-shield-alt"></i>
-                                        <span>Optimizado por deBridge DLN. La tasa incluye gas fee de destino.</span>
-                                    </div>
-                                </div>
-
-                                <button id="btn-pay" disabled onclick="executeSwap()" class="btn-kashio-primary mt-4">
-                                    Confirmar y Pagar
-                                </button>
-
-                                <button onclick="location.reload()"
-                                    class="btn btn-link w-100 text-slate-400 text-uppercase fw-bold text-decoration-none"
-                                    style="font-size: 11px;">
-                                    Cambiar Billetera
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -214,8 +253,10 @@
         </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
     <script src="assets/js/web3.js"></script>
 
     <script>
@@ -224,9 +265,8 @@
             web3: @json(config('web3.networks')),
             destChain: 137,
             destToken: "{{ config('web3.networks.POL.tokens.USDC.address') }}",
-            userWallet: "{{ $userWallet }}"
+            userWallet: "{{ $userWallet }}",
+            quoteUrl: "{{ route('pay.api.quote') }}"
         };
-
-        let selectedData = null;
     </script>
 @endsection
