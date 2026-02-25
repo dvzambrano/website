@@ -1,356 +1,232 @@
-<!DOCTYPE html>
-<html lang="es">
+@extends('zentrotraderbot::themes.FlexStart.template')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kashio Pay - Smart Deposit</title>
-
-    <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+@section('templatehead')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-
-        body {
-            background-color: #05070a;
-            color: #e2e8f0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+        /* Estilos Core de Kashio (Sin Tailwind) */
+        .custom-card {
+            padding: 2.5rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0px 0px 30px rgba(1, 41, 112, 0.08) !important;
         }
 
-        .step-card {
-            display: none;
+        .kashio-icon-container {
+            width: 64px;
+            height: 64px;
+            background-color: #2563eb;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+            margin-bottom: 1rem;
         }
 
-        .step-card.active {
-            display: block;
-            animation: fadeIn 0.4s ease-out;
+        .btn-kashio-primary {
+            background-color: #2563eb;
+            color: white;
+            font-weight: 700;
+            padding: 1rem;
+            border-radius: 1rem;
+            border: none;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+        .btn-kashio-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
         }
 
-        .glass {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .btn-kashio-primary:disabled {
+            background-color: #e2e8f0;
+            color: #94a3b8;
+            box-shadow: none;
+            cursor: not-allowed;
         }
 
-        .kashio-gradient {
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        }
-
-        select option {
+        .btn-kashio-dark {
             background-color: #0f172a;
             color: white;
+            font-weight: 700;
+            padding: 1rem;
+            border-radius: 1rem;
+            border: none;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.2);
+        }
+
+        .asset-selector-box {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1rem;
+            transition: all 0.2s;
+        }
+
+        .asset-selector-box:focus-within {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .quote-container {
+            background-color: #eff6ff;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid #dbeafe;
+            margin-top: 1.5rem;
+        }
+
+        .text-slate-500 {
+            color: #64748b;
+        }
+
+        .text-slate-400 {
+            color: #94a3b8;
+        }
+
+        .font-extrabold {
+            font-weight: 800;
+        }
+
+        .tracking-widest {
+            letter-spacing: 0.1em;
+        }
+
+        /* Utility Helpers */
+        .hidden {
+            display: none !important;
+        }
+
+        .mt-10 {
+            margin-top: 2.5rem;
+        }
+
+        .mb-10 {
+            margin-bottom: 2.5rem;
+        }
+
+        .space-y-4>*+* {
+            margin-top: 1rem;
+        }
+
+        .space-y-8>*+* {
+            margin-top: 2rem;
         }
     </style>
-</head>
+@endsection
 
-<body class="min-h-screen flex items-center justify-center p-4">
+@section('templatebody')
+    <main id="main">
+        <section id="values" class="values hero" style="overflow:visible; padding:10px;">
+            <div class="container col-md-5 text-center" data-aos="zoom-in">
 
-    <div class="max-w-md w-full glass rounded-[2.5rem] overflow-hidden shadow-2xl relative">
-        <div id="progress" class="h-1 kashio-gradient transition-all duration-500" style="width: 20%"></div>
+                <div x-data="{ view: 'balance' }">
+                    <div x-show="view === 'balance'" x-transition>
+                        <div class="custom-card text-center">
 
-        <div class="p-8">
-            <div class="flex justify-between items-center mb-10">
-                <h1 class="text-2xl font-black tracking-tighter italic text-white">KASHIO<span
-                        class="text-blue-500">.</span></h1>
-                <div id="status-pill"
-                    class="hidden flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span id="addr-display" class="text-[10px] font-mono text-blue-400">0x...</span>
+                            <div class="mb-10">
+                                <div class="kashio-icon-container">
+                                    <i class="fas fa-bolt text-2xl text-white"></i>
+                                </div>
+                                <h2 class="text-2xl font-extrabold text-dark">Recarga con criptomonedas</h2>
+                                <p class="text-slate-500 small mt-1">Depósito inteligente gracias a deBridge</p>
+                            </div>
+
+                            <div id="connect-section" class="space-y-4">
+                                <button onclick="connectAndScan()" id="btn-connect"
+                                    class="btn btn-primary btn-lg w-100 shadow-sm">
+                                    <i class="fas fa-wallet me-2"></i>
+                                    <span>Conectar Billetera</span>
+                                </button>
+                                <p class="text-slate-400 small px-4" style="font-size: 11px;">
+                                    Escanearemos tus balances en múltiples redes para facilitar el depósito.
+                                </p>
+                            </div>
+
+                            <div id="scan-status" class="hidden py-5">
+                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-4 text-dark fw-bold">Analizando tus activos...</p>
+
+                                <p id="current-network-scan" class="text-slate-400 small px-4" style="font-size: 11px;">
+                                    Iniciando...
+                                </p>
+                            </div>
+
+                            <div id="payment-section" class="hidden space-y-8 text-start">
+                                <div>
+                                    <label class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-2 d-block"
+                                        style="font-size: 10px;">
+                                        Origen del Pago
+                                    </label>
+                                    <div class="asset-selector-box">
+                                        <img id="selected-asset-logo" src="" class="hidden"
+                                            style="width: 32px; height: 32px; border-radius: 50%;">
+                                        <div style="flex: 1;">
+                                            <select id="asset-selector" onchange="updateQuote()"
+                                                class="form-select border-0 bg-transparent shadow-none fw-bold"
+                                                style="cursor:pointer;">
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="quote-card" class="quote-container hidden">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="small fw-bold text-slate-400 text-uppercase">Vas a pagar</span>
+                                        <span id="txt-send-amount" class="small fw-bold text-dark">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between pb-3 border-bottom mb-3">
+                                        <span class="small fw-bold text-slate-400 text-uppercase">Recibes en Polygon</span>
+                                        <span id="txt-receive-amount"
+                                            class="h4 mb-0 fw-black text-primary">Calculando...</span>
+                                    </div>
+                                    <div class="d-flex gap-2 text-primary small" style="font-size: 10px; opacity: 0.8;">
+                                        <i class="fas fa-shield-alt"></i>
+                                        <span>Optimizado por deBridge DLN. La tasa incluye gas fee de destino.</span>
+                                    </div>
+                                </div>
+
+                                <button id="btn-pay" disabled onclick="executeSwap()" class="btn-kashio-primary mt-4">
+                                    Confirmar y Pagar
+                                </button>
+
+                                <button onclick="location.reload()"
+                                    class="btn btn-link w-100 text-slate-400 text-uppercase fw-bold text-decoration-none"
+                                    style="font-size: 11px;">
+                                    Cambiar Billetera
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div id="step-0" class="step-card active text-center">
-                <div class="mb-8">
-                    <div
-                        class="w-24 h-24 kashio-gradient rounded-3xl rotate-12 flex items-center justify-center mx-auto shadow-2xl shadow-blue-500/20">
-                        <i class="fa-solid fa-wallet text-4xl text-white -rotate-12"></i>
-                    </div>
-                </div>
-                <h2 class="text-2xl font-bold text-white mb-2">Bienvenido, {{ $userUuid ?? 'Donel' }}</h2>
-                <p class="text-slate-400 text-sm mb-10 px-6">Conecta tu wallet para detectar automáticamente tus activos
-                    disponibles en cada red.</p>
-                <button onclick="connectAndScan()" id="btn-main"
-                    class="w-full py-4 kashio-gradient rounded-2xl font-bold text-white transition-all active:scale-95">
-                    Conectar Wallet
-                </button>
-            </div>
-
-            <div id="step-1" class="step-card">
-                <div class="space-y-6">
-                    <div>
-                        <div class="flex justify-between items-end mb-2 px-1">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Activos
-                                detectados</label>
-                            <button onclick="connectAndScan()" class="text-[10px] text-blue-500 font-bold"><i
-                                    class="fa-solid fa-sync mr-1"></i> Re-escanear</button>
-                        </div>
-                        <select id="select-asset"
-                            class="w-full bg-slate-900/50 border border-slate-700 rounded-2xl p-4 outline-none focus:border-blue-500 text-white transition-all cursor-pointer">
-                        </select>
-                    </div>
-
-                    <div class="bg-slate-900/80 border border-slate-800 rounded-3xl p-5">
-                        <div class="flex justify-between mb-2 px-1">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase">Cantidad a depositar</span>
-                            <span id="max-label"
-                                class="text-[10px] text-blue-400 font-bold cursor-pointer hover:underline">MAX</span>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <input type="number" id="input-amount" placeholder="0.00"
-                                class="bg-transparent text-3xl font-bold text-white outline-none w-full">
-                            <span id="token-symbol" class="text-slate-500 font-bold text-sm">---</span>
-                        </div>
-                    </div>
-
-                    <button onclick="handleEstimation()" id="btn-estimate"
-                        class="w-full py-4 kashio-gradient rounded-2xl font-bold text-white shadow-lg active:scale-95">
-                        Verificar Recepción <i class="fa-solid fa-chevron-right ml-2 text-[10px]"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div id="step-2" class="step-card">
-                <h2 class="text-xl font-bold text-white mb-6">Confirmar Depósito</h2>
-                <div class="space-y-4">
-                    <div class="bg-blue-600/5 border border-blue-500/20 rounded-3xl p-6 text-center">
-                        <span class="text-xs text-slate-500 block mb-1">Recibirás en tu cuenta Kashio</span>
-                        <span id="res-receive" class="text-4xl font-black text-green-400 italic">0.00 USDC</span>
-                        <div class="flex items-center justify-center gap-2 mt-2 text-[10px] text-slate-500">
-                            <i class="fa-brands fa-ethereum"></i> Red Polygon
-                        </div>
-                    </div>
-
-                    <div class="p-4 rounded-2xl bg-slate-900/50 space-y-3 text-xs">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Pagas desde:</span>
-                            <span id="res-source" class="text-white font-medium">--</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Tarifa de deBridge:</span>
-                            <span id="res-fee" class="text-white font-medium">--</span>
-                        </div>
-                    </div>
-
-                    <button onclick="handleCreateOrder()"
-                        class="w-full py-4 bg-white text-black rounded-2xl font-black text-sm uppercase tracking-tighter hover:bg-blue-50 transition-all">
-                        Firmar y Enviar Fondos
-                    </button>
-                </div>
-            </div>
-
-            <div id="step-3" class="step-card text-center py-10">
-                <div id="loader" class="mb-6">
-                    <div
-                        class="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto">
-                    </div>
-                </div>
-                <div id="success-icon" class="hidden mb-6">
-                    <div
-                        class="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto text-3xl">
-                        <i class="fa-solid fa-check"></i>
-                    </div>
-                </div>
-                <h2 id="status-title" class="text-xl font-bold text-white mb-2">Procesando...</h2>
-                <p id="status-text" class="text-slate-400 text-sm px-6">Estamos preparando la orden cross-chain en la
-                    blockchain.</p>
-            </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="assets/js/web3.js"></script>
 
     <script>
-        const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)",
-            "function decimals() view returns (uint8)"
-        ];
-
-        // Inyección de datos desde Laravel
         const KASHIO = {
-            chains: (function() {
-                const data = {!! json_encode($availableRoutes) !!};
-                return data.supportedSourceChains || [];
-            })(),
-            quoteUrl: "{!! route('pay.api.quote') !!}",
-            orderUrl: "{!! route('pay.api.order') !!}",
-            csrfToken: "{{ csrf_token() }}",
+            chains: @json($chains),
+            web3: @json(config('web3.networks')),
+            destChain: 137,
+            destToken: "{{ config('web3.networks.POL.tokens.USDC.address') }}",
             userWallet: "{{ $userWallet }}"
         };
 
-        let userAddress, provider, signer;
-
-        async function connectAndScan() {
-            if (!window.ethereum) return alert("Instala MetaMask");
-
-            try {
-                provider = new ethers.providers.Web3Provider(window.ethereum);
-                const accounts = await provider.send("eth_requestAccounts", []);
-                userAddress = accounts[0];
-                signer = provider.getSigner();
-
-                // Actualizar interfaz
-                document.getElementById('status-pill').classList.remove('hidden');
-                document.getElementById('addr-display').innerText =
-                    `${userAddress.substring(0,6)}...${userAddress.substring(38)}`;
-
-                await scanBalances();
-                goToStep(1);
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        async function scanBalances() {
-            const select = document.getElementById('select-asset');
-            select.innerHTML = '<option value="">Buscando tokens con saldo...</option>';
-
-            const network = await provider.getNetwork();
-            const currentChain = KASHIO.chains.find(c => c.chainId == network.chainId);
-
-            if (!currentChain) {
-                select.innerHTML = '<option value="">Red no soportada por deBridge. Cambia de red.</option>';
-                return;
-            }
-
-            const tokens = Object.values(currentChain.tokens);
-            let found = 0;
-
-            for (const token of tokens) {
-                // Solo escaneamos tokens principales para ahorrar tiempo
-                if (!['USDC', 'USDT', 'ETH', 'MATIC', 'WETH', 'DAI'].includes(token.symbol)) continue;
-
-                try {
-                    let balance;
-                    if (token.address === "0x0000000000000000000000000000000000000000") {
-                        balance = await provider.getBalance(userAddress);
-                    } else {
-                        const contract = new ethers.Contract(token.address, ERC20_ABI, provider);
-                        balance = await contract.balanceOf(userAddress);
-                    }
-
-                    if (balance.gt(0)) {
-                        const decimals = token.decimals || 18;
-                        const formatted = ethers.utils.formatUnits(balance, decimals);
-                        const opt = document.createElement('option');
-                        opt.value = `${currentChain.chainId}|${token.address}|${token.symbol}`;
-                        opt.text =
-                            `${token.symbol} - Saldo: ${parseFloat(formatted).toFixed(4)} (${currentChain.chainName})`;
-                        opt.dataset.max = formatted;
-                        select.appendChild(opt);
-                        found++;
-                    }
-                } catch (err) {
-                    console.warn(err);
-                }
-            }
-
-            if (found === 0) {
-                select.innerHTML =
-                    '<option value="">No tienes saldo en esta red (Prueba cambiar de red en MetaMask)</option>';
-            } else {
-                const empty = select.querySelector('option[value=""]');
-                if (empty) empty.text = "Selecciona un activo";
-                updateSymbol();
-            }
-        }
-
-        function updateSymbol() {
-            const val = document.getElementById('select-asset').value;
-            if (val) document.getElementById('token-symbol').innerText = val.split('|')[2];
-        }
-
-        document.getElementById('select-asset').addEventListener('change', updateSymbol);
-        document.getElementById('max-label').addEventListener('click', () => {
-            const sel = document.getElementById('select-asset');
-            const max = sel.options[sel.selectedIndex]?.dataset.max;
-            if (max) document.getElementById('input-amount').value = max;
-        });
-
-        async function handleEstimation() {
-            const amount = document.getElementById('input-amount').value;
-            const assetData = document.getElementById('select-asset').value;
-            if (!amount || !assetData) return alert("Completa los datos");
-
-            const [srcChainId, srcToken, symbol] = assetData.split('|');
-            const btn = document.getElementById('btn-estimate');
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i>';
-
-            try {
-                const res = await fetch(
-                    `${KASHIO.quoteUrl}?amount=${amount}&srcChainId=${srcChainId}&srcToken=${srcToken}`);
-                const data = await res.json();
-
-                document.getElementById('res-receive').innerText =
-                    `${data.estimation.dstChainTokenOut.amountFormatted} USDC`;
-                document.getElementById('res-source').innerText = `${amount} ${symbol} en ${srcChainId}`;
-                document.getElementById('res-fee').innerText =
-                    `$ ${data.estimation.costsDetails.totalFixedFee || '0.00'}`;
-                goToStep(2);
-            } catch (e) {
-                alert("Error de cotización");
-            } finally {
-                btn.innerHTML = 'Verificar Recepción <i class="fa-solid fa-chevron-right ml-2 text-[10px]"></i>';
-            }
-        }
-
-        async function handleCreateOrder() {
-            const [srcChainId, srcToken] = document.getElementById('select-asset').value.split('|');
-            const amount = document.getElementById('input-amount').value;
-
-            goToStep(3);
-            try {
-                const res = await fetch(KASHIO.orderUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': KASHIO.csrfToken
-                    },
-                    body: JSON.stringify({
-                        amount,
-                        srcChainId,
-                        srcToken,
-                        userWallet: KASHIO.userWallet
-                    })
-                });
-                const order = await res.json();
-
-                const tx = await signer.sendTransaction({
-                    to: order.tx.to,
-                    data: order.tx.data,
-                    value: order.tx.value
-                });
-
-                document.getElementById('loader').classList.add('hidden');
-                document.getElementById('success-icon').classList.remove('hidden');
-                document.getElementById('status-title').innerText = "¡Pago Enviado!";
-                document.getElementById('status-text').innerText = "Tu depósito llegará a Kashio en pocos minutos.";
-
-                setTimeout(() => window.location.href = "https://t.me/TuBot", 5000);
-            } catch (e) {
-                alert("Error en la firma");
-                goToStep(2);
-            }
-        }
-
-        function goToStep(s) {
-            document.querySelectorAll('.step-card').forEach(c => c.classList.remove('active'));
-            document.getElementById(`step-${s}`).classList.add('active');
-            document.getElementById('progress').style.width = (s * 25 + 20) + '%';
-        }
+        let selectedData = null;
     </script>
-</body>
-
-</html>
+@endsection

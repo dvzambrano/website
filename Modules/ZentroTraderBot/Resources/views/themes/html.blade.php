@@ -6,55 +6,38 @@
 
     <title>{{ __('zentrotraderbot::landing.title') }}</title>
 
-    <style>
-        .navbar .dropdown ul img {
-            width: 18px;
-            height: auto;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
+    @yield('htmlhead')
 
-        .navbar .dropdown span i {
-            font-size: 1.1rem;
-            margin-right: 5px;
-        }
-    </style>
-
-    @yield('head')
 </head>
 
-<body>
-    @yield('body')
+<body id="@yield('htmlbodyid')" class="@yield('htmlbodycss')">
+
+    @yield('htmlbody')
 
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
     <script>
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                // Obtenemos el ID de la sección (ejemplo: #about)
-                const targetId = this.getAttribute('href');
-
-                // Si solo es "#", no hacemos nada (ya lo cubrimos con el Back to Top)
-                if (targetId === '#') return;
-
-                const targetElement = document.querySelector(targetId);
-
-                if (targetElement) {
-                    e.preventDefault(); // Evitamos que cambie la URL a esa ruta larga
-
-                    // Calculamos la posición restando un poco de margen por si tienes el header fijo
-                    const offset = 70;
-                    const elementPosition = targetElement.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - offset;
-
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true, // Los nuevos aparecen arriba
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false, // Queremos ver todos los hallazgos
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000", // 5 segundos visibles
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
     </script>
+
 </body>
 
 </html>

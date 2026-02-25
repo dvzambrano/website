@@ -7,6 +7,7 @@ use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\DeBridgeController;
+use Illuminate\Support\Facades\Cache;
 
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 
@@ -81,13 +82,17 @@ class LandingController extends Controller
         // 2. Instanciar el controlador de Wallets
         $walletController = new TraderWalletController();
 
-        // 3. Obtener Balance REAL (específicamente de USDC en Polygon)
-        // El método getBalance que tienes devuelve el portfolio
-        $usdcBalance = $walletController->getBalance($suscriptor);
-
-        // 4. Obtener Transacciones 
-        $transactions = $walletController->getRecentTransactions($suscriptor);
-        //$transactions = [];
+        $usdcBalance = 0;
+        $transactions = [];
+        try {
+            // 3. Obtener Balance REAL (específicamente de USDC en Polygon)
+            // El método getBalance que tienes devuelve el portfolio
+            $usdcBalance = $walletController->getBalance($suscriptor);
+            // 4. Obtener Transacciones 
+            $transactions = $walletController->getRecentTransactions($suscriptor);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
 
         return view("zentrotraderbot::themes.{$this->theme}.dashboard", [
             'balance' => $usdcBalance,
@@ -99,6 +104,9 @@ class LandingController extends Controller
 
     public function pay()
     {
+        // Forzar eliminación de la caché de rutas de deBridge
+        //Cache::forget('debridge_routes_to_137');
+
         $suscriptor = $this->getSuscriptor();
         //dd($suscriptor->getWallet()["address"]);
 
@@ -106,14 +114,14 @@ class LandingController extends Controller
 
         //dd(config('web3'));
 
-        $routes = $bridge->getSupportedRoutesTo();
-        //dd($routes);
+        $chains = $bridge->getSupportedChainsInfo();
+        //dd($chains);
 
 
 
         return view("zentrotraderbot::themes.{$this->theme}.pay", [
             'userWallet' => $suscriptor->getWallet()["address"],
-            'availableRoutes' => $routes, // Pasamos la data a la vista
+            'chains' => $chains,
             'bot' => $this->bot // Datos del bot para el branding
         ]);
     }

@@ -20,7 +20,7 @@ return [
             "identifiedas" => "Identificado como",
             "myaccount" => "Mi panel",
             "greeting" => "Hola, :name",
-            "balance" => "Tu saldo libre",
+            "balance" => "Balance",
             "logout" => "Cerrar sesión",
             "refresh" => "Actualizar saldo",
             "photo_alt" => "Avatar de usuario",
