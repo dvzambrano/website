@@ -76,8 +76,9 @@ class TraderWalletController extends WalletController
         $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
         //app_zentrotraderbot_alchemy_authtoken
         $usdcContract = config('web3.networks.POL.tokens.USDC.address');
+        $polUsdcContract = config('web3.networks.POL.tokens.USDC.address');
 
-        return AlchemyController::getRecentTransactions($authToken, $address, "POL", ["erc20"], [$usdcContract], 5);
+        return AlchemyController::getRecentTransactions($authToken, $address, 'POL', ["erc20"], [$polUsdcContract], 5);
     }
 
     /**
