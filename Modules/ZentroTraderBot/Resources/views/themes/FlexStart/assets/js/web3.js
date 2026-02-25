@@ -336,6 +336,9 @@ async function executeSwap() {
 
         toastr.info("Solicitando orden de pago...");
 
+        //alpine.step = "success";
+        //return;
+
         // 5. Petición POST a tu controlador de Laravel
         const response = await fetch(KASHIO.createOrderUrl, {
             method: "POST",
