@@ -404,21 +404,31 @@ async function executeSwap() {
         } else {
             throw new Error("La transacción fue revertida por la red.");
         }
-    } catch (err) {
-        console.error("🚨 Error en executeSwap:", err);
-
-        // Manejo de errores comunes de Wallet
-        let userFriendlyMsg = "No se pudo procesar el pago.";
-
-        if (err.code === 4001) {
-            userFriendlyMsg = "Transacción cancelada por el usuario.";
-        } else if (err.message.includes("insufficient funds")) {
-            userFriendlyMsg = "Saldo insuficiente para pagar el Gas.";
-        }
-
-        toastr.error(userFriendlyMsg);
+    } catch (error) {
+        console.error("🚨 Error en executeSwap:", error);
 
         btnPay.disabled = false;
         btnPay.innerText = "Confirmar y Pagar";
+
+        // Personalizamos el mensaje según el error
+        if (error.code === 4001) {
+            alpine.errorMessage =
+                "Transacción cancelada: Has rechazado la firma en MetaMask.";
+        } else if (error.message.includes("insufficient funds")) {
+            alpine.errorMessage =
+                "Saldo insuficiente: No tienes suficiente BNB/GAS para pagar la comisión.";
+        } else {
+            alpine.errorMessage =
+                "No pudimos procesar la orden. Por favor, intenta más tarde.";
+        }
+
+        // Cambiamos el detalle técnico en el cuadro pequeño
+        document.getElementById("error-detail-text").innerText =
+            error.message.substring(0, 100) + "...";
+
+        // Saltamos a la vista de error
+        alpine.step = "error";
+
+        toastr.error("La operación fue cancelada o falló.");
     }
 }

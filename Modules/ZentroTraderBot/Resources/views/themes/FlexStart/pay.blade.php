@@ -199,7 +199,7 @@
                                                 class="fas fa-list-ul text-2xl text-white"></i>
                                         </div>
                                         <h2 class="text-2xl font-extrabold text-dark">Selecciona tu moneda</h2>
-                                        <p class="text-slate-500 small mt-1">¿Qué activo deseas convertir a USDC?</p>
+                                        <p class="text-slate-500 small mt-1">¿Qué activo deseas convertir a USD?</p>
                                     </div>
                                     <h6 class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-3 d-block"
                                         style="font-size: 10px;">
@@ -223,7 +223,7 @@
                                                 class="fas fa-file-invoice-dollar text-2xl text-white"></i>
                                         </div>
                                         <h2 class="text-2xl font-extrabold text-dark">Monto de recarga</h2>
-                                        <p class="text-slate-500 small mt-1">Define cuánto quieres depositar en tu billetera
+                                        <p class="text-slate-500 small mt-1">Define cuánto quieres depositar en tu cuenta
                                         </p>
                                     </div>
 
@@ -262,7 +262,7 @@
                                         </div>
                                         <div class="d-flex justify-content-between pb-3 border-bottom mb-3">
                                             <span class="small fw-bold text-slate-400 text-uppercase">Recibes en
-                                                Polygon</span>
+                                                tu cuenta</span>
                                             <span id="txt-receive-amount"
                                                 class="h4 mb-0 fw-black text-primary">Calculando...</span>
                                         </div>
@@ -281,22 +281,59 @@
                                             </div>
                                         </div>
                                         <h3 class="fw-black text-dark">¡Transacción Enviada!</h3>
-                                        <p class="text-slate-500 small">Tu depósito está siendo procesado. Los fondos
-                                            llegarán a Polygon pronto.</p>
+                                        <p class="text-slate-500 small">Tu depósito está siendo procesado.</p>
+                                        <p class="text-slate-500 small">Los fondos
+                                            llegarán a tu cuenta pronto.</p>
 
                                         <div class="quote-container text-start mb-4">
                                             <div class="d-flex justify-content-between mb-1">
                                                 <span class="small text-slate-400">Estado:</span>
-                                                <span class="small fw-bold text-success">En camino (Bridge)</span>
+                                                <span class="small fw-bold text-success">En camino</span>
                                             </div>
                                             <div class="d-flex justify-content-between">
                                                 <span class="small text-slate-400">Destino:</span>
-                                                <span class="small fw-bold">Polygon (USDC)</span>
+                                                <span class="small fw-bold">USD</span>
                                             </div>
                                         </div>
 
                                         <button onclick="location.reload()" class="btn-kashio-dark">Volver al
                                             inicio</button>
+                                    </div>
+                                </div>
+
+                                <div x-show="step === 'error'" x-transition style="display: none;">
+                                    <div class="text-center py-4">
+                                        <div class="mb-4">
+                                            <div class="kashio-icon-container" style="background-color: #ef4444;"> <i
+                                                    class="fas fa-exclamation-triangle text-2xl text-white"></i>
+                                            </div>
+                                        </div>
+
+                                        <h3 class="fw-black text-dark">Hubo un problema</h3>
+                                        <p class="text-slate-500 small px-4" x-text="errorMessage">
+                                            La transacción no pudo completarse.
+                                        </p>
+
+                                        <div class="quote-container text-start mb-4"
+                                            style="background-color: #fef2f2; border-color: #fee2e2;">
+                                            <div class="small text-danger fw-bold mb-1">Detalle del error:</div>
+                                            <div class="small text-slate-600" id="error-detail-text"
+                                                style="font-family: monospace; font-size: 10px;">
+                                                User rejected the request.
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-4">
+                                            <button @click="step = 'amount'" class="btn-kashio-primary">
+                                                Intentar de nuevo
+                                            </button>
+
+                                            <button onclick="location.reload()"
+                                                class="btn btn-link w-100 text-slate-400 text-uppercase fw-bold text-decoration-none"
+                                                style="font-size: 11px;">
+                                                Volver al inicio
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
