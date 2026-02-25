@@ -83,13 +83,26 @@ async function updateQuoteManual(isAutoRefresh = false) {
             .parseUnits(alpine.amount.toString(), selectedData.decimals)
             .toString();
 
+        let tokenAddress = selectedData.address.toLowerCase();
+        const NATIVE_ADDR = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+        const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
+
+        if (tokenAddress === NATIVE_ADDR) {
+            tokenAddress = ZERO_ADDR;
+        }
+
+        // 2. Construir la query con la dirección saneada
         const query = new URLSearchParams({
             srcChainId: selectedData.chainId,
-            srcToken: selectedData.address,
+            srcToken: tokenAddress, // <--- Usamos la variable saneada
             amount: rawAmount,
             dstChainId: KASHIO.destChain,
             dstToken: KASHIO.destToken,
         });
+
+        console.log(
+            `📡 Solicitando cotización para ${selectedData.symbol} (${tokenAddress})...`,
+        );
 
         const response = await fetch(`${KASHIO.quoteUrl}?${query.toString()}`);
         const data = await response.json();
