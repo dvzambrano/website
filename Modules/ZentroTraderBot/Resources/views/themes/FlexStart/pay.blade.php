@@ -181,7 +181,8 @@
                             </div>
 
                             <div id="payment-section" class="hidden" x-data="{ step: 'list', selectedAsset: null, amount: '' }"
-                                @asset-selected.window="selectedAsset = $event.detail; step = 'amount'; amount = '';">
+                                @asset-selected.window="selectedAsset = $event.detail; step = 'amount'; amount = '';"
+                                x-effect="if(step === 'list') { stopQuotePolling(); }">
 
                                 <div x-show="step === 'list'" x-transition>
                                     <label class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-3 d-block"
@@ -215,15 +216,18 @@
                                             <span class="text-slate-400 small"
                                                 x-text="'Saldo: ' + selectedAsset?.balance"></span>
                                         </div>
-                                        <button class="btn btn-sm btn-outline-primary fw-bold"
-                                            @click="amount = selectedAsset?.balance; updateQuoteManual()">MAX</button>
+                                        <button type="button" @click="amount = selectedAsset.balance; updateQuoteManual();"
+                                            class="btn btn-sm btn-outline-primary ms-2">
+                                            MAX
+                                        </button>
                                     </div>
 
                                     <div class="mb-4">
                                         <label
                                             class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-2 d-block"
                                             style="font-size: 10px;">Monto a enviar</label>
-                                        <input type="number" x-model="amount" @input.debounce.500ms="updateQuoteManual()"
+                                        <input type="number" x-model="amount"
+                                            @input.debounce.500ms="typeof updateQuoteManual === 'function' ? updateQuoteManual() : null"
                                             class="form-control form-control-lg border-2 fw-bold text-center"
                                             placeholder="0.00">
                                     </div>

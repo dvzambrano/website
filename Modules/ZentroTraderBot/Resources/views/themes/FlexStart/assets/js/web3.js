@@ -1,10 +1,119 @@
 /**
- * Kashio - ZentroTraderBot Web3 Handler
- * Sincronizado con Interfaz de Asistente (Alpine.js)
+ * Kashio - Global State
  */
+// Aseguramos que las variables existan en el objeto window
+window.quoteInterval = window.quoteInterval || null;
+window.QUOTE_REFRESH_TIME = 15000;
 
-let selectedData = null; // Almacena el activo seleccionado globalmente
-const QUOTE_REFRESH_TIME = 30000; // 30 segundos es un estándar sano
+/**
+ * Detiene el refresco automático
+ */
+function stopQuotePolling() {
+    if (window.quoteInterval) {
+        console.log("🛑 Deteniendo auto-refresco.");
+        clearInterval(window.quoteInterval);
+        window.quoteInterval = null;
+    }
+}
+
+/**
+ * Inicia el refresco automático
+ */
+function startQuotePolling() {
+    if (window.quoteInterval) return;
+
+    console.log("⏱️ Iniciando auto-refresco...");
+    window.quoteInterval = setInterval(() => {
+        updateQuoteManual(true);
+    }, window.QUOTE_REFRESH_TIME);
+}
+
+/**
+ * Función principal de cotización
+ */
+async function updateQuoteManual(isAutoRefresh = false) {
+    const quoteCard = document.getElementById("quote-card");
+    const btnPay = document.getElementById("btn-pay");
+    const receiveTxt = document.getElementById("txt-receive-amount");
+    const sendTxt = document.getElementById("txt-send-amount");
+    const amountInputEl = document.querySelector('input[x-model="amount"]');
+
+    const el = document.getElementById("payment-section");
+    if (!el || !window.Alpine) return;
+
+    const alpine = window.Alpine.$data(el);
+    const currentAmount = parseFloat(alpine.amount);
+
+    // VALIDACIÓN: ¿Es un número válido? ¿Es mayor a 0? ¿Es menor o igual al saldo?
+    const balanceAvailable = parseFloat(selectedData.balance);
+    const isValidAmount =
+        currentAmount > 0 && currentAmount <= balanceAvailable;
+
+    if (!isValidAmount || alpine.step !== "amount") {
+        if (!isAutoRefresh) {
+            if (quoteCard) quoteCard.classList.add("hidden");
+            if (btnPay) btnPay.disabled = true;
+
+            // Mostrar error visual si se pasa del balance
+            if (currentAmount > balanceAvailable) {
+                toastr.error(
+                    `Saldo insuficiente. Tu máximo es ${selectedData.balance}`,
+                );
+            }
+        }
+        stopQuotePolling();
+        return;
+    }
+
+    // Si el monto es válido, procedemos
+    if (quoteCard) quoteCard.classList.remove("hidden");
+    if (sendTxt) sendTxt.innerText = `${alpine.amount} ${selectedData.symbol}`;
+
+    if (receiveTxt) receiveTxt.innerText = "Calculando...";
+    if (btnPay) btnPay.disabled = true;
+    if (amountInputEl) amountInputEl.disabled = true;
+
+    if (!isAutoRefresh) {
+        stopQuotePolling();
+        startQuotePolling();
+    }
+
+    try {
+        const rawAmount = ethers.utils
+            .parseUnits(alpine.amount.toString(), selectedData.decimals)
+            .toString();
+
+        const query = new URLSearchParams({
+            srcChainId: selectedData.chainId,
+            srcToken: selectedData.address,
+            amount: rawAmount,
+            dstChainId: KASHIO.destChain,
+            dstToken: KASHIO.destToken,
+        });
+
+        const response = await fetch(`${KASHIO.quoteUrl}?${query.toString()}`);
+        const data = await response.json();
+
+        if (data.estimation) {
+            const amt =
+                data.estimation.dstChainTokenOut.recommendedAmount / 1e6;
+            if (receiveTxt) {
+                receiveTxt.innerText = `${amt.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 6,
+                })} USDC`;
+            }
+            if (btnPay) btnPay.disabled = false;
+        }
+    } catch (e) {
+        console.error("Error en estimación:", e);
+        if (!isAutoRefresh && receiveTxt)
+            receiveTxt.innerText = "Error de conexión";
+    } finally {
+        if (amountInputEl) amountInputEl.disabled = false;
+        if (!isAutoRefresh && amountInputEl) amountInputEl.focus();
+    }
+}
 
 async function connectAndScan() {
     // Verificación de Provider
@@ -169,69 +278,6 @@ async function connectAndScan() {
         scanStatus.classList.add("hidden");
         btnConnect.classList.remove("hidden");
         toastr.error("Error al conectar con la wallet.");
-    }
-}
-
-/**
- * Calcula la cotización en deBridge basándose en el monto manual
- */
-async function updateQuoteManual() {
-    const card = document.getElementById("quote-card");
-    const btn = document.getElementById("btn-pay");
-    const receiveTxt = document.getElementById("txt-receive-amount");
-    const sendTxt = document.getElementById("txt-send-amount");
-
-    const alpine = Alpine.$data(document.getElementById("payment-section"));
-    const amountInput = alpine.amount;
-
-    if (!amountInput || amountInput <= 0 || !selectedData) {
-        card.classList.add("hidden");
-        btn.disabled = true;
-        return;
-    }
-
-    card.classList.remove("hidden");
-    btn.disabled = true;
-    receiveTxt.innerText = "Calculando...";
-    sendTxt.innerText = `${amountInput} ${selectedData.symbol}`;
-
-    try {
-        const rawAmount = ethers.utils.parseUnits(
-            amountInput.toString(),
-            selectedData.decimals,
-        );
-
-        const query = new URLSearchParams({
-            srcChainId: selectedData.chainId,
-            srcToken: selectedData.address,
-            amount: rawAmount.toString(),
-            dstChainId: KASHIO.destChain,
-            dstToken: KASHIO.destToken,
-        });
-
-        // USAMOS LA URL SINCRONIZADA
-        const response = await fetch(`${KASHIO.quoteUrl}?${query.toString()}`);
-
-        if (!response.ok) throw new Error("Error en servidor");
-
-        const data = await response.json();
-
-        // Ajusta 'data.estimation' según lo que devuelva tu LandingController@getQuote
-        if (data.estimation) {
-            const recommendedAmount =
-                data.estimation.dstChainTokenOut.recommendedAmount;
-            // USDC en Polygon tiene 6 decimales
-            const amt = recommendedAmount / 1_000_000;
-
-            // Mostramos 6 decimales para coincidir con deBridge y evitar confusiones
-            receiveTxt.innerText = `${amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })} USD`;
-            btn.disabled = false;
-        } else {
-            receiveTxt.innerText = "Ruta no disponible";
-        }
-    } catch (e) {
-        console.error("Error en quote:", e);
-        receiveTxt.innerText = "Error de conexión";
     }
 }
 
