@@ -8,6 +8,7 @@ use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\DeBridgeController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 
@@ -154,20 +155,33 @@ class LandingController extends Controller
     // PASO 3: Crear Orden (Generar Data para firmar)
     public function createOrder(Request $request)
     {
+        try {
+            $suscriptor = $this->getSuscriptor();
+            $userSignerAddress = $request->input('userWallet');
 
+            $bridge = new DeBridgeController();
 
-        $bridge = new DeBridgeController();
+            // Obtenemos la respuesta real de la API de deBridge
+            $result = $bridge->createOrder(
+                $request->input('srcChainId'),
+                $request->input('srcToken'),
+                $request->input('amount'),
+                $userSignerAddress,
+                $suscriptor->getWallet()["address"],
+                $request->input('dstChainId'),
+                $request->input('dstToken')
+            );
 
-        // Preparamos la orden para que el dinero llegue a la wallet del usuario
-        $order = $bridge->createOrder(
-            $request->srcChainId,
-            $request->srcToken,
-            $request->amount,
-            137,
-            '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359',
-            $request->userWallet // ReceiverAddress en destino
-        );
+            // IMPORTANTE: Debes devolver el resultado de la API
+            // Si el bridge ya devuelve un array o un objeto JSON, Laravel lo enviará correctamente.
+            return response()->json($result);
 
-        return response()->json($order);
+        } catch (\Exception $e) {
+            Log::error("🚨 Error en createOrder: " . $e->getMessage());
+            return response()->json([
+                'error' => 'Error al procesar la orden',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

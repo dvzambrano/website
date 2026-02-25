@@ -3,6 +3,7 @@
 
 <head>
     <base href="{{ url('laravel/ZentroTraderBot/' . config('zentrotraderbot.theme', 'FlexStart')) }}/" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ __('zentrotraderbot::landing.title') }}</title>
 
