@@ -271,46 +271,87 @@ async function executeSwap() {
 }
 
 /**
- * Renderiza la lista de activos
+ * Renderiza la lista de activos detectados y actualiza la info de la red.
+ * @param {Array} assets - Lista de objetos de activos con balance.
  */
 function renderAssetsList(assets) {
     const container = document.getElementById("assets-list-container");
     const scanStatus = document.getElementById("scan-status");
     const paymentSection = document.getElementById("payment-section");
+    const networkDisplay = document.getElementById("display-network-name");
 
     if (!container) return;
+
+    // 1. Limpiar el contenedor de activos
     container.innerHTML = "";
 
+    // 2. Actualizar el nombre de la red conectada en el selector inferior
+    if (networkDisplay && window.web3Modal) {
+        const currentChainId = window.web3Modal.getChainId();
+        const networkConfig = window.supportedChains.find(
+            (n) => Number(n.chainId) === Number(currentChainId),
+        );
+        networkDisplay.innerText = networkConfig
+            ? networkConfig.name
+            : "Red no detectada";
+    }
+
+    // 3. Renderizar la lista de activos o mensaje de vacío
     if (assets.length === 0) {
-        container.innerHTML = `<p class="text-center p-4">Sin activos con saldo.</p>`;
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-coins text-slate-200 mb-3" style="font-size: 40px;"></i>
+                <p class="text-slate-500 small">No se encontraron activos con saldo relevante en esta red.</p>
+            </div>`;
     } else {
         assets.forEach((item) => {
+            // Asegurar un logo por defecto si falla el de deBridge
             const imgUrl =
                 item.logoURI ||
                 "https://app.debridge.com/assets/images/chain/generic.svg";
+
             const html = `
                 <button type="button" 
                     class="list-group-item list-group-item-action d-flex align-items-center p-3 mb-2 border rounded-3 hover-bg-light"
                     onclick="selectAsset('${item.address}', '${item.symbol}', ${item.decimals}, '${item.balance}', '${imgUrl}')">
-                    <img src="${imgUrl}" class="rounded-circle me-3" width="35" height="35" onerror="this.src='https://app.debridge.com/assets/images/chain/generic.svg'">
-                    <div class="flex-grow-1 text-start">
-                        <div class="fw-bold text-dark">${item.symbol}</div>
-                        <div class="text-slate-400" style="font-size: 10px;">${item.networkName}</div>
+                    
+                    <div class="position-relative">
+                        <img src="${imgUrl}" class="rounded-circle border" width="40" height="40" 
+                             onerror="this.src='https://app.debridge.com/assets/images/chain/generic.svg'">
+                        <div class="position-absolute bottom-0 end-0 bg-white rounded-circle" style="padding: 2px;">
+                            <i class="fas fa-check-circle text-success" style="font-size: 10px;"></i>
+                        </div>
                     </div>
+
+                    <div class="flex-grow-1 text-start ms-3">
+                        <div class="fw-bold text-dark" style="font-size: 14px;">${item.symbol}</div>
+                        <div class="text-slate-400" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            ${item.networkName}
+                        </div>
+                    </div>
+
                     <div class="text-end">
-                        <div class="fw-black text-primary">${item.balance}</div>
-                        <div class="text-slate-400" style="font-size: 9px;">DISPONIBLE</div>
+                        <div class="fw-black text-primary" style="font-size: 15px;">${item.balance}</div>
+                        <div class="text-slate-400 fw-bold" style="font-size: 9px; letter-spacing: 1px;">DISPONIBLE</div>
                     </div>
                 </button>`;
             container.insertAdjacentHTML("beforeend", html);
         });
     }
 
+    // 4. Gestión de visibilidad con transiciones
     if (scanStatus) scanStatus.classList.add("hidden");
+
     if (paymentSection) {
         paymentSection.classList.remove("hidden");
-        if (window.Alpine) Alpine.$data(paymentSection).step = "list";
+        // Aseguramos que Alpine vuelva al paso de la lista
+        if (window.Alpine) {
+            const alpineData = Alpine.$data(paymentSection);
+            alpineData.step = "list";
+        }
     }
+
+    console.log(`✅ Renderizado: ${assets.length} activos mostrados.`);
 }
 
 /**

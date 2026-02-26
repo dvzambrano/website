@@ -220,6 +220,27 @@
                                     <div id="assets-list-container" class="list-group list-group-flush text-start mb-4">
                                     </div>
 
+                                    <div class="mt-4 mb-4 pt-3 border-top">
+                                        <label
+                                            class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-3 d-block"
+                                            style="font-size: 10px;">
+                                            Red Conectada
+                                        </label>
+                                        <button type="button" onclick="window.web3Modal.open({ view: 'Networks' })"
+                                            class="asset-selector-box w-100 hover-bg-light border-dashed"
+                                            style="border-style: dashed;">
+                                            <div class="kashio-list-icon rounded-circle bg-light me-2"
+                                                style="width: 24px; height: 24px;">
+                                                <i class="fas fa-network-wired text-primary" style="font-size: 12px;"></i>
+                                            </div>
+                                            <div class="flex-grow-1 text-start">
+                                                <span class="fw-bold small text-dark" id="display-network-name">Cargando
+                                                    red...</span>
+                                            </div>
+                                            <i class="fas fa-chevron-right text-slate-400 small"></i>
+                                        </button>
+                                    </div>
+
                                     <button onclick="disconnectAndExit()"
                                         class="btn btn-link w-100 text-slate-400 text-uppercase fw-bold text-decoration-none"
                                         style="font-size: 11px;">
@@ -252,7 +273,8 @@
                                             <span class="text-slate-400 small"
                                                 x-text="'Saldo: ' + selectedAsset?.balance"></span>
                                         </div>
-                                        <button type="button" @click="amount = selectedAsset.balance; updateQuoteManual();"
+                                        <button type="button"
+                                            @click="amount = selectedAsset.balance; updateQuoteManual();"
                                             class="btn btn-sm btn-outline-primary ms-2">MAX</button>
                                     </div>
 
