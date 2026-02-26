@@ -345,9 +345,11 @@ async function startScanning(userAddress) {
         const provider = new ethers.providers.Web3Provider(walletProvider);
         const currentChainId = window.web3Modal.getChainId();
 
-        const networkConfig = Object.values(KASHIO.web3).find((n) => {
-            return Number(n.chain_id) === Number(currentChainId);
-        });
+        const networkConfig = Object.values(window.supportedChains).find(
+            (n) => {
+                return Number(n.chainId) === Number(currentChainId);
+            },
+        );
 
         if (!networkConfig) {
             toastr.error("Red no soportada (ID: " + currentChainId + ")");
@@ -385,7 +387,7 @@ async function startScanning(userAddress) {
             );
 
             foundAssets.push({
-                symbol: networkConfig.native_symbol || networkConfig.symbol,
+                symbol: deBridgeNative.symbol,
                 balance: parseFloat(nativeBalance).toFixed(4),
                 address: "0x0000000000000000000000000000000000000000",
                 chainId: currentChainId,

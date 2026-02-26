@@ -357,114 +357,32 @@
 
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-
-    <script type="module">
-        import {
-            createWeb3Modal,
-            defaultConfig
-        } from "https://esm.sh/@web3modal/ethers5@3.5.0";
-
-        async function init() {
-            try {
-                const projectId = '7ee216bd3d5f9925ab5e9eb6636fb421'; // <--- TU ID
-
-                const mainnet = {
-                    chainId: 56,
-                    name: 'Binance Smart Chain',
-                    currency: 'BNB',
-                    explorerUrl: 'https://bscscan.com',
-                    rpcUrl: 'https://bsc-dataseed.binance.org/'
-                };
-
-                const polygon = {
-                    chainId: 137,
-                    name: 'Polygon',
-                    currency: 'MATIC',
-                    explorerUrl: 'https://polygonscan.com',
-                    rpcUrl: 'https://polygon.llamarpc.com'
-                };
-
-                const metadata = {
-                    name: 'Kashio',
-                    description: 'Wallet inteligente',
-                    url: window.location.origin,
-                    icons: ['https://avatars.githubusercontent.com/u/37784886']
-                };
-
-                // Inicializamos
-                const modal = createWeb3Modal({
-                    ethersConfig: defaultConfig({
-                        metadata
-                    }),
-                    chains: [mainnet, polygon],
-                    projectId,
-                    themeMode: 'light'
-                });
-
-                // Lo guardamos en window
-                window.web3Modal = modal;
-
-                // Variable para rastrear el estado previo y evitar recargas infinitas
-                let wasConnected = false;
-                window.web3Modal.subscribeState(state => {
-                    const address = window.web3Modal.getAddress();
-                    const isConnected = window.web3Modal.getIsConnected();
-                    const chainId = window.web3Modal.getChainId();
-
-                    console.log("🔄 Cambio de estado:", {
-                        isConnected,
-                        address,
-                        chainId
-                    });
-
-                    if (isConnected && address) {
-                        wasConnected = true;
-
-                        // --- AQUÍ EL CAMBIO CLAVE ---
-                        // Referencias a tus secciones de la página
-                        const connectSection = document.getElementById('connect-section');
-                        const scanStatus = document.getElementById('scan-status');
-                        const paymentSection = document.getElementById('payment-section');
-
-                        // 1. Ocultar el botón de inicio
-                        if (connectSection) connectSection.classList.add('hidden');
-
-                        // 2. Mostrar el estado de escaneo (Spinner)
-                        if (scanStatus) scanStatus.classList.remove('hidden');
-
-                        // 3. Ejecutar el escaneo de tokens
-                        if (typeof window.startScanning === 'function') {
-                            console.log("🚀 Lanzando escaneo para:", address);
-                            window.startScanning(address);
-                        }
-                    } else if (!isConnected && wasConnected) {
-                        console.warn("Wallet desconectada.");
-                        location.reload();
-                    }
-                });
-
-                console.log("✅ Kashio: Web3Modal operativo");
-
-                // En lugar de subscribeAccount (que puede variar por versión), 
-                // usamos un intervalo o escuchamos el cambio de estado si es necesario.
-                // Por ahora, enfoquémonos en que el botón funcione.
-
-            } catch (error) {
-                console.error("❌ Error cargando Web3Modal:", error);
-            }
-        }
-
-        init();
-    </script>
-
     <script src="assets/js/web3.js"></script>
 
     <script>
+        window.onWalletConnected = function(address, chainId) {
+            // Referencias a tus secciones de la página
+            const connectSection = document.getElementById('connect-section');
+            const scanStatus = document.getElementById('scan-status');
+            const paymentSection = document.getElementById('payment-section');
+
+            // 1. Ocultar el botón de inicio
+            if (connectSection) connectSection.classList.add('hidden');
+
+            // 2. Mostrar el estado de escaneo (Spinner)
+            if (scanStatus) scanStatus.classList.remove('hidden');
+
+            // 3. Ejecutar el escaneo de tokens
+            if (typeof window.startScanning === 'function') {
+                console.log("🚀 Lanzando escaneo para:", address);
+                window.startScanning(address);
+            }
+        };
+        window.onWalletDisconnected = function(address, chainId) {
+            location.reload();
+        };
+
         const KASHIO = {
-            chains: @json($chains),
             web3: @json(config('web3.networks')),
             destChain: 137,
             destToken: "{{ config('web3.networks.POL.tokens.USDC.address') }}",
@@ -474,4 +392,16 @@
             createOrderUrl: "{{ route('pay.api.order') }}"
         };
     </script>
+
+
+
+    {{-- Incluir el partial del Web3Modal --}}
+    @include('zentrotraderbot::partials.wallet-connect', [
+        'projectId' => config('zentrotraderbot.wallet_connect_api_key'),
+        'walletName' => config('zentrotraderbot.bot'),
+        'walletDescription' => 'Wallet inteligente',
+        'walletIcon' => 'https://avatars.githubusercontent.com/u/37784886',
+        'themeMode' => 'light',
+        'chains' => route('pay.api.routes'),
+    ])
 @endsection

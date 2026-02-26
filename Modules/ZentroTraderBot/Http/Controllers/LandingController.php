@@ -9,6 +9,8 @@ use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\DeBridgeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 
@@ -115,14 +117,9 @@ class LandingController extends Controller
 
         //dd(config('web3'));
 
-        $chains = $bridge->getSupportedChainsInfo();
-        //dd($chains);
-
-
 
         return view("zentrotraderbot::themes.{$this->theme}.pay", [
             'userWallet' => $suscriptor->getWallet()["address"],
-            'chains' => $chains,
             'bot' => $this->bot // Datos del bot para el branding
         ]);
     }
@@ -130,11 +127,70 @@ class LandingController extends Controller
     // PASO 1: Obtener rutas soportadas
     public function getRoutes()
     {
+        // 1. Obtener rutas comerciales de deBridge (terminan en Polygon 137)
         $bridge = new DeBridgeController();
-        // Obtenemos rutas que terminan en Polygon (137)
-        $routes = $bridge->getSupportedRoutesTo(137);
-        return response()->json($routes);
+        $debridgeRoutes = $bridge->getSupportedChainsInfo(137);
+
+        // 2. Obtener datos técnicos de Chainlink / ChainID Network (con Cache para no saturar)
+        $allChainsData = Cache::remember('external_chains_info', 3600, function () {
+            $response = Http::timeout(3600)->get('https://chainid.network/chains.json');
+            return $response->collect();
+        });
+
+        $enrichedRoutes = [];
+
+        foreach ($debridgeRoutes as $id => $route) {
+            $chainId = (int) $route['chainId'];
+
+            // Buscamos la info técnica oficial por ChainID
+            $chainInfo = $allChainsData->firstWhere('chainId', $chainId);
+
+            if ($chainInfo) {
+                $chainInfo["logo"] = $route["logoURI"];
+
+                // --- LÓGICA DE NORMALIZACIÓN DE RPC ---
+                $cleanRpc = [];
+
+                // Convertimos a array por si viene como objeto desde el JSON
+                $rpcSource = (array) $chainInfo['rpc'];
+
+                foreach ($rpcSource as $rpc) {
+                    // 1. Saltamos si contiene variables ${...}
+                    if (str_contains($rpc, '${'))
+                        continue;
+
+                    // 2. Priorizamos HTTPS (Web3Modal prefiere HTTPS para el handshake inicial)
+                    if (str_starts_with($rpc, 'https://')) {
+                        $cleanRpc[] = $rpc;
+                    }
+                }
+
+                // Si por alguna razón no hay HTTPS, metemos los WSS o lo que quede
+                if (empty($cleanRpc)) {
+                    foreach ($rpcSource as $rpc) {
+                        if (!str_contains($rpc, '${'))
+                            $cleanRpc[] = $rpc;
+                    }
+                }
+
+                // REGLA DE ORO: array_values garantiza que las llaves sean [0, 1, 2...]
+                // Esto obliga a PHP a convertirlo en un Array de JSON [] y no en un Objeto {}
+                $chainInfo['rpc'] = array_values(array_unique($cleanRpc));
+
+                // --- NORMALIZACIÓN DE EXPLORERS ---
+                // Hacemos lo mismo con explorers para evitar errores en el Blade
+                $chainInfo['explorers'] = array_values((array) ($chainInfo['explorers'] ?? []));
+
+
+                $enrichedRoutes[$chainInfo['chainId']] = $chainInfo;
+
+                //dd($chainInfo, $route);
+            }
+        }
+
+        return response()->json($enrichedRoutes);
     }
+
     public function getTokens($chainId = 137)
     {
         $bridge = new DeBridgeController();
