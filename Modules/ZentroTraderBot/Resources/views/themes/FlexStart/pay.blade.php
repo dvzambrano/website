@@ -165,7 +165,7 @@
                                     <span>Conectar Billetera</span>
                                 </button>
                                 <p class="text-slate-400 small px-4" style="font-size: 11px;">
-                                    Escanearemos tus balances en múltiples redes para facilitar el depósito.
+                                    Escanearemos tus balances en la red conectada para facilitar el depósito.
                                 </p>
                             </div>
 
@@ -188,9 +188,14 @@
                                 </p>
                             </div>
 
-                            <div id="payment-section" class="hidden" x-data="{ step: 'list', selectedAsset: null, amount: '' }"
+                            <div id="payment-section" class="hidden" x-data="{
+                                step: 'list',
+                                selectedAsset: null,
+                                amount: '',
+                                errorMessage: ''
+                            }"
                                 @asset-selected.window="selectedAsset = $event.detail; step = 'amount'; amount = '';"
-                                x-effect="if(step === 'list') { stopQuotePolling(); }">
+                                x-effect="if(step === 'list') { typeof window.stopQuotePolling === 'function' ? window.stopQuotePolling() : null; }">
 
                                 <div x-show="step === 'list'" x-transition>
 
@@ -201,15 +206,21 @@
                                         <h2 class="text-2xl font-extrabold text-dark">Selecciona tu moneda</h2>
                                         <p class="text-slate-500 small mt-1">¿Qué activo deseas convertir a USD?</p>
                                     </div>
-                                    <h6 class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-3 d-block"
-                                        style="font-size: 10px;">
-                                        Selecciona un activo para depositar
-                                    </h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-0"
+                                            style="font-size: 10px;">
+                                            Activos detectados
+                                        </h6>
+                                        <button type="button" onclick="manualRescan()"
+                                            class="btn btn-sm btn-outline-primary border-0" style="font-size: 11px;">
+                                            <i class="fas fa-sync-alt me-1"></i> Actualizar
+                                        </button>
+                                    </div>
 
                                     <div id="assets-list-container" class="list-group list-group-flush text-start mb-4">
                                     </div>
 
-                                    <button onclick="location.reload()"
+                                    <button onclick="disconnectAndExit()"
                                         class="btn btn-link w-100 text-slate-400 text-uppercase fw-bold text-decoration-none"
                                         style="font-size: 11px;">
                                         Cancelar y salir
@@ -346,7 +357,108 @@
 
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+    <script type="module">
+        import {
+            createWeb3Modal,
+            defaultConfig
+        } from "https://esm.sh/@web3modal/ethers5@3.5.0";
+
+        async function init() {
+            try {
+                const projectId = '7ee216bd3d5f9925ab5e9eb6636fb421'; // <--- TU ID
+
+                const mainnet = {
+                    chainId: 56,
+                    name: 'Binance Smart Chain',
+                    currency: 'BNB',
+                    explorerUrl: 'https://bscscan.com',
+                    rpcUrl: 'https://bsc-dataseed.binance.org/'
+                };
+
+                const polygon = {
+                    chainId: 137,
+                    name: 'Polygon',
+                    currency: 'MATIC',
+                    explorerUrl: 'https://polygonscan.com',
+                    rpcUrl: 'https://polygon.llamarpc.com'
+                };
+
+                const metadata = {
+                    name: 'Kashio',
+                    description: 'Wallet inteligente',
+                    url: window.location.origin,
+                    icons: ['https://avatars.githubusercontent.com/u/37784886']
+                };
+
+                // Inicializamos
+                const modal = createWeb3Modal({
+                    ethersConfig: defaultConfig({
+                        metadata
+                    }),
+                    chains: [mainnet, polygon],
+                    projectId,
+                    themeMode: 'light'
+                });
+
+                // Lo guardamos en window
+                window.web3Modal = modal;
+
+                // Variable para rastrear el estado previo y evitar recargas infinitas
+                let wasConnected = false;
+                window.web3Modal.subscribeState(state => {
+                    const address = window.web3Modal.getAddress();
+                    const isConnected = window.web3Modal.getIsConnected();
+                    const chainId = window.web3Modal.getChainId();
+
+                    console.log("🔄 Cambio de estado:", {
+                        isConnected,
+                        address,
+                        chainId
+                    });
+
+                    if (isConnected && address) {
+                        wasConnected = true;
+
+                        // --- AQUÍ EL CAMBIO CLAVE ---
+                        // Referencias a tus secciones de la página
+                        const connectSection = document.getElementById('connect-section');
+                        const scanStatus = document.getElementById('scan-status');
+                        const paymentSection = document.getElementById('payment-section');
+
+                        // 1. Ocultar el botón de inicio
+                        if (connectSection) connectSection.classList.add('hidden');
+
+                        // 2. Mostrar el estado de escaneo (Spinner)
+                        if (scanStatus) scanStatus.classList.remove('hidden');
+
+                        // 3. Ejecutar el escaneo de tokens
+                        if (typeof window.startScanning === 'function') {
+                            console.log("🚀 Lanzando escaneo para:", address);
+                            window.startScanning(address);
+                        }
+                    } else if (!isConnected && wasConnected) {
+                        console.warn("Wallet desconectada.");
+                        location.reload();
+                    }
+                });
+
+                console.log("✅ Kashio: Web3Modal operativo");
+
+                // En lugar de subscribeAccount (que puede variar por versión), 
+                // usamos un intervalo o escuchamos el cambio de estado si es necesario.
+                // Por ahora, enfoquémonos en que el botón funcione.
+
+            } catch (error) {
+                console.error("❌ Error cargando Web3Modal:", error);
+            }
+        }
+
+        init();
+    </script>
 
     <script src="assets/js/web3.js"></script>
 
@@ -358,6 +470,7 @@
             destToken: "{{ config('web3.networks.POL.tokens.USDC.address') }}",
             userWallet: "{{ $userWallet }}",
             quoteUrl: "{{ route('pay.api.quote') }}",
+            tokensUrl: "{{ route('pay.api.tokens') }}",
             createOrderUrl: "{{ route('pay.api.order') }}"
         };
     </script>

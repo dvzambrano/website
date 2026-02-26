@@ -21,6 +21,9 @@ Route::prefix('pay')->group(function () {
     Route::get('/routes', 'LandingController@getRoutes')
         ->name('pay.api.routes');
 
+    Route::get('/tokens/{chainId?}', 'LandingController@getTokens')
+        ->name('pay.api.tokens');
+
     // PASO 2: Obtener la cotización (Cuanto llega a Kashio)
     Route::get('/quote', 'LandingController@getQuote')
         ->name('pay.api.quote');

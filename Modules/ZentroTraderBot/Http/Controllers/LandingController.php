@@ -135,6 +135,12 @@ class LandingController extends Controller
         $routes = $bridge->getSupportedRoutesTo(137);
         return response()->json($routes);
     }
+    public function getTokens($chainId = 137)
+    {
+        $bridge = new DeBridgeController();
+        $tokens = $bridge->tokenList($chainId);
+        return response()->json($tokens);
+    }
 
     // PASO 2: Obtener Estimación
     public function getQuote(Request $request)

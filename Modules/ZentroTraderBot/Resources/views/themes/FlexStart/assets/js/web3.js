@@ -1,165 +1,101 @@
 /**
  * Kashio - Web3 Logic & Bridge Integration
- * Powered by Gemini 2.0 Flash
+ * Powered by Gemini 3.0 Flash
  */
 
 // --- Estado Global ---
 window.quoteInterval = null;
 window.QUOTE_REFRESH_TIME = 15000;
-let selectedData = null;
+let selectedData = null; // IMPORTANTE: Se llena al seleccionar un token
 
 // --- Inicialización y Eventos de Wallet ---
 if (window.ethereum) {
-    // Recargar si cambia la cuenta
     window.ethereum.on("accountsChanged", () => location.reload());
-
-    // Escaneo automático si cambia la red
-    window.ethereum.on("chainChanged", () => {
-        console.log("🔄 Cambio de red detectado, re-escaneando...");
-        connectAndScan();
-    });
+    window.ethereum.on("chainChanged", () => location.reload());
 }
 
 /**
- * Conecta la wallet y escanea SOLO la red activa en MetaMask
+ * Conecta la wallet manualmente (si el subscribeState del modal no se dispara)
  */
 async function connectAndScan() {
-    if (!window.ethereum) {
-        toastr.warning("Por favor, instala MetaMask para continuar.");
+    if (!window.web3Modal) {
+        toastr.warning("Inicializando conexión...");
         return;
     }
 
-    const btnConnect = document.getElementById("connect-section");
-    const scanStatus = document.getElementById("scan-status");
-    const paymentSection = document.getElementById("payment-section");
-    const currentNetTxt = document.getElementById("current-network-scan");
-    const listContainer = document.getElementById("assets-list-container");
-
-    // UI Reset
-    if (btnConnect) btnConnect.classList.add("hidden");
-    if (scanStatus) scanStatus.classList.remove("hidden");
-    if (paymentSection) paymentSection.classList.add("hidden");
-    if (listContainer) listContainer.innerHTML = "";
-
     try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const { chainId } = await provider.getNetwork();
-        const signer = provider.getSigner();
-        const userAddress = await signer.getAddress();
+        await window.web3Modal.open();
+        const address = window.web3Modal.getAddress();
 
-        // Identificar la red en nuestra configuración KASHIO.web3
-        const netKey = Object.keys(KASHIO.web3).find(
-            (key) => KASHIO.web3[key].chain_id == chainId,
-        );
+        if (address) {
+            document.getElementById("connect-section").classList.add("hidden");
+            document.getElementById("scan-status").classList.remove("hidden");
+            startScanning(address);
+        }
+    } catch (error) {
+        console.error("Error al interactuar con Web3Modal:", error);
+    }
+}
 
-        if (!netKey) {
-            const netName =
-                KASHIO.chains[chainId]?.name || `Chain ID: ${chainId}`;
-            toastr.error(`La red ${netName} no está soportada actualmente.`);
-            if (scanStatus) scanStatus.classList.add("hidden");
-            if (btnConnect) btnConnect.classList.remove("hidden");
-            return;
+async function disconnectAndExit() {
+    try {
+        if (window.web3Modal) {
+            // 1. Desconectar la wallet de Web3Modal
+            await window.web3Modal.disconnect();
+
+            // 2. Limpiar variables globales si es necesario
+            selectedData = null;
+            stopQuotePolling();
+
+            console.log("🔌 Kashio: Wallet desconectada manualmente.");
         }
 
-        if (currentNetTxt)
-            currentNetTxt.innerText = `📡 Escaneando tokens en ${netKey}...`;
-
-        const netInfo = KASHIO.web3[netKey];
-
-        // Escanear tokens definidos para esta red activa
-        for (const [symbol, token] of Object.entries(netInfo.tokens)) {
-            try {
-                let balance;
-                const isNative =
-                    token.address.toLowerCase() ===
-                        "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" ||
-                    token.address.toLowerCase() ===
-                        "0x0000000000000000000000000000000000000000";
-
-                if (isNative) {
-                    balance = await provider.getBalance(userAddress);
-                } else {
-                    const contract = new ethers.Contract(
-                        token.address,
-                        ["function balanceOf(address) view returns (uint256)"],
-                        provider,
-                    );
-                    balance = await contract.balanceOf(userAddress);
-                }
-
-                if (balance.gt(0)) {
-                    const formatted = ethers.utils.formatUnits(
-                        balance,
-                        token.decimals,
-                    );
-
-                    const assetData = {
-                        symbol,
-                        network: netKey,
-                        balance: formatted,
-                        rawBalance: balance.toString(),
-                        logo: KASHIO.chains[chainId]?.logoURI || "",
-                        address: token.address,
-                        chainId: chainId,
-                        decimals: token.decimals,
-                    };
-
-                    renderAssetItem(assetData, listContainer);
-                }
-            } catch (err) {
-                console.error(`Error en token ${symbol}:`, err);
-            }
-        }
-
-        if (scanStatus) scanStatus.classList.add("hidden");
-        if (listContainer.children.length > 0) {
-            if (paymentSection) paymentSection.classList.remove("hidden");
-        } else {
-            toastr.info(`No se detectó saldo en ${netKey}.`);
-            if (btnConnect) btnConnect.classList.remove("hidden");
-        }
-    } catch (err) {
-        console.error("🚨 Error crítico:", err);
-        if (scanStatus) scanStatus.classList.add("hidden");
-        if (btnConnect) btnConnect.classList.remove("hidden");
-        toastr.error("Error al conectar con la wallet.");
+        // 3. Recargar la página para volver al estado inicial limpio
+        location.reload();
+    } catch (error) {
+        console.error("Error al desconectar:", error);
+        // Fallback: si falla la desconexión, al menos recargamos
+        location.reload();
     }
 }
 
 /**
- * Renderiza un item en la lista de activos
+ * Selecciona un activo y comunica con Alpine.js
  */
-function renderAssetItem(data, container) {
-    const item = document.createElement("div");
-    item.className =
-        "list-group-item d-flex align-items-center py-3 border-0 mb-2 shadow-sm rounded-4 cursor-pointer hover-bg-light";
-    item.style.cursor = "pointer";
+window.selectAsset = function (address, symbol, decimals, balance, logo) {
+    const paymentSection = document.getElementById("payment-section");
 
-    item.onclick = () => {
-        selectedData = data;
-        // Notificar a Alpine
-        window.dispatchEvent(
-            new CustomEvent("asset-selected", { detail: data }),
-        );
-        const quoteCard = document.getElementById("quote-card");
-        if (quoteCard) quoteCard.classList.add("hidden");
+    // Actualizamos la variable global para que updateQuoteManual tenga los datos
+    selectedData = {
+        address: address,
+        symbol: symbol,
+        decimals: decimals,
+        balance: balance,
+        logo: logo,
+        chainId: window.web3Modal.getChainId(),
     };
 
-    item.innerHTML = `
-        <div class="me-3" style="background: #f8fafc; padding: 10px; border-radius: 12px;">
-            <img src="${data.logo}" style="width: 24px; height: 24px;">
-        </div>
-        <div class="flex-grow-1 text-start">
-            <h6 class="mb-0 fw-bold">${data.symbol}</h6>
-            <small class="text-muted">${data.network}</small>
-        </div>
-        <div class="text-end">
-            <span class="fw-bold text-primary">${parseFloat(data.balance).toFixed(4)}</span>
-        </div>
-    `;
-    container.appendChild(item);
-}
+    // Disparamos el evento para Alpine
+    window.dispatchEvent(
+        new CustomEvent("asset-selected", {
+            detail: selectedData,
+        }),
+    );
+
+    console.log("✅ Activo seleccionado:", symbol);
+};
+
+window.manualRescan = function () {
+    const address = window.web3Modal.getAddress();
+    if (!address) return;
+
+    // 1. Mostrar de nuevo el spinner
+    document.getElementById("payment-section").classList.add("hidden");
+    document.getElementById("scan-status").classList.remove("hidden");
+
+    // 2. Lanzar escaneo
+    startScanning(address);
+};
 
 /**
  * Obtiene cotización desde el backend de Kashio (deBridge)
@@ -169,12 +105,11 @@ async function updateQuoteManual(isAutoRefresh = false) {
     const btnPay = document.getElementById("btn-pay");
     const receiveTxt = document.getElementById("txt-receive-amount");
     const sendTxt = document.getElementById("txt-send-amount");
-    const amountInputEl = document.querySelector('input[x-model="amount"]');
 
     const el = document.getElementById("payment-section");
     if (!el || !window.Alpine) return;
 
-    const alpine = window.Alpine.$data(el);
+    const alpine = Alpine.$data(el);
     const currentAmount = parseFloat(alpine.amount);
     const balanceAvailable = parseFloat(selectedData?.balance || 0);
 
@@ -195,21 +130,18 @@ async function updateQuoteManual(isAutoRefresh = false) {
 
     // Validación de saldo
     if (currentAmount > balanceAvailable) {
-        if (!isAutoRefresh)
-            toastr.error(
-                `Saldo insuficiente (${selectedData.balance} disponible)`,
-            );
+        if (!isAutoRefresh) toastr.error(`Saldo insuficiente`);
         if (btnPay) btnPay.disabled = true;
-        stopQuotePolling();
         return;
     }
 
     // UI Feedback
     if (quoteCard) quoteCard.classList.remove("hidden");
     if (sendTxt) sendTxt.innerText = `${alpine.amount} ${selectedData.symbol}`;
-    if (receiveTxt && !isAutoRefresh) receiveTxt.innerText = "Calculando...";
-    if (btnPay) btnPay.disabled = true;
-    if (amountInputEl) amountInputEl.disabled = true;
+    if (!isAutoRefresh) {
+        if (receiveTxt) receiveTxt.innerText = "Calculando...";
+        if (btnPay) btnPay.disabled = true;
+    }
 
     if (!isAutoRefresh) {
         stopQuotePolling();
@@ -221,7 +153,6 @@ async function updateQuoteManual(isAutoRefresh = false) {
             .parseUnits(alpine.amount.toString(), selectedData.decimals)
             .toString();
 
-        // Saneamiento de dirección nativa para la API (0xeee... -> 0x000...)
         let tokenAddress = selectedData.address.toLowerCase();
         if (tokenAddress === "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
             tokenAddress = "0x0000000000000000000000000000000000000000";
@@ -240,198 +171,294 @@ async function updateQuoteManual(isAutoRefresh = false) {
 
         if (data.estimation) {
             const amt =
-                data.estimation.dstChainTokenOut.recommendedAmount / 1e6; // USDC Polygon
-            if (receiveTxt) {
-                receiveTxt.innerText = `${amt.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 6,
-                })} USDC`;
-            }
+                data.estimation.dstChainTokenOut.recommendedAmount / 1e6;
+            if (receiveTxt) receiveTxt.innerText = `${amt.toFixed(2)} USDC`;
             if (btnPay) btnPay.disabled = false;
         }
     } catch (e) {
         console.error("Error en estimación:", e);
-        if (!isAutoRefresh && receiveTxt)
-            receiveTxt.innerText = "Error de conexión";
-    } finally {
-        if (amountInputEl) amountInputEl.disabled = false;
-        if (!isAutoRefresh && amountInputEl) amountInputEl.focus();
     }
 }
 
 /**
  * Gestión del Latido (Polling)
  */
-function startQuotePolling() {
+window.startQuotePolling = function () {
     if (window.quoteInterval) return;
-    console.log("⏱️ Latido Kashio iniciado.");
     window.quoteInterval = setInterval(
         () => updateQuoteManual(true),
         window.QUOTE_REFRESH_TIME,
     );
-}
+};
 
-function stopQuotePolling() {
+window.stopQuotePolling = function () {
     if (window.quoteInterval) {
-        console.log("🛑 Latido Kashio detenido.");
         clearInterval(window.quoteInterval);
         window.quoteInterval = null;
     }
-}
+};
 
 /**
- * Ejecuta el flujo de pago:
- * 1. Envía datos al servidor (POST).
- * 2. Recibe el objeto de transacción.
- * 3. Dispara MetaMask para la firma.
+ * Ejecuta el flujo de pago
  */
 async function executeSwap() {
     const el = document.getElementById("payment-section");
     if (!el || !window.Alpine) return;
-
-    const alpine = window.Alpine.$data(el);
+    const alpine = Alpine.$data(el);
     const btnPay = document.getElementById("btn-pay");
 
-    // 1. Validaciones de interfaz
-    if (!selectedData || !alpine.amount || parseFloat(alpine.amount) <= 0) {
-        toastr.error("Por favor, ingresa un monto válido.");
-        return;
-    }
-
     try {
-        // Bloqueo de UI para evitar doble clic
         btnPay.disabled = true;
         btnPay.innerText = "Preparando transacción...";
 
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const provider = new ethers.providers.Web3Provider(
+            window.web3Modal.getWalletProvider(),
+        );
         const signer = provider.getSigner();
-
-        // Obtenemos la dirección activa del usuario que firma
         const userAddress = await signer.getAddress();
 
-        // 2. Preparar el monto en unidades mínimas (BigInt/Wei)
         const rawAmount = ethers.utils
             .parseUnits(alpine.amount.toString(), selectedData.decimals)
             .toString();
 
-        // 3. Normalizar dirección nativa para la API (0xeee... -> 0x000...)
-        let tokenAddress = selectedData.address.toLowerCase();
-        if (tokenAddress === "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
-            tokenAddress = "0x0000000000000000000000000000000000000000";
-        }
-
-        // 4. Preparar Payload y Token CSRF de Laravel
-        const csrfToken = document.querySelector(
-            'meta[name="csrf-token"]',
-        )?.content;
-
         const payload = {
             srcChainId: selectedData.chainId,
-            srcToken: tokenAddress,
+            srcToken:
+                selectedData.address ===
+                "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                    ? "0x0000000000000000000000000000000000000000"
+                    : selectedData.address,
             amount: rawAmount,
-            dstChainId: KASHIO.destChain, // Generalmente 137 (Polygon)
-            dstToken: KASHIO.destToken, // USDC Address en Polygon
-            userWallet: userAddress, // Quien firma
+            dstChainId: KASHIO.destChain,
+            dstToken: KASHIO.destToken,
+            userWallet: userAddress,
         };
 
-        toastr.info("Solicitando orden de pago...");
-
-        //alpine.step = "success";
-        //return;
-
-        // 5. Petición POST a tu controlador de Laravel
         const response = await fetch(KASHIO.createOrderUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Accept: "application/json",
-                "X-CSRF-TOKEN": csrfToken,
+                "X-CSRF-TOKEN": document.querySelector(
+                    'meta[name="csrf-token"]',
+                )?.content,
             },
             body: JSON.stringify(payload),
         });
 
-        // Manejo de errores del servidor (HTML vs JSON)
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new Error(
-                errorData?.message ||
-                    "Error en el servidor de Kashio (Verifica la ruta POST).",
-            );
-        }
-
         const data = await response.json();
 
-        // DEBUG: Si aún estás devolviendo $params para probar, veremos esto en consola:
         if (!data.tx) {
-            console.log(
-                "🐞 Modo Debug - Parámetros generados en Laravel:",
-                data,
-            );
-            toastr.success(
-                "Parámetros validados correctamente en el servidor.",
-            );
+            toastr.info("Orden validada (Modo Debug)");
             btnPay.disabled = false;
-            btnPay.innerText = "Confirmar y Pagar";
             return;
         }
 
-        // Busca el punto 6 en tu código y cámbialo por esto:
-        // 6. Firma de la Transacción real
-        toastr.warning("Confirma la transacción en tu MetaMask...");
-        // Preparamos el objeto de transacción con BigNumber para ethers v5
-        const txParams = {
+        const txResponse = await signer.sendTransaction({
             to: data.tx.to,
             data: data.tx.data,
-            value: data.tx.value
-                ? ethers.BigNumber.from(data.tx.value)
-                : ethers.BigNumber.from(0),
-            // Forzamos un límite de gas para evitar que falle la estimación inicial
-            // 1,500,000 es un estándar seguro para swaps cross-chain de deBridge
-            gasLimit: ethers.BigNumber.from(1500000),
-        };
+            value: data.tx.value ? ethers.BigNumber.from(data.tx.value) : 0,
+            gasLimit: 1500000,
+        });
 
-        console.log("🚀 Enviando a MetaMask:", txParams);
-
-        const txResponse = await signer.sendTransaction(txParams);
-
-        // 7. Espera de confirmación en la Blockchain
-        btnPay.innerText = "Confirmando en Red...";
-        toastr.info("Transacción enviada. Esperando validación...");
-
-        const receipt = await txResponse.wait();
-
-        if (receipt.status === 1) {
-            toastr.success("¡Depósito realizado con éxito!", "Kashio");
-            // Cambiar a paso final en el asistente de Alpine
-            if (alpine.step) alpine.step = "success";
-        } else {
-            throw new Error("La transacción fue revertida por la red.");
-        }
+        toastr.info("Esperando confirmación...");
+        await txResponse.wait();
+        alpine.step = "success";
     } catch (error) {
-        console.error("🚨 Error en executeSwap:", error);
+        console.error("🚨 Error:", error);
+        alpine.errorMessage = error.message;
+        alpine.step = "error";
+    }
+}
 
-        btnPay.disabled = false;
-        btnPay.innerText = "Confirmar y Pagar";
+/**
+ * Renderiza la lista de activos
+ */
+function renderAssetsList(assets) {
+    const container = document.getElementById("assets-list-container");
+    const scanStatus = document.getElementById("scan-status");
+    const paymentSection = document.getElementById("payment-section");
 
-        // Personalizamos el mensaje según el error
-        if (error.code === 4001) {
-            alpine.errorMessage =
-                "Transacción cancelada: Has rechazado la firma en MetaMask.";
-        } else if (error.message.includes("insufficient funds")) {
-            alpine.errorMessage =
-                "Saldo insuficiente: No tienes suficiente BNB/GAS para pagar la comisión.";
-        } else {
-            alpine.errorMessage =
-                "No pudimos procesar la orden. Por favor, intenta más tarde.";
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (assets.length === 0) {
+        container.innerHTML = `<p class="text-center p-4">Sin activos con saldo.</p>`;
+    } else {
+        assets.forEach((item) => {
+            const imgUrl =
+                item.logoURI ||
+                "https://app.debridge.com/assets/images/chain/generic.svg";
+            const html = `
+                <button type="button" 
+                    class="list-group-item list-group-item-action d-flex align-items-center p-3 mb-2 border rounded-3 hover-bg-light"
+                    onclick="selectAsset('${item.address}', '${item.symbol}', ${item.decimals}, '${item.balance}', '${imgUrl}')">
+                    <img src="${imgUrl}" class="rounded-circle me-3" width="35" height="35" onerror="this.src='https://app.debridge.com/assets/images/chain/generic.svg'">
+                    <div class="flex-grow-1 text-start">
+                        <div class="fw-bold text-dark">${item.symbol}</div>
+                        <div class="text-slate-400" style="font-size: 10px;">${item.networkName}</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-black text-primary">${item.balance}</div>
+                        <div class="text-slate-400" style="font-size: 9px;">DISPONIBLE</div>
+                    </div>
+                </button>`;
+            container.insertAdjacentHTML("beforeend", html);
+        });
+    }
+
+    if (scanStatus) scanStatus.classList.add("hidden");
+    if (paymentSection) {
+        paymentSection.classList.remove("hidden");
+        if (window.Alpine) Alpine.$data(paymentSection).step = "list";
+    }
+}
+
+/**
+ * Escaneo de activos
+ */
+/**
+ * Escanea activos en la red activa de la wallet.
+ * Optimizado para detectar balances nativos en la primera conexión.
+ * @param {string} userAddress - Dirección de la wallet del usuario.
+ */
+async function startScanning(userAddress) {
+    const container = document.getElementById("assets-list-container");
+    const statusEl = document.getElementById("current-network-scan");
+
+    // 1. Preparación de la interfaz
+    if (container) container.innerHTML = "";
+    if (statusEl) statusEl.innerText = "Sincronizando con tu billetera...";
+
+    console.log("🔍 Kashio: Iniciando escaneo para:", userAddress);
+    const foundAssets = [];
+
+    try {
+        // 2. Delay de seguridad (500ms)
+        // Vital para que el provider reconozca el balance nativo tras el handshake inicial
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // 3. Identificación de Red y Proveedor
+        const walletProvider = window.web3Modal.getWalletProvider();
+        if (!walletProvider)
+            throw new Error("No se encontró proveedor de wallet.");
+
+        const provider = new ethers.providers.Web3Provider(walletProvider);
+        const currentChainId = window.web3Modal.getChainId();
+
+        const networkConfig = Object.values(KASHIO.web3).find((n) => {
+            return Number(n.chain_id) === Number(currentChainId);
+        });
+
+        if (!networkConfig) {
+            toastr.error("Red no soportada (ID: " + currentChainId + ")");
+            document.getElementById("scan-status").classList.add("hidden");
+            document
+                .getElementById("connect-section")
+                .classList.remove("hidden");
+            return;
         }
 
-        // Cambiamos el detalle técnico en el cuadro pequeño
-        document.getElementById("error-detail-text").innerText =
-            error.message.substring(0, 100) + "...";
+        // 4. Obtener Lista de Tokens desde la API de Kashio (deBridge)
+        if (statusEl)
+            statusEl.innerText = `Consultando activos en ${networkConfig.name}...`;
+        const tokenResponse = await fetch(
+            `${KASHIO.tokensUrl}/${currentChainId}`,
+        );
+        const tokenData = await tokenResponse.json();
 
-        // Saltamos a la vista de error
-        alpine.step = "error";
+        // Convertimos el objeto de tokens en un array para procesarlo
+        const allTokens = tokenData.tokens
+            ? Object.values(tokenData.tokens)
+            : [];
 
-        toastr.error("La operación fue cancelada o falló.");
+        // 5. Escaneo de Balance Nativo (BNB, MATIC, etc.)
+        // Forzamos la consulta al provider recién inicializado
+        const nativeBalanceWei = await provider.getBalance(userAddress);
+        const nativeBalance = ethers.utils.formatEther(nativeBalanceWei);
+
+        if (parseFloat(nativeBalance) > 0) {
+            // Buscamos el logo del nativo en la lista de deBridge para consistencia visual
+            const deBridgeNative = allTokens.find(
+                (t) =>
+                    t.isNative ||
+                    t.address === "0x0000000000000000000000000000000000000000",
+            );
+
+            foundAssets.push({
+                symbol: networkConfig.native_symbol || networkConfig.symbol,
+                balance: parseFloat(nativeBalance).toFixed(4),
+                address: "0x0000000000000000000000000000000000000000",
+                chainId: currentChainId,
+                decimals: 18,
+                logoURI: deBridgeNative
+                    ? deBridgeNative.logoURI
+                    : networkConfig.logo,
+                networkName: networkConfig.name,
+                isNative: true,
+            });
+        }
+
+        // 6. Escaneo de Tokens ERC20 con Saldo
+        if (allTokens.length > 0) {
+            if (statusEl)
+                statusEl.innerText = `Buscando saldos en ${networkConfig.name}...`;
+
+            // Limitamos a los primeros 40 para evitar saturar el RPC en el escaneo inicial
+            const filteredTokens = allTokens.slice(0, 40);
+
+            const tokenPromises = filteredTokens.map(async (token) => {
+                try {
+                    // Saltamos si es el nativo (ya procesado arriba)
+                    if (
+                        token.isNative ||
+                        token.address ===
+                            "0x0000000000000000000000000000000000000000"
+                    )
+                        return null;
+
+                    const contract = new ethers.Contract(
+                        token.address,
+                        ["function balanceOf(address) view returns (uint256)"],
+                        provider,
+                    );
+
+                    const balanceWei = await contract.balanceOf(userAddress);
+                    const balance = ethers.utils.formatUnits(
+                        balanceWei,
+                        token.decimals,
+                    );
+
+                    if (parseFloat(balance) > 0.01) {
+                        return {
+                            symbol: token.symbol,
+                            balance: parseFloat(balance).toFixed(2),
+                            address: token.address,
+                            chainId: currentChainId,
+                            decimals: token.decimals,
+                            logoURI: token.logoURI,
+                            networkName: networkConfig.name,
+                            isNative: false,
+                        };
+                    }
+                } catch (e) {
+                    return null;
+                }
+                return null;
+            });
+
+            const tokensFound = await Promise.all(tokenPromises);
+            foundAssets.push(...tokensFound.filter((t) => t !== null));
+        }
+
+        // 7. Renderizado Final
+        console.log("✅ Kashio: Escaneo finalizado.", foundAssets);
+        renderAssetsList(foundAssets);
+    } catch (error) {
+        console.error("🚨 Error crítico en startScanning:", error);
+        toastr.error("No se pudieron cargar los balances.");
+
+        // En caso de error, devolvemos al usuario a la sección de conexión
+        document.getElementById("scan-status").classList.add("hidden");
+        document.getElementById("connect-section").classList.remove("hidden");
     }
 }
