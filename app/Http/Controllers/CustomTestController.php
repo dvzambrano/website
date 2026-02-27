@@ -38,6 +38,11 @@ class CustomTestController extends BaseController
     }
 
 
+    public function testLocal()
+    {
+        dd(app()->environment('local'));
+    }
+
     public function testWalletController()
     {
         $address = "0xd2531438b90232f4Aab4DDfC6f146474e84E1Ea1";

@@ -131,26 +131,25 @@ class LandingController extends Controller
         $bridge = new DeBridgeController();
         $debridgeRoutes = $bridge->getSupportedChainsInfo(137);
 
+        $isLocal = app()->environment('local');
+        $time = $isLocal ? 86400 : 3600; // 1 día en local, 1 hora en producción
         // 2. Obtener datos técnicos de Chainlink / ChainID Network (con Cache para no saturar)
-        $allChainsData = Cache::remember('external_chains_info', 3600, function () {
-            $response = Http::timeout(3600)->get('https://chainid.network/chains.json');
+        $allChainsData = Cache::remember('external_chains_info', $time, function () {
+            $response = Http::timeout(360)->get('https://chainid.network/chains.json');
             return $response->collect();
         });
 
         $enrichedRoutes = [];
-
         foreach ($debridgeRoutes as $id => $route) {
             $chainId = (int) $route['chainId'];
 
             // Buscamos la info técnica oficial por ChainID
             $chainInfo = $allChainsData->firstWhere('chainId', $chainId);
-
             if ($chainInfo) {
                 $chainInfo["logo"] = $route["logoURI"];
 
                 // --- LÓGICA DE NORMALIZACIÓN DE RPC ---
                 $cleanRpc = [];
-                // Dentro de tu bucle de redes en el controlador
                 $rpcSource = (array) $chainInfo['rpc'];
 
                 // 1. Lista de RPCs que SABEMOS que fallan o dan 401/CORS
@@ -161,7 +160,6 @@ class LandingController extends Controller
                     'pokt.network' // A veces da 401 sin ID
                 ];
 
-                $cleanRpc = [];
                 foreach ($rpcSource as $rpc) {
                     if (str_contains($rpc, '${'))
                         continue; // Saltar los que piden API KEY
@@ -181,6 +179,7 @@ class LandingController extends Controller
 
                 // 2. PRIORIZACIÓN ESTRATÉGICA
                 // Forzamos nodos que casi nunca fallan al inicio del array
+                /*
                 if ($chainId == 137) { // Polygon
                     array_unshift($cleanRpc, 'https://polygon-bor-rpc.publicnode.com', 'https://1rpc.io/matic');
                 } elseif ($chainId == 1) { // Ethereum
@@ -188,6 +187,7 @@ class LandingController extends Controller
                 } elseif ($chainId == 56) { // BSC
                     array_unshift($cleanRpc, 'https://binance.llamarpc.com', 'https://bsc-dataseed.binance.org');
                 }
+                */
 
                 $chainInfo['rpc'] = array_values(array_unique($cleanRpc));
 
@@ -215,16 +215,49 @@ class LandingController extends Controller
     // PASO 2: Obtener Estimación
     public function getQuote(Request $request)
     {
-
         $bridge = new DeBridgeController();
 
-        $quote = $bridge->getEstimation(
-            $request->srcChainId,
-            $request->srcToken,
-            $request->amount, // Cantidad a enviar
-            137,              // Polygon
-            '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359' // USDC
-        );
+        $srcChainId = (int) $request->srcChainId;
+        $dstChainId = config('web3.networks.POL.chain_id'); // Tu destino fijo en Polygon
+        $srcToken = $request->srcToken;
+        $amount = $request->amount;
+        $dstToken = config('web3.networks.POL.tokens.USDC.address');// USDC Polygon
+
+        // CASO A: Misma Red (Polygon -> Polygon)
+        if ($srcChainId === $dstChainId) {
+            // Si el token de origen ya es USDC en Polygon, no hay nada que intercambiar
+            if (strtolower($srcToken) === strtolower($dstToken)) {
+                return response()->json([
+                    'estimation' => [
+                        'dstChainTokenOut' => [
+                            'recommendedAmount' => $amount // 1 a 1
+                        ]
+                    ],
+                    'isDirectTransfer' => true // Bandera útil para el JS
+                ]);
+            }
+
+            // Si es otro token (POL, ETH, etc) en Polygon, usamos la lógica Single-Chain
+            // Nota: Asegúrate de que tu DeBridgeController tenga implementado getSingleChainEstimation
+            // Si no, puedes usar el mismo getEstimation pero validando que el servicio soporte '1.0/swap'
+            $quote = $bridge->getSingleChainEstimation(
+                $srcChainId,
+                $srcToken,
+                $amount,
+                $dstToken
+            );
+        }
+        // CASO B: Puente (Cualquier red -> Polygon)
+        else {
+            $quote = $bridge->getEstimation(
+                $srcChainId,
+                $srcToken,
+                $amount,
+                $dstChainId,
+                $dstToken
+            );
+        }
+
         return response()->json($quote);
     }
 
@@ -232,6 +265,18 @@ class LandingController extends Controller
     public function createOrder(Request $request)
     {
         try {
+            $srcChainId = (int) $request->input('srcChainId');
+            $dstChainId = (int) $request->input('dstChainId');
+            if ($srcChainId === $dstChainId) {
+                // Lógica para generar la transacción de intercambio simple o transferencia
+                // Aquí llamarías a un método diferente en tu DeBridgeController
+                // Ejemplo: $result = $bridge->createLocalSwap(...);
+
+                // Por ahora, para debug, podemos retornar un aviso:
+                return response()->json(['info' => 'Misma red detectada, usando flujo local']);
+            }
+
+
             $suscriptor = $this->getSuscriptor();
             $userSignerAddress = $request->input('userWallet');
 

@@ -441,13 +441,6 @@ async function startScanning(userAddress, forcedChainId = null) {
         // 2. Delay de seguridad (500ms) - Clave para evitar errores de handshake
         await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // 3. Identificación de Proveedor
-        const walletProvider = window.web3Modal.getWalletProvider();
-        if (!walletProvider)
-            throw new Error("No se encontró proveedor de wallet.");
-
-        const provider = new ethers.providers.Web3Provider(walletProvider);
-
         // 4. Validar configuración de red
         const networkConfig = Object.values(window.supportedChains).find(
             (n) => Number(n.chainId) === Number(currentChainId),
@@ -461,6 +454,25 @@ async function startScanning(userAddress, forcedChainId = null) {
                 .getElementById("connect-section")
                 .classList.remove("hidden");
             return;
+        }
+
+        // 3. Identificación de Proveedor
+        const walletProvider = window.web3Modal.getWalletProvider();
+        if (!walletProvider)
+            throw new Error("No se encontró proveedor de wallet.");
+        const provider = new ethers.providers.Web3Provider(walletProvider);
+        // VALIDACIÓN CRUCIAL:
+        const network = await provider.getNetwork();
+        if (Number(network.chainId) !== Number(currentChainId)) {
+            console.error(
+                "Mismatched Networks!",
+                network.chainId,
+                currentChainId,
+            );
+            // Si no coinciden, forzamos el uso del RPC oficial de nuestra configuración
+            // para evitar que el provider use el nodo equivocado
+            const rpcUrl = networkConfig.rpc[0];
+            provider = new ethers.providers.JsonRpcProvider(rpcUrl);
         }
 
         // 5. Obtener Lista de Tokens desde tu Backend (que consulta deBridge)
@@ -477,7 +489,11 @@ async function startScanning(userAddress, forcedChainId = null) {
 
         // 6. Escaneo de Balance Nativo (BNB, MATIC, ETH...)
         try {
-            const nativeBalanceWei = await provider.getBalance(userAddress);
+            // USAMOS LA FUNCIÓN DE FALLBACK
+            const nativeBalanceWei = await getBalanceWithFallback(
+                userAddress,
+                networkConfig,
+            );
             const nativeBalance = ethers.utils.formatEther(nativeBalanceWei);
 
             if (parseFloat(nativeBalance) > 0) {
@@ -505,7 +521,7 @@ async function startScanning(userAddress, forcedChainId = null) {
                 });
             }
         } catch (nativeErr) {
-            console.warn("Error consultando balance nativo:", nativeErr);
+            console.error("🚨 Agotados todos los RPCs:", nativeErr);
         }
 
         // 7. Escaneo de Tokens ERC20 (Filtrados con saldo)
@@ -513,11 +529,31 @@ async function startScanning(userAddress, forcedChainId = null) {
             if (statusEl)
                 statusEl.innerText = `Buscando saldos en ${networkConfig.name}...`;
 
-            // Procesamos un lote manejable (máximo 40) para no saturar el RPC
-            const filteredTokens = allTokens.slice(0, 40);
+            // DETERMINAR QUÉ PROVIDER USAR:
+            // Si el principal ya falló (lo sabemos porque tuvimos que usar el fallback para el nativo),
+            // creamos un provider usando el nodo que sí funcionó.
+            let activeProvider;
+            try {
+                activeProvider = new ethers.providers.Web3Provider(
+                    window.web3Modal.getWalletProvider(),
+                );
+                await activeProvider.getNetwork(); // Test de vida
+            } catch (e) {
+                console.log(
+                    "🛠️ Usando nodo de respaldo para escaneo de tokens...",
+                );
+                // Usamos el rpcUrl que ya sabemos que funciona (podemos guardarlo en una variable global si quieres)
+                // O simplemente usamos el primero de la lista de respaldo que no sea el fallido
+                const fallbackUrl = networkConfig.allRpcs.find(
+                    (url) => url !== networkConfig.rpcUrl,
+                );
+                activeProvider = new ethers.providers.JsonRpcProvider(
+                    fallbackUrl,
+                );
+            }
 
+            const filteredTokens = allTokens.slice(0, 40);
             const tokenPromises = filteredTokens.map(async (token) => {
-                // Saltar si es nativo (ya procesado)
                 if (
                     token.isNative ||
                     token.address ===
@@ -526,10 +562,11 @@ async function startScanning(userAddress, forcedChainId = null) {
                     return null;
 
                 try {
+                    // USAR EL PROVIDER ACTIVO (Sea el de la wallet o el de respaldo)
                     const contract = new ethers.Contract(
                         token.address,
                         ["function balanceOf(address) view returns (uint256)"],
-                        provider,
+                        activeProvider,
                     );
 
                     const balanceWei = await contract.balanceOf(userAddress);
@@ -538,7 +575,6 @@ async function startScanning(userAddress, forcedChainId = null) {
                         token.decimals,
                     );
 
-                    // Solo mostrar si el saldo es "relevante" (> 0.01)
                     if (parseFloat(balance) > 0.01) {
                         return {
                             symbol: token.symbol,
@@ -551,9 +587,7 @@ async function startScanning(userAddress, forcedChainId = null) {
                             isNative: false,
                         };
                     }
-                } catch (e) {
-                    return null; // Error silencioso para tokens que fallen
-                }
+                } catch (e) {}
                 return null;
             });
 
@@ -574,4 +608,54 @@ async function startScanning(userAddress, forcedChainId = null) {
         document.getElementById("scan-status").classList.add("hidden");
         document.getElementById("connect-section").classList.remove("hidden");
     }
+}
+
+/**
+ * Intenta obtener un balance probando varios RPCs si el principal falla.
+ */
+async function getBalanceWithFallback(address, networkConfig) {
+    // 1. Intentar primero con el proveedor de la wallet (lo más rápido)
+    try {
+        const walletProvider = new ethers.providers.Web3Provider(
+            window.web3Modal.getWalletProvider(),
+        );
+        return await walletProvider.getBalance(address);
+    } catch (e) {
+        console.warn(
+            "⚠️ Proveedor de wallet falló, intentando RPCs alternativos...",
+        );
+    }
+
+    // 2. Filtrar los RPCs para NO reintentar el principal que ya falló
+    // networkConfig.rpcUrl es el que Web3Modal intentó usar primero
+    const fallbackRpcs = (networkConfig.allRpcs || []).filter(
+        (url) => url !== networkConfig.rpcUrl,
+    );
+
+    console.log(`🔍 Probando ${fallbackRpcs.length} nodos de respaldo...`);
+
+    // 3. Iteramos por los RPCs secundarios
+    for (const rpcUrl of fallbackRpcs) {
+        try {
+            const fallbackProvider = new ethers.providers.JsonRpcProvider(
+                rpcUrl,
+            );
+
+            // Timeout de 3.5s para no penalizar la UX
+            const balance = await Promise.race([
+                fallbackProvider.getBalance(address),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Timeout")), 3500),
+                ),
+            ]);
+
+            console.log(`✅ Nodo recuperado con éxito: ${rpcUrl}`);
+            return balance;
+        } catch (err) {
+            console.warn(`❌ Nodo fallido: ${rpcUrl}`, err.message);
+            // Seguimos al siguiente en el loop
+        }
+    }
+
+    throw new Error("No se pudo conectar con ningún nodo de respaldo.");
 }
