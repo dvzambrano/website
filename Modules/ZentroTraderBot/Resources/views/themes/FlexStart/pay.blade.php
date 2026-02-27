@@ -388,7 +388,7 @@
 
 
     {{-- Incluir el partial del Web3Modal --}}
-    @include('zentrotraderbot::partials.wallet-connect', [
+    @include('web3::partials.wallet-connect', [
         'projectId' => config('zentrotraderbot.wallet_connect_api_key'),
         'walletName' => config('zentrotraderbot.bot'),
         'walletDescription' => 'Wallet inteligente',

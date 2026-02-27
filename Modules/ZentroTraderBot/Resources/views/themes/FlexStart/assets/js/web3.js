@@ -5,7 +5,7 @@
 
 // --- Estado Global ---
 window.quoteInterval = null;
-window.QUOTE_REFRESH_TIME = 15000;
+window.QUOTE_REFRESH_TIME = 30000;
 let selectedData = null; // IMPORTANTE: Se llena al seleccionar un token
 
 // --- Inicialización y Eventos de Wallet ---
@@ -194,6 +194,13 @@ async function updateQuoteManual(isAutoRefresh = false) {
         const response = await fetch(`${KASHIO.quoteUrl}?${query.toString()}`);
         const data = await response.json();
 
+        // 2. Si el backend responde con error (como el Error 25)
+        if (data.error || data.errorCode) {
+            throw new Error(
+                data.errorMessage || data.error || "Error en cotización",
+            );
+        }
+
         if (data.estimation) {
             const amt =
                 data.estimation.dstChainTokenOut.recommendedAmount / 1e6;
@@ -201,7 +208,19 @@ async function updateQuoteManual(isAutoRefresh = false) {
             if (btnPay) btnPay.disabled = false;
         }
     } catch (e) {
-        console.error("Error en estimación:", e);
+        console.error("🚨 Error en estimación:", e.message);
+
+        // 3. BLINDAJE: Si falla, dejamos de decir "Calculando..."
+        receiveTxt.innerText = "No disponible";
+        if (btnPay) btnPay.disabled = true;
+
+        // Si no es un refresco automático, avisamos al usuario con un Toast
+        if (!isAutoRefresh) {
+            toastr.error("No se pudo obtener la tasa de cambio");
+        }
+
+        // Detenemos el polling porque si falló una vez por lógica (mismo chain), fallará siempre
+        stopQuotePolling();
     }
 }
 
@@ -356,7 +375,7 @@ function renderAssetsList(assets) {
                     <div class="position-relative">
                         <img src="${imgUrl}" class="rounded-circle border" width="40" height="40" 
                              onerror="this.src='https://app.debridge.com/assets/images/chain/generic.svg'">
-                        <div class="position-absolute bottom-0 end-0 bg-white rounded-circle" style="padding: 2px;">
+                        <div class="position-absolute bottom-0 end-0" style="padding: 2px;">
                             <i class="fas fa-check-circle text-success" style="font-size: 10px;"></i>
                         </div>
                     </div>
