@@ -135,6 +135,46 @@
                 font-size: 2.5rem;
                 /* Ajustamos el tamaño del número del balance */
             }
+
+            .transaction-item {
+                padding: 10px 0 !important;
+                /* Ajustamos espacio interno */
+            }
+
+            .transaction-item .flex-grow-1 {
+                min-width: 0;
+                /* Permite que el contenedor se encoja para aplicar el truncado */
+                margin-right: 10px;
+            }
+
+            .transaction-item h6 {
+                font-size: 0.85rem !important;
+                /* Fecha un poco más pequeña */
+            }
+
+            .transaction-item small {
+                display: block;
+                font-size: 0.75rem !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                /* Esto crea el efecto "0x123..." si es muy largo */
+                max-width: 140px;
+                /* Ajusta según veas necesario */
+            }
+
+            .transaction-item .text-end span {
+                font-size: 0.9rem !important;
+                /* Monto un poco más pequeño para que no salte de línea */
+                white-space: nowrap;
+            }
+
+            .icon-box {
+                width: 30px !important;
+                /* Iconos ligeramente más pequeños en móvil */
+                height: 30px !important;
+                margin-right: 8px !important;
+            }
         }
 
         .custom-card {
@@ -213,8 +253,9 @@
                                         </div>
                                         <div class="flex-grow-1">
                                             <h6 class="mb-0 fw-bold">{{ $tx['human']['date'] }}</h6>
-                                            <small
-                                                class="text-muted">{{ $tx['human']['type'] == 'in' ? $tx['from'] : $tx['to'] }}</small>
+                                            <small class="text-muted text-truncate d-block">
+                                                {{ $tx['human']['type'] == 'in' ? str_replace('0x', '', $tx['from']) : str_replace('0x', '', $tx['to']) }}
+                                            </small>
                                         </div>
                                         <div class="text-end">
                                             <span

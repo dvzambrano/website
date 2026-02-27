@@ -4,6 +4,7 @@ namespace Modules\ZentroTraderBot\Http\Controllers;
 
 use Modules\Laravel\Http\Controllers\Controller;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\TelegramBot\Entities\Actors;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\DeBridgeController;
@@ -106,18 +107,15 @@ class LandingController extends Controller
         ]);
     }
 
-    public function pay()
+    public function pay($user)
     {
-        // Forzar eliminación de la caché de rutas de deBridge
-        //Cache::forget('debridge_routes_to_137');
-
-        $suscriptor = $this->getSuscriptor();
+        $actor = Actors::where('data->telegram->username', $user)->first();
+        if (!$actor)
+            abort(404);
+        $suscriptor = Suscriptions::where("user_id", $actor->user_id)->first();
+        if (!$suscriptor)
+            abort(404);
         //dd($suscriptor->getWallet()["address"]);
-
-        $bridge = new DeBridgeController();
-
-        //dd(config('web3'));
-
 
         return view("zentrotraderbot::themes.{$this->theme}.pay", [
             'userWallet' => $suscriptor->getWallet()["address"],
@@ -132,8 +130,6 @@ class LandingController extends Controller
         $bridge = new DeBridgeController();
         $debridgeRoutes = $bridge->getSupportedChainsInfo(137);
 
-        $isLocal = app()->environment('local');
-        $time = $isLocal ? 86400 : 3600; // 1 día en local, 1 hora en producción
         // 2. Obtener datos técnicos de Chainlink / ChainID Network (con Cache para no saturar)
         $allChainsData = BehaviorService::cache('external_chains_info', function () {
             $response = Http::timeout(BehaviorService::timeout())->get('https://chainid.network/chains.json');
