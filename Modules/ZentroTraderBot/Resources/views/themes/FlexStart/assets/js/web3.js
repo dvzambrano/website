@@ -254,8 +254,9 @@ async function executeSwap() {
     const btnPay = document.getElementById("btn-pay");
 
     try {
-        btnPay.disabled = true;
+        // 1. Preparación inicial
         btnPay.innerText = "Preparando transacción...";
+        btnPay.disabled = true;
 
         const provider = new ethers.providers.Web3Provider(
             window.web3Modal.getWalletProvider(),
@@ -267,6 +268,7 @@ async function executeSwap() {
             .parseUnits(alpine.amount.toString(), selectedData.decimals)
             .toString();
 
+        // 2. Obtener la orden del Backend
         const payload = {
             srcChainId: selectedData.chainId,
             srcToken:
@@ -292,37 +294,139 @@ async function executeSwap() {
         });
 
         const data = await response.json();
+        if (data.error || !data.tx)
+            throw new Error(data.message || "Error al crear la orden");
 
-        if (data.error) throw new Error(data.errorMessage);
+        // 3. GESTIÓN DE ALLOWANCE (Aprobación de Tokens)
+        // Solo si no es el token nativo y el backend nos indica un objetivo de aprobación
+        if (
+            selectedData.address !==
+                "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" &&
+            data.tx.allowanceTarget
+        ) {
+            btnPay.innerText = "Verificando permisos...";
+            btnPay.disabled = true;
 
-        toastr.info("Esperando confirmación...");
+            const tokenContract = new ethers.Contract(
+                selectedData.address,
+                [
+                    "function allowance(address owner, address spender) view returns (uint256)",
+                    "function approve(address spender, uint256 amount) returns (bool)",
+                ],
+                signer,
+            );
 
-        const txResponse = await signer.sendTransaction({
+            const currentAllowance = await tokenContract.allowance(
+                userAddress,
+                data.tx.allowanceTarget,
+            );
+
+            // Si el permiso es menor a lo que queremos enviar, pedimos aprobación
+            if (currentAllowance.lt(rawAmount)) {
+                toastr.info(
+                    "Por favor, aprueba el uso de los tokens en tu wallet",
+                );
+                btnPay.innerText = "Esperando aprobación...";
+                btnPay.disabled = true;
+
+                // Aprobamos el monto máximo para no volver a pedir permiso en el futuro (ahorra gas a la larga)
+                const approveTx = await tokenContract.approve(
+                    data.tx.allowanceTarget,
+                    ethers.constants.MaxUint256,
+                );
+                await approveTx.wait();
+                toastr.success("Permiso concedido correctamente");
+            }
+        }
+
+        // 4. ESTIMACIÓN DE GAS DINÁMICA
+        btnPay.innerText = "Confirmando pago...";
+        btnPay.disabled = true;
+
+        const txParams = {
             to: data.tx.to,
             data: data.tx.data,
             value: data.tx.value ? ethers.BigNumber.from(data.tx.value) : 0,
-            gasLimit: 1500000,
-        });
+        };
 
-        await txResponse.wait();
-        alpine.step = "success";
-    } catch (error) {
-        console.error("🚨 Error:", error);
-
-        // Si el usuario rechazó la firma, ponemos un mensaje amigable
-        let friendlyMessage = error.message;
-        if (error.code === "ACTION_REJECTED") {
-            friendlyMessage =
-                "Cancelaste la firma de la transacción en tu wallet.";
+        try {
+            // Intentamos estimar el gas para esa transacción específica
+            const estimatedGas = await provider.estimateGas({
+                ...txParams,
+                from: userAddress,
+            });
+            // Añadimos un 20% de buffer para evitar fallos por volatilidad de gas
+            txParams.gasLimit = estimatedGas.mul(120).div(100);
+            console.log(
+                "⚓ Gas estimado con buffer:",
+                txParams.gasLimit.toString(),
+            );
+        } catch (gasError) {
+            console.warn(
+                "⚠️ No se pudo estimar el gas, usando fallback:",
+                gasError,
+            );
+            // Si falla la estimación (a veces pasa en redes congestionadas), usamos un límite seguro
+            txParams.gasLimit = 1000000;
         }
 
-        alpine.errorMessage =
-            "No pudimos procesar la orden. Por favor intente más tarde.";
-        document.getElementById("error-detail-text").innerText =
-            friendlyMessage;
+        // 5. EJECUCIÓN DEL PAGO
+        toastr.info("Esperando firma de la transacción...");
+        const txResponse = await signer.sendTransaction(txParams);
+
+        btnPay.innerText = "Procesando en blockchain...";
+        btnPay.disabled = true;
+
+        console.log("🚀 Transacción enviada:", txResponse.hash);
+
+        // 6. FINALIZACIÓN
+        await txResponse.wait();
+
+        // Construimos la URL del explorador (usando la config que ya tenemos en window.supportedChainsDict)
+        const chainInfo = Object.values(window.supportedChains).find(
+            (n) => Number(n.chainId) === Number(selectedData.chainId),
+        );
+        const explorerUrl = chainInfo
+            ? `${chainInfo.explorerUrl}/tx/${txResponse.hash}`
+            : "#";
+
+        toastr.success(
+            `Tu depósito ha sido confirmado.<br>
+            <a href="${explorerUrl}" target="_blank" style="color: #fff; text-decoration: underline; font-weight: bold;">
+                <i class="fas fa-external-link-alt me-1"></i> Ver en el explorador
+            </a>`,
+            "¡Depósito Exitoso!",
+            {
+                timeOut: 0, // No se cierra automáticamente
+                extendedTimeOut: 0, // No se cierra al pasar el mouse
+                closeButton: true, // Permite al usuario cerrarlo manualmente
+                tapToDismiss: false, // Evita que se cierre al hacer clic accidentalmente fuera
+                progressBar: false, // No hace falta barra de tiempo si es permanente
+            },
+        );
+
+        alpine.step = "success";
+    } catch (error) {
+        console.error("🚨 Error en executeSwap:", error);
+
+        let friendlyMessage = error.message;
+
+        // Manejo de errores comunes de la wallet
+        if (error.code === "ACTION_REJECTED" || error.code === 4001) {
+            friendlyMessage = "Cancelaste la firma en tu wallet.";
+        } else if (error.message.includes("insufficient funds")) {
+            friendlyMessage =
+                "No tienes suficiente saldo para cubrir el gas de la red.";
+        }
+
+        alpine.errorMessage = "La operación no pudo completarse.";
+        const detailEl = document.getElementById("error-detail-text");
+        if (detailEl) detailEl.innerText = friendlyMessage;
 
         alpine.step = "error";
-        clearQuoteUI();
+        // Rehabilitamos el botón por si el usuario quiere corregir algo
+        btnPay.disabled = false;
+        btnPay.innerText = "Confirmar y Pagar";
     }
 }
 
