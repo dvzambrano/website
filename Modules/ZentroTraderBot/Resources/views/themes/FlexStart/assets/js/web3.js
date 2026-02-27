@@ -293,11 +293,9 @@ async function executeSwap() {
 
         const data = await response.json();
 
-        if (!data.tx) {
-            //toastr.info("Orden validada (Modo Debug)");
-            btnPay.disabled = false;
-            return;
-        }
+        if (data.error) throw new Error(data.errorMessage);
+
+        toastr.info("Esperando confirmación...");
 
         const txResponse = await signer.sendTransaction({
             to: data.tx.to,
@@ -306,7 +304,6 @@ async function executeSwap() {
             gasLimit: 1500000,
         });
 
-        toastr.info("Esperando confirmación...");
         await txResponse.wait();
         alpine.step = "success";
     } catch (error) {

@@ -280,59 +280,109 @@ class LandingController extends Controller
 
         return response()->json($quote);
     }
+
+    /**
+     * Codifica la función transfer(address,uint256) para envíos directos de tokens
+     */
     private function encodeERC20Transfer($to, $amount)
     {
         // Firma de la función transfer(address,uint256): 0xa9059cbb
-        $methodId = "0xa9059cbb";
+        $methodId = "0xa9059cbb"; // selector de transfer(address,uint256)
         $paddedAddress = str_pad(substr($to, 2), 64, "0", STR_PAD_LEFT);
 
         // El amount ya debe venir en unidades mínimas (base 10) desde el request
         // Lo convertimos a hexadecimal y lo rellenamos a 64 caracteres
-        $hexAmount = str_pad(dechex($amount), 64, "0", STR_PAD_LEFT);
+        // Usamos BCMath si el número es muy grande para dechex()
+        $hexAmount = str_pad($this->bcdechex($amount), 64, "0", STR_PAD_LEFT);
 
         return $methodId . $paddedAddress . $hexAmount;
+    }
+
+    private function bcdechex($dec)
+    {
+        $last = bcmod($dec, 16);
+        $remain = bcdiv(bcsub($dec, $last), 16);
+        if ($remain > 0) {
+            return $this->bcdechex($remain) . dechex($last);
+        } else {
+            return dechex($last);
+        }
     }
 
     // PASO 3: Crear Orden (Generar Data para firmar)
     public function createOrder(Request $request)
     {
         try {
-            $srcChainId = (int) $request->input('srcChainId');
-            $dstChainId = (int) $request->input('dstChainId');
-            if ($srcChainId === $dstChainId) {
-                // Lógica para generar la transacción de intercambio simple o transferencia
-                // Aquí llamarías a un método diferente en tu DeBridgeController
-                // Ejemplo: $result = $bridge->createLocalSwap(...);
-
-                // Por ahora, para debug, podemos retornar un aviso:
-                return response()->json(['info' => 'Misma red detectada, usando flujo local']);
-            }
-
-
+            $bridge = new DeBridgeController();
             $suscriptor = $this->getSuscriptor();
+
+
+            $srcChainId = (int) $request->input('srcChainId');
+            $srcToken = $request->input('srcToken');
+            $amount = $request->input('amount'); // Ya viene en unidades mínimas (BigInt string)
+
+            $dstChainId = (int) $request->input('dstChainId');
+            $dstToken = $request->input('dstToken');
+            $dstWallet = $suscriptor->getWallet()["address"];
+
             $userSignerAddress = $request->input('userWallet');
 
-            $bridge = new DeBridgeController();
+            // --- CASO 1: MISMA RED (Polygon -> Polygon) ---
+            if ($srcChainId === $dstChainId) {
+                // Sub-caso A: USDC -> USDC (Transferencia Directa)
+                if (strtolower($srcToken) === strtolower($dstToken)) {
+                    return response()->json([
+                        'type' => 'direct_transfer',
+                        'tx' => [
+                            'to' => $srcToken, // El contrato del token
+                            'data' => $this->encodeERC20Transfer($dstWallet, $amount),
+                            'value' => "0",
+                            'chainId' => $srcChainId
+                        ]
+                    ]);
+                }
 
+                // Sub-caso B: OTRO TOKEN -> USDC (Single Chain Swap)
+                $rawSwap = $bridge->getSameChainTransaction($srcChainId, $srcToken, $amount, $dstToken, $userSignerAddress, $dstWallet);
+                return response()->json([
+                    'type' => 'same_chain_swap',
+                    'tx' => [
+                        'to' => $rawSwap['tx']['to'],
+                        'data' => $rawSwap['tx']['data'],
+                        'value' => $rawSwap['tx']['value'] ?? "0",
+                        'chainId' => $srcChainId
+                    ]
+                ]);
+            }
+
+            // --- CASO 2: PUENTE (Cross-chain) ---
+            // Aquí usamos la lógica de DLN que ya tenías
             // Obtenemos la respuesta real de la API de deBridge
-            $result = $bridge->createOrder(
-                $request->input('srcChainId'),
-                $request->input('srcToken'),
-                $request->input('amount'),
+            $rawBridge = $bridge->createOrder(
+                $srcChainId,
+                $srcToken,
+                $amount,
                 $userSignerAddress,
-                $suscriptor->getWallet()["address"],
-                $request->input('dstChainId'),
-                $request->input('dstToken')
+                $dstWallet,
+                $dstChainId,
+                $dstToken,
             );
 
-            // IMPORTANTE: Debes devolver el resultado de la API
-            // Si el bridge ya devuelve un array o un objeto JSON, Laravel lo enviará correctamente.
-            return response()->json($result);
+            return response()->json([
+                'type' => 'cross_chain_bridge',
+                'tx' => [
+                    'to' => $rawBridge['tx']['to'],
+                    'data' => $rawBridge['tx']['data'],
+                    'value' => $rawBridge['tx']['value'] ?? "0",
+                    'chainId' => $srcChainId
+                ],
+                'orderId' => $rawBridge['orderId'] ?? null
+            ]);
 
         } catch (\Exception $e) {
             Log::error("🚨 Error en createOrder: " . $e->getMessage());
             return response()->json([
-                'error' => 'Error al procesar la orden',
+                'error' => true,
                 'message' => $e->getMessage()
             ], 500);
         }
