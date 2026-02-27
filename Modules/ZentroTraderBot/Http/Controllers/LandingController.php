@@ -150,31 +150,45 @@ class LandingController extends Controller
 
                 // --- LÓGICA DE NORMALIZACIÓN DE RPC ---
                 $cleanRpc = [];
-
-                // Convertimos a array por si viene como objeto desde el JSON
+                // Dentro de tu bucle de redes en el controlador
                 $rpcSource = (array) $chainInfo['rpc'];
 
-                foreach ($rpcSource as $rpc) {
-                    // 1. Saltamos si contiene variables ${...}
-                    if (str_contains($rpc, '${'))
-                        continue;
+                // 1. Lista de RPCs que SABEMOS que fallan o dan 401/CORS
+                $badRpcs = [
+                    'polygon-rpc.com',
+                    'api.mycryptoapi.com',
+                    'rpc.astral.global',
+                    'pokt.network' // A veces da 401 sin ID
+                ];
 
-                    // 2. Priorizamos HTTPS (Web3Modal prefiere HTTPS para el handshake inicial)
-                    if (str_starts_with($rpc, 'https://')) {
+                $cleanRpc = [];
+                foreach ($rpcSource as $rpc) {
+                    if (str_contains($rpc, '${'))
+                        continue; // Saltar los que piden API KEY
+
+                    $isBad = false;
+                    foreach ($badRpcs as $bad) {
+                        if (str_contains($rpc, $bad)) {
+                            $isBad = true;
+                            break;
+                        }
+                    }
+
+                    if (!$isBad && str_starts_with($rpc, 'https://')) {
                         $cleanRpc[] = $rpc;
                     }
                 }
 
-                // Si por alguna razón no hay HTTPS, metemos los WSS o lo que quede
-                if (empty($cleanRpc)) {
-                    foreach ($rpcSource as $rpc) {
-                        if (!str_contains($rpc, '${'))
-                            $cleanRpc[] = $rpc;
-                    }
+                // 2. PRIORIZACIÓN ESTRATÉGICA
+                // Forzamos nodos que casi nunca fallan al inicio del array
+                if ($chainId == 137) { // Polygon
+                    array_unshift($cleanRpc, 'https://polygon-bor-rpc.publicnode.com', 'https://1rpc.io/matic');
+                } elseif ($chainId == 1) { // Ethereum
+                    array_unshift($cleanRpc, 'https://cloudflare-eth.com', 'https://eth.llamarpc.com');
+                } elseif ($chainId == 56) { // BSC
+                    array_unshift($cleanRpc, 'https://binance.llamarpc.com', 'https://bsc-dataseed.binance.org');
                 }
 
-                // REGLA DE ORO: array_values garantiza que las llaves sean [0, 1, 2...]
-                // Esto obliga a PHP a convertirlo en un Array de JSON [] y no en un Objeto {}
                 $chainInfo['rpc'] = array_values(array_unique($cleanRpc));
 
                 // --- NORMALIZACIÓN DE EXPLORERS ---

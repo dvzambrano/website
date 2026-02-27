@@ -5,7 +5,7 @@
     <style>
         /* Estilos Core de Kashio (Sin Tailwind) */
         .custom-card {
-            padding: 2.5rem;
+            padding: 2rem;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: none;
@@ -138,6 +138,18 @@
         .fw-black {
             font-weight: 900;
         }
+
+        #error-detail-text {
+            font-family: monospace;
+            font-size: 10px;
+            /* ESTO ES LO IMPORTANTE */
+            word-break: break-all;
+            /* Rompe el texto en cualquier carácter */
+            white-space: pre-wrap;
+            /* Mantiene saltos de línea si los hay */
+            overflow-wrap: break-word;
+            /* Refuerzo para navegadores modernos */
+        }
     </style>
 @endsection
 
@@ -199,28 +211,14 @@
 
                                 <div x-show="step === 'list'" x-transition>
 
-                                    <div class="mb-10">
+                                    <div class="">
                                         <div class="kashio-icon-container" style="background-color: #f59e0b;"> <i
                                                 class="fas fa-list-ul text-2xl text-white"></i>
                                         </div>
                                         <h2 class="text-2xl font-extrabold text-dark">Selecciona tu moneda</h2>
-                                        <p class="text-slate-500 small mt-1">¿Qué activo deseas convertir a USD?</p>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h6 class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-0"
-                                            style="font-size: 10px;">
-                                            Activos detectados
-                                        </h6>
-                                        <button type="button" onclick="manualRescan()"
-                                            class="btn btn-sm btn-outline-primary border-0" style="font-size: 11px;">
-                                            <i class="fas fa-sync-alt me-1"></i> Actualizar
-                                        </button>
                                     </div>
 
-                                    <div id="assets-list-container" class="list-group list-group-flush text-start mb-4">
-                                    </div>
-
-                                    <div class="mt-4 mb-4 pt-3 border-top">
+                                    <div class="mb-4 pt-3">
                                         <label
                                             class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-3 d-block"
                                             style="font-size: 10px;">
@@ -239,6 +237,20 @@
                                             </div>
                                             <i class="fas fa-chevron-right text-slate-400 small"></i>
                                         </button>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="text-slate-400 fw-bold text-uppercase small tracking-widest mb-0"
+                                            style="font-size: 10px;">
+                                            Activos detectados
+                                        </h6>
+                                        <button type="button" onclick="manualRescan()"
+                                            class="btn btn-sm btn-outline-primary border-0" style="font-size: 11px;">
+                                            <i class="fas fa-sync-alt me-1"></i> Actualizar
+                                        </button>
+                                    </div>
+
+                                    <div id="assets-list-container" class="list-group list-group-flush text-start mb-4">
                                     </div>
 
                                     <button onclick="disconnectAndExit()"
@@ -260,7 +272,8 @@
                                     </div>
 
                                     <div class="d-flex align-items-center mb-4">
-                                        <button @click="step = 'list'" class="btn btn-sm btn-light rounded-circle me-3">
+                                        <button @click="step = 'list'; clearQuoteUI();"
+                                            class="btn btn-sm btn-light rounded-circle me-3">
                                             <i class="fas fa-arrow-left"></i>
                                         </button>
                                         <h6 class="mb-0 fw-bold">Configurar Depósito</h6>
@@ -343,7 +356,7 @@
                                         </div>
 
                                         <h3 class="fw-black text-dark">Hubo un problema</h3>
-                                        <p class="text-slate-500 small px-4" x-text="errorMessage">
+                                        <p class="text-slate-500 small px-4">
                                             La transacción no pudo completarse.
                                         </p>
 
@@ -351,8 +364,9 @@
                                             style="background-color: #fef2f2; border-color: #fee2e2;">
                                             <div class="small text-danger fw-bold mb-1">Detalle del error:</div>
                                             <div class="small text-slate-600" id="error-detail-text"
-                                                style="font-family: monospace; font-size: 10px;">
-                                                User rejected the request.
+                                                style="font-family: monospace; font-size: 10px; word-break: break-all;"
+                                                x-text="errorMessage">
+                                                {{-- Aquí cae el error --}}
                                             </div>
                                         </div>
 
@@ -397,7 +411,7 @@
             // 3. Ejecutar el escaneo de tokens
             if (typeof window.startScanning === 'function') {
                 console.log("🚀 Lanzando escaneo para:", address);
-                window.startScanning(address);
+                window.startScanning(address, chainId);
             }
         };
         window.onWalletDisconnected = function(address, chainId) {

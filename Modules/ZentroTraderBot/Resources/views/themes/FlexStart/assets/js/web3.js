@@ -98,6 +98,31 @@ window.manualRescan = function () {
 };
 
 /**
+ * Limpia la interfaz de cotización y resetea el botón de pago
+ */
+window.clearQuoteUI = function () {
+    const el = document.getElementById("payment-section");
+    if (el && window.Alpine) {
+        // Accedemos a los datos de Alpine y reseteamos la variable 'amount'
+        Alpine.$data(el).amount = "";
+    }
+
+    const quoteCard = document.getElementById("quote-card");
+    const receiveTxt = document.getElementById("txt-receive-amount");
+    const btnPay = document.getElementById("btn-pay");
+
+    if (quoteCard) quoteCard.classList.add("hidden");
+    if (receiveTxt) receiveTxt.innerText = "Calculando...";
+    if (btnPay) {
+        btnPay.disabled = true;
+        btnPay.innerText = "Confirmar y Pagar";
+    }
+
+    // Detenemos el polling para no gastar recursos
+    stopQuotePolling();
+};
+
+/**
  * Obtiene cotización desde el backend de Kashio (deBridge)
  */
 async function updateQuoteManual(isAutoRefresh = false) {
@@ -172,7 +197,7 @@ async function updateQuoteManual(isAutoRefresh = false) {
         if (data.estimation) {
             const amt =
                 data.estimation.dstChainTokenOut.recommendedAmount / 1e6;
-            if (receiveTxt) receiveTxt.innerText = `${amt.toFixed(2)} USDC`;
+            if (receiveTxt) receiveTxt.innerText = `${amt} USD`;
             if (btnPay) btnPay.disabled = false;
         }
     } catch (e) {
@@ -248,7 +273,7 @@ async function executeSwap() {
         const data = await response.json();
 
         if (!data.tx) {
-            toastr.info("Orden validada (Modo Debug)");
+            //toastr.info("Orden validada (Modo Debug)");
             btnPay.disabled = false;
             return;
         }
@@ -265,8 +290,21 @@ async function executeSwap() {
         alpine.step = "success";
     } catch (error) {
         console.error("🚨 Error:", error);
-        alpine.errorMessage = error.message;
+
+        // Si el usuario rechazó la firma, ponemos un mensaje amigable
+        let friendlyMessage = error.message;
+        if (error.code === "ACTION_REJECTED") {
+            friendlyMessage =
+                "Cancelaste la firma de la transacción en tu wallet.";
+        }
+
+        alpine.errorMessage =
+            "No pudimos procesar la orden. Por favor intente más tarde.";
+        document.getElementById("error-detail-text").innerText =
+            friendlyMessage;
+
         alpine.step = "error";
+        clearQuoteUI();
     }
 }
 
@@ -301,7 +339,7 @@ function renderAssetsList(assets) {
         container.innerHTML = `
             <div class="text-center py-5">
                 <i class="fas fa-coins text-slate-200 mb-3" style="font-size: 40px;"></i>
-                <p class="text-slate-500 small">No se encontraron activos con saldo relevante en esta red.</p>
+                <p class="text-slate-500 small">No se encontraron activos en esta red.</p>
             </div>`;
     } else {
         assets.forEach((item) => {
@@ -362,7 +400,12 @@ function renderAssetsList(assets) {
  * Optimizado para detectar balances nativos en la primera conexión.
  * @param {string} userAddress - Dirección de la wallet del usuario.
  */
-async function startScanning(userAddress) {
+/**
+ * Escanea activos en la red activa de la wallet.
+ * @param {string} userAddress - Dirección de la wallet del usuario.
+ * @param {number|string} forcedChainId - (Opcional) ID de red pasado desde el evento de conexión.
+ */
+async function startScanning(userAddress, forcedChainId = null) {
     const container = document.getElementById("assets-list-container");
     const statusEl = document.getElementById("current-network-scan");
 
@@ -370,30 +413,36 @@ async function startScanning(userAddress) {
     if (container) container.innerHTML = "";
     if (statusEl) statusEl.innerText = "Sincronizando con tu billetera...";
 
-    console.log("🔍 Kashio: Iniciando escaneo para:", userAddress);
+    // Determinamos el ChainID real (priorizando el que viene del evento)
+    const currentChainId =
+        forcedChainId ||
+        (window.web3Modal ? window.web3Modal.getChainId() : null);
+
+    console.log(
+        `🔍 Kashio: Iniciando escaneo en red ${currentChainId} para:`,
+        userAddress,
+    );
     const foundAssets = [];
 
     try {
-        // 2. Delay de seguridad (500ms)
-        // Vital para que el provider reconozca el balance nativo tras el handshake inicial
+        // 2. Delay de seguridad (500ms) - Clave para evitar errores de handshake
         await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // 3. Identificación de Red y Proveedor
+        // 3. Identificación de Proveedor
         const walletProvider = window.web3Modal.getWalletProvider();
         if (!walletProvider)
             throw new Error("No se encontró proveedor de wallet.");
 
         const provider = new ethers.providers.Web3Provider(walletProvider);
-        const currentChainId = window.web3Modal.getChainId();
 
+        // 4. Validar configuración de red
         const networkConfig = Object.values(window.supportedChains).find(
-            (n) => {
-                return Number(n.chainId) === Number(currentChainId);
-            },
+            (n) => Number(n.chainId) === Number(currentChainId),
         );
 
         if (!networkConfig) {
-            toastr.error("Red no soportada (ID: " + currentChainId + ")");
+            console.error("❌ Red no soportada:", currentChainId);
+            toastr.error("La red conectada no está configurada en Kashio.");
             document.getElementById("scan-status").classList.add("hidden");
             document
                 .getElementById("connect-section")
@@ -401,64 +450,69 @@ async function startScanning(userAddress) {
             return;
         }
 
-        // 4. Obtener Lista de Tokens desde la API de Kashio (deBridge)
+        // 5. Obtener Lista de Tokens desde tu Backend (que consulta deBridge)
         if (statusEl)
             statusEl.innerText = `Consultando activos en ${networkConfig.name}...`;
+
         const tokenResponse = await fetch(
             `${KASHIO.tokensUrl}/${currentChainId}`,
         );
         const tokenData = await tokenResponse.json();
-
-        // Convertimos el objeto de tokens en un array para procesarlo
         const allTokens = tokenData.tokens
             ? Object.values(tokenData.tokens)
             : [];
 
-        // 5. Escaneo de Balance Nativo (BNB, MATIC, etc.)
-        // Forzamos la consulta al provider recién inicializado
-        const nativeBalanceWei = await provider.getBalance(userAddress);
-        const nativeBalance = ethers.utils.formatEther(nativeBalanceWei);
+        // 6. Escaneo de Balance Nativo (BNB, MATIC, ETH...)
+        try {
+            const nativeBalanceWei = await provider.getBalance(userAddress);
+            const nativeBalance = ethers.utils.formatEther(nativeBalanceWei);
 
-        if (parseFloat(nativeBalance) > 0) {
-            // Buscamos el logo del nativo en la lista de deBridge para consistencia visual
-            const deBridgeNative = allTokens.find(
-                (t) =>
-                    t.isNative ||
-                    t.address === "0x0000000000000000000000000000000000000000",
-            );
+            if (parseFloat(nativeBalance) > 0) {
+                // Buscamos info del nativo en la lista de tokens para el logo
+                const deBridgeNative = allTokens.find(
+                    (t) =>
+                        t.isNative ||
+                        t.address ===
+                            "0x0000000000000000000000000000000000000000",
+                );
 
-            foundAssets.push({
-                symbol: deBridgeNative.symbol,
-                balance: parseFloat(nativeBalance).toFixed(4),
-                address: "0x0000000000000000000000000000000000000000",
-                chainId: currentChainId,
-                decimals: 18,
-                logoURI: deBridgeNative
-                    ? deBridgeNative.logoURI
-                    : networkConfig.logo,
-                networkName: networkConfig.name,
-                isNative: true,
-            });
+                foundAssets.push({
+                    symbol: deBridgeNative
+                        ? deBridgeNative.symbol
+                        : networkConfig.currency,
+                    balance: parseFloat(nativeBalance).toFixed(4),
+                    address: "0x0000000000000000000000000000000000000000",
+                    chainId: currentChainId,
+                    decimals: 18,
+                    logoURI: deBridgeNative
+                        ? deBridgeNative.logoURI
+                        : networkConfig.logo,
+                    networkName: networkConfig.name,
+                    isNative: true,
+                });
+            }
+        } catch (nativeErr) {
+            console.warn("Error consultando balance nativo:", nativeErr);
         }
 
-        // 6. Escaneo de Tokens ERC20 con Saldo
+        // 7. Escaneo de Tokens ERC20 (Filtrados con saldo)
         if (allTokens.length > 0) {
             if (statusEl)
                 statusEl.innerText = `Buscando saldos en ${networkConfig.name}...`;
 
-            // Limitamos a los primeros 40 para evitar saturar el RPC en el escaneo inicial
+            // Procesamos un lote manejable (máximo 40) para no saturar el RPC
             const filteredTokens = allTokens.slice(0, 40);
 
             const tokenPromises = filteredTokens.map(async (token) => {
-                try {
-                    // Saltamos si es el nativo (ya procesado arriba)
-                    if (
-                        token.isNative ||
-                        token.address ===
-                            "0x0000000000000000000000000000000000000000"
-                    )
-                        return null;
+                // Saltar si es nativo (ya procesado)
+                if (
+                    token.isNative ||
+                    token.address ===
+                        "0x0000000000000000000000000000000000000000"
+                )
+                    return null;
 
+                try {
                     const contract = new ethers.Contract(
                         token.address,
                         ["function balanceOf(address) view returns (uint256)"],
@@ -471,6 +525,7 @@ async function startScanning(userAddress) {
                         token.decimals,
                     );
 
+                    // Solo mostrar si el saldo es "relevante" (> 0.01)
                     if (parseFloat(balance) > 0.01) {
                         return {
                             symbol: token.symbol,
@@ -484,7 +539,7 @@ async function startScanning(userAddress) {
                         };
                     }
                 } catch (e) {
-                    return null;
+                    return null; // Error silencioso para tokens que fallen
                 }
                 return null;
             });
@@ -493,14 +548,16 @@ async function startScanning(userAddress) {
             foundAssets.push(...tokensFound.filter((t) => t !== null));
         }
 
-        // 7. Renderizado Final
-        console.log("✅ Kashio: Escaneo finalizado.", foundAssets);
+        // 8. Renderizado Final
+        console.log(
+            `✅ Kashio: Escaneo finalizado. Activos encontrados: ${foundAssets.length}`,
+        );
         renderAssetsList(foundAssets);
     } catch (error) {
         console.error("🚨 Error crítico en startScanning:", error);
         toastr.error("No se pudieron cargar los balances.");
 
-        // En caso de error, devolvemos al usuario a la sección de conexión
+        // Volver al estado inicial si falla
         document.getElementById("scan-status").classList.add("hidden");
         document.getElementById("connect-section").classList.remove("hidden");
     }
