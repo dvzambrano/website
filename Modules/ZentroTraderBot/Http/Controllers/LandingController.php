@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Modules\Laravel\Services\BehaviorService;
 
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 
@@ -134,8 +135,8 @@ class LandingController extends Controller
         $isLocal = app()->environment('local');
         $time = $isLocal ? 86400 : 3600; // 1 día en local, 1 hora en producción
         // 2. Obtener datos técnicos de Chainlink / ChainID Network (con Cache para no saturar)
-        $allChainsData = Cache::remember('external_chains_info', $time, function () {
-            $response = Http::timeout(360)->get('https://chainid.network/chains.json');
+        $allChainsData = BehaviorService::cache('external_chains_info', function () {
+            $response = Http::timeout(BehaviorService::timeout())->get('https://chainid.network/chains.json');
             return $response->collect();
         });
 
@@ -177,18 +178,6 @@ class LandingController extends Controller
                     }
                 }
 
-                // 2. PRIORIZACIÓN ESTRATÉGICA
-                // Forzamos nodos que casi nunca fallan al inicio del array
-                /*
-                if ($chainId == 137) { // Polygon
-                    array_unshift($cleanRpc, 'https://polygon-bor-rpc.publicnode.com', 'https://1rpc.io/matic');
-                } elseif ($chainId == 1) { // Ethereum
-                    array_unshift($cleanRpc, 'https://cloudflare-eth.com', 'https://eth.llamarpc.com');
-                } elseif ($chainId == 56) { // BSC
-                    array_unshift($cleanRpc, 'https://binance.llamarpc.com', 'https://bsc-dataseed.binance.org');
-                }
-                */
-
                 $chainInfo['rpc'] = array_values(array_unique($cleanRpc));
 
                 // --- NORMALIZACIÓN DE EXPLORERS ---
@@ -225,27 +214,58 @@ class LandingController extends Controller
 
         // CASO A: Misma Red (Polygon -> Polygon)
         if ($srcChainId === $dstChainId) {
-            // Si el token de origen ya es USDC en Polygon, no hay nada que intercambiar
             if (strtolower($srcToken) === strtolower($dstToken)) {
+                $suscriptor = $this->getSuscriptor();
+                $address = $suscriptor->getWallet()["address"];
+
+                // RESPUESTA MANUAL PARA TRANSFERENCIA DIRECTA
                 return response()->json([
+                    'isDirectTransfer' => true,
                     'estimation' => [
+                        'srcChainTokenIn' => [
+                            'symbol' => 'USDC',
+                            'decimals' => config('web3.networks.POL.tokens.USDC.decimals'),
+                            'amount' => $amount
+                        ],
                         'dstChainTokenOut' => [
-                            'recommendedAmount' => $amount // 1 a 1
+                            'symbol' => 'USDC',
+                            'decimals' => config('web3.networks.POL.tokens.USDC.decimals'),
+                            'amount' => $amount,
+                            'recommendedAmount' => $amount
                         ]
                     ],
-                    'isDirectTransfer' => true // Bandera útil para el JS
+                    'tx' => [
+                        // Generamos los datos para una transferencia ERC20 estándar
+                        'to' => $dstToken, // El contrato del token
+                        //'address' => $address, // El destinatario
+                        // Codificamos la función transfer(address _to, uint256 _value)
+                        'data' => $this->encodeERC20Transfer($suscriptor->getWallet()["address"], $amount),
+                        'value' => "0"
+                    ]
                 ]);
             }
 
-            // Si es otro token (POL, ETH, etc) en Polygon, usamos la lógica Single-Chain
-            // Nota: Asegúrate de que tu DeBridgeController tenga implementado getSingleChainEstimation
-            // Si no, puedes usar el mismo getEstimation pero validando que el servicio soporte '1.0/swap'
-            $quote = $bridge->getSingleChainEstimation(
-                $srcChainId,
-                $srcToken,
-                $amount,
-                $dstToken
-            );
+            // Usamos la lógica Single-Chain
+            $rawQuote = $bridge->getSameChainEstimation($srcChainId, $srcToken, $amount, $dstToken);
+            // --- NORMALIZACIÓN ---
+            $quote = [
+                'isSameChain' => true,
+                'estimation' => [
+                    'srcChainTokenIn' => $rawQuote['estimation']['tokenIn'],
+                    'dstChainTokenOut' => [
+                        'chainId' => $dstChainId,
+                        'address' => $rawQuote['estimation']['tokenOut']['address'],
+                        'symbol' => $rawQuote['estimation']['tokenOut']['symbol'],
+                        'decimals' => $rawQuote['estimation']['tokenOut']['decimals'],
+                        // Normalizamos el nombre del campo para el JS
+                        'amount' => $rawQuote['estimation']['tokenOut']['amount'],
+                        'recommendedAmount' => $rawQuote['estimation']['tokenOut']['amount'],
+                    ]
+                ],
+                'tx' => $rawQuote['tx'] ?? null, // deSwap suele incluir el objeto tx si pides la cotización completa
+                'fixFee' => "0", // No hay fee de puente
+                'protocolFee' => $rawQuote['estimation']['protocolFee'] ?? "0"
+            ];
         }
         // CASO B: Puente (Cualquier red -> Polygon)
         else {
@@ -259,6 +279,18 @@ class LandingController extends Controller
         }
 
         return response()->json($quote);
+    }
+    private function encodeERC20Transfer($to, $amount)
+    {
+        // Firma de la función transfer(address,uint256): 0xa9059cbb
+        $methodId = "0xa9059cbb";
+        $paddedAddress = str_pad(substr($to, 2), 64, "0", STR_PAD_LEFT);
+
+        // El amount ya debe venir en unidades mínimas (base 10) desde el request
+        // Lo convertimos a hexadecimal y lo rellenamos a 64 caracteres
+        $hexAmount = str_pad(dechex($amount), 64, "0", STR_PAD_LEFT);
+
+        return $methodId . $paddedAddress . $hexAmount;
     }
 
     // PASO 3: Crear Orden (Generar Data para firmar)

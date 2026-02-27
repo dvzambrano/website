@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Arr;
+use Modules\Laravel\Services\BehaviorService;
 
 class TelegramController extends Controller
 {
@@ -372,7 +372,7 @@ class TelegramController extends Controller
             foreach ($media as $idx => $item) {
                 if (!empty($item['media']) && filter_var($item['media'], FILTER_VALIDATE_URL)) {
                     try {
-                        $dl = Http::timeout(10)->get($item['media']);
+                        $dl = Http::timeout(BehaviorService::timeout())->get($item['media']);
                         if ($dl->successful()) {
                             $contents = $dl->body();
                             $name = "media{$idx}." . (pathinfo(parse_url($item['media'], PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg');
@@ -627,7 +627,7 @@ class TelegramController extends Controller
             return false;
         }
         try {
-            $dl = Http::timeout(10)->get($fileUrl);
+            $dl = Http::timeout(BehaviorService::timeout())->get($fileUrl);
             if (!$dl->successful()) {
                 Log::warning('⚠️ TelegramController manualUpload download failed', ['status' => $dl->status(), 'url' => $fileUrl]);
                 return false;

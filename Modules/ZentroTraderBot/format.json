@@ -1,36 +1,213 @@
-{
-    "GutoTradeBot": { "admin_level": 1, "last_bot_callback_data": "" },
-    "ZentroTraderBot": {
-        "exchanges": {
-            "bingx": {
-                "api_key": "F3pw0O44pv5QhGGuKzY9AyHZq60NYf3THq5QlfIaq98sS1KBIROzeLB2aUI7U7bUqUSnjMDfw3licUQDdhcbQ",
-                "secret_key": "DzLfyysYVDVQYVtEDe4z8AixcI0eDfNbBuYt4gJBm68jdR3D7PoCCxLG4PRnIokZEOyvl11PtuQBg06ORQ",
-                "base_order_size": 10
+[
+    {
+        "estimation": {
+            "srcChainTokenIn": {
+                "chainId": 56,
+                "address": "0x55d398326f99059ff775485246999027b3197955",
+                "name": "Tether USD",
+                "symbol": "USDT",
+                "decimals": 18,
+                "amount": "1019586611395754143",
+                "approximateOperatingExpense": "19586611395754143",
+                "mutatedWithOperatingExpense": true,
+                "approximateUsdValue": 1.0195866113957541,
+                "originApproximateUsdValue": 1
             },
-            "apexpromainnet": {
-                "account_id": "582636658558500973",
-                "api_key": "7db9ecef-ae49-919c-1846-d940915038f3",
-                "api_key_passphrase": "LE28zjRYnLxCg6gSwNt6",
-                "api_key_secret": "vaDMMnqqpaAw2zuM8PFLz7APToQ0u67HmIIaoaCg",
-                "stark_key_private": "0x075ad444fa7b1192d97a7d70d41e0e84aecb5ab24e94cfd66ff132c6fa080371",
-                "stark_key_public": "0x02ca7badf2d37abdc8e3b750f4f73a817e0a6baf309fb668d00b96e840cb58ed",
-                "stark_key_public_key_y_coordinate": "0x04b45a88a2c5f7692ce9f1bb025fb182300925d3111e903d68d72fea660fb668",
-                "base_order_size": 1
+            "srcChainTokenOut": {
+                "chainId": 56,
+                "address": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+                "name": "USD Coin",
+                "symbol": "USDC",
+                "decimals": 18,
+                "amount": "1019056669539484877",
+                "maxRefundAmount": "509783226382933",
+                "approximateUsdValue": 1.019056669539485
             },
-            "apexprotestnet": {
-                "account_id": "582635608690655601",
-                "api_key": "2e705f3e-1b37-3224-9977-9cfa5b17b1c2",
-                "api_key_passphrase": "MBQBXf9WXwKDB991TGGh",
-                "api_key_secret": "2AhyVMp8ZZ2SI6NeJlQq7tw65-hj8PxfkR2MNZ_P",
-                "stark_key_private": "0x07ead10517457b1a57f17bda2a7253962457e39ce22d4b469468f1f6dde1434b",
-                "stark_key_public": "0x0678a0b412a405b276ff2ce43c5bab96f49a86a7be1e9bde0941e5b3a37070f1",
-                "stark_key_public_key_y_coordinate": "0x05cf53cfd299bb9452bf0f750de4935e672500fa11474acfb042fce4d1f1f2d3",
-                "base_order_size": 5
+            "dstChainTokenOut": {
+                "chainId": 137,
+                "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                "name": "USD Coin",
+                "symbol": "USDC",
+                "decimals": 6,
+                "amount": "998652",
+                "recommendedAmount": "998652",
+                "maxTheoreticalAmount": "999151",
+                "approximateUsdValue": 0.9984787258694146,
+                "recommendedApproximateUsdValue": 0.9984787258694146,
+                "maxTheoreticalApproximateUsdValue": 0.9989776392889129
             },
-            "active": ["apexprotestnet", "apexpromainnet", "bingx"]
+            "costsDetails": [
+                {
+                    "chain": "56",
+                    "tokenIn": "0x55d398326f99059ff775485246999027b3197955",
+                    "tokenOut": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+                    "amountIn": "1019586611395754143",
+                    "amountOut": "1019566452765867810",
+                    "type": "PreSwap"
+                },
+                {
+                    "chain": "56",
+                    "tokenIn": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+                    "tokenOut": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+                    "amountIn": "1019566452765867810",
+                    "amountOut": "1019056669539484877",
+                    "type": "PreSwapEstimatedSlippage",
+                    "payload": {
+                        "feeAmount": "509783226382933",
+                        "feeBps": "5",
+                        "estimatedVolatilityBps": "0"
+                    }
+                },
+                {
+                    "chain": "56",
+                    "tokenIn": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+                    "tokenOut": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+                    "amountIn": "1019056669539484877",
+                    "amountOut": "1018649046871669084",
+                    "type": "DlnProtocolFee",
+                    "payload": {
+                        "feeAmount": "407622667815793",
+                        "feeBps": "4",
+                        "feeApproximateUsdValue": "0.000407622667815793"
+                    }
+                },
+                {
+                    "chain": "137",
+                    "tokenIn": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                    "tokenOut": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                    "amountIn": "1018649",
+                    "amountOut": "1018242",
+                    "type": "TakerMargin",
+                    "payload": {
+                        "feeAmount": "407",
+                        "feeBps": "4"
+                    }
+                },
+                {
+                    "chain": "137",
+                    "tokenIn": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                    "tokenOut": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                    "amountIn": "1018242",
+                    "amountOut": "998652",
+                    "type": "EstimatedOperatingExpenses",
+                    "payload": {
+                        "feeAmount": "19590"
+                    }
+                }
+            ],
+            "recommendedSlippage": 0.05
         },
-        "admin_level": 2,
-        "suscription_level": 2,
-        "last_bot_callback_data": ""
+        "tx": {
+            "allowanceTarget": "0x663DC15D3C1aC63ff12E45Ab68FeA3F0a883C251",
+            "allowanceValue": "1019586611395754143"
+        },
+        "prependedOperatingExpenseCost": "19586611395754143",
+        "order": {
+            "approximateFulfillmentDelay": 3
+        },
+        "fixFee": "5000000000000000",
+        "protocolFee": "407622667815793",
+        "userPoints": 306.99,
+        "integratorPoints": 76.75,
+        "protocolFeeApproximateUsdValue": 0.000407622667815793,
+        "usdPriceImpact": -0.15212741305854482
+    },
+    {
+        "estimation": {
+            "tokenIn": {
+                "address": "0x0000000000000000000000000000000000000000",
+                "name": "Polygon",
+                "symbol": "MATIC",
+                "decimals": 18,
+                "amount": "2000000000000000000",
+                "approximateUsdValue": 0.220564
+            },
+            "tokenOut": {
+                "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                "name": "USD Coin",
+                "symbol": "USDC",
+                "decimals": 6,
+                "minAmount": "218579",
+                "amount": "219700",
+                "approximateUsdValue": 0.219837
+            },
+            "slippage": 0.51,
+            "recommendedSlippage": 0.51,
+            "comparedAggregators": [
+                {
+                    "name": "OKX",
+                    "amount": "219700",
+                    "priceDrop": 0,
+                    "approximateUsdValue": 0.21966268783183546,
+                    "imageUrl": "https:\/\/cdn.debridge.finance\/images\/brands\/okx.svg"
+                },
+                {
+                    "name": "KyberSwap",
+                    "amount": "218562",
+                    "priceDrop": 0.5179790623577606,
+                    "approximateUsdValue": 0.21852488110105425,
+                    "imageUrl": "https:\/\/cdn.debridge.finance\/images\/brands\/kyberswap.svg"
+                },
+                {
+                    "name": "0x",
+                    "amount": "218514",
+                    "priceDrop": 0.539827036868457,
+                    "approximateUsdValue": 0.21847688925300723,
+                    "imageUrl": "https:\/\/cdn.debridge.finance\/images\/brands\/0x.svg"
+                },
+                {
+                    "name": "1inch",
+                    "amount": "218514",
+                    "priceDrop": 0.539827036868457,
+                    "approximateUsdValue": 0.21847688925300723,
+                    "imageUrl": "https:\/\/cdn.debridge.finance\/images\/brands\/1inch.svg"
+                },
+                {
+                    "name": "OpenOcean",
+                    "amount": "216485",
+                    "priceDrop": 1.4633591260810195,
+                    "approximateUsdValue": 0.21644823384285342,
+                    "imageUrl": "https:\/\/cdn.debridge.finance\/images\/brands\/openocean.svg"
+                }
+            ],
+            "protocolFee": "175",
+            "estimatedTransactionFee": {
+                "total": "2778000522377746640",
+                "details": {
+                    "gasLimit": "1540760",
+                    "baseFee": "1683006647614",
+                    "maxFeePerGas": "1803006647614",
+                    "maxPriorityFeePerGas": "120000000000"
+                },
+                "approximateUsdValue": 0.306363
+            },
+            "protocolFeeApproximateUsdValue": 0.000174,
+            "costsDetails": [
+                {
+                    "chain": "137",
+                    "tokenIn": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                    "tokenOut": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                    "amountIn": "219875",
+                    "amountOut": "219700",
+                    "type": "SingleChainSwapProtocolFee",
+                    "payload": {
+                        "feeAmount": "175",
+                        "feeBps": "8"
+                    }
+                },
+                {
+                    "chain": "137",
+                    "tokenIn": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                    "tokenOut": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+                    "amountIn": "219700",
+                    "amountOut": "218579",
+                    "type": "SingleChainSwapEstimatedSlippage",
+                    "payload": {
+                        "feeAmount": "1121",
+                        "feeBps": "51"
+                    }
+                }
+            ]
+        }
     }
-}
+]

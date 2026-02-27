@@ -202,8 +202,10 @@ async function updateQuoteManual(isAutoRefresh = false) {
         }
 
         if (data.estimation) {
-            const amt =
-                data.estimation.dstChainTokenOut.recommendedAmount / 1e6;
+            const amountOut =
+                data.estimation.dstChainTokenOut.recommendedAmount;
+            const decimalsOut = data.estimation.dstChainTokenOut.decimals || 6;
+            const amt = amountOut / Math.pow(10, decimalsOut);
             if (receiveTxt) receiveTxt.innerText = `${amt} USD`;
             if (btnPay) btnPay.disabled = false;
         }
