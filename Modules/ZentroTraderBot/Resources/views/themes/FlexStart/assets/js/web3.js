@@ -89,11 +89,11 @@ window.manualRescan = function () {
     const address = window.web3Modal.getAddress();
     if (!address) return;
 
-    // 1. Mostrar de nuevo el spinner
-    document.getElementById("payment-section").classList.add("hidden");
-    document.getElementById("scan-status").classList.remove("hidden");
+    const paymentSection = document.getElementById("payment-section");
+    if (paymentSection) {
+        Alpine.$data(paymentSection).step = "scanning"; // Volver al spinner
+    }
 
-    // 2. Lanzar escaneo
     startScanning(address);
 };
 
@@ -378,15 +378,9 @@ function renderAssetsList(assets) {
     }
 
     // 4. Gestión de visibilidad con transiciones
-    if (scanStatus) scanStatus.classList.add("hidden");
-
-    if (paymentSection) {
-        paymentSection.classList.remove("hidden");
-        // Aseguramos que Alpine vuelva al paso de la lista
-        if (window.Alpine) {
-            const alpineData = Alpine.$data(paymentSection);
-            alpineData.step = "list";
-        }
+    if (paymentSection && window.Alpine) {
+        // CAMBIAMOS DE 'SCANNING' A 'LIST' AUTOMÁTICAMENTE
+        Alpine.$data(paymentSection).step = "list";
     }
 
     console.log(`✅ Renderizado: ${assets.length} activos mostrados.`);
