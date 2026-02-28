@@ -39,6 +39,19 @@ class RouteServiceProvider extends ServiceProvider
             }
         );
 
+        // 2. Manejo de CORS Manual para el prefijo 'pay'
+        // Esto responde a la petición OPTIONS que hace el móvil antes del POST
+        if (request()->is('pay/*')) {
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE');
+            header('Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization, X-Requested-With, X-CSRF-TOKEN');
+
+            if (request()->isMethod('OPTIONS')) {
+                header("HTTP/1.1 200 OK");
+                exit;
+            }
+        }
+
         parent::boot();
     }
 
