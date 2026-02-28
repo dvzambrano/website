@@ -262,9 +262,15 @@ async function executeSwap() {
         btnPay.innerText = "Preparando transacción...";
         btnPay.disabled = true;
 
-        const provider = new ethers.providers.Web3Provider(
-            window.web3Modal.getWalletProvider(),
-        );
+        const walletProvider = window.web3Modal.getWalletProvider();
+        // RE-SINCRONIZACIÓN: Si estamos en móvil/Chrome, forzamos un ping al provider
+        if (!walletProvider) {
+            toastr.warning("Reconectando con SafePal...");
+            await window.web3Modal.open(); // Abre el modal para refrescar la sesión si se perdió
+            return;
+        }
+
+        const provider = new ethers.providers.Web3Provider(walletProvider);
         const signer = provider.getSigner();
         const userAddress = await signer.getAddress();
 
