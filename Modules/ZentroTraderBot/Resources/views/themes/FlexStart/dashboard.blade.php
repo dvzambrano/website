@@ -254,7 +254,7 @@
                                         <div class="flex-grow-1">
                                             <h6 class="mb-0 fw-bold">{{ $tx['human']['date'] }}</h6>
                                             <small class="text-muted text-truncate d-block">
-                                                {{ $tx['human']['type'] == 'in' ? str_replace('0x', '', $tx['from']) : str_replace('0x', '', $tx['to']) }}
+                                                {{ $tx['human']['type'] == 'in' ? $tx['from'] : $tx['to'] }}
                                             </small>
                                         </div>
                                         <div class="text-end">
