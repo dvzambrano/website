@@ -415,11 +415,28 @@ async function executeSwap() {
     } catch (error) {
         console.error("🚨 Error Crítico:", error);
 
-        // --- DIAGNÓSTICO PARA DONEL ---
-        let diag = `--- DIAGNÓSTICO ---\nMsg: ${error.message}\n`;
-        if (error.code) diag += `Code: ${error.code}\n`;
-        if (error.data) diag += `Data: ${JSON.stringify(error.data)}\n`;
-        alert(diag);
+        // --- LOGGER PARA MÓVIL ---
+        let errorDiag = "--- DIAGNÓSTICO DE ERROR ---\n";
+        errorDiag += `Mensaje: ${error.message}\n`;
+
+        if (error.response) {
+            // El servidor respondió con un código de error (4xx, 5xx)
+            errorDiag += `Status: ${error.response.status}\n`;
+            const body = await error.response.text();
+            errorDiag += `Respuesta: ${body.substring(0, 100)}...\n`;
+        } else if (error.request) {
+            // La petición se hizo pero no hubo respuesta (CORS o Red)
+            errorDiag += `Tipo: Error de Red / CORS / Timeout\n`;
+            errorDiag += `URL intentada: ${KASHIO.createOrderUrl}\n`;
+        } else {
+            // Error al configurar la petición o error de Ethers
+            errorDiag += `Código: ${error.code || "N/A"}\n`;
+            errorDiag += `Stack: ${error.stack ? error.stack.substring(0, 150) : "N/A"}\n`;
+        }
+
+        // Mostrar el alert solo si estamos en desarrollo/prueba
+        alert(errorDiag);
+        // -------------------------
 
         let friendly = error.message;
         if (error.code === "ACTION_REJECTED" || error.code === 4001)
