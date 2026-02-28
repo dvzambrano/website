@@ -247,14 +247,18 @@ window.stopQuotePolling = function () {
 /**
  * Ejecuta el flujo de pago
  */
+/**
+ * Ejecuta el flujo de pago completo: Cotización -> Permisos -> Envío
+ */
 async function executeSwap() {
     const el = document.getElementById("payment-section");
     if (!el || !window.Alpine) return;
+
     const alpine = Alpine.$data(el);
     const btnPay = document.getElementById("btn-pay");
 
     try {
-        // 1. Preparación inicial
+        // 1. PREPARACIÓN INICIAL
         btnPay.innerText = "Preparando transacción...";
         btnPay.disabled = true;
 
@@ -268,14 +272,10 @@ async function executeSwap() {
             .parseUnits(alpine.amount.toString(), selectedData.decimals)
             .toString();
 
-        // 2. Obtener la orden del Backend
+        // 2. OBTENER ORDEN DEL BACKEND
         const payload = {
             srcChainId: selectedData.chainId,
-            srcToken:
-                selectedData.address ===
-                "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-                    ? "0x0000000000000000000000000000000000000000"
-                    : selectedData.address,
+            srcToken: selectedData.address,
             amount: rawAmount,
             dstChainId: KASHIO.destChain,
             dstToken: KASHIO.destToken,
@@ -295,25 +295,25 @@ async function executeSwap() {
         });
 
         if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            const error = new Error(
-                errData.message || `Error del servidor: ${response.status}`,
+            const errBody = await response.json().catch(() => ({}));
+            throw new Error(
+                errBody.message || `Error del servidor: ${response.status}`,
             );
-            error.response = response; // Guardamos la respuesta para el logger
-            throw error;
         }
 
         const data = await response.json();
         if (data.error || !data.tx)
             throw new Error(data.message || "Error al crear la orden");
 
-        // 3. GESTIÓN DE ALLOWANCE (Aprobación de Tokens)
-        // Solo si no es el token nativo y el backend nos indica un objetivo de aprobación
-        if (
-            selectedData.address !==
-                "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" &&
-            data.tx.allowanceTarget
-        ) {
+        // 3. GESTIÓN DE ALLOWANCE (CORREGIDO PARA MÓVILES)
+        // Evitamos el CALL_EXCEPTION si es token nativo (MATIC/BNB/ETH)
+        const isNative =
+            selectedData.address.toLowerCase() ===
+                "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" ||
+            selectedData.address.toLowerCase() ===
+                "0x0000000000000000000000000000000000000000";
+
+        if (!isNative && data.tx.allowanceTarget) {
             btnPay.innerText = "Verificando permisos...";
             btnPay.disabled = true;
 
@@ -331,25 +331,22 @@ async function executeSwap() {
                 data.tx.allowanceTarget,
             );
 
-            // Si el permiso es menor a lo que queremos enviar, pedimos aprobación
             if (currentAllowance.lt(rawAmount)) {
-                toastr.info(
-                    "Por favor, aprueba el uso de los tokens en tu wallet",
-                );
+                toastr.info("Por favor, aprueba el uso de tokens en tu wallet");
                 btnPay.innerText = "Esperando aprobación...";
                 btnPay.disabled = true;
 
-                // Aprobamos el monto máximo para no volver a pedir permiso en el futuro (ahorra gas a la larga)
+                // Aprobamos el máximo para ahorrar gas en futuras operaciones
                 const approveTx = await tokenContract.approve(
                     data.tx.allowanceTarget,
                     ethers.constants.MaxUint256,
                 );
                 await approveTx.wait();
-                toastr.success("Permiso concedido correctamente");
+                toastr.success("Permiso concedido");
             }
         }
 
-        // 4. ESTIMACIÓN DE GAS DINÁMICA
+        // 4. CONFIGURACIÓN DE TRANSACCIÓN Y GAS
         btnPay.innerText = "Confirmando pago...";
         btnPay.disabled = true;
 
@@ -387,12 +384,10 @@ async function executeSwap() {
         btnPay.innerText = "Procesando en blockchain...";
         btnPay.disabled = true;
 
-        console.log("🚀 Transacción enviada:", txResponse.hash);
-
-        // 6. FINALIZACIÓN
+        // 6. ESPERA DE CONFIRMACIÓN
         await txResponse.wait();
 
-        // Construimos la URL del explorador (usando la config que ya tenemos en window.supportedChainsDict)
+        // Notificación final con link al explorador
         const chainInfo = Object.values(window.supportedChains).find(
             (n) => Number(n.chainId) === Number(selectedData.chainId),
         );
@@ -417,47 +412,25 @@ async function executeSwap() {
 
         alpine.step = "success";
     } catch (error) {
-        console.error("🚨 Error en executeSwap:", error);
+        console.error("🚨 Error Crítico:", error);
 
-        // --- LOGGER PARA MÓVIL ---
-        let errorDiag = "--- DIAGNÓSTICO DE ERROR ---\n";
-        errorDiag += `Mensaje: ${error.message}\n`;
+        // --- DIAGNÓSTICO PARA DONEL ---
+        let diag = `--- DIAGNÓSTICO ---\nMsg: ${error.message}\n`;
+        if (error.code) diag += `Code: ${error.code}\n`;
+        if (error.data) diag += `Data: ${JSON.stringify(error.data)}\n`;
+        alert(diag);
 
-        if (error.response) {
-            // El servidor respondió con un código de error (4xx, 5xx)
-            errorDiag += `Status: ${error.response.status}\n`;
-            const body = await error.response.text();
-            errorDiag += `Respuesta: ${body.substring(0, 100)}...\n`;
-        } else if (error.request) {
-            // La petición se hizo pero no hubo respuesta (CORS o Red)
-            errorDiag += `Tipo: Error de Red / CORS / Timeout\n`;
-            errorDiag += `URL intentada: ${KASHIO.createOrderUrl}\n`;
-        } else {
-            // Error al configurar la petición o error de Ethers
-            errorDiag += `Código: ${error.code || "N/A"}\n`;
-            errorDiag += `Stack: ${error.stack ? error.stack.substring(0, 150) : "N/A"}\n`;
-        }
+        let friendly = error.message;
+        if (error.code === "ACTION_REJECTED" || error.code === 4001)
+            friendly = "Cancelaste la operación.";
+        else if (friendly.includes("insufficient funds"))
+            friendly = "No tienes suficiente para el gas.";
 
-        // Mostrar el alert solo si estamos en desarrollo/prueba
-        alert(errorDiag);
-        // -------------------------
-
-        let friendlyMessage = error.message;
-
-        // Manejo de errores comunes de la wallet
-        if (error.code === "ACTION_REJECTED" || error.code === 4001) {
-            friendlyMessage = "Cancelaste la firma en tu wallet.";
-        } else if (error.message.includes("insufficient funds")) {
-            friendlyMessage =
-                "No tienes suficiente saldo para cubrir el gas de la red.";
-        }
-
-        alpine.errorMessage = "La operación no pudo completarse.";
+        alpine.errorMessage = friendly;
         const detailEl = document.getElementById("error-detail-text");
-        if (detailEl) detailEl.innerText = friendlyMessage;
+        if (detailEl) detailEl.innerText = error.stack || friendly;
 
         alpine.step = "error";
-        // Rehabilitamos el botón por si el usuario quiere corregir algo
         btnPay.disabled = false;
         btnPay.innerText = "Confirmar y Pagar";
     }
@@ -555,7 +528,6 @@ function renderAssetsList(assets) {
  * @param {number|string} forcedChainId - (Opcional) ID de red pasado desde el evento de conexión.
  */
 async function startScanning(userAddress, forcedChainId = null) {
-    toastr.error("NUEVA!!!");
     const container = document.getElementById("assets-list-container");
     const statusEl = document.getElementById("current-network-scan");
 
