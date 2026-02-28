@@ -804,12 +804,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Web3.git",
-                "reference": "187650a0b76f752b3078eb49644926dab55a52c3"
+                "reference": "451199be54834779ae2f4c1d2caa09922502838a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/187650a0b76f752b3078eb49644926dab55a52c3",
-                "reference": "187650a0b76f752b3078eb49644926dab55a52c3",
+                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/451199be54834779ae2f4c1d2caa09922502838a",
+                "reference": "451199be54834779ae2f4c1d2caa09922502838a",
                 "shasum": ""
             },
             "require": {
@@ -839,6 +839,14 @@
                     "Modules\\Web3\\": ""
                 }
             },
+            "scripts": {
+                "post-install-cmd": [
+                    "@php artisan web3:install"
+                ],
+                "post-update-cmd": [
+                    "@php artisan web3:install"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -853,7 +861,7 @@
                 "source": "https://github.com/dvzambrano/Web3/tree/main",
                 "issues": "https://github.com/dvzambrano/Web3/issues"
             },
-            "time": "2026-02-28T13:51:53+00:00"
+            "time": "2026-02-28T16:27:03+00:00"
         },
         {
             "name": "egulias/email-validator",
