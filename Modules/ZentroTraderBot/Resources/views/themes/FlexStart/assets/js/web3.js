@@ -283,16 +283,19 @@ async function executeSwap() {
             dstWallet: KASHIO.userWallet,
         };
 
+        // En web3.js, dentro de executeSwap
         const response = await fetch(KASHIO.createOrderUrl, {
             method: "POST",
+            mode: "cors", // Forzamos modo CORS
             headers: {
                 "Content-Type": "application/json",
-                "X-CSRF-TOKEN": document.querySelector(
-                    'meta[name="csrf-token"]',
-                )?.content,
                 Accept: "application/json",
+                // Quitamos el X-CSRF-TOKEN aquí si ya lo pusiste en el middleware 'except'
             },
             body: JSON.stringify(payload),
+        }).catch((err) => {
+            alert("Error de Red Local: " + err.message);
+            throw err;
         });
 
         if (!response.ok) {
