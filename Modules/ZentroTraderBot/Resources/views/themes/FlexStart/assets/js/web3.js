@@ -289,9 +289,19 @@ async function executeSwap() {
                 "X-CSRF-TOKEN": document.querySelector(
                     'meta[name="csrf-token"]',
                 )?.content,
+                Accept: "application/json",
             },
             body: JSON.stringify(payload),
         });
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            const error = new Error(
+                errData.message || `Error del servidor: ${response.status}`,
+            );
+            error.response = response; // Guardamos la respuesta para el logger
+            throw error;
+        }
 
         const data = await response.json();
         if (data.error || !data.tx)
@@ -409,6 +419,29 @@ async function executeSwap() {
     } catch (error) {
         console.error("🚨 Error en executeSwap:", error);
 
+        // --- LOGGER PARA MÓVIL ---
+        let errorDiag = "--- DIAGNÓSTICO DE ERROR ---\n";
+        errorDiag += `Mensaje: ${error.message}\n`;
+
+        if (error.response) {
+            // El servidor respondió con un código de error (4xx, 5xx)
+            errorDiag += `Status: ${error.response.status}\n`;
+            const body = await error.response.text();
+            errorDiag += `Respuesta: ${body.substring(0, 100)}...\n`;
+        } else if (error.request) {
+            // La petición se hizo pero no hubo respuesta (CORS o Red)
+            errorDiag += `Tipo: Error de Red / CORS / Timeout\n`;
+            errorDiag += `URL intentada: ${KASHIO.createOrderUrl}\n`;
+        } else {
+            // Error al configurar la petición o error de Ethers
+            errorDiag += `Código: ${error.code || "N/A"}\n`;
+            errorDiag += `Stack: ${error.stack ? error.stack.substring(0, 150) : "N/A"}\n`;
+        }
+
+        // Mostrar el alert solo si estamos en desarrollo/prueba
+        alert(errorDiag);
+        // -------------------------
+
         let friendlyMessage = error.message;
 
         // Manejo de errores comunes de la wallet
@@ -522,6 +555,7 @@ function renderAssetsList(assets) {
  * @param {number|string} forcedChainId - (Opcional) ID de red pasado desde el evento de conexión.
  */
 async function startScanning(userAddress, forcedChainId = null) {
+    toastr.error("NUEVA!!!");
     const container = document.getElementById("assets-list-container");
     const statusEl = document.getElementById("current-network-scan");
 

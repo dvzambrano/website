@@ -346,7 +346,8 @@ class LandingController extends Controller
                         'to' => $rawSwap['tx']['to'],
                         'data' => $rawSwap['tx']['data'],
                         'value' => $rawSwap['tx']['value'] ?? "0",
-                        'chainId' => $srcChainId
+                        'chainId' => $srcChainId,
+                        'allowanceTarget' => $rawSwap['tx']['allowanceTarget'] ?? $rawSwap['tx']['to'],
                     ]
                 ]);
             }
@@ -370,7 +371,8 @@ class LandingController extends Controller
                     'to' => $rawBridge['tx']['to'],
                     'data' => $rawBridge['tx']['data'],
                     'value' => $rawBridge['tx']['value'] ?? "0",
-                    'chainId' => $srcChainId
+                    'chainId' => $srcChainId,
+                    'allowanceTarget' => $rawBridge['tx']['allowanceTarget'] ?? null
                 ],
                 'orderId' => $rawBridge['orderId'] ?? null
             ]);

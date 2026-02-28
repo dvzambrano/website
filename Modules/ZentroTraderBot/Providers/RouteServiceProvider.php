@@ -29,8 +29,11 @@ class RouteServiceProvider extends ServiceProvider
             VerifyCsrfToken::class,
             function ($middleware) {
                 $middleware->except([
+                    'sanctum/csrf-cookie',
+                    'api/*',
                     'tradingview/*',
                     'ramp/*',
+                    'pay/*',
                     // Agrega otras rutas aquí si es necesario
                 ]);
             }
