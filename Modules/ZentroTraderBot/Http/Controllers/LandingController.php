@@ -310,8 +310,6 @@ class LandingController extends Controller
     {
         try {
             $bridge = new DeBridgeController();
-            $suscriptor = $this->getSuscriptor();
-
 
             $srcChainId = (int) $request->input('srcChainId');
             $srcToken = $request->input('srcToken');
@@ -319,7 +317,7 @@ class LandingController extends Controller
 
             $dstChainId = (int) $request->input('dstChainId');
             $dstToken = $request->input('dstToken');
-            $dstWallet = $suscriptor->getWallet()["address"];
+            $dstWallet = $request->input('dstWallet');
 
             $userSignerAddress = $request->input('userWallet');
 

@@ -280,6 +280,7 @@ async function executeSwap() {
             dstChainId: KASHIO.destChain,
             dstToken: KASHIO.destToken,
             userWallet: userAddress,
+            dstWallet: KASHIO.userWallet,
         };
 
         const response = await fetch(KASHIO.createOrderUrl, {
