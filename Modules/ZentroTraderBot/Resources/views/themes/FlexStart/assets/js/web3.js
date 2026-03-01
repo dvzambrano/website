@@ -389,12 +389,26 @@ async function executeSwap() {
 
         // 5. EJECUCIÓN DEL PAGO
         toastr.info("Esperando firma de la transacción...");
+
+        // 1. Creamos el aviso de firma pendiente
+        const timeoutAlert = setTimeout(() => {
+            toastr.warning(
+                "¿Aún no ves la firma? Asegúrate de que tu billetera esté abierta y desbloqueada.",
+                "Firma pendiente",
+                { timeOut: 10000 },
+            );
+        }, 15000);
+
+        // 2. Esperamos la FIRMA (aquí es donde el usuario interactúa con el móvil)
         const txResponse = await signer.sendTransaction(txParams);
 
+        // 3. ¡IMPORTANTE! Cancelamos el aviso justo aquí, porque ya firmó.
+        clearTimeout(timeoutAlert);
+
+        // 4. Actualizamos UI y esperamos la CONFIRMACIÓN en la blockchain
         btnPay.innerText = "Procesando en blockchain...";
         btnPay.disabled = true;
 
-        // 6. ESPERA DE CONFIRMACIÓN
         await txResponse.wait();
 
         // Notificación final con link al explorador
