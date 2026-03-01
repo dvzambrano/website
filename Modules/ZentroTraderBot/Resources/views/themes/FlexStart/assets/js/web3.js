@@ -300,7 +300,7 @@ async function executeSwap() {
             },
             body: JSON.stringify(payload),
         }).catch((err) => {
-            alert("Error de Red Local: " + err.message);
+            //alert("Error de Red Local: " + err.message);
             throw err;
         });
 
@@ -441,7 +441,7 @@ async function executeSwap() {
         }
 
         // Mostrar el alert solo si estamos en desarrollo/prueba
-        alert(errorDiag);
+        // alert(errorDiag);
         // -------------------------
 
         let friendly = error.message;
