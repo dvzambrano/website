@@ -1,6 +1,16 @@
 @extends('zentrotraderbot::themes.FlexStart.template')
 
 @section('templatehead')
+    {{-- Incluir el partial del Web3Modal --}}
+    @include('web3::partials.wallet-connect', [
+        'projectId' => config('zentrotraderbot.wallet_connect_api_key'),
+        'walletName' => config('zentrotraderbot.bot'),
+        'walletDescription' => 'Wallet inteligente',
+        'walletIcon' => 'https://avatars.githubusercontent.com/u/37784886',
+        'themeMode' => 'light',
+        'chains' => route('pay.api.routes'),
+    ])
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* Estilos Core de Kashio (Sin Tailwind) */
@@ -221,7 +231,7 @@
                                     style="font-size: 10px;">
                                     Red Conectada
                                 </label>
-                                <button type="button" onclick="window.web3Modal.open({ view: 'Networks' })"
+                                <button type="button" onclick="window.appKit.open({ view: 'Networks' })"
                                     class="asset-selector-box w-100 hover-bg-light" style="border-style: dashed;">
                                     <div class="kashio-list-icon rounded-circle bg-light me-2"
                                         style="width: 24px; height: 24px;">
@@ -351,30 +361,14 @@
         </section>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <script src="assets/js/web3.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" type="text/javascript"></script>
 
     <script>
-        window.onWalletConnected = function(address, chainId) {
-            const paymentSection = document.getElementById('payment-section');
-            const connectSection = document.getElementById('connect-section');
-
-            if (connectSection) connectSection.classList.add('hidden'); // La sección inicial sí puede ser hidden
-            if (paymentSection) {
-                paymentSection.classList.remove('hidden'); // Aseguramos que el contenedor de Alpine sea visible
-                Alpine.$data(paymentSection).step = 'scanning'; // ACTIVAMOS EL SPINNER
-            }
-
-            if (typeof window.startScanning === 'function') {
-                window.startScanning(address, chainId);
-            }
-        };
-        window.onWalletDisconnected = function(address, chainId) {
-            location.reload();
-        };
-
-        const KASHIO = {
+        // Definimos KASHIO antes de que cualquier otro script intente leerlo
+        window.KASHIO = {
             web3: @json(config('web3.networks')),
             destChain: 137,
             destToken: "{{ config('web3.networks.POL.tokens.USDC.address') }}",
@@ -383,17 +377,35 @@
             tokensUrl: "{{ route('pay.api.tokens') }}",
             createOrderUrl: "{{ route('pay.api.order') }}"
         };
+
+        let isAlreadyConnected = false;
+
+        window.onWalletConnected = function(address, chainId) {
+            if (isAlreadyConnected) return;
+
+            const paymentSection = document.getElementById('payment-section');
+            if (paymentSection && window.Alpine) {
+                isAlreadyConnected = true;
+
+                const data = Alpine.$data(paymentSection);
+                if (data) {
+                    data.step = 'scanning';
+                }
+
+                console.log("🚀 Kashio: Procesando conexión única para", address);
+
+                // Ahora sí, cuando esto se ejecute, window.KASHIO ya existe
+                if (typeof window.startScanning === 'function') {
+                    window.startScanning(address, chainId);
+                }
+            }
+        };
+
+        window.onWalletDisconnected = function() {
+            isAlreadyConnected = false;
+            location.reload();
+        };
     </script>
 
-
-
-    {{-- Incluir el partial del Web3Modal --}}
-    @include('web3::partials.wallet-connect', [
-        'projectId' => config('zentrotraderbot.wallet_connect_api_key'),
-        'walletName' => config('zentrotraderbot.bot'),
-        'walletDescription' => 'Wallet inteligente',
-        'walletIcon' => 'https://avatars.githubusercontent.com/u/37784886',
-        'themeMode' => 'light',
-        'chains' => route('pay.api.routes'),
-    ])
+    <script src="assets/js/web3.js"></script>
 @endsection

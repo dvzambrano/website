@@ -6,7 +6,7 @@
 // --- Estado Global ---
 window.quoteInterval = null;
 window.QUOTE_REFRESH_TIME = 30000;
-let selectedData = null; // IMPORTANTE: Se llena al seleccionar un token
+let selectedData = null;
 
 // --- Inicialización y Eventos de Wallet ---
 if (window.ethereum) {
@@ -18,14 +18,14 @@ if (window.ethereum) {
  * Conecta la wallet manualmente (si el subscribeState del modal no se dispara)
  */
 async function connectAndScan() {
-    if (!window.web3Modal) {
+    if (!window.appKit) {
         toastr.warning("Inicializando conexión...");
         return;
     }
 
     try {
-        await window.web3Modal.open();
-        const address = window.web3Modal.getAddress();
+        await window.appKit.open();
+        const address = window.appKit.getAddress();
 
         if (address) {
             document.getElementById("connect-section").classList.add("hidden");
@@ -39,9 +39,9 @@ async function connectAndScan() {
 
 async function disconnectAndExit() {
     try {
-        if (window.web3Modal) {
+        if (window.appKit) {
             // 1. Desconectar la wallet de Web3Modal
-            await window.web3Modal.disconnect();
+            await window.appKit.disconnect();
 
             // 2. Limpiar variables globales si es necesario
             selectedData = null;
@@ -72,7 +72,7 @@ window.selectAsset = function (address, symbol, decimals, balance, logo) {
         decimals: decimals,
         balance: balance,
         logo: logo,
-        chainId: window.web3Modal.getChainId(),
+        chainId: window.appKit.getChainId(),
     };
 
     // Disparamos el evento para Alpine
@@ -86,7 +86,7 @@ window.selectAsset = function (address, symbol, decimals, balance, logo) {
 };
 
 window.manualRescan = function () {
-    const address = window.web3Modal.getAddress();
+    const address = window.appKit.getAddress();
     if (!address) return;
 
     const paymentSection = document.getElementById("payment-section");
@@ -262,11 +262,11 @@ async function executeSwap() {
         btnPay.innerText = "Preparando transacción...";
         btnPay.disabled = true;
 
-        const walletProvider = window.web3Modal.getWalletProvider();
+        const walletProvider = window.appKit.getWalletProvider();
         // RE-SINCRONIZACIÓN: Si estamos en móvil/Chrome, forzamos un ping al provider
         if (!walletProvider) {
             toastr.warning("Reconectando con SafePal...");
-            await window.web3Modal.open(); // Abre el modal para refrescar la sesión si se perdió
+            await window.appKit.open(); // Abre el modal para refrescar la sesión si se perdió
             return;
         }
 
@@ -398,11 +398,8 @@ async function executeSwap() {
         await txResponse.wait();
 
         // Notificación final con link al explorador
-        const chainInfo = Object.values(window.supportedChains).find(
-            (n) => Number(n.chainId) === Number(selectedData.chainId),
-        );
-        const explorerUrl = chainInfo
-            ? `${chainInfo.explorerUrl}/tx/${txResponse.hash}`
+        const explorerUrl = window.networkConfig
+            ? `${window.networkConfig.explorers[0].url}/tx/${txResponse.hash}`
             : "#";
 
         toastr.success(
@@ -469,40 +466,35 @@ async function executeSwap() {
  */
 function renderAssetsList(assets) {
     const container = document.getElementById("assets-list-container");
-    const scanStatus = document.getElementById("scan-status");
-    const paymentSection = document.getElementById("payment-section");
     const networkDisplay = document.getElementById("display-network-name");
+    const paymentSection = document.getElementById("payment-section");
 
     if (!container) return;
 
-    // 1. Limpiar el contenedor de activos
     container.innerHTML = "";
 
-    // 2. Actualizar el nombre de la red conectada en el selector inferior
-    if (networkDisplay && window.web3Modal) {
-        const currentChainId = window.web3Modal.getChainId();
-        const networkConfig = window.supportedChains.find(
-            (n) => Number(n.chainId) === Number(currentChainId),
-        );
-        networkDisplay.innerText = networkConfig
-            ? networkConfig.name
-            : "Red no detectada";
+    // Actualizar nombre de red en la UI usando window.supportedChains
+    if (networkDisplay && window.appKit) {
+        const currentChainId = window.appKit.getChainId();
+        // Acceso directo por ID en el objeto
+        networkDisplay.innerText = window.networkConfig
+            ? window.networkConfig.name
+            : `Red ID: ${currentChainId}`;
     }
 
-    // 3. Renderizar la lista de activos o mensaje de vacío
-    if (assets.length === 0) {
+    if (!assets || assets.length === 0) {
         container.innerHTML = `
             <div class="text-center py-5">
                 <i class="fas fa-coins text-slate-200 mb-3" style="font-size: 40px;"></i>
-                <p class="text-slate-500 small">No se encontraron activos en esta red.</p>
+                <p class="text-slate-500 small">No se encontraron activos con saldo suficiente.</p>
             </div>`;
     } else {
+        assets.sort((a, b) => parseFloat(b.balance) - parseFloat(a.balance));
+
         assets.forEach((item) => {
-            // Asegurar un logo por defecto si falla el de deBridge
             const imgUrl =
                 item.logoURI ||
                 "https://app.debridge.com/assets/images/chain/generic.svg";
-
             const html = `
                 <button type="button" 
                     class="list-group-item list-group-item-action d-flex align-items-center p-3 mb-2 border rounded-3 hover-bg-light"
@@ -511,110 +503,94 @@ function renderAssetsList(assets) {
                     <div class="position-relative">
                         <img src="${imgUrl}" class="rounded-circle border" width="40" height="40" 
                              onerror="this.src='https://app.debridge.com/assets/images/chain/generic.svg'">
-                        <div class="position-absolute bottom-0 end-0" style="padding: 2px;">
-                            <i class="fas fa-check-circle text-success" style="font-size: 10px;"></i>
-                        </div>
                     </div>
 
                     <div class="flex-grow-1 text-start ms-3">
                         <div class="fw-bold text-dark" style="font-size: 14px;">${item.symbol}</div>
-                        <div class="text-slate-400" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
-                            ${item.networkName}
+                        <div class="text-slate-400" style="font-size: 10px; text-transform: uppercase;">
+                            ${item.networkName || "Token"}
                         </div>
                     </div>
 
                     <div class="text-end">
                         <div class="fw-black text-primary" style="font-size: 15px;">${item.balance}</div>
-                        <div class="text-slate-400 fw-bold" style="font-size: 9px; letter-spacing: 1px;">DISPONIBLE</div>
+                        <div class="text-slate-400 fw-bold" style="font-size: 9px;">DISPONIBLE</div>
                     </div>
                 </button>`;
             container.insertAdjacentHTML("beforeend", html);
         });
     }
 
-    // 4. Gestión de visibilidad con transiciones
     if (paymentSection && window.Alpine) {
-        // CAMBIAMOS DE 'SCANNING' A 'LIST' AUTOMÁTICAMENTE
         Alpine.$data(paymentSection).step = "list";
     }
-
-    console.log(`✅ Renderizado: ${assets.length} activos mostrados.`);
 }
 
-/**
- * Escaneo de activos
- */
-/**
- * Escanea activos en la red activa de la wallet.
- * Optimizado para detectar balances nativos en la primera conexión.
- * @param {string} userAddress - Dirección de la wallet del usuario.
- */
 /**
  * Escanea activos en la red activa de la wallet.
  * @param {string} userAddress - Dirección de la wallet del usuario.
  * @param {number|string} forcedChainId - (Opcional) ID de red pasado desde el evento de conexión.
  */
 async function startScanning(userAddress, forcedChainId = null) {
-    const container = document.getElementById("assets-list-container");
-    const statusEl = document.getElementById("current-network-scan");
+    if (typeof ethers === "undefined") {
+        console.error("🚨 Ethers no detectado");
+        return;
+    }
 
-    // 1. Preparación de la interfaz
-    if (container) container.innerHTML = "";
-    if (statusEl) statusEl.innerText = "Sincronizando con tu billetera...";
-
-    // Determinamos el ChainID real (priorizando el que viene del evento)
     const currentChainId =
-        forcedChainId ||
-        (window.web3Modal ? window.web3Modal.getChainId() : null);
+        forcedChainId || (window.appKit ? window.appKit.getChainId() : null);
+    console.log(`🔍 Escaneando Red ${currentChainId} para: ${userAddress}`);
 
-    console.log(
-        `🔍 Kashio: Iniciando escaneo en red ${currentChainId} para:`,
-        userAddress,
+    window.networkConfig = Object.values(window.supportedChains).find(
+        (n) => Number(n.chainId) === Number(currentChainId),
     );
+    console.log(
+        `🔍 Datos de la red: `,
+        window.networkConfig,
+        window.supportedChains,
+    );
+    if (!window.networkConfig) {
+        console.error(
+            "❌ Red no soportada en supportedChains:",
+            currentChainId,
+        );
+        if (typeof toastr !== "undefined")
+            toastr.error("Red no configurada en DeBridge.");
+        const el = document.getElementById("payment-section");
+        if (el && window.Alpine) Alpine.$data(el).step = "connect";
+        return;
+    }
+
+    const statusEl = document.getElementById("current-network-scan");
+    const container = document.getElementById("assets-list-container");
+    if (container) container.innerHTML = "";
+    if (statusEl)
+        statusEl.innerText = `Consultando ${window.networkConfig.name}...`;
+
     const foundAssets = [];
 
     try {
-        // 2. Delay de seguridad (500ms) - Clave para evitar errores de handshake
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // 4. Validar configuración de red
-        const networkConfig = Object.values(window.supportedChains).find(
-            (n) => Number(n.chainId) === Number(currentChainId),
-        );
-
-        if (!networkConfig) {
-            console.error("❌ Red no soportada:", currentChainId);
-            toastr.error("La red conectada no está configurada en Kashio.");
-            document.getElementById("scan-status").classList.add("hidden");
-            document
-                .getElementById("connect-section")
-                .classList.remove("hidden");
-            return;
-        }
-
-        // 3. Identificación de Proveedor
-        const walletProvider = window.web3Modal.getWalletProvider();
-        if (!walletProvider)
-            throw new Error("No se encontró proveedor de wallet.");
+        const walletProvider = window.appKit.getWalletProvider();
         const provider = new ethers.providers.Web3Provider(walletProvider);
-        // VALIDACIÓN CRUCIAL:
-        const network = await provider.getNetwork();
-        if (Number(network.chainId) !== Number(currentChainId)) {
-            console.error(
-                "Mismatched Networks!",
-                network.chainId,
-                currentChainId,
-            );
-            // Si no coinciden, forzamos el uso del RPC oficial de nuestra configuración
-            // para evitar que el provider use el nodo equivocado
-            const rpcUrl = networkConfig.rpc[0];
-            provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+
+        // 1. BALANCE NATIVO
+        const nativeBalanceWei = await provider.getBalance(userAddress);
+        const nativeBalance = ethers.utils.formatEther(nativeBalanceWei);
+
+        if (parseFloat(nativeBalance) > 0.0001) {
+            foundAssets.push({
+                symbol: window.networkConfig.nativeCurrency.symbol, // Propiedad correcta del JSON de deBridge
+                balance: parseFloat(nativeBalance).toFixed(4),
+                address: "0x0000000000000000000000000000000000000000",
+                chainId: currentChainId,
+                decimals: window.networkConfig.nativeCurrency.decimals,
+                logoURI: window.networkConfig.logo,
+                networkName: window.networkConfig.name,
+                isNative: true,
+            });
         }
 
-        // 5. Obtener Lista de Tokens desde tu Backend (que consulta deBridge)
-        if (statusEl)
-            statusEl.innerText = `Consultando activos en ${networkConfig.name}...`;
-
+        // 2. TOKENS ERC20 (Scan desde tu API interna de tokens)
         const tokenResponse = await fetch(
             `${KASHIO.tokensUrl}/${currentChainId}`,
         );
@@ -623,137 +599,49 @@ async function startScanning(userAddress, forcedChainId = null) {
             ? Object.values(tokenData.tokens)
             : [];
 
-        // 6. Escaneo de Balance Nativo (BNB, MATIC, ETH...)
-        try {
-            // USAMOS LA FUNCIÓN DE FALLBACK
-            const nativeBalanceWei = await getBalanceWithFallback(
-                userAddress,
-                networkConfig,
-            );
-            const nativeBalance = ethers.utils.formatEther(nativeBalanceWei);
-
-            if (parseFloat(nativeBalance) > 0) {
-                // Buscamos info del nativo en la lista de tokens para el logo
-                const deBridgeNative = allTokens.find(
-                    (t) =>
-                        t.isNative ||
-                        t.address ===
-                            "0x0000000000000000000000000000000000000000",
-                );
-
-                foundAssets.push({
-                    symbol: deBridgeNative
-                        ? deBridgeNative.symbol
-                        : networkConfig.currency,
-                    balance: parseFloat(nativeBalance).toFixed(4),
-                    address: "0x0000000000000000000000000000000000000000",
-                    chainId: currentChainId,
-                    decimals: 18,
-                    logoURI: deBridgeNative
-                        ? deBridgeNative.logoURI
-                        : networkConfig.logo,
-                    networkName: networkConfig.name,
-                    isNative: true,
-                });
-            }
-        } catch (nativeErr) {
-            console.error("🚨 Agotados todos los RPCs:", nativeErr);
-        }
-
-        // 7. Escaneo de Tokens ERC20 (Filtrados con saldo)
-        if (allTokens.length > 0) {
-            if (statusEl)
-                statusEl.innerText = `Buscando saldos en ${networkConfig.name}...`;
-
-            // DETERMINAR QUÉ PROVIDER USAR:
-            // Si el principal ya falló (lo sabemos porque tuvimos que usar el fallback para el nativo),
-            // creamos un provider usando el nodo que sí funcionó.
-            let activeProvider;
-            try {
-                activeProvider = new ethers.providers.Web3Provider(
-                    window.web3Modal.getWalletProvider(),
-                );
-                await activeProvider.getNetwork(); // Test de vida
-            } catch (e) {
-                console.log(
-                    "🛠️ Usando nodo de respaldo para escaneo de tokens...",
-                );
-                // Usamos el rpcUrl que ya sabemos que funciona (podemos guardarlo en una variable global si quieres)
-                // O simplemente usamos el primero de la lista de respaldo que no sea el fallido
-                const fallbackUrl = networkConfig.allRpcs.find(
-                    (url) => url !== networkConfig.rpcUrl,
-                );
-                activeProvider = new ethers.providers.JsonRpcProvider(
-                    fallbackUrl,
-                );
-            }
-
-            const filteredTokens = allTokens.slice(0, 40);
-            const tokenPromises = filteredTokens.map(async (token) => {
-                if (
-                    token.isNative ||
-                    token.address ===
-                        "0x0000000000000000000000000000000000000000"
-                )
-                    return null;
-
-                try {
-                    // USAR EL PROVIDER ACTIVO (Sea el de la wallet o el de respaldo)
-                    const contract = new ethers.Contract(
-                        token.address,
-                        ["function balanceOf(address) view returns (uint256)"],
-                        activeProvider,
-                    );
-
-                    const balanceWei = await contract.balanceOf(userAddress);
-                    const balance = ethers.utils.formatUnits(
-                        balanceWei,
-                        token.decimals,
-                    );
-
-                    if (parseFloat(balance) > 0.01) {
-                        return {
-                            symbol: token.symbol,
-                            balance: parseFloat(balance).toFixed(2),
-                            address: token.address,
-                            chainId: currentChainId,
-                            decimals: token.decimals,
-                            logoURI: token.logoURI,
-                            networkName: networkConfig.name,
-                            isNative: false,
-                        };
-                    }
-                } catch (e) {}
+        // Escaneamos un grupo reducido para no saturar la RPC en móvil
+        const tokensToScan = allTokens.slice(0, 15);
+        const tokenPromises = tokensToScan.map(async (token) => {
+            if (token.address === "0x0000000000000000000000000000000000000000")
                 return null;
-            });
+            try {
+                const contract = new ethers.Contract(
+                    token.address,
+                    ["function balanceOf(address) view returns (uint256)"],
+                    provider,
+                );
+                const bal = await contract.balanceOf(userAddress);
+                const formatted = ethers.utils.formatUnits(bal, token.decimals);
+                if (parseFloat(formatted) > 0.001) {
+                    return {
+                        ...token,
+                        balance: parseFloat(formatted).toFixed(4),
+                        networkName: window.networkConfig.name,
+                    };
+                }
+            } catch (e) {
+                return null;
+            }
+            return null;
+        });
 
-            const tokensFound = await Promise.all(tokenPromises);
-            foundAssets.push(...tokensFound.filter((t) => t !== null));
-        }
+        const results = await Promise.all(tokenPromises);
+        foundAssets.push(...results.filter((t) => t !== null));
 
-        // 8. Renderizado Final
-        console.log(
-            `✅ Kashio: Escaneo finalizado. Activos encontrados: ${foundAssets.length}`,
-        );
         renderAssetsList(foundAssets);
     } catch (error) {
-        console.error("🚨 Error crítico en startScanning:", error);
-        toastr.error("No se pudieron cargar los balances.");
-
-        // Volver al estado inicial si falla
-        document.getElementById("scan-status").classList.add("hidden");
-        document.getElementById("connect-section").classList.remove("hidden");
+        console.error("🚨 Error startScanning:", error);
     }
 }
 
 /**
  * Intenta obtener un balance probando varios RPCs si el principal falla.
  */
-async function getBalanceWithFallback(address, networkConfig) {
+async function getBalanceWithFallback(address) {
     // 1. Intentar primero con el proveedor de la wallet (lo más rápido)
     try {
         const walletProvider = new ethers.providers.Web3Provider(
-            window.web3Modal.getWalletProvider(),
+            window.appKit.getWalletProvider(),
         );
         return await walletProvider.getBalance(address);
     } catch (e) {
@@ -763,9 +651,9 @@ async function getBalanceWithFallback(address, networkConfig) {
     }
 
     // 2. Filtrar los RPCs para NO reintentar el principal que ya falló
-    // networkConfig.rpcUrl es el que Web3Modal intentó usar primero
-    const fallbackRpcs = (networkConfig.allRpcs || []).filter(
-        (url) => url !== networkConfig.rpcUrl,
+    // window.networkConfig.rpcUrl es el que Web3Modal intentó usar primero
+    const fallbackRpcs = (window.networkConfig.allRpcs || []).filter(
+        (url) => url !== window.networkConfig.rpcUrl,
     );
 
     console.log(`🔍 Probando ${fallbackRpcs.length} nodos de respaldo...`);
