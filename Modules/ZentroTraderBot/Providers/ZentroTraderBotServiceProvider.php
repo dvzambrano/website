@@ -51,14 +51,6 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
             BlockchainActivityDetected::class,
             ProcessBlockchainActivity::class
         );
-        // Registramos el comando para sincronizar manualmente wallets existentes con Alchemy
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                SyncAlchemyAddresses::class,
-                RegisterAlchemyWebhooks::class,
-            ]);
-        }
-
     }
 
     /**
@@ -69,6 +61,12 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->register(RouteServiceProvider::class);
+
+        // Registramos el comando para sincronizar manualmente wallets existentes con Alchemy
+        $this->commands([
+            SyncAlchemyAddresses::class,
+            RegisterAlchemyWebhooks::class,
+        ]);
     }
 
     /**

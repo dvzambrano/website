@@ -3,17 +3,13 @@
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
 use Modules\Laravel\Entities\Metadatas;
-use Illuminate\Http\Request;
-use Modules\TelegramBot\Entities\Actors;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
-use Modules\TelegramBot\Http\Controllers\TelegramBotController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\TelegramBot\Traits\UsesTelegramBot;
-use Illuminate\Support\Facades\Log;
-use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Lang;
+use Modules\Web3\Http\Controllers\ZeroExController;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -239,9 +235,16 @@ class ZentroTraderBotController extends JsonsController
         ]);
         */
 
+        $url = route('zentrotraderbot.pay', array(
+            "user" => "dvzambrano"
+        ));
         array_push($menu, [
             [
-                "text" => "💳 " . Lang::get("zentrotraderbot::bot.options.topup"),
+                "text" => "⛓️‍💥 " . Lang::get("zentrotraderbot::bot.options.topupcripto"),
+                'web_app' => ['url' => $url],
+            ],
+            [
+                "text" => "💳 " . Lang::get("zentrotraderbot::bot.options.topupramp"),
                 "url" => route('ramp-redirect', array(
                     "action" => "buy",
                     "key" => $tenant->key,

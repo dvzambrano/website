@@ -34,7 +34,8 @@ return [
         "actionlevel2" => "Ejecutar ordenes",
         "selloffer" => "Vender USD",
         "buyoffer" => "Comprar USD",
-        "topup" => "Depositar USD",
+        "topupcripto" => "Depositar USD",
+        "topupramp" => "Depositar USD",
         "withdraw" => "Extraer USD",
     ],
     "prompts" => [

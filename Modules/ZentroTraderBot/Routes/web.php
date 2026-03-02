@@ -16,6 +16,26 @@ Route::get('/', 'LandingController@index')->name('zentrotraderbot.landing');
 Route::get('/dashboard', 'LandingController@dashboard')
     ->middleware(['web', 'telegrambot.auth'])
     ->name('zentrotraderbot.dashboard');
+Route::prefix('pay')->group(function () {
+    // PASO 1: Obtener redes y tokens disponibles
+    Route::get('/routes', 'LandingController@getRoutes')
+        ->name('pay.api.routes');
+
+    Route::get('/tokens/{chainId?}', 'LandingController@getTokens')
+        ->name('pay.api.tokens');
+
+    // PASO 2: Obtener la cotización (Cuanto llega a Kashio)
+    Route::get('/quote', 'LandingController@getQuote')
+        ->name('pay.api.quote');
+
+    // PASO 3: Crear la orden final (Obtener el objeto de transacción para firmar)
+    Route::post('/order', 'LandingController@createOrder')
+        ->name('pay.api.order');
+
+    // Vista principal del asistente (Donde el usuario aterriza desde Telegram)
+    Route::get('/{user}', 'LandingController@pay')
+        ->name('zentrotraderbot.pay');
+});
 
 Route::prefix('zentrotraderbot')->group(function () {
     //Route::get('/', 'LandingController@index')->name('zentrotraderbot.landing');
@@ -34,5 +54,9 @@ Route::prefix('tradingview')->group(function () {
 Route::prefix('ramp')->group(function () {
     Route::get('{action}/{key}/{secret}/{user_id}', 'RampController@redirect')->middleware('tenant')->name('ramp-redirect');
     Route::get('/success/{key}/{secret}/{user_id}', 'RampController@success')->middleware('tenant')->name('ramp-success');
+    Route::post('/webhook', 'RampController@processWebhook')->name('ramp-webhook');
+});
+
+Route::prefix('trondealer')->group(function () {
     Route::post('/webhook', 'RampController@processWebhook')->name('ramp-webhook');
 });

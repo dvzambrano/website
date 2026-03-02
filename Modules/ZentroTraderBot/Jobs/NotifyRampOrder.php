@@ -38,7 +38,7 @@ class NotifyRampOrder implements ShouldQueue
 
         $token = $this->bot['token'];
 
-        Log::debug("🐞  NotifyRampOrder handle bot: " . json_encode($this->bot) . " order: " . json_encode($this->order));
+        Log::debug("🐞 NotifyRampOrder handle bot: " . json_encode($this->bot) . " order: " . json_encode($this->order));
 
         // Construimos un mensaje atractivo
         $message = "🔔 *" . Lang::get("zentrotraderbot::bot.prompts.buy.update.header") . "* \n\n";

@@ -48,7 +48,7 @@ class Suscriptions extends Actors
                 ]
             );
             $this->save();
-            Log::debug("🐞  Suscriptions getWallet: Wallet " . $wallet["address"] . " generada en JSON para usuario " . $this->user_id);
+            Log::debug("🐞 Suscriptions getWallet: Wallet " . $wallet["address"] . " generada en JSON para usuario " . $this->user_id);
 
         } else
             $wallet = $this->data["wallet"];
