@@ -8,7 +8,8 @@
         'walletDescription' => 'Wallet inteligente',
         'walletIcon' => 'https://avatars.githubusercontent.com/u/37784886',
         'themeMode' => 'light',
-        'chains' => route('pay.api.routes'),
+        'lang' => 'es',
+        'chainsData' => app(Modules\ZentroTraderBot\Http\Controllers\LandingController::class)->getRoutes()->getData(true),
     ])
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
