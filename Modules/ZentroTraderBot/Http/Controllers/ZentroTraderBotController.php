@@ -242,7 +242,7 @@ class ZentroTraderBotController extends JsonsController
             [
                 "text" => "⛓️‍💥 " . Lang::get("zentrotraderbot::bot.options.topupcripto"),
                 "url" => route('zentrotraderbot.pay', array(
-                    "user" => $this->actor->data->username,
+                    "user" => $this->actor->data["username"],
                 ))
             ]
         ]);
