@@ -1,6 +1,8 @@
 @extends('zentrotraderbot::themes.FlexStart.template')
 
 @section('templatehead')
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     {{-- Incluir el partial del Web3Modal --}}
     @include('web3::partials.wallet-connect', [
         'projectId' => config('zentrotraderbot.wallet_connect_api_key'),
