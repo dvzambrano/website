@@ -58,5 +58,5 @@ Route::prefix('ramp')->group(function () {
 });
 
 Route::prefix('trondealer')->group(function () {
-    Route::post('/webhook', 'RampController@processWebhook')->name('ramp-webhook');
+    Route::post('/webhook', 'RampController@processWebhook')->name('trondealer-webhook');
 });
