@@ -39,9 +39,7 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
-            "Modules\\": "Modules/",
-            "Modules\\TelegramBot\\": "Modules/TelegramBot/",
-            "Modules\\ZentroTraderBot\\": "Modules/ZentroTraderBot/"
+            "Modules\\": "Modules/"
         }
     },
     "autoload-dev": {

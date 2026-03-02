@@ -41,17 +41,6 @@ class TelegramBotServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'Database/Migrations'));
-
-        // Registramos el comando para migrar los modulos
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                MigrateAndSeedModules::class,
-                GetTelegramWebhook::class,
-                SetTelegramWebhook::class,
-                ResetTelegramWebhooks::class,
-                BotSimulate::class,
-            ]);
-        }
     }
 
     /**
@@ -62,6 +51,14 @@ class TelegramBotServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->register(RouteServiceProvider::class);
+
+        $this->commands([
+            MigrateAndSeedModules::class,
+            GetTelegramWebhook::class,
+            SetTelegramWebhook::class,
+            ResetTelegramWebhooks::class,
+            BotSimulate::class,
+        ]);
     }
 
     /**
