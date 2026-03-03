@@ -56,17 +56,6 @@ class TransakController extends Controller implements RampProviderInterface
         return Redirect::to($widgetUrl);
     }
 
-    public function processWebhook1(Request $request): JsonResponse
-    {
-
-        // Si el soporte de Transak está probando el endpoint, 
-        // esto responderá con éxito antes de intentar procesar lógica compleja.
-        return response()->json([
-            'status' => 'success',
-            'timestamp' => now()->toIso8601String()
-        ], 200);
-    }
-
     public function processWebhook(Request $request): array
     {
         $array = array();
