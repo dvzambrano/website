@@ -749,12 +749,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Laravel.git",
-                "reference": "50ee4284b629017296d2346952f712ef4906e23f"
+                "reference": "8aa76d899b6fc3a6a3f9c701cfc096f3767ab056"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/50ee4284b629017296d2346952f712ef4906e23f",
-                "reference": "50ee4284b629017296d2346952f712ef4906e23f",
+                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/8aa76d899b6fc3a6a3f9c701cfc096f3767ab056",
+                "reference": "8aa76d899b6fc3a6a3f9c701cfc096f3767ab056",
                 "shasum": ""
             },
             "require": {
@@ -796,7 +796,7 @@
                 "source": "https://github.com/dvzambrano/Laravel/tree/main",
                 "issues": "https://github.com/dvzambrano/Laravel/issues"
             },
-            "time": "2026-03-02T17:39:10+00:00"
+            "time": "2026-03-03T16:21:24+00:00"
         },
         {
             "name": "dvzambrano/web3",
@@ -804,12 +804,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Web3.git",
-                "reference": "b91e42a04339ba488b3d9210ff6212d32e245d5b"
+                "reference": "88b1dc5abcbcbf0203853e3ef1c2669f4cf69767"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/b91e42a04339ba488b3d9210ff6212d32e245d5b",
-                "reference": "b91e42a04339ba488b3d9210ff6212d32e245d5b",
+                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/88b1dc5abcbcbf0203853e3ef1c2669f4cf69767",
+                "reference": "88b1dc5abcbcbf0203853e3ef1c2669f4cf69767",
                 "shasum": ""
             },
             "require": {
@@ -861,7 +861,7 @@
                 "source": "https://github.com/dvzambrano/Web3/tree/main",
                 "issues": "https://github.com/dvzambrano/Web3/issues"
             },
-            "time": "2026-03-02T17:39:01+00:00"
+            "time": "2026-03-03T18:11:42+00:00"
         },
         {
             "name": "egulias/email-validator",

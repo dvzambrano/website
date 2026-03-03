@@ -174,6 +174,18 @@ async function updateQuoteManual(isAutoRefresh = false) {
     }
 
     try {
+        const walletProvider = window.appKit.getWalletProvider();
+        // RE-SINCRONIZACIÓN: Si estamos en móvil/Chrome, forzamos un ping al provider
+        if (!walletProvider) {
+            toastr.warning("Reconectando con SafePal...");
+            await window.appKit.open(); // Abre el modal para refrescar la sesión si se perdió
+            return;
+        }
+
+        const provider = new ethers.providers.Web3Provider(walletProvider);
+        const signer = provider.getSigner();
+        const userAddress = await signer.getAddress();
+
         const rawAmount = ethers.utils
             .parseUnits(alpine.amount.toString(), selectedData.decimals)
             .toString();
@@ -189,6 +201,8 @@ async function updateQuoteManual(isAutoRefresh = false) {
             amount: rawAmount,
             dstChainId: KASHIO.destChain,
             dstToken: KASHIO.destToken,
+            userWallet: userAddress,
+            dstWallet: KASHIO.userWallet,
         });
 
         const response = await fetch(`${KASHIO.quoteUrl}?${query.toString()}`);
@@ -584,63 +598,31 @@ async function startScanning(userAddress, forcedChainId = null) {
     const foundAssets = [];
 
     try {
-        const walletProvider = window.appKit.getWalletProvider();
-        const provider = new ethers.providers.Web3Provider(walletProvider);
-
-        // 1. BALANCE NATIVO
-        const nativeBalanceWei = await provider.getBalance(userAddress);
-        const nativeBalance = ethers.utils.formatEther(nativeBalanceWei);
-
-        if (parseFloat(nativeBalance) > 0.0001) {
-            foundAssets.push({
-                symbol: window.networkConfig.nativeCurrency.symbol, // Propiedad correcta del JSON de deBridge
-                balance: parseFloat(nativeBalance).toFixed(4),
-                address: "0x0000000000000000000000000000000000000000",
-                chainId: currentChainId,
-                decimals: window.networkConfig.nativeCurrency.decimals,
-                logoURI: window.networkConfig.logo,
-                networkName: window.networkConfig.name,
-                isNative: true,
-            });
-        }
-
-        // 2. TOKENS ERC20 (Scan desde tu API interna de tokens)
-        const tokenResponse = await fetch(
-            `${KASHIO.tokensUrl}/${currentChainId}`,
+        // 1. Llamamos a tu nuevo endpoint (Asegúrate de que la ruta coincida con tu API)
+        // Pasamos la dirección del usuario, el chainId y el networkKey (ej: 'POL')
+        const response = await fetch(
+            `${KASHIO.tokensUrl}/${userAddress}/${window.networkConfig.chainId}/${window.networkConfig.chain}`,
         );
-        const tokenData = await tokenResponse.json();
-        const allTokens = tokenData.tokens
-            ? Object.values(tokenData.tokens)
-            : [];
 
-        // Escaneamos un grupo reducido para no saturar la RPC en móvil
-        const tokensToScan = allTokens.slice(0, 15);
-        const tokenPromises = tokensToScan.map(async (token) => {
-            if (token.address === "0x0000000000000000000000000000000000000000")
-                return null;
-            try {
-                const contract = new ethers.Contract(
-                    token.address,
-                    ["function balanceOf(address) view returns (uint256)"],
-                    provider,
-                );
-                const bal = await contract.balanceOf(userAddress);
-                const formatted = ethers.utils.formatUnits(bal, token.decimals);
-                if (parseFloat(formatted) > 0.001) {
-                    return {
-                        ...token,
-                        balance: parseFloat(formatted).toFixed(4),
-                        networkName: window.networkConfig.name,
-                    };
-                }
-            } catch (e) {
-                return null;
-            }
-            return null;
+        if (!response.ok)
+            throw new Error("Error consultando balances en Kashio");
+
+        const portfolio = await response.json();
+
+        // 2. Mapeamos los resultados al formato que espera tu UI
+        const results = portfolio.map((token) => {
+            return {
+                ...token,
+                // Mantener consistencia con el resto de tu appKit
+                balance: parseFloat(token.balance).toFixed(4),
+                chainId: currentChainId,
+                networkName: window.networkConfig.name,
+                isNative: token.is_native || false,
+            };
         });
 
-        const results = await Promise.all(tokenPromises);
-        foundAssets.push(...results.filter((t) => t !== null));
+        // 3. Agregamos todo a la lista de activos encontrados
+        foundAssets.push(...results);
 
         renderAssetsList(foundAssets);
     } catch (error) {

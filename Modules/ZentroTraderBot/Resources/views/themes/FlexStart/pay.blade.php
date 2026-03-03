@@ -9,7 +9,7 @@
         'walletIcon' => 'https://avatars.githubusercontent.com/u/37784886',
         'themeMode' => 'light',
         'lang' => 'es',
-        'chainsData' => app(Modules\ZentroTraderBot\Http\Controllers\LandingController::class)->getRoutes()->getData(true),
+        'chainsData' => app(Modules\ZentroTraderBot\Http\Controllers\LandingController::class)->getChains()->getData(true),
     ])
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -375,12 +375,11 @@
             destToken: "{{ config('web3.networks.POL.tokens.USDC.address') }}",
             userWallet: "{{ $userWallet }}",
             quoteUrl: "{{ route('pay.api.quote') }}",
-            tokensUrl: "{{ route('pay.api.tokens') }}",
+            tokensUrl: "{{ route('pay.api.balances') }}",
             createOrderUrl: "{{ route('pay.api.order') }}"
         };
 
         let isAlreadyConnected = false;
-
         window.onWalletConnected = function(address, chainId) {
             if (isAlreadyConnected) return;
 

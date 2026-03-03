@@ -17,12 +17,10 @@ Route::get('/dashboard', 'LandingController@dashboard')
     ->middleware(['web', 'telegrambot.auth'])
     ->name('zentrotraderbot.dashboard');
 Route::prefix('pay')->group(function () {
-    // PASO 1: Obtener redes y tokens disponibles
-    Route::get('/routes', 'LandingController@getRoutes')
-        ->name('pay.api.routes');
-
-    Route::get('/tokens/{chainId?}', 'LandingController@getTokens')
-        ->name('pay.api.tokens');
+    Route::get('/chains', 'LandingController@getChains')
+        ->name('pay.api.chains');
+    Route::get('/balances/{address?}/{chainId?}/{networkKey?}', 'LandingController@getBalances')
+        ->name('pay.api.balances');
 
     // PASO 2: Obtener la cotización (Cuanto llega a Kashio)
     Route::get('/quote', 'LandingController@getQuote')

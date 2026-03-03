@@ -8,11 +8,13 @@ use Modules\TelegramBot\Entities\Actors;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\DeBridgeController;
+use Modules\Web3\Http\Controllers\AlchemyController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Modules\Laravel\Services\BehaviorService;
+use Modules\Web3\Services\Web3MathService;
 
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 
@@ -124,20 +126,25 @@ class LandingController extends Controller
     }
 
     // PASO 1: Obtener rutas soportadas
-    public function getRoutes()
+    public function getChains()
     {
         // 1. Obtener rutas comerciales de deBridge (terminan en Polygon 137)
         $bridge = new DeBridgeController();
-        $debridgeRoutes = $bridge->getSupportedChainsInfo(137);
+        $chains = $bridge->getSupportedChainsInfo();
+        //dd($chains);
 
         // 2. Obtener datos técnicos de Chainlink / ChainID Network (con Cache para no saturar)
+        // php artisan cache:forget external_chains_info
         $allChainsData = BehaviorService::cache('external_chains_info', function () {
+            Log::info("✅ Refrescando base de datos de ChainID desde chainid.network.");
             $response = Http::timeout(BehaviorService::timeout())->get('https://chainid.network/chains.json');
             return $response->collect();
-        });
+        }, 604800, 172800);
+        // 604800 es una semana en segundos
+        // 172800 son 2 dias en segundos
 
-        $enrichedRoutes = [];
-        foreach ($debridgeRoutes as $id => $route) {
+        $enrichedChains = [];
+        foreach ($chains as $route) {
             $chainId = (int) $route['chainId'];
 
             // Buscamos la info técnica oficial por ChainID
@@ -181,39 +188,85 @@ class LandingController extends Controller
                 $chainInfo['explorers'] = array_values((array) ($chainInfo['explorers'] ?? []));
 
 
-                $enrichedRoutes[$chainInfo['chainId']] = $chainInfo;
+                $enrichedChains[$chainInfo['chainId']] = $chainInfo;
 
                 //dd($chainInfo, $route);
             }
         }
 
-        return response()->json($enrichedRoutes);
+        //dd($enrichedChains);
+        return response()->json($enrichedChains);
     }
 
-    public function getTokens($chainId = 137)
+    public function getBalances(string $address, $chainId = 137, $networkKey = "POL")
     {
         $bridge = new DeBridgeController();
-        $tokens = $bridge->tokenList($chainId);
-        return response()->json($tokens);
+        $tokensData = $bridge->tokenList($chainId, 604800);
+        $supportedTokens = collect($tokensData["tokens"]);
+
+        // 1. Obtener Balances desde Alchemy
+        $nativeHex = AlchemyController::getNativeBalance(config('zentrotraderbot.alchemy_api_key'), $address, $networkKey);
+        $erc20Balances = AlchemyController::getTokenBalances(config('zentrotraderbot.alchemy_api_key'), $address, [], $networkKey);
+
+        // 2. Unificar balances en una sola colección para el Map
+        // Añadimos el nativo como si fuera un resultado más de Alchemy
+        $allBalances = collect($erc20Balances)->prepend([
+            'contractAddress' => '0x0000000000000000000000000000000000000000',
+            'tokenBalance' => $nativeHex
+        ]);
+
+        // 3. Procesar todo con una sola lógica
+        $portfolio = $allBalances->map(function ($balance) use ($supportedTokens) {
+            $contract = strtolower($balance['contractAddress']);
+
+            // Filtro rápido: si el balance es cero, ni buscamos info
+            if ($balance['tokenBalance'] === '0x' . str_repeat('0', 64) || $balance['tokenBalance'] === '0x0') {
+                return null;
+            }
+
+            $info = $supportedTokens->firstWhere('address', $contract);
+
+            if ($info) {
+                $amount = Web3MathService::hexToDecimal($balance['tokenBalance'], $info['decimals']);
+                if ($amount > 0.00009) {// Si el balance es menor a 0.0001, lo ignoramos
+                    $info['balance'] = Web3MathService::hexToDecimal($balance['tokenBalance'], $info['decimals']);
+                    return $info;
+                }
+            }
+
+            return null;
+        })->filter()->values();
+
+        return response()->json($portfolio);
     }
 
     // PASO 2: Obtener Estimación
     public function getQuote(Request $request)
     {
+        /*
+        http://localhost/website/pay/quote?
+        // srcChainId=137&
+        // srcToken=0x3c499c542cef5e3811e1192ce70d8cc03d5c3359&
+        // amount=1200&
+        // dstChainId=137&dstToken=0x3c499c542cef5e3811e1192ce70d8cc03d5c3359
+
+         */
         $bridge = new DeBridgeController();
 
-        $srcChainId = (int) $request->srcChainId;
-        $dstChainId = config('web3.networks.POL.chain_id'); // Tu destino fijo en Polygon
-        $srcToken = $request->srcToken;
-        $amount = $request->amount;
-        $dstToken = config('web3.networks.POL.tokens.USDC.address');// USDC Polygon
+        $srcChainId = (int) $request->input('srcChainId');
+        $srcToken = $request->input('srcToken');
+        $amount = $request->input('amount'); // Ya viene en unidades mínimas (BigInt string)
+        $dstChainId = (int) $request->input('dstChainId');
+        $dstToken = $request->input('dstToken');
+        $dstWallet = $request->input('dstWallet');
+
+
+
+
 
         // CASO A: Misma Red (Polygon -> Polygon)
         if ($srcChainId === $dstChainId) {
             if (strtolower($srcToken) === strtolower($dstToken)) {
-                $suscriptor = $this->getSuscriptor();
-                $address = $suscriptor->getWallet()["address"];
-
                 // RESPUESTA MANUAL PARA TRANSFERENCIA DIRECTA
                 return response()->json([
                     'isDirectTransfer' => true,
@@ -235,7 +288,7 @@ class LandingController extends Controller
                         'to' => $dstToken, // El contrato del token
                         //'address' => $address, // El destinatario
                         // Codificamos la función transfer(address _to, uint256 _value)
-                        'data' => $this->encodeERC20Transfer($suscriptor->getWallet()["address"], $amount),
+                        'data' => $this->encodeERC20Transfer($dstWallet, $amount),
                         'value' => "0"
                     ]
                 ]);

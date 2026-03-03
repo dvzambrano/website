@@ -7,4 +7,6 @@ return [
     // Credenciales
     '0x_api_key' => env('TRADER_BOT_ZERO_EX_API_KEY'),
     'wallet_connect_api_key' => env('TRADER_BOT_WALLET_CONNECT_API_KEY'),
+    'alchemy_api_key' => env('ALCHEMY_AUTH_TOKEN'),
+
 ];
