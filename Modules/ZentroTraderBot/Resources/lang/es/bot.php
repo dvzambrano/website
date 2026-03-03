@@ -55,8 +55,9 @@ return [
                 "processing" => "Estamos procesando su solicitud.",
             ],
             "completed" => [
-                "header" => "Saldo Acreditado!",
-                "text" => "Hemos recibido un depósito para Ud de :amount :currency correctamente",
+                "header" => "¡Saldo Acreditado!",
+                "warning" => "Ha recibido un depósito de :amount USD a su cuenta.",
+                "text" => "Esperamos que su día sea más brillante ahora que sus fondos ya están disponibles.",
             ],
 
         ],

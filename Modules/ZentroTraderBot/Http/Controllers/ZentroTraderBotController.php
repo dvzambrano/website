@@ -420,11 +420,12 @@ class ZentroTraderBotController extends JsonsController
         $array = array(
             "message" => array(
                 "text" =>
-                    "✅ *¡" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.header") . "!*\n\n" .
-                    Lang::get("zentrotraderbot::bot.prompts.buy.completed.text", [
-                        "amount" => $amount,
-                        "currency" => $currency
-                    ]),
+                    "✅ *" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.header") . "* \n\n" .
+                    "💰 _" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.warning", [
+                                "amount" => $amount,
+                                "currency" => $currency
+                            ]) . "_\n" .
+                    "✨ " . Lang::get("zentrotraderbot::bot.prompts.buy.completed.text"),
                 "chat" => array(
                     "id" => $user_id,
                 ),
