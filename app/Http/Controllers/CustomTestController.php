@@ -6,8 +6,9 @@ use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Web3\Http\Controllers\AlchemyController;
 use Modules\Web3\Services\Web3MathService;
-
 use Modules\Laravel\Http\Controllers\TestController as BaseController;
+use Modules\Web3\Http\Controllers\ChainidController;
+use Modules\Web3\Http\Controllers\InchController;
 
 class CustomTestController extends BaseController
 {
@@ -41,6 +42,15 @@ class CustomTestController extends BaseController
     public function testLocal()
     {
         dd(app()->environment('local'));
+    }
+
+
+    public function testCache()
+    {
+        $network = ChainidController::getNetworkData();
+        dd($network["POL"]);
+        $tokens = InchController::getTokensData(137);
+        dd($network, $tokens);
     }
 
     public function testWalletController()

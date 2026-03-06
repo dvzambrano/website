@@ -10,6 +10,8 @@ use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\TelegramBot\Traits\UsesTelegramBot;
 use Illuminate\Support\Facades\Lang;
 use Modules\Web3\Http\Controllers\ZeroExController;
+use Illuminate\Support\Facades\Log;
+use Modules\Web3\Http\Controllers\ChainidController;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -81,18 +83,28 @@ class ZentroTraderBotController extends JsonsController
         // /swap 5 POL USDC
         $this->strategies["/swap"] =
             function () use ($array) {
+                $key = "POL";
+
+                $network = ChainidController::getNetworkData();
+
+
                 $wc = new TraderWalletController();
                 $privateKey = $wc->getDecryptedPrivateKey($this->actor->user_id);
+                //Log::debug("🐞 ZentroTraderBotController /swap:" . json_encode($array));
                 $amount = $array["pieces"][1];     // Cantidad a vender (Empieza suave, ej. 2 POL)
                 $from = $array["pieces"][2];   // Token que vendes
                 $to = $array["pieces"][3];  // Token que compras
     
                 $userId = $this->actor->user_id;
                 $array = $this->engine->swap(
+                    $network[$key]["chainId"],
                     $from,
                     $to,
                     $amount,
                     $privateKey,
+                    config('zentrotraderbot.0x_api_key'),
+                    config('zentrotraderbot.0x_treasury_wallet'),
+                    config('zentrotraderbot.0x_swap_fee_percentage'),
                     function ($text, $autodestroy) use ($userId) {
                         TelegramController::sendMessage(
                             array(
@@ -107,10 +119,11 @@ class ZentroTraderBotController extends JsonsController
                             $autodestroy
                         );
                     },
-                    true
                 );
+                //Log::debug("🐞 ZentroTraderBotController /swap:" . json_encode($array));
+                $explorer = $network[$key]["explorers"][0]["url"] . "/tx/" . $array["tx_hash"];
                 $reply = array(
-                    "text" => "✅ " . Lang::get("zentrotraderbot::bot.prompts.txsuccess") . ": " . $array["explorer"],
+                    "text" => "✅ " . Lang::get("zentrotraderbot::bot.prompts.txsuccess") . ": " . $explorer,
                 );
 
                 return $reply;
