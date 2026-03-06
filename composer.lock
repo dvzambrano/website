@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "69c34c6b83f8b5a243553a4ad46c40fa",
+    "content-hash": "315baaa2433a6473aa12f489caa39899",
     "packages": [
         {
             "name": "amenadiel/jpgraph",
@@ -803,14 +803,8 @@
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "git@github.com:dvzambrano/Web3.git",
-                "reference": "ce7852f45ef4e0dd65627effbcd22a285ba71e1c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/ce7852f45ef4e0dd65627effbcd22a285ba71e1c",
-                "reference": "ce7852f45ef4e0dd65627effbcd22a285ba71e1c",
-                "shasum": ""
+                "url": "git@github.com:dvzambrano/web3.git",
+                "reference": "e8abf837be0c30cd8e1f9a8c77318f196835e383"
             },
             "require": {
                 "dvzambrano/laravel": "dev-main as 1.0.0",
@@ -857,11 +851,7 @@
                 }
             ],
             "description": "Modulo base para funcionalidades Web3",
-            "support": {
-                "source": "https://github.com/dvzambrano/Web3/tree/main",
-                "issues": "https://github.com/dvzambrano/Web3/issues"
-            },
-            "time": "2026-03-06T16:25:15+00:00"
+            "time": "2026-03-06T19:53:26+00:00"
         },
         {
             "name": "egulias/email-validator",

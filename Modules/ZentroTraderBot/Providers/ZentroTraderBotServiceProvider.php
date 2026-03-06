@@ -13,6 +13,7 @@ use Modules\Web3\Events\BlockchainActivityDetected;
 use Modules\ZentroTraderBot\Listeners\ProcessBlockchainActivity;
 use Modules\ZentroTraderBot\Console\SyncAlchemyAddresses;
 use Modules\ZentroTraderBot\Console\RegisterAlchemyWebhooks;
+use Modules\ZentroTraderBot\Console\UpdateAlchemyWebhooks;
 use Modules\TelegramBot\Middleware\TenantMiddleware;
 
 class ZentroTraderBotServiceProvider extends ServiceProvider
@@ -66,6 +67,7 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
         $this->commands([
             SyncAlchemyAddresses::class,
             RegisterAlchemyWebhooks::class,
+            UpdateAlchemyWebhooks::class
         ]);
     }
 

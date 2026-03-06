@@ -23,7 +23,7 @@ class TraderWalletController extends WalletController
         try {
             $wallet = $this->generateWallet();
 
-            $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
+            $authToken = config('web3.alchemy_auth_token');
             AlchemyController::updateWebhookAddresses(
                 $tenant->data["alchemy_webhook_id"],
                 $authToken,
@@ -53,7 +53,7 @@ class TraderWalletController extends WalletController
         }
 
         $address = $suscriptor->data['wallet']['address'];
-        $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
+        $apiKey = config('web3.alchemy_api_key');
 
         $networks = ChainidController::getNetworkData();
         $chainId = (int) $networks[$networkSymbol]["chainId"];
@@ -61,7 +61,7 @@ class TraderWalletController extends WalletController
 
         $usdcContract = $tokenMap["usdc"]["address"];
 
-        $balances = AlchemyController::getTokenBalances($authToken, $address, [$usdcContract]);
+        $balances = AlchemyController::getTokenBalances($apiKey, $address, [$usdcContract]);
 
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {
@@ -82,12 +82,11 @@ class TraderWalletController extends WalletController
         }
 
         $address = $suscriptor->data['wallet']['address'];
-        $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
-        //app_zentrotraderbot_alchemy_authtoken
+        $apiKey = config("web3.alchemy_api_key");
         $usdcContract = config('web3.networks.POL.tokens.USDC.address');
         $polUsdcContract = config('web3.networks.POL.tokens.USDC.address');
 
-        return AlchemyController::getRecentTransactions($authToken, $address, 'POL', ["erc20"], [$polUsdcContract], 5);
+        return AlchemyController::getRecentTransactions($apiKey, $address, 'POL', ["erc20"], [$polUsdcContract], 5);
     }
 
     /**

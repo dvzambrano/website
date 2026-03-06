@@ -205,8 +205,8 @@ class LandingController extends Controller
         $supportedTokens = collect($tokensData["tokens"]);
 
         // 1. Obtener Balances desde Alchemy
-        $nativeHex = AlchemyController::getNativeBalance(config('zentrotraderbot.alchemy_api_key'), $address, $networkKey);
-        $erc20Balances = AlchemyController::getTokenBalances(config('zentrotraderbot.alchemy_api_key'), $address, [], $networkKey);
+        $nativeHex = AlchemyController::getNativeBalance(config('web3.alchemy_api_key'), $address, $networkKey);
+        $erc20Balances = AlchemyController::getTokenBalances(config('web3.alchemy_api_key'), $address, [], $networkKey);
 
         // 2. Unificar balances en una sola colección para el Map
         // Añadimos el nativo como si fuera un resultado más de Alchemy

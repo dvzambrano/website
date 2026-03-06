@@ -56,9 +56,9 @@ class CustomTestController extends BaseController
     public function testWalletController()
     {
         $address = "0xd2531438b90232f4Aab4DDfC6f146474e84E1Ea1";
-        $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
+        $apiKey = config('web3.alchemy_api_key');
         $usdcContract = config('web3.networks.POL.tokens.USDC.address');
-        $balances = AlchemyController::getTokenBalances($authToken, $address, [$usdcContract]);
+        $balances = AlchemyController::getTokenBalances($apiKey, $address, [$usdcContract]);
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {
             foreach ($balances as $i => $bal) {
@@ -69,9 +69,9 @@ class CustomTestController extends BaseController
         }
 
 
-        $txs = AlchemyController::getRecentTransactions($authToken, $address, "POL", ["erc20"], [$usdcContract]);
+        $txs = AlchemyController::getRecentTransactions($apiKey, $address, "POL", ["erc20"], [$usdcContract]);
 
-        dd($authToken, $address, $usdcContract, $balances, $humanBal, $txs);
+        dd($apiKey, $address, $usdcContract, $balances, $humanBal, $txs);
     }
 
     /**

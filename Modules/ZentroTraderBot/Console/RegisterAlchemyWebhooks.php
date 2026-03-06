@@ -5,7 +5,7 @@ namespace Modules\ZentroTraderBot\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Modules\TelegramBot\Entities\TelegramBots;
-use Modules\Laravel\Entities\Metadatas;
+use Modules\Laravel\Services\BehaviorService;
 
 class RegisterAlchemyWebhooks extends Command
 {
@@ -15,13 +15,7 @@ class RegisterAlchemyWebhooks extends Command
 
     public function handle()
     {
-        $metadata = Metadatas::where('name', "app_zentrotraderbot_alchemy_authtoken")->first();
-        if (!$metadata) {
-            $this->error("❌ No se encontró el AuthToken de Alchemy en Metadatas.");
-            return;
-        }
-
-        $alchemyToken = $metadata->value;
+        $alchemyToken = config("web3.alchemy_auth_token");
         $domain = $this->option('domain');
 
         $bots = TelegramBots::where('module', $this->argument('module'))->get();
@@ -35,13 +29,16 @@ class RegisterAlchemyWebhooks extends Command
                 'network' => 'MATIC_MAINNET',
                 'webhook_type' => 'ADDRESS_ACTIVITY',
                 'webhook_url' => "https://" . rtrim($domain, '/') . "/webhook/alchemy/{$tenant->key}",
+                'name' => $tenant->code,
                 'addresses' => []
             ];
 
             $response = Http::withHeaders([
                 'X-Alchemy-Token' => $alchemyToken,
                 'Content-Type' => 'application/json',
-            ])->post('https://dashboard.alchemy.com/api/create-webhook', $payload);
+            ])
+                ->timeout(BehaviorService::timeout())
+                ->post('https://dashboard.alchemy.com/api/create-webhook', $payload);
 
             if ($response->successful()) {
                 $webhookId = $response->json('data.id');
