@@ -131,7 +131,7 @@ class ZentroTraderBotController extends JsonsController
 
         // /balance POL
         $this->strategies["/balance"] =
-            function () use ($array) {
+            function () use ($array, $suscriptor) {
                 $reply = [
                     "text" => "",
                 ];
@@ -141,16 +141,15 @@ class ZentroTraderBotController extends JsonsController
                 try {
                     $result = array();
                     if (isset($array["pieces"][1]))
-                        $result = $wc->getBalance($this->actor->user_id, $array["pieces"][1]);
+                        $result = $wc->getBalance($suscriptor, $array["pieces"][1]);
                     else
-                        $result = $wc->getBalance($this->actor->user_id);
+                        $result = $wc->getBalance($suscriptor);
 
-                    $text = "🫆 `" . $result["address"] . "`\n";
-                    foreach ($result["portfolio"] as $values) {
-                        foreach ($values["assets"] as $token => $balance) {
-                            $text .= "💰 " . $balance . " *" . $token . "*\n";
-                        }
-                    }
+
+                    $address = $suscriptor->data['wallet']['address'];
+
+                    $text = "🫆 `" . $address . "`\n";
+                    $text .= "💰 " . $result . " *USD*\n";
 
                     $reply = array(
                         "text" => $text,

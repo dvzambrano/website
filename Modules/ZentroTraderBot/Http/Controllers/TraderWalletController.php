@@ -8,6 +8,8 @@ use Modules\Web3\Http\Controllers\WalletController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\AlchemyController;
 use Modules\Web3\Services\Web3MathService;
+use Modules\Web3\Http\Controllers\InchController;
+use Modules\Web3\Http\Controllers\ChainidController;
 
 class TraderWalletController extends WalletController
 {
@@ -43,7 +45,7 @@ class TraderWalletController extends WalletController
      * - Si no hay wallet, devuelve error específico.
      * - Si hay wallet pero no balance, devuelve 0.0 sin error.
      */
-    public function getBalance($suscriptor, $networkSymbol = null)
+    public function getBalance($suscriptor, $networkSymbol = "POL")
     {
         // 1. Obtener Wallet
         if (!$suscriptor || !isset($suscriptor->data['wallet']['address'])) {
@@ -52,8 +54,15 @@ class TraderWalletController extends WalletController
 
         $address = $suscriptor->data['wallet']['address'];
         $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
-        $usdcContract = config('web3.networks.POL.tokens.USDC.address');
+
+        $networks = ChainidController::getNetworkData();
+        $chainId = (int) $networks[$networkSymbol]["chainId"];
+        $tokenMap = InchController::getTokensData($chainId);
+
+        $usdcContract = $tokenMap["usdc"]["address"];
+
         $balances = AlchemyController::getTokenBalances($authToken, $address, [$usdcContract]);
+
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {
             foreach ($balances as $bal) {
