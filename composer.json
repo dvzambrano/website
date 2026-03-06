@@ -26,11 +26,11 @@
     },
     "repositories": [
         {
-            "type": "vcs",
+            "type": "git",
             "url": "git@github.com:dvzambrano/laravel.git"
         },
         {
-            "type": "vcs",
+            "type": "git",
             "url": "git@github.com:dvzambrano/web3.git"
         }
     ],
