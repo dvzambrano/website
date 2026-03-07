@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "315baaa2433a6473aa12f489caa39899",
+    "content-hash": "69c34c6b83f8b5a243553a4ad46c40fa",
     "packages": [
         {
             "name": "amenadiel/jpgraph",
@@ -748,8 +748,14 @@
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "git@github.com:dvzambrano/laravel.git",
+                "url": "git@github.com:dvzambrano/Laravel.git",
                 "reference": "8aa76d899b6fc3a6a3f9c701cfc096f3767ab056"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/8aa76d899b6fc3a6a3f9c701cfc096f3767ab056",
+                "reference": "8aa76d899b6fc3a6a3f9c701cfc096f3767ab056",
+                "shasum": ""
             },
             "require": {
                 "amenadiel/jpgraph": "*",
@@ -786,6 +792,10 @@
                 }
             ],
             "description": "Modulo base para funcionalidades de Laravel",
+            "support": {
+                "source": "https://github.com/dvzambrano/Laravel/tree/main",
+                "issues": "https://github.com/dvzambrano/Laravel/issues"
+            },
             "time": "2026-03-03T16:21:24+00:00"
         },
         {
@@ -793,8 +803,14 @@
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "git@github.com:dvzambrano/web3.git",
-                "reference": "ac369997a1abfd3e1cc3206dadf2c125cc0c2225"
+                "url": "git@github.com:dvzambrano/Web3.git",
+                "reference": "d61f9919321867c22f218801fd270d23537011b0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/d61f9919321867c22f218801fd270d23537011b0",
+                "reference": "d61f9919321867c22f218801fd270d23537011b0",
+                "shasum": ""
             },
             "require": {
                 "dvzambrano/laravel": "dev-main as 1.0.0",
@@ -841,7 +857,11 @@
                 }
             ],
             "description": "Modulo base para funcionalidades Web3",
-            "time": "2026-03-06T23:50:21+00:00"
+            "support": {
+                "source": "https://github.com/dvzambrano/Web3/tree/main",
+                "issues": "https://github.com/dvzambrano/Web3/issues"
+            },
+            "time": "2026-03-07T00:54:10+00:00"
         },
         {
             "name": "egulias/email-validator",

@@ -51,7 +51,7 @@ class CustomTestController extends BaseController
         $network = ChainidController::getNetworkData();
         //dd($network["POL"]);
         $tokens = InchController::getTokensData(137);
-        //dd($tokens["USDC"]);
+        //dd($tokens);
         dd($network, $tokens);
     }
 
