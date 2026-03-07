@@ -31,10 +31,8 @@ class Suscriptions extends Actors
         $wallet = array();
         // si el usuario no tiene wallet es recien suscrito y hay q completar su estructura
         if (!isset($currentData["wallet"])) {
-            $tenant = app('active_bot');
-
             $wc = new TraderWalletController();
-            $wallet = $wc->getWallet($tenant);
+            $wallet = $wc->getWallet();
             if (!$wallet)
                 return null;
 

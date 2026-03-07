@@ -17,22 +17,12 @@ class TraderWalletController extends WalletController
     /**
      * Se llama cuando el usuario inicia el bot (/start).
      */
-    public function getWallet($tenant)
+    public function getWallet()
     {
         $wallet = null;
 
         try {
             $wallet = $this->generateWallet();
-
-            $authToken = config('zentrotraderbot.alchemy_auth_token');
-            AlchemyController::updateWebhookAddresses(
-                $tenant->data["alchemy_webhook_id"],
-                $authToken,
-                [$wallet["address"]]
-            );
-
-            return $wallet;
-
         } catch (\Exception $e) {
             Log::error("🆘 TraderWalletController getWallet: Error generando wallet: " . $e->getMessage());
         }
