@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Modules\Laravel\Services\BehaviorService;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\Web3\Http\Controllers\AlchemyController;
 
 class UpdateAlchemyWebhooks extends Command
 {
@@ -73,16 +74,12 @@ class UpdateAlchemyWebhooks extends Command
                     continue;
                 }
 
-                $response = Http::withHeaders([
-                    'X-Alchemy-Token' => $alchemyToken,
-                    'Content-Type' => 'application/json',
-                ])
-                    ->timeout(BehaviorService::timeout())
-                    ->patch("https://dashboard.alchemy.com/api/update-webhook-addresses", [
-                        'webhook_id' => $webhookId,
-                        'addresses_to_add' => [],
-                        'addresses_to_remove' => $wallets
-                    ]);
+                $response = AlchemyController::updateWebhookAddresses(
+                    $tenant->data["alchemy_webhook_id"],
+                    $alchemyToken,
+                    [],
+                    $wallets
+                );
                 // DEPURACIÓN: Imprime esto para ver qué recibes realmente
                 // $this->info("Respuesta de Alchemy: " . json_encode($response->json()));
                 if ($response->successful())
