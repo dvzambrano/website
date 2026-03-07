@@ -29,6 +29,8 @@ class AlchemyUpdateWebhookAddresses implements ShouldQueue
 
     public function handle()
     {
+        Log::info("El worker está corriendo desde: " . base_path());
+
         $response = AlchemyController::updateWebhookAddresses(
             $this->webhook_id,
             $this->auth_token,
