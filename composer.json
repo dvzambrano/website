@@ -10,8 +10,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "dvzambrano/laravel": "dev-main as 1.0.0",
-        "dvzambrano/web3": "dev-main as 1.0.0",
+        "dvzambrano/laravel": "dev-main",
+        "dvzambrano/web3": "dev-main",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^3.0",
         "nwidart/laravel-modules": "^12.0"
@@ -26,11 +26,11 @@
     },
     "repositories": [
         {
-            "type": "vcs",
+            "type": "git",
             "url": "git@github.com:dvzambrano/laravel.git"
         },
         {
-            "type": "vcs",
+            "type": "git",
             "url": "git@github.com:dvzambrano/web3.git"
         }
     ],
