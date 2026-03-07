@@ -40,9 +40,9 @@
 
                     // Configuración de redes y tokens (Ajustado a la lógica de Kashio)
                     inputChain: 137, // Polygon (Matic) por defecto para Kashio
-                    inputCurrency: {{ config('web3.networks.POL.tokens.USDC.address') }}, // USDC en Polygon
+                    inputCurrency: {{ ConfigService::getToken('USDC', strtoupper(ConfigService::getActiveNetwork()['shortName']))['address'] }}, // USDC en Polygon
                     outputChain: 56, // BNB por defecto
-                    //outputCurrency: {{ config('web3.tokens.USDT.address') }}, // USDT en BSC
+                    //outputCurrency: {{ ConfigService::getToken('USDT', 'BNB')['address'] }}, // USDT en BSC
 
                     address: 0xFAcD960564531bd336ed94fBBd0911408288FCF2,
 

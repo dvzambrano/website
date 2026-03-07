@@ -370,9 +370,8 @@
     <script>
         // Definimos KASHIO antes de que cualquier otro script intente leerlo
         window.KASHIO = {
-            web3: @json(config('web3.networks')),
-            destChain: 137,
-            destToken: "{{ config('web3.networks.POL.tokens.USDC.address') }}",
+            destChain: "{{ $destChain }}",
+            destToken: "{{ $destToken }}",
             userWallet: "{{ $userWallet }}",
             quoteUrl: "{{ route('pay.api.quote') }}",
             tokensUrl: "{{ route('pay.api.balances') }}",

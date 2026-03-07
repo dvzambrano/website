@@ -6,6 +6,7 @@ use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Web3\Http\Controllers\AlchemyController;
 use Modules\Web3\Services\Web3MathService;
+use Modules\Web3\Services\ConfigService;
 use Modules\Laravel\Http\Controllers\TestController as BaseController;
 use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\Web3\Http\Controllers\InchController;
@@ -48,16 +49,17 @@ class CustomTestController extends BaseController
     public function testCache()
     {
         $network = ChainidController::getNetworkData();
-        dd($network["POL"]);
+        //dd($network["POL"]);
         $tokens = InchController::getTokensData(137);
+        //dd($tokens["USDC"]);
         dd($network, $tokens);
     }
 
     public function testWalletController()
     {
         $address = "0xd2531438b90232f4Aab4DDfC6f146474e84E1Ea1";
-        $apiKey = config('web3.alchemy_api_key');
-        $usdcContract = config('web3.networks.POL.tokens.USDC.address');
+        $apiKey = config('zentrotraderbot.alchemy_api_key');
+        $usdcContract = ConfigService::getToken("USDC", strtoupper(ConfigService::getActiveNetwork()["shortName"]))["address"];
         $balances = AlchemyController::getTokenBalances($apiKey, $address, [$usdcContract]);
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {

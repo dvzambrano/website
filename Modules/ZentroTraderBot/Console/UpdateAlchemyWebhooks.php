@@ -14,7 +14,7 @@ class UpdateAlchemyWebhooks extends Command
 
     public function handle()
     {
-        $alchemyToken = config("web3.alchemy_auth_token");
+        $alchemyToken = config("zentrotraderbot.alchemy_auth_token");
 
         $bots = TelegramBots::where('module', $this->argument('module'))->get();
 

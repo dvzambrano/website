@@ -11,4 +11,6 @@ return [
     'alchemy_api_key' => env('ALCHEMY_API_KEY'),
     'alchemy_signing_key' => env('ALCHEMY_SIGNING_KEY'),
     'alchemy_auth_token' => env('ALCHEMY_AUTH_TOKEN'),
+    'debridge_treasury_wallet' => env('TREASURY_WALLET'),
+    'debridge_swap_fee_percentage' => env('SWAP_FEE_PERCENTAGE'),
 ];

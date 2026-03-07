@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Modules\Laravel\Services\BehaviorService;
 use Modules\Web3\Services\Web3MathService;
+use Modules\Web3\Services\ConfigService;
 
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 
@@ -119,8 +120,14 @@ class LandingController extends Controller
             abort(404);
         //dd($suscriptor->getWallet()["address"]);
 
+        $destChain = (int) ConfigService::getActiveNetwork()['chainId'];
+        //dd(strtoupper(ConfigService::getActiveNetwork()['shortName']));
+        $destToken = ConfigService::getToken('USDC', strtoupper(ConfigService::getActiveNetwork()['shortName']))['address'];
+
         return view("zentrotraderbot::themes.{$this->theme}.pay", [
             'userWallet' => $suscriptor->getWallet()["address"],
+            'destChain' => $destChain,
+            'destToken' => $destToken,
             'bot' => $this->bot // Datos del bot para el branding
         ]);
     }
@@ -205,8 +212,8 @@ class LandingController extends Controller
         $supportedTokens = collect($tokensData["tokens"]);
 
         // 1. Obtener Balances desde Alchemy
-        $nativeHex = AlchemyController::getNativeBalance(config('web3.alchemy_api_key'), $address, $networkKey);
-        $erc20Balances = AlchemyController::getTokenBalances(config('web3.alchemy_api_key'), $address, [], $networkKey);
+        $nativeHex = AlchemyController::getNativeBalance(config('zentrotraderbot.alchemy_api_key'), $address, $networkKey);
+        $erc20Balances = AlchemyController::getTokenBalances(config('zentrotraderbot.alchemy_api_key'), $address, [], $networkKey);
 
         // 2. Unificar balances en una sola colección para el Map
         // Añadimos el nativo como si fuera un resultado más de Alchemy
@@ -273,12 +280,12 @@ class LandingController extends Controller
                     'estimation' => [
                         'srcChainTokenIn' => [
                             'symbol' => 'USDC',
-                            'decimals' => config('web3.networks.POL.tokens.USDC.decimals'),
+                            'decimals' => ConfigService::getToken("USDC", "POL")["decimals"],
                             'amount' => $amount
                         ],
                         'dstChainTokenOut' => [
                             'symbol' => 'USDC',
-                            'decimals' => config('web3.networks.POL.tokens.USDC.decimals'),
+                            'decimals' => ConfigService::getToken("USDC", "POL")["decimals"],
                             'amount' => $amount,
                             'recommendedAmount' => $amount
                         ]
