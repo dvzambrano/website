@@ -48,9 +48,9 @@ class CustomTestController extends BaseController
 
     public function testCache()
     {
-        $network = ChainidController::getNetworkData();
+        $network = ChainidController::getNetworkData(false);
         //dd($network["POL"]);
-        $tokens = InchController::getTokensData(137);
+        $tokens = InchController::getTokensData(137, false);
         //dd($tokens);
         dd($network, $tokens);
     }
