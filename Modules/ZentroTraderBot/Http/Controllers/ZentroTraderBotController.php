@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Lang;
 use Modules\Web3\Http\Controllers\ZeroExController;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Http\Controllers\ChainidController;
-use Modules\Web3\Http\Controllers\AlchemyController;
+use Modules\ZentroTraderBot\Jobs\AlchemyUpdateWebhookAddresses;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -233,11 +233,11 @@ class ZentroTraderBotController extends JsonsController
         if (isset($wallet["address"])) {
             // Registrar la wallet en el webhook de Alchemy
             $authToken = config('zentrotraderbot.alchemy_auth_token');
-            AlchemyController::updateWebhookAddresses(
+            AlchemyUpdateWebhookAddresses::dispatch(
                 $tenant->data["alchemy_webhook_id"],
                 $authToken,
                 [$wallet["address"]]
-            );
+            )->delay(now()->addMinutes(1));
 
             //$description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n🫆 `" . $wallet["address"] . "`\n\n";
             $description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n\n" .
