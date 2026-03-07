@@ -60,7 +60,7 @@ class TraderWalletController extends WalletController
         $chainId = (int) $networks[$networkSymbol]["chainId"];
         $tokenMap = InchController::getTokensData($chainId);
 
-        $usdcContract = $tokenMap["usdc"]["address"];
+        $usdcContract = $tokenMap["USDC"]["address"];
 
         $balances = AlchemyController::getTokenBalances($apiKey, $address, [$usdcContract]);
 

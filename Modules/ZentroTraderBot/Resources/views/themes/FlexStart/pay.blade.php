@@ -9,6 +9,8 @@
         'walletIcon' => 'https://avatars.githubusercontent.com/u/37784886',
         'themeMode' => 'light',
         'lang' => 'es',
+        'socials' => [], // ['google', 'github']
+        'email' => false,
         'chainsData' => app(Modules\ZentroTraderBot\Http\Controllers\LandingController::class)->getChains()->getData(true),
     ])
 
@@ -368,13 +370,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" type="text/javascript"></script>
 
     <script>
-        // Definimos KASHIO antes de que cualquier otro script intente leerlo
-        window.KASHIO = {
+        // Definimos SWAP antes de que cualquier otro script intente leerlo
+        window.SWAP = {
             destChain: "{{ $destChain }}",
             destToken: "{{ $destToken }}",
-            userWallet: "{{ $userWallet }}",
+            dstWallet: "{{ $userWallet }}",
             quoteUrl: "{{ route('pay.api.quote') }}",
-            tokensUrl: "{{ route('pay.api.balances') }}",
+            balancesUrl: "{{ route('pay.api.balances') }}",
             createOrderUrl: "{{ route('pay.api.order') }}"
         };
 
@@ -393,7 +395,7 @@
 
                 console.log("🚀 Kashio: Procesando conexión única para", address);
 
-                // Ahora sí, cuando esto se ejecute, window.KASHIO ya existe
+                // Ahora sí, cuando esto se ejecute, window.SWAP ya existe
                 if (typeof window.startScanning === 'function') {
                     window.startScanning(address, chainId);
                 }

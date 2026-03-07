@@ -48,7 +48,7 @@ class LandingController extends Controller
     public function getSuscriptor()
     {
         // 1. Obtener el ID de Telegram del usuario desde la sesión
-        $telegramUser = session('telegram_user');
+        $sessionUser = session('telegram_user');
 
         $controller = new ZentroTraderBotController();
         $controller->receiveMessage($this->bot, [
@@ -56,17 +56,17 @@ class LandingController extends Controller
                 'message_id' => "",
                 'text' => "/start",
                 'chat' => [
-                    'id' => $telegramUser['user_id'],
+                    'id' => $sessionUser['user_id'],
                     'type' => "web"
                 ],
                 'from' => [
-                    'id' => $telegramUser['user_id']
+                    'id' => $sessionUser['user_id']
                 ]
             ]
         ]);
 
         // tiene q ir aqui abajo porq arriba se esta simulando el comando /start del bot q suscribe al usuario y le crea su wallet
-        return Suscriptions::where("user_id", $telegramUser['user_id'])->first();
+        return Suscriptions::where("user_id", $sessionUser['user_id'])->first();
     }
 
     public function index()
@@ -101,6 +101,7 @@ class LandingController extends Controller
         } catch (\Throwable $th) {
             //throw $th;
         }
+        //dd($suscriptor->data, $usdcBalance, $transactions);
 
         return view("zentrotraderbot::themes.{$this->theme}.dashboard", [
             'balance' => $usdcBalance,

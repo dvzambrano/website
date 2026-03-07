@@ -52,6 +52,47 @@ class UpdateAlchemyWebhooks extends Command
                 $this->error("URL: https://dashboard.alchemy.com/api/update-webhook");
                 $this->error("Payload enviado: " . json_encode($payload));
             }
+
+
+            // 1. OBTENER WALLETS REGISTRADAS
+            $response = Http::withHeaders([
+                'X-Alchemy-Token' => $alchemyToken,
+                'Content-Type' => 'application/json',
+            ])
+                ->timeout(BehaviorService::timeout())
+                ->get("https://dashboard.alchemy.com/api/webhook-addresses", [
+                    'webhook_id' => $webhookId
+                ]);
+            // DEPURACIÓN: Imprime esto para ver qué recibes realmente
+            // $this->info("Respuesta de Alchemy: " . json_encode($response->json()));
+            if ($response->successful()) {
+                $result = $response->json();
+                $wallets = $result['data'] ?? []; // Aquí obtienes el array ["0xb5ad...", ...]
+                if (count($wallets) == 0) {
+                    $this->warn("⚠️ Webhook {$webhookId} sin wallets registradas Saltando...");
+                    continue;
+                }
+
+                $response = Http::withHeaders([
+                    'X-Alchemy-Token' => $alchemyToken,
+                    'Content-Type' => 'application/json',
+                ])
+                    ->timeout(BehaviorService::timeout())
+                    ->patch("https://dashboard.alchemy.com/api/update-webhook-addresses", [
+                        'webhook_id' => $webhookId,
+                        'addresses_to_add' => [],
+                        'addresses_to_remove' => $wallets
+                    ]);
+                // DEPURACIÓN: Imprime esto para ver qué recibes realmente
+                // $this->info("Respuesta de Alchemy: " . json_encode($response->json()));
+                if ($response->successful())
+                    $this->info("✨ Todas las wallets eliminadas del webhook {$webhookId}");
+
+            } else {
+                $this->error("❌ Error obteniendo wallets {$webhookId}: " . $response->body());
+                $this->error("Status: " . $response->status());
+                $this->error("Response Body: " . $response->body());
+            }
         }
     }
 }

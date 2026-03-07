@@ -199,13 +199,13 @@ async function updateQuoteManual(isAutoRefresh = false) {
             srcChainId: selectedData.chainId,
             srcToken: tokenAddress,
             amount: rawAmount,
-            dstChainId: KASHIO.destChain,
-            dstToken: KASHIO.destToken,
+            dstChainId: SWAP.destChain,
+            dstToken: SWAP.destToken,
             userWallet: userAddress,
-            dstWallet: KASHIO.userWallet,
+            dstWallet: SWAP.dstWallet,
         });
 
-        const response = await fetch(`${KASHIO.quoteUrl}?${query.toString()}`);
+        const response = await fetch(`${SWAP.quoteUrl}?${query.toString()}`);
         const data = await response.json();
 
         // 2. Si el backend responde con error (como el Error 25)
@@ -297,14 +297,14 @@ async function executeSwap() {
             srcChainId: selectedData.chainId,
             srcToken: selectedData.address,
             amount: rawAmount,
-            dstChainId: KASHIO.destChain,
-            dstToken: KASHIO.destToken,
+            dstChainId: SWAP.destChain,
+            dstToken: SWAP.destToken,
             userWallet: userAddress,
-            dstWallet: KASHIO.userWallet,
+            dstWallet: SWAP.dstWallet,
         };
 
         // En web3.js, dentro de executeSwap
-        const response = await fetch(KASHIO.createOrderUrl, {
+        const response = await fetch(SWAP.createOrderUrl, {
             method: "POST",
             mode: "cors", // Forzamos modo CORS
             headers: {
@@ -461,7 +461,7 @@ async function executeSwap() {
         } else if (error.request) {
             // La petición se hizo pero no hubo respuesta (CORS o Red)
             errorDiag += `Tipo: Error de Red / CORS / Timeout\n`;
-            errorDiag += `URL intentada: ${KASHIO.createOrderUrl}\n`;
+            errorDiag += `URL intentada: ${SWAP.createOrderUrl}\n`;
         } else {
             // Error al configurar la petición o error de Ethers
             errorDiag += `Código: ${error.code || "N/A"}\n`;
@@ -514,7 +514,7 @@ function renderAssetsList(assets) {
         container.innerHTML = `
             <div class="text-center py-5">
                 <i class="fas fa-coins text-slate-200 mb-3" style="font-size: 40px;"></i>
-                <p class="text-slate-500 small">No se encontraron activos con saldo suficiente.</p>
+                <p class="text-slate-500 small">No se encontraron activos con saldo.</p>
             </div>`;
     } else {
         assets.sort((a, b) => parseFloat(b.balance) - parseFloat(a.balance));
@@ -601,7 +601,7 @@ async function startScanning(userAddress, forcedChainId = null) {
         // 1. Llamamos a tu nuevo endpoint (Asegúrate de que la ruta coincida con tu API)
         // Pasamos la dirección del usuario, el chainId y el networkKey (ej: 'POL')
         const response = await fetch(
-            `${KASHIO.tokensUrl}/${userAddress}/${window.networkConfig.chainId}/${window.networkConfig.chain}`,
+            `${SWAP.balancesUrl}/${userAddress}/${window.networkConfig.chainId}/${window.networkConfig.chain}`,
         );
 
         if (!response.ok)

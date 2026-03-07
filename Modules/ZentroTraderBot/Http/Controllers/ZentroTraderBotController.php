@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Lang;
 use Modules\Web3\Http\Controllers\ZeroExController;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Http\Controllers\ChainidController;
+use Modules\Web3\Http\Controllers\AlchemyController;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -230,6 +231,14 @@ class ZentroTraderBotController extends JsonsController
             $wallet = $suscriptor->data["wallet"];
         $description = "";
         if (isset($wallet["address"])) {
+            // Registrar la wallet en el webhook de Alchemy
+            $authToken = config('zentrotraderbot.alchemy_auth_token');
+            AlchemyController::updateWebhookAddresses(
+                $tenant->data["alchemy_webhook_id"],
+                $authToken,
+                [$wallet["address"]]
+            );
+
             //$description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n🫆 `" . $wallet["address"] . "`\n\n";
             $description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n\n" .
                 Lang::get("zentrotraderbot::bot.mainmenu.body") . "\n\n";
@@ -432,12 +441,12 @@ class ZentroTraderBotController extends JsonsController
         $array = array(
             "message" => array(
                 "text" =>
-                    "✅ *" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.header") . "* \n\n" .
-                    "💰 _" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.warning", [
+                    "✅ *" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.header") . "* \n" .
+                    "💰 " . Lang::get("zentrotraderbot::bot.prompts.buy.completed.warning", [
                                 "amount" => $amount,
                                 "currency" => $currency
-                            ]) . "_\n" .
-                    "✨ " . Lang::get("zentrotraderbot::bot.prompts.buy.completed.text"),
+                            ]) . "\n" .
+                    "✨ _" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.text") . "_",
                 "chat" => array(
                     "id" => $user_id,
                 ),

@@ -48,11 +48,11 @@ class CustomTestController extends BaseController
 
     public function testCache()
     {
-        $network = ChainidController::getNetworkData(false);
+        $network = ChainidController::getNetworkData();
         //dd($network["POL"]);
-        $tokens = InchController::getTokensData(137, false);
+        $tokens = InchController::getTokensData(137);
         //dd($tokens);
-        dd($network, $tokens);
+        dd($network["POL"], $tokens["USDC"]);
     }
 
     public function testWalletController()
