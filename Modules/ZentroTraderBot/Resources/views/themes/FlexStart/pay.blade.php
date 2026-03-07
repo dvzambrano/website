@@ -3,7 +3,7 @@
 @section('templatehead')
     {{-- Incluir el partial del Web3Modal --}}
     @include('web3::partials.wallet-connect', [
-        'projectId' => config('zentrotraderbot.wallet_connect_api_key'),
+        'projectId' => env('WALLET_CONNECT_API_KEY'),
         'walletName' => config('zentrotraderbot.bot'),
         'walletDescription' => 'Wallet inteligente',
         'walletIcon' => 'https://avatars.githubusercontent.com/u/37784886',
