@@ -24,11 +24,10 @@ class BlockchainController extends Controller
 
     public function processWebhook()
     {
+        // Decidir el proveedor de RAMP activo para este bot
+        $providerName = 'moralis'; // $tenant->data['ramp']
+
         try {
-            // Recuperamos el bot que el Middleware ya encontró y guardó
-            $tenant = app('active_bot');
-            // Decidir el proveedor de RAMP activo para este bot
-            $providerName = 'moralis'; // $tenant->data['ramp']
             $provider = $this->getProvider($providerName);
 
             $array = $provider->processWebhook(request());
