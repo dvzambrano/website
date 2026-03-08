@@ -24,6 +24,16 @@ class ProcessBlockchainActivity
         // Ahora $data contiene nuestra estructura normalizada:
         // 'network_id', 'confirmed', 'tx_hash', 'from', 'to', 'value', 'token_symbol'...
         $data = $event->data;
+        Log::debug("🐞 ProcessBlockchainActivity handle: " . json_encode($data));
+
+
+        /*
+        // 2. Filtro inteligente: ¿Ignoramos los no confirmados? 
+        // Depende de tu negocio, pero generalmente solo procesamos el 'confirmed: true'
+        if (!$data['confirmed']) {
+            continue; 
+        }
+        */
 
         // 1. Identificar el Bot/Tenant
         // Nota: Asegúrate de que el extractor de cada Provider incluya el 'tenant_code'
