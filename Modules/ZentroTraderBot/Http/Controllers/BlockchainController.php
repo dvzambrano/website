@@ -43,19 +43,4 @@ class BlockchainController extends Controller
             'timestamp' => now()->toIso8601String()
         ], 200);
     }
-
-    private function createRamporder($botId, $orderId, $userId, $amount, $status, $payload)
-    {
-        // Guardamos en la tabla que creamos (ramporders)
-        return Ramporders::updateOrCreate(
-            ['order_id' => $orderId],
-            [
-                'user_id' => $userId,
-                'bot_id' => $botId,
-                'amount' => $amount,
-                'status' => $status,
-                'raw_data' => $payload
-            ]
-        );
-    }
 }

@@ -1,102 +1,57 @@
 <?php
+
 namespace Modules\ZentroTraderBot\Listeners;
 
 use Modules\Web3\Events\BlockchainActivityDetected;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
-use Modules\ZentroTraderBot\Entities\Ramporders;
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
 class ProcessBlockchainActivity
 {
     /**
-     * Webhook para recibir eventos de Alchemy.
-     * @param BlockchainActivityDetected $event
-     * 
-     * // Para POL recibido
-     * {
-     *      ...
-     *      "activity": [
-     *          {
-     *              "fromAddress": "0x1aaffcab3cb8ec9b207b191c1b2e2ec662486666",
-     *              "toAddress": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
-     *              "blockNum": "0x500ba79",
-     *              "hash": "0x6adb5a3ba99ba412aecc8b6094413d44894214570e578226678a1d817fdb4028",
-     *              "value": 1,
-     *              "asset": "MATIC",
-     *              "category": "external",
-     *              "rawContract": {
-     *                  "rawValue": "0xde0b6b3a7640000",
-     *                  "decimals": 18
-     *              },
-     *              "blockTimestamp": "0x69ada513"
-     *          }
-     *      ],
-     *      ...
-     *  }
-     *  // Para USDC recibido
-     *  {
-     *      ...
-     *      "activity": [
-     *          {
-     *              "tenantCode": "16a65922-6a5d-4a45-a754-560a38c3c44c", }// este se lo puse en el AlchemyController/webhook
-     *              "fromAddress": "0xb0873c46937d34e98615e8c868bd3580bc6dcd47",
-     *              "toAddress": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
-     *              "blockNum": "0x4eafa87",
-     *              "hash": "0x8542bfadf98f54778587710af7ee3c476d3ff2e2f772cfb8b41b99fefc01e115",
-     *              "value": 0.111153,
-     *              "asset": "USDC",
-     *              "category": "token",
-     *              "rawContract": {
-     *                  "rawValue": "0x000000000000000000000000000000000000000000000000000000000001b231",
-     *                  "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-     *                  "decimals": 6
-     *              },
-     *              "log": {
-     *                  "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-     *                  "topics": [
-     *                      "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-     *                      "0x000000000000000000000000b0873c46937d34e98615e8c868bd3580bc6dcd47",
-     *                      "0x000000000000000000000000d2531438b90232f4aab4ddfc6f146474e84e1ea1"
-     *                  ],
-     *                  "data": "0x000000000000000000000000000000000000000000000000000000000001b231",
-     *                  "blockNumber": "0x4eafa87",
-     *                  "transactionHash": "0x8542bfadf98f54778587710af7ee3c476d3ff2e2f772cfb8b41b99fefc01e115",
-     *                  "transactionIndex": "0xfa",
-     *                  "blockHash": "0x9d2932cfe732e9d8c3d612378012e43bd8989efdf899092a78c28463b191c7e5",
-     *                  "blockTimestamp": "0x69822514",
-     *                  "logIndex": "0xfcf",
-     *                  "removed": false
-     *              },
-     *              "blockTimestamp": "0x69822514"
-     *          }
-     *      ]
-     *      ...
-     *  }
+     * Procesa eventos de actividad blockchain de manera agnóstica al proveedor.
+     * Recibe datos normalizados (DTO) desde cualquier fuente (Moralis, Alchemy, etc.), 
+     * identifica el tenant correspondiente y dispara las notificaciones al usuario.
+     *
+     * @param BlockchainActivityDetected $event Contiene el DTO normalizado con 
+     * la estructura: network_id, tx_hash, from, to, value, token_symbol, tenant_code.
+     * * @return void
      */
     public function handle(BlockchainActivityDetected $event)
     {
-        $activity = $event->data;
+        // Ahora $data contiene nuestra estructura normalizada:
+        // 'network_id', 'confirmed', 'tx_hash', 'from', 'to', 'value', 'token_symbol'...
+        $data = $event->data;
 
-        $bot = TelegramBots::where('key', $activity['tenantCode'])->first();
+        // 1. Identificar el Bot/Tenant
+        // Nota: Asegúrate de que el extractor de cada Provider incluya el 'tenant_code'
+        // Si no, añádelo en el controlador antes de disparar el evento.
+        $bot = TelegramBots::where('key', $data['tenant_code'])->first();
+
         if (!$bot) {
-            Log::error("🆘 ProcessBlockchainActivity handle event: " . $activity['tenantCode']);
+            Log::error("🆘 ProcessBlockchainActivity: Bot no encontrado para tenant: " . ($data['tenant_code'] ?? 'N/A'));
             return;
         }
 
         $bot->connectToThisTenant();
 
-        $toAddress = strtolower($activity['toAddress']);
+        // 2. Buscar al suscriptor usando la dirección estandarizada
+        $toAddress = strtolower($data['to']);
         $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
+
         if ($suscriptor) {
-            $bot = new ZentroTraderBotController();
-            $bot->notifyDepositConfirmed(
+            $botController = new ZentroTraderBotController();
+
+            // Usamos las llaves normalizadas que definimos en extractRelevantData
+            $botController->notifyDepositConfirmed(
                 $suscriptor->user_id,
-                $activity['value'],
-                $activity['asset']
+                $data['value'],
+                $data['token_symbol']
             );
+
+            Log::info("✅ Depósito procesado exitosamente en {$data['network_id']} para usuario {$suscriptor->user_id}");
         }
     }
 }
