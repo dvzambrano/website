@@ -269,10 +269,16 @@ class ZentroTraderBotController extends JsonsController
         array_push($menu, [
             [
                 "text" => "⛓️‍💥 " . Lang::get("zentrotraderbot::bot.options.topupcripto"),
+                'web_app' => ['url' => url('/pay' . $this->actor->data["telegram"]["username"])],
+            ]
+            /*
+            [
+                "text" => "⛓️‍💥 " . Lang::get("zentrotraderbot::bot.options.topupcripto"),
                 "url" => route('zentrotraderbot.pay', array(
                     "user" => $this->actor->data["telegram"]["username"],
                 ))
             ]
+                */
         ]);
         array_push($menu, [
             [
