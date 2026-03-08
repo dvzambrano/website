@@ -51,6 +51,8 @@ class CustomTestController extends BaseController
         $data = "ethereum:0x71C7656EC7ab88b098defB751B7401B5f6d8976F?value=1.5e18";
         dd("https://quickchart.io/qr?text=" . urlencode($data) . "&size=220");
 
+        //"https://quickchart.io/qr?text=ethereum%3A0x71C7656EC7ab88b098defB751B7401B5f6d8976F&size=220";
+
         $qrService = new QrService();
         dd($qrService->generateSvg($data, 220));
     }
