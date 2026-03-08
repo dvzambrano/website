@@ -11,6 +11,7 @@ use Modules\Laravel\Http\Controllers\TestController as BaseController;
 use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\Web3\Http\Controllers\InchController;
 use Modules\Laravel\Services\Codes\QrService;
+use Modules\ZentroTraderBot\Entities\Suscriptions;
 
 class CustomTestController extends BaseController
 {
@@ -48,10 +49,25 @@ class CustomTestController extends BaseController
 
     public function testQr()
     {
-        $data = "ethereum:0x71C7656EC7ab88b098defB751B7401B5f6d8976F?value=1.5e18";
-        dd("https://quickchart.io/qr?text=" . urlencode($data) . "&size=220");
+        $this->KashioBot->connectToThisTenant();
 
-        //"https://quickchart.io/qr?text=ethereum%3A0x71C7656EC7ab88b098defB751B7401B5f6d8976F&size=220";
+        $user_id = 816767995;
+        $suscriptor = Suscriptions::where("user_id", $user_id)->first();
+        $address = $suscriptor->getWallet()["address"];
+        $data = "ethereum:" . $address;
+
+
+        $array = array(
+            "message" => array(
+                "text" => "Esta es su billetera de deposito: `{$address}`\nY otra linea mas",
+                "photo" => "https://quickchart.io/qr?text={$data}&size=220",
+                "chat" => array(
+                    "id" => $user_id,
+                ),
+            ),
+        );
+        TelegramController::sendPhoto($array, $this->KashioBot->token);
+        die("done!");
 
         $qrService = new QrService();
         dd($qrService->generateSvg($data, 220));

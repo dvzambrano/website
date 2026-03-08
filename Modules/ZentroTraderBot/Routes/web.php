@@ -57,4 +57,5 @@ Route::prefix('ramp')->group(function () {
 Route::prefix('webhook')->group(function () {
     Route::post('/ramp', 'RampController@processWebhook')->name('ramp-webhook');
     Route::post('/trondealer', 'RampController@processWebhook')->name('trondealer-webhook');
+    Route::post('/moralis', 'BlockchainController@processWebhook')->name('moralis-webhook');
 });
