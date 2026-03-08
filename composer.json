@@ -16,11 +16,11 @@
         "nwidart/laravel-modules": "^12.0",
         "pragmarx/google2fa-laravel": "^2.3",
         "socialiteproviders/google": "^4.1",
-        "wikimedia/composer-merge-plugin": "^2.1"
+        "wikimedia/composer-merge-plugin": "^2.1",
+        "dvzambrano/laravel": "dev-main",
+        "dvzambrano/web3": "dev-main"
     },
     "require-dev": {
-        "dvzambrano/laravel": "dev-main as 1.0.0",
-        "dvzambrano/web3": "dev-main as 1.0.0",
         "fakerphp/faker": "^1.23",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",
@@ -32,11 +32,11 @@
     },
     "repositories": [
         {
-            "type": "vcs",
+            "type": "git",
             "url": "git@github.com:dvzambrano/laravel.git"
         },
         {
-            "type": "vcs",
+            "type": "git",
             "url": "git@github.com:dvzambrano/web3.git"
         }
     ],
