@@ -10,6 +10,7 @@ use Modules\Web3\Services\ConfigService;
 use Modules\Laravel\Http\Controllers\TestController as BaseController;
 use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\Web3\Http\Controllers\InchController;
+use Modules\Laravel\Services\Codes\QrService;
 
 class CustomTestController extends BaseController
 {
@@ -43,6 +44,15 @@ class CustomTestController extends BaseController
     public function testLocal()
     {
         dd(app()->environment('local'));
+    }
+
+    public function testQr()
+    {
+        $data = "ethereum:0x71C7656EC7ab88b098defB751B7401B5f6d8976F?value=1.5e18";
+        dd("https://quickchart.io/qr?text=" . urlencode($data) . "&size=220");
+
+        $qrService = new QrService();
+        dd($qrService->generateSvg($data, 220));
     }
 
 
