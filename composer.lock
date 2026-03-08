@@ -7213,12 +7213,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Laravel.git",
-                "reference": "50ee4284b629017296d2346952f712ef4906e23f"
+                "reference": "b2e2f3b09efcc18082dfba9156cac98840756d41"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/50ee4284b629017296d2346952f712ef4906e23f",
-                "reference": "50ee4284b629017296d2346952f712ef4906e23f",
+                "url": "https://api.github.com/repos/dvzambrano/Laravel/zipball/b2e2f3b09efcc18082dfba9156cac98840756d41",
+                "reference": "b2e2f3b09efcc18082dfba9156cac98840756d41",
                 "shasum": ""
             },
             "require": {
@@ -7260,7 +7260,7 @@
                 "source": "https://github.com/dvzambrano/Laravel/tree/main",
                 "issues": "https://github.com/dvzambrano/Laravel/issues"
             },
-            "time": "2026-03-02T17:39:10+00:00"
+            "time": "2026-03-08T01:03:14+00:00"
         },
         {
             "name": "dvzambrano/web3",
@@ -7268,12 +7268,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Web3.git",
-                "reference": "b91e42a04339ba488b3d9210ff6212d32e245d5b"
+                "reference": "6d7e33ec3dae7cc27bcc4fa185120a4ba3a6e639"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/b91e42a04339ba488b3d9210ff6212d32e245d5b",
-                "reference": "b91e42a04339ba488b3d9210ff6212d32e245d5b",
+                "url": "https://api.github.com/repos/dvzambrano/Web3/zipball/6d7e33ec3dae7cc27bcc4fa185120a4ba3a6e639",
+                "reference": "6d7e33ec3dae7cc27bcc4fa185120a4ba3a6e639",
                 "shasum": ""
             },
             "require": {
@@ -7325,7 +7325,7 @@
                 "source": "https://github.com/dvzambrano/Web3/tree/main",
                 "issues": "https://github.com/dvzambrano/Web3/issues"
             },
-            "time": "2026-03-02T17:39:01+00:00"
+            "time": "2026-03-07T19:44:20+00:00"
         },
         {
             "name": "ezyang/htmlpurifier",
