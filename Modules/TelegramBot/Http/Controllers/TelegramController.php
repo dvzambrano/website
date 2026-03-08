@@ -521,8 +521,8 @@ class TelegramController extends Controller
 
         $json = array(
             "result" => array(
-                "full_name" => "👤 {$userId}",
-                "full_info" => "👤 {$userId}",
+                "full_name" => "{$userId}",
+                "full_info" => "{$userId}",
             ),
         );
 
@@ -531,7 +531,7 @@ class TelegramController extends Controller
             $json = $response->json();
 
             // Formando un text personalizado con los datos del usuario
-            $text = "👤 ";
+            $text = "";
             if (isset($json["result"]["first_name"])) {
                 $text .= TelegramController::cleanText4Url($json["result"]["first_name"]);
             }

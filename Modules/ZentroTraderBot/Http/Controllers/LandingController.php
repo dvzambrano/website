@@ -5,6 +5,7 @@ namespace Modules\ZentroTraderBot\Http\Controllers;
 use Modules\Laravel\Http\Controllers\Controller;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\TelegramBot\Entities\Actors;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\DeBridgeController;
@@ -113,6 +114,8 @@ class LandingController extends Controller
 
     public function pay($user)
     {
+        $tenant = app('active_bot');
+
         $actor = Actors::where('data->telegram->username', $user)->first();
         if (!$actor)
             abort(404);
@@ -121,12 +124,25 @@ class LandingController extends Controller
             abort(404);
         //dd($suscriptor->getWallet()["address"]);
 
+        $user = json_decode(TelegramController::getUserInfo($actor->user_id, $tenant->token), true)["result"];
+        //dd($user);
+
+        $user["photo_url"] = "";
+        $photos = TelegramController::getUserPhotos($actor->user_id, $tenant->token);
+        if (!empty($photos) && isset($photos[0][0]['file_id'])) {
+            $fileId = $photos[0][0]['file_id'];
+            $fileResponse = json_decode(self::getFileUrl($fileId, $tenant->token), true);
+            if (isset($fileResponse['ok']) && $fileResponse['ok'])
+                $user["photo_url"] = $fileResponse['result']['file_path'];
+        }
+
         $destChain = (int) ConfigService::getActiveNetwork()['chainId'];
         //dd(strtoupper(ConfigService::getActiveNetwork()['shortName']));
         $destToken = ConfigService::getToken('USDC', strtoupper(ConfigService::getActiveNetwork()['shortName']))['address'];
 
         return view("zentrotraderbot::themes.{$this->theme}.pay", [
-            'userWallet' => $suscriptor->getWallet()["address"],
+            'user' => $user,
+            'dstWallet' => $suscriptor->getWallet()["address"],
             'destChain' => $destChain,
             'destToken' => $destToken,
             'bot' => $this->bot // Datos del bot para el branding
