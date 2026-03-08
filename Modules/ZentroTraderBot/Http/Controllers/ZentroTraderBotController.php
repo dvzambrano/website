@@ -35,6 +35,24 @@ class ZentroTraderBotController extends JsonsController
         $array = $this->getCommand($this->message["text"]);
         $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
 
+        $this->strategies["/start"] = $this->strategies["start"] =
+            function () use ($suscriptor) {
+                $wallet = $suscriptor->getWallet();
+                if (isset($wallet["address"])) {
+                    // Registrar la wallet en el webhook de Alchemy
+                    $authToken = config('zentrotraderbot.alchemy_auth_token');
+                    AlchemyUpdateWebhookAddresses::dispatch(
+                        $this->tenant->data["alchemy_webhook_id"],
+                        $authToken,
+                        [$wallet["address"]]
+                    )->delay(now()->addSeconds(10));
+                    //Log::debug("🐞 ZentroTraderBotController processMessage /start:" . json_encode($wallet));
+                }
+
+                $reply = $this->mainMenu($this->actor);
+                return $reply;
+            };
+
         $this->strategies["suscribemenu"] = function () use ($suscriptor) {
             return $this->suscribeMenu($suscriptor);
         };
@@ -231,14 +249,6 @@ class ZentroTraderBotController extends JsonsController
             $wallet = $suscriptor->data["wallet"];
         $description = "";
         if (isset($wallet["address"])) {
-            // Registrar la wallet en el webhook de Alchemy
-            $authToken = config('zentrotraderbot.alchemy_auth_token');
-            AlchemyUpdateWebhookAddresses::dispatch(
-                $tenant->data["alchemy_webhook_id"],
-                $authToken,
-                [$wallet["address"]]
-            )->delay(now()->addMinutes(1));
-
             //$description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n🫆 `" . $wallet["address"] . "`\n\n";
             $description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n\n" .
                 Lang::get("zentrotraderbot::bot.mainmenu.body") . "\n\n";
