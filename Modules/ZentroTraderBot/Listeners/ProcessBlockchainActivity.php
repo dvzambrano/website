@@ -16,52 +16,61 @@ class ProcessBlockchainActivity
      * identifica el tenant correspondiente y dispara las notificaciones al usuario.
      *
      * @param BlockchainActivityDetected $event Contiene el DTO normalizado con 
-     * la estructura: network_id, tx_hash, from, to, value, token_symbol, tenant_code.
+     * la estructura: 'network_id', 'confirmed', 'tx_hash', 'from', 'to', 'value', 'token_symbol', 'tenant_code'.
      * * @return void
      */
     public function handle(BlockchainActivityDetected $event)
     {
-        // Ahora $data contiene nuestra estructura normalizada:
-        // 'network_id', 'confirmed', 'tx_hash', 'from', 'to', 'value', 'token_symbol'...
         $data = $event->data;
-        Log::debug("🐞 ProcessBlockchainActivity handle: " . json_encode($data));
-
+        //Log::debug("🐞 ProcessBlockchainActivity handle: " . json_encode($data));
 
         /*
-        // 2. Filtro inteligente: ¿Ignoramos los no confirmados? 
-        // Depende de tu negocio, pero generalmente solo procesamos el 'confirmed: true'
-        if (!$data['confirmed']) {
-            continue; 
-        }
+           {
+                "network_id": "0x89",
+                "confirmed": false,
+                "block_number": "83945304",
+                "tx_hash": "0x19d00883c41d12bae05844ed76b5521fd897afe1ec825ee2cbf6fb2550530b63",
+                "from": "0x697b45689e4b4cce3c316f21ed6c8a6cb053873d",
+                "to": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
+                "value": "1000",
+                "token_symbol": "pedgy",
+                "token_address": "0x1f7aee83037ae9979e6d5b8bc4581e007da53981",
+                "timestamp": "1773010641",
+                "tenant_code": "59d5e7a3-dea0-4289-88f0-a39765f50bcf"
+            }
         */
 
-        // 1. Identificar el Bot/Tenant
-        // Nota: Asegúrate de que el extractor de cada Provider incluya el 'tenant_code'
-        // Si no, añádelo en el controlador antes de disparar el evento.
-        $bot = TelegramBots::where('key', $data['tenant_code'])->first();
+        if (isset($data['token_symbol'])) {
+            // 1. Identificar el Bot/Tenant
+            $bot = TelegramBots::where('key', $data['tenant_code'])->first();
+            if (!$bot) {
+                Log::error("🆘 ProcessBlockchainActivity: Bot no encontrado para tenant: " . ($data['tenant_code'] ?? 'N/A'));
+                return;
+            }
+            $bot->connectToThisTenant();
 
-        if (!$bot) {
-            Log::error("🆘 ProcessBlockchainActivity: Bot no encontrado para tenant: " . ($data['tenant_code'] ?? 'N/A'));
-            return;
-        }
+            // 2. Buscar al suscriptor usando la dirección estandarizada
+            $toAddress = strtolower($data['to']);
+            $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
 
-        $bot->connectToThisTenant();
+            if ($suscriptor) {
+                $botController = new ZentroTraderBotController();
+                // Usamos las llaves normalizadas que definimos en extractRelevantData
+                if (!$data['confirmed'])
+                    $botController->notifyDepositUnconfirmed(
+                        $suscriptor->user_id,
+                        $data['value'],
+                        $data['token_symbol']
+                    );
+                else
+                    $botController->notifyDepositConfirmed(
+                        $suscriptor->user_id,
+                        $data['value'],
+                        $data['token_symbol']
+                    );
 
-        // 2. Buscar al suscriptor usando la dirección estandarizada
-        $toAddress = strtolower($data['to']);
-        $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
-
-        if ($suscriptor) {
-            $botController = new ZentroTraderBotController();
-
-            // Usamos las llaves normalizadas que definimos en extractRelevantData
-            $botController->notifyDepositConfirmed(
-                $suscriptor->user_id,
-                $data['value'],
-                $data['token_symbol']
-            );
-
-            Log::info("✅ Depósito procesado exitosamente en {$data['network_id']} para usuario {$suscriptor->user_id}");
+                Log::info("✅ Depósito procesado exitosamente en {$data['network_id']} para usuario {$suscriptor->user_id}");
+            }
         }
     }
 }

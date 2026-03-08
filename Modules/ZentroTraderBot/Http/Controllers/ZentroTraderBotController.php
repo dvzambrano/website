@@ -471,4 +471,28 @@ class ZentroTraderBotController extends JsonsController
         TelegramController::sendMessage($array, $this->tenant->token);
     }
 
+    public function notifyDepositUnconfirmed($user_id, $amount, $currency)
+    {
+        $text = Lang::get("zentrotraderbot::bot.prompts.buy.inprogress.badcurrency");
+        if (strtoupper($currency) == "USDC")
+            $text = Lang::get("zentrotraderbot::bot.prompts.buy.inprogress.currencyok");
+
+        $array = array(
+            "message" => array(
+                "text" =>
+                    "✋ *" . Lang::get("zentrotraderbot::bot.prompts.buy.inprogress.header") . "* \n" .
+                    "⌛️ " . Lang::get("zentrotraderbot::bot.prompts.buy.inprogress.warning", [
+                                "amount" => $amount,
+                                "currency" => $currency
+                            ]) . "\n" .
+                    "🧏 _" . $text . "_",
+                "chat" => array(
+                    "id" => $user_id,
+
+                ),
+            ),
+        );
+        TelegramController::sendMessage($array, $this->tenant->token, 1);
+    }
+
 }
