@@ -36,12 +36,15 @@ class MoralisController extends Controller implements BlockchainProviderInterfac
 
         $payload = $request->all();
 
-        // Logueamos siempre para auditoría interna
-        Log::debug("🐞 MoralisController processWebhook: Evento recibido para tenant $code: " . json_encode($payload));
-
         // 1. Extraemos datos limpios
         $data = $this->extractData($payload);
         $data['tenant_code'] = $code;
+
+        // Logueamos siempre para auditoría interna
+        Log::debug("🐞 MoralisController processWebhook: Evento recibido para tenant $code: ", [
+            "payload" => $payload,
+            "data" => $data,
+        ]);
 
         // Disparamos el evento para que cualquier otro módulo lo capture
         event(new BlockchainActivityDetected($data));
