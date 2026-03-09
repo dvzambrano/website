@@ -23,7 +23,7 @@ class ProcessBlockchainActivity
     public function handle(BlockchainActivityDetected $event)
     {
         $data = $event->data;
-        //Log::debug("🐞 ProcessBlockchainActivity handle: " . json_encode($data));
+        Log::debug("🐞 ProcessBlockchainActivity handle: " . json_encode($data));
 
         /*
            {
