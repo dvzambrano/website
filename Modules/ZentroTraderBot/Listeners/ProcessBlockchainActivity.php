@@ -79,7 +79,10 @@ class ProcessBlockchainActivity
                     $data['token_symbol']
                 );
 
-                Log::info("✅ Depósito procesado exitosamente en {$data['network_id']} para usuario {$suscriptor->user_id}");
+                Log::info("✅ Depósito procesado exitosamente: ", [
+                    "id" => $data['trace_id'],
+                    "data" => $data,
+                ]);
             }
         }
     }

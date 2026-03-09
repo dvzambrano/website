@@ -57,6 +57,4 @@ Route::prefix('ramp')->group(function () {
 Route::prefix('webhook')->group(function () {
     Route::post('/ramp', 'RampController@processWebhook')->name('ramp-webhook');
     Route::post('/trondealer', 'RampController@processWebhook')->name('trondealer-webhook');
-    // https://misitio.com/webhook/moralis/59d5e7a3-dea0-4289-88f0-a39765f50bcf
-    Route::post('/moralis/{code}', 'BlockchainController@processWebhook')->name('moralis-webhook');
 });
