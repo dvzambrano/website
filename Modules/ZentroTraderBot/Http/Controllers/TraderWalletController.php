@@ -50,7 +50,7 @@ class TraderWalletController extends WalletController
         $chainId = (int) $networks[$networkSymbol]["chainId"];
         $tokenMap = InchController::getTokensData($chainId);
 
-        $usdcContract = $tokenMap["USDC"]["address"];
+        $usdcContract = $tokenMap[env('BASE_TOKEN')]["address"];
 
         $balances = AlchemyController::getTokenBalances($apiKey, $address, [$usdcContract]);
 
@@ -74,7 +74,7 @@ class TraderWalletController extends WalletController
 
         $address = $suscriptor->data['wallet']['address'];
         $apiKey = config("zentrotraderbot.alchemy_api_key");
-        $polUsdcContract = ConfigService::getToken("USDC", strtoupper(ConfigService::getActiveNetwork()["shortName"]))["address"];
+        $polUsdcContract = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]))["address"];
 
         return AlchemyController::getRecentTransactions($apiKey, $address, 'POL', ["erc20"], [$polUsdcContract], 5);
     }

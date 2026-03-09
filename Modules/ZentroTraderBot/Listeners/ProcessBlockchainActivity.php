@@ -23,7 +23,11 @@ class ProcessBlockchainActivity
     public function handle(BlockchainActivityDetected $event)
     {
         $data = $event->data;
-        Log::debug("🐞 ProcessBlockchainActivity handle: " . json_encode($data));
+        Log::debug("🐞 ProcessBlockchainActivity handle: ", [
+            "id" => $data['trace_id'],
+            "confirmed" => $data['confirmed'],
+            "data" => $data,
+        ]);
 
         /*
            {
@@ -41,6 +45,11 @@ class ProcessBlockchainActivity
             }
         */
 
+        // Si no esta confirmada la desechamos
+        if (!$data['confirmed'])
+            return;
+
+        // Si no trae token_symbol no esta estandarizada para este evento por lo q se desestima
         if (isset($data['token_symbol'])) {
             // 1. Identificar el Bot/Tenant
             $bot = TelegramBots::where('key', $data['tenant_code'])->first();
@@ -53,7 +62,6 @@ class ProcessBlockchainActivity
             // 2. Buscar al suscriptor usando la dirección estandarizada
             $toAddress = strtolower($data['to']);
             $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
-
             if ($suscriptor) {
                 if ($data['token_symbol'] == "" && is_numeric($data['network_id'])) {
                     try {
@@ -65,19 +73,11 @@ class ProcessBlockchainActivity
                     }
                 }
                 $botController = new ZentroTraderBotController();
-                // Usamos las llaves normalizadas que definimos en extractRelevantData
-                if (!$data['confirmed'])
-                    $botController->notifyDepositUnconfirmed(
-                        $suscriptor->user_id,
-                        $data['value'],
-                        $data['token_symbol']
-                    );
-                else
-                    $botController->notifyDepositConfirmed(
-                        $suscriptor->user_id,
-                        $data['value'],
-                        $data['token_symbol']
-                    );
+                $botController->notifyDepositConfirmed(
+                    $suscriptor->user_id,
+                    $data['value'],
+                    $data['token_symbol']
+                );
 
                 Log::info("✅ Depósito procesado exitosamente en {$data['network_id']} para usuario {$suscriptor->user_id}");
             }

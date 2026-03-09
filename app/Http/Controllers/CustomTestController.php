@@ -76,18 +76,18 @@ class CustomTestController extends BaseController
 
     public function testCache()
     {
-        $network = ChainidController::getNetworkData();
-        //dd($network["POL"]);
+        $networks = ChainidController::getNetworkData();
+        //dd($networks);
         $tokens = InchController::getTokensData(137);
         //dd($tokens);
-        dd($network["POL"], $tokens["USDC"]);
+        dd($networks[env('BASE_NETWORK')], $tokens[env('BASE_TOKEN')]);
     }
 
     public function testWalletController()
     {
         $address = "0xd2531438b90232f4Aab4DDfC6f146474e84E1Ea1";
         $apiKey = config('zentrotraderbot.alchemy_api_key');
-        $usdcContract = ConfigService::getToken("USDC", strtoupper(ConfigService::getActiveNetwork()["shortName"]))["address"];
+        $usdcContract = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]))["address"];
         $balances = AlchemyController::getTokenBalances($apiKey, $address, [$usdcContract]);
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {
@@ -99,7 +99,7 @@ class CustomTestController extends BaseController
         }
 
 
-        $txs = AlchemyController::getRecentTransactions($apiKey, $address, "POL", ["erc20"], [$usdcContract]);
+        $txs = AlchemyController::getRecentTransactions($apiKey, $address, env('BASE_NETWORK'), ["erc20"], [$usdcContract]);
 
         dd($apiKey, $address, $usdcContract, $balances, $humanBal, $txs);
     }

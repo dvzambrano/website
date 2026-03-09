@@ -170,7 +170,7 @@ class TransakController extends Controller implements RampProviderInterface
                         'referrerDomain' => request()->getHost(),
                         //'defaultCryptoAmount' => 1,
                         //'cryptoAmount' => 1,
-                        'cryptoCurrencyCode' => 'USDC',
+                        'cryptoCurrencyCode' => env('BASE_TOKEN'),
                         'network' => 'polygon',
                         //'networks' => 'ethereum, polygon,terra, mainnet',
                         'walletAddress' => $wallet,

@@ -102,7 +102,7 @@ class ZentroTraderBotController extends JsonsController
         // /swap 5 POL USDC
         $this->strategies["/swap"] =
             function () use ($array) {
-                $key = "POL";
+                $key = env('BASE_NETWORK');
 
                 $network = ChainidController::getNetworkData();
 
@@ -454,6 +454,16 @@ class ZentroTraderBotController extends JsonsController
 
     public function notifyDepositConfirmed($user_id, $amount, $currency)
     {
+        $autodestroy = 1;
+        $text = "🧏 _" .
+            Lang::get("zentrotraderbot::bot.prompts.buy.completed.badcurrency", [
+                "currency" => $currency
+            ]) . "_";
+        if (strtoupper($currency) == env('BASE_TOKEN')) {
+            $text = "✨ _" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.text") . "_";
+            $autodestroy = 0;
+        }
+
         $array = array(
             "message" => array(
                 "text" =>
@@ -462,37 +472,13 @@ class ZentroTraderBotController extends JsonsController
                                 "amount" => $amount,
                                 "currency" => $currency
                             ]) . "\n" .
-                    "✨ _" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.text") . "_",
+                    $text,
                 "chat" => array(
                     "id" => $user_id,
                 ),
             ),
         );
-        TelegramController::sendMessage($array, $this->tenant->token);
-    }
-
-    public function notifyDepositUnconfirmed($user_id, $amount, $currency)
-    {
-        $text = Lang::get("zentrotraderbot::bot.prompts.buy.inprogress.badcurrency");
-        if (strtoupper($currency) == "USDC")
-            $text = Lang::get("zentrotraderbot::bot.prompts.buy.inprogress.currencyok");
-
-        $array = array(
-            "message" => array(
-                "text" =>
-                    "✋ *" . Lang::get("zentrotraderbot::bot.prompts.buy.inprogress.header") . "* \n" .
-                    "⌛️ " . Lang::get("zentrotraderbot::bot.prompts.buy.inprogress.warning", [
-                                "amount" => $amount,
-                                "currency" => $currency
-                            ]) . "\n" .
-                    "🧏 _" . $text . "_",
-                "chat" => array(
-                    "id" => $user_id,
-
-                ),
-            ),
-        );
-        TelegramController::sendMessage($array, $this->tenant->token, 1);
+        TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
     }
 
 }

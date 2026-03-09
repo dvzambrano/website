@@ -56,14 +56,9 @@ return [
             ],
             "completed" => [
                 "header" => "¡Saldo Acreditado!",
-                "warning" => "Ha recibido un depósito de :amount USD a su cuenta.",
-                "text" => "Esperamos que su día sea más brillante ahora que sus fondos ya están disponibles.",
-            ],
-            "inprogress" => [
-                "header" => "Procesando saldo...",
-                "warning" => "Se está procesando un depósito de :amount :currency a su cuenta.",
-                "currencyok" => "Estos fondos están en nuestra moneda contable por lo que se le acreditarán en cuanto esten confirmados.",
-                "badcurrency" => "Estos fondos NO están en nuestra moneda contable por lo que se procederá a hacer el cambio correspondiente para que Ud reciba dólares.",
+                "warning" => "Ha recibido un depósito de :amount :currency.",
+                "text" => "Sus fondos ya están disponibles en su cuenta para ser utilizados.",
+                "badcurrency" => "Estos fondos NO están en :currency: Intentaremos cambiarlos automaticamente para que pasen a ser dólares disponibles en su cuenta...",
             ],
 
         ],

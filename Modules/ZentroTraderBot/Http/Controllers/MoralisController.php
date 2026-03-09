@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\ZentroTraderBot\Contracts\BlockchainProviderInterface;
 use Illuminate\Http\Request;
 use Modules\Web3\Events\BlockchainActivityDetected;
+use Illuminate\Support\Str;
 
 class MoralisController extends Controller implements BlockchainProviderInterface
 {
@@ -39,6 +40,8 @@ class MoralisController extends Controller implements BlockchainProviderInterfac
         // 1. Extraemos datos limpios
         $data = $this->extractData($payload);
         $data['tenant_code'] = $code;
+        // Generamos un UUID único para este evento recibido
+        $data['trace_id'] = (string) Str::uuid();
 
         // Logueamos siempre para auditoría interna
         Log::debug("🐞 MoralisController processWebhook: Evento recibido para tenant $code: ", [

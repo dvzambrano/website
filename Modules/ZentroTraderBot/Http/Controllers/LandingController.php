@@ -138,7 +138,10 @@ class LandingController extends Controller
 
         $destChain = (int) ConfigService::getActiveNetwork()['chainId'];
         //dd(strtoupper(ConfigService::getActiveNetwork()['shortName']));
-        $destToken = ConfigService::getToken('USDC', strtoupper(ConfigService::getActiveNetwork()['shortName']))['address'];
+        $destToken = ConfigService::getToken(
+            env('BASE_TOKEN'),
+            strtoupper(ConfigService::getActiveNetwork()['shortName'])
+        )['address'];
 
         return view("zentrotraderbot::themes.{$this->theme}.pay", [
             'user' => $user,
@@ -296,13 +299,13 @@ class LandingController extends Controller
                     'isDirectTransfer' => true,
                     'estimation' => [
                         'srcChainTokenIn' => [
-                            'symbol' => 'USDC',
-                            'decimals' => ConfigService::getToken("USDC", "POL")["decimals"],
+                            'symbol' => env('BASE_TOKEN'),
+                            'decimals' => ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'))["decimals"],
                             'amount' => $amount
                         ],
                         'dstChainTokenOut' => [
-                            'symbol' => 'USDC',
-                            'decimals' => ConfigService::getToken("USDC", "POL")["decimals"],
+                            'symbol' => env('BASE_TOKEN'),
+                            'decimals' => ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'))["decimals"],
                             'amount' => $amount,
                             'recommendedAmount' => $amount
                         ]
