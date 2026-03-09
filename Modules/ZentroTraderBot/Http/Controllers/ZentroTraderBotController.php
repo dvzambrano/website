@@ -454,7 +454,7 @@ class ZentroTraderBotController extends JsonsController
 
     public function notifyDepositConfirmed($user_id, $amount, $currency)
     {
-        $autodestroy = 1;
+        $autodestroy = 3;
         $text = "🧏 _" .
             Lang::get("zentrotraderbot::bot.prompts.buy.completed.badcurrency", [
                 "currency" => $currency

@@ -40,6 +40,7 @@ class MoralisController extends Controller implements BlockchainProviderInterfac
         // 1. Extraemos datos limpios
         $data = $this->extractData($payload);
         $data['tenant_code'] = $code;
+        $data['listener'] = "moralis";
         // Generamos un UUID único para este evento recibido
         $data['trace_id'] = (string) Str::uuid();
 
