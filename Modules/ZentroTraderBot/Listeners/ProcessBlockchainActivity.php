@@ -7,6 +7,7 @@ use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
+use Modules\Web3\Services\ConfigService;
 
 class ProcessBlockchainActivity
 {
@@ -54,6 +55,15 @@ class ProcessBlockchainActivity
             $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
 
             if ($suscriptor) {
+                if ($data['token_symbol'] == "" && is_numeric($data['network_id'])) {
+                    try {
+                        $token = ConfigService::getToken(strtolower($data['token_symbol']), (int) $data['network_id']);
+                        if ($token)
+                            $data['token_symbol'] = $token["symbol"];
+                    } catch (\Throwable $th) {
+
+                    }
+                }
                 $botController = new ZentroTraderBotController();
                 // Usamos las llaves normalizadas que definimos en extractRelevantData
                 if (!$data['confirmed'])

@@ -56,14 +56,14 @@ class MoralisController extends Controller implements BlockchainProviderInterfac
         $transferData = $isErc20 ? $item['erc20Transfers'][0] : ($item['txs'][0] ?? []);
 
         return [
-            'network_id' => $item['chainId'],
+            'network_id' => hexdec($item['chainId']),
             'confirmed' => $item['confirmed'],
             'block_number' => $item['block']['number'],
             'tx_hash' => $isErc20 ? $transferData['transactionHash'] : $transferData['hash'],
             'from' => $isErc20 ? $transferData['from'] : $transferData['fromAddress'],
             'to' => $isErc20 ? $transferData['to'] : $transferData['toAddress'],
             'value' => $isErc20 ? $transferData['valueWithDecimals'] : ($transferData['value'] / 1e18), // Ajuste simple
-            'token_symbol' => $isErc20 ? $transferData['tokenSymbol'] : 'NATIVE',
+            'token_symbol' => $isErc20 ? $transferData['tokenSymbol'] : '',
             'token_address' => $isErc20 ? $transferData['contract'] : null,
             'timestamp' => $item['block']['timestamp'],
         ];
