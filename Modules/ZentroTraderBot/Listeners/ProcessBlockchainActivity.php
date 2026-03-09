@@ -57,9 +57,9 @@ class ProcessBlockchainActivity
             if ($suscriptor) {
                 if ($data['token_symbol'] == "" && is_numeric($data['network_id'])) {
                     try {
-                        $token = ConfigService::getToken(strtolower($data['token_symbol']), (int) $data['network_id']);
-                        if ($token)
-                            $data['token_symbol'] = $token["symbol"];
+                        $network = ConfigService::getNetworks((int) $data['network_id']);
+                        if ($network)
+                            $data['token_symbol'] = strtoupper($network["shortName"]);
                     } catch (\Throwable $th) {
 
                     }
