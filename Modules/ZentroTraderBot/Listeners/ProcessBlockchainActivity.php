@@ -49,6 +49,11 @@ class ProcessBlockchainActivity
         if (!$data['confirmed'])
             return;
 
+        // Si token no existe en el listado oficial provisto por 1inch lo desechamos
+        $token = ConfigService::getToken(strtolower($data['token_address']), $data['network_id']);
+        if (!$token)
+            return;
+
         // Si no trae token_symbol no esta estandarizada para este evento por lo q se desestima
         if (isset($data['token_symbol'])) {
             // 1. Identificar el Bot/Tenant
