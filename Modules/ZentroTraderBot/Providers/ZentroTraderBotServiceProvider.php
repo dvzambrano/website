@@ -14,6 +14,8 @@ use Modules\ZentroTraderBot\Listeners\ProcessBlockchainActivity;
 use Modules\ZentroTraderBot\Console\SyncAlchemyAddresses;
 use Modules\ZentroTraderBot\Console\RegisterAlchemyWebhooks;
 use Modules\ZentroTraderBot\Console\UpdateAlchemyWebhooks;
+use Modules\ZentroTraderBot\Console\RegisterMoralisStreams;
+use Modules\ZentroTraderBot\Console\DeleteMoralisStream;
 use Modules\TelegramBot\Middleware\TenantMiddleware;
 
 class ZentroTraderBotServiceProvider extends ServiceProvider
@@ -67,7 +69,9 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
         $this->commands([
             SyncAlchemyAddresses::class,
             RegisterAlchemyWebhooks::class,
-            UpdateAlchemyWebhooks::class
+            UpdateAlchemyWebhooks::class,
+            RegisterMoralisStreams::class,
+            DeleteMoralisStream::class,
         ]);
     }
 
