@@ -36,8 +36,11 @@ class AlchemyUpdateWebhookAddresses implements ShouldQueue
             $this->addreses_to_remove
         );
         if ($response->successful())
-            Log::debug("🐞 AlchemyUpdateWebhookAddresses handle webhook_id=" . $this->webhook_id . ", addreses_to_add: " .
-                json_encode($this->addreses_to_add) . ", addreses_to_remove: " . json_encode($this->addreses_to_remove));
+            Log::debug("🐞 AlchemyUpdateWebhookAddresses handle", [
+                'webhook_id' => $this->webhook_id,
+                'addreses_to_add' => $this->addreses_to_add,
+                'addreses_to_remove' => $this->addreses_to_remove
+            ]);
         else
             Log::error('🆘 AlchemyUpdateWebhookAddresses handle error', [
                 'webhook_id' => $this->webhook_id,

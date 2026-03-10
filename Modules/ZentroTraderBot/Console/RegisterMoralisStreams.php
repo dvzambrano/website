@@ -9,34 +9,42 @@ use Modules\Laravel\Services\BehaviorService;
 
 class RegisterMoralisStreams extends Command
 {
-    protected $signature = 'zentrotraderbot:moralis-init-streams {module=ZentroTraderBot} {--domain=micalme.com}';
+    protected $signature = 'zentrotraderbot:moralis-init-streams {module=ZentroTraderBot} {--bot=all} {--domain=micalme.com}';
     protected $description = 'Crea los Streams en Moralis y guarda sus IDs en los bots';
 
     public function handle()
     {
         $apiKey = env("MORALIS_API_KEY");
+        $bot = $this->option('bot');
         $domain = $this->option('domain');
 
-        $bots = TelegramBots::where('module', $this->argument('module'))->get();
+        $bots = [];
+        if (strtolower($bot) == "all")
+            $bots = TelegramBots::where('module', $this->argument('module'))->get();
+        else {
+            $tenant = TelegramBots::where('name', "@" . $bot)->first();
+            $bots[] = $tenant;
+        }
 
         foreach ($bots as $tenant) {
-            /*
-            if (isset($tenant->data["moralis_stream_id"])) {
-                $this->info("🗑 Eliminando Stream existente: " . $tenant->data["moralis_stream_id"]);
+            $data = $tenant->data;
+
+            if (isset($data["moralis_stream_id"])) {
+                $this->info("🗑 Eliminando Stream existente: " . $data["moralis_stream_id"]);
                 $response = Http::withHeaders([
                     'x-api-key' => $apiKey,
                     'Content-Type' => 'application/json',
                 ])
                     ->timeout(BehaviorService::timeout())
-                    ->delete('https://api.moralis-streams.com/streams/evm/' . $tenant->data["moralis_stream_id"]);
+                    ->delete('https://api.moralis-streams.com/streams/evm/' . $data["moralis_stream_id"]);
 
                 if ($response->successful()) {
                     $this->info("🪦 Stream eliminado!");
+                    unset($data["moralis_stream_id"]);
                 } else {
                     $this->error("❌ Error eliminando Stream: " . $response->body());
                 }
             }
-            */
 
             $this->info("🚀 Creando Stream en Moralis para: {$tenant->code}");
             $payload = [
@@ -60,11 +68,11 @@ class RegisterMoralisStreams extends Command
                     '0x8f', // Monad
                 ],
                 'tag' => $tenant->token,
-                'allAddresses' => false, // IMPORTANTE: Ponemos false para ir agregando direcciones luego
-                'includeNativeTxs' => true,
-                'includeContractLogs' => true,
-                'includeInternalTxs' => true,
-                'filterPossibleSpamAddresses' => true,
+                'includeNativeTxs' => true,        // ✅ Para transferencias nativas (ETH, MATIC, etc.)
+                'includeContractLogs' => true,      // ✅ Necesario para detectar ERC-20 transfers
+                'allAddresses' => false,            // ✅ Correcto, agregas wallets después
+                'filterPossibleSpamAddresses' => true, // ✅ Filtra spam
+                'includeInternalTxs' => false, // No necesitas txs internas si solo quieres envíos/recepciones directas
                 'abi' => [
                     [
                         'name' => 'Transfer',
@@ -102,7 +110,6 @@ class RegisterMoralisStreams extends Command
             if ($response->successful()) {
                 $streamId = $response->json('id'); // Moralis devuelve 'id'
 
-                $data = $tenant->data;
                 $data["moralis_stream_id"] = $streamId;
                 $tenant->data = $data;
                 $tenant->save();

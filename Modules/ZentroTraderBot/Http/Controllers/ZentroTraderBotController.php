@@ -13,6 +13,7 @@ use Modules\Web3\Http\Controllers\ZeroExController;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\ZentroTraderBot\Jobs\AlchemyUpdateWebhookAddresses;
+use Modules\ZentroTraderBot\Jobs\MoralisAddAddressToStream;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -39,6 +40,13 @@ class ZentroTraderBotController extends JsonsController
             function () use ($suscriptor) {
                 $wallet = $suscriptor->getWallet();
                 if (isset($wallet["address"])) {
+                    // Registrar la wallet en el webhook de Moralis
+                    MoralisAddAddressToStream::dispatch(
+                        $this->tenant->data["moralis_stream_id"],
+                        env("MORALIS_API_KEY"),
+                        $wallet["address"]
+                    )->delay(now()->addSeconds(10));
+
                     // Registrar la wallet en el webhook de Alchemy
                     $authToken = config('zentrotraderbot.alchemy_auth_token');
                     AlchemyUpdateWebhookAddresses::dispatch(
