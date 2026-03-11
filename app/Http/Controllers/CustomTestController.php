@@ -82,6 +82,9 @@ class CustomTestController extends BaseController
         //dd($network);
         $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
         // ($token);
+        $test = ConfigService::getToken("MATIC", $network["chainId"]);
+        dd($test);
+
         dd($network, $token);
     }
 

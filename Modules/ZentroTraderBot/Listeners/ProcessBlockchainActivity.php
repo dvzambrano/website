@@ -80,9 +80,12 @@ class ProcessBlockchainActivity
 
         // 3. Filtro Anti-Scam (Solo para Tokens ERC20/BEP20): Si no existe en el listado oficial provisto por 1inch lo desechamos
         if (!empty($data['token_address'])) {
-            $token = ConfigService::getToken(strtolower($data['token_address']), $data['network_id']);
-            if (!$token)
-                return;
+            try {
+                $token = ConfigService::getToken(strtolower($data['token_address']), $data['network_id']);
+                if (!$token)
+                    return;
+            } catch (\Throwable $th) {
+            }
         }
 
         // Si no trae token_symbol no esta estandarizada para este evento por lo q se desestima
