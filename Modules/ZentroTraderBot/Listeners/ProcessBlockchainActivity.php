@@ -9,6 +9,7 @@ use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
+use Modules\Laravel\Http\Controllers\MathController;
 
 class ProcessBlockchainActivity
 {
@@ -105,7 +106,7 @@ class ProcessBlockchainActivity
                 $botController = new ZentroTraderBotController();
                 $botController->notifyDepositConfirmed(
                     $suscriptor->user_id,
-                    $data['value'],
+                    MathController::round($data['value'], 4, false),
                     $data['token_symbol']
                 );
 

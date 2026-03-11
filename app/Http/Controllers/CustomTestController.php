@@ -12,6 +12,7 @@ use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\Web3\Http\Controllers\InchController;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
+use Modules\Laravel\Http\Controllers\MathController;
 
 class CustomTestController extends BaseController
 {
@@ -55,7 +56,6 @@ class CustomTestController extends BaseController
         $suscriptor = Suscriptions::where("user_id", $user_id)->first();
         $address = $suscriptor->getWallet()["address"];
         $data = "ethereum:" . $address;
-
 
         $array = array(
             "message" => array(
