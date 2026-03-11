@@ -8,6 +8,7 @@ use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Services\ConfigService;
+use Illuminate\Support\Facades\Cache;
 
 class ProcessBlockchainActivity
 {
@@ -61,6 +62,12 @@ class ProcessBlockchainActivity
         if (!($data['confirmed'] ?? false))
             return;
 
+        //  Validación de duplicidad: Verificar si el tx_hash ya fue procesado
+        $cacheKey = 'tx_processed_' . $data['tx_hash'];
+        if (Cache::has($cacheKey)) {
+            return;
+        }
+
         // 2. Normalización de Token Nativo (MATIC, BNB, ETH...)
         if (empty($data['token_symbol']) && is_numeric($data['network_id'])) {
             try {
@@ -98,6 +105,9 @@ class ProcessBlockchainActivity
                     $data['value'],
                     $data['token_symbol']
                 );
+
+                // Marcar como procesado en caché por 24 horas
+                Cache::put($cacheKey, true, now()->addHours(24));
 
                 Log::info("✅ Depósito procesado exitosamente: ", [
                     "id" => $data['trace_id'],
