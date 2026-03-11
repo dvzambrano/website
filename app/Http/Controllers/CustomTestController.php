@@ -76,32 +76,34 @@ class CustomTestController extends BaseController
 
     public function testCache()
     {
-        $networks = ChainidController::getNetworkData();
+        //$networks = ConfigService::getNetworks(false, false);
         //dd($networks);
-        $tokens = InchController::getTokensData(137);
-        //dd($tokens);
-        dd($networks[env('BASE_NETWORK')], $tokens[env('BASE_TOKEN')]);
+        $network = ConfigService::getActiveNetwork();
+        //dd($network);
+        $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+        // ($token);
+        dd($network, $token);
     }
 
     public function testWalletController()
     {
         $address = "0xd2531438b90232f4Aab4DDfC6f146474e84E1Ea1";
         $apiKey = config('zentrotraderbot.alchemy_api_key');
-        $usdcContract = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]))["address"];
-        $balances = AlchemyController::getTokenBalances($apiKey, $address, [$usdcContract]);
+        $token = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]));
+        $balances = AlchemyController::getTokenBalances($apiKey, $address, [$token["address"]]);
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {
             foreach ($balances as $i => $bal) {
                 $hexBal = $bal['tokenBalance'] ?? '0x0';
                 // Conversión humana
-                $humanBal = Web3MathService::hexToDecimal($hexBal, 6);
+                $humanBal = Web3MathService::hexToDecimal($hexBal, $token["decimals"]);
             }
         }
 
 
-        $txs = AlchemyController::getRecentTransactions($apiKey, $address, env('BASE_NETWORK'), ["erc20"], [$usdcContract]);
+        $txs = AlchemyController::getRecentTransactions($apiKey, $address, env('BASE_NETWORK'), ["erc20"], [$token["address"]]);
 
-        dd($apiKey, $address, $usdcContract, $balances, $humanBal, $txs);
+        dd($apiKey, $address, $token["address"], $balances, $humanBal, $txs);
     }
 
     /**

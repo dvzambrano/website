@@ -107,7 +107,7 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
-        // /swap 5 POL USDC
+        // /swap 5 POL DAI
         $this->strategies["/swap"] =
             function () use ($array) {
                 $key = env('BASE_NETWORK');

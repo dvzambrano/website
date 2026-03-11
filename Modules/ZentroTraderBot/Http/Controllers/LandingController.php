@@ -91,21 +91,21 @@ class LandingController extends Controller
         // 2. Instanciar el controlador de Wallets
         $walletController = new TraderWalletController();
 
-        $usdcBalance = 0;
+        $balance = 0;
         $transactions = [];
         try {
-            // 3. Obtener Balance REAL (específicamente de USDC en Polygon)
+            // 3. Obtener Balance REAL (específicamente de BASE_TOKEN en Polygon)
             // El método getBalance que tienes devuelve el portfolio
-            $usdcBalance = $walletController->getBalance($suscriptor);
+            $balance = $walletController->getBalance($suscriptor);
             // 4. Obtener Transacciones 
             $transactions = $walletController->getRecentTransactions($suscriptor);
         } catch (\Throwable $th) {
             //throw $th;
         }
-        //dd($suscriptor->data, $usdcBalance, $transactions);
+        //dd($suscriptor->data, $balance, $transactions);
 
         return view("zentrotraderbot::themes.{$this->theme}.dashboard", [
-            'balance' => $usdcBalance,
+            'balance' => $balance,
             'transactions' => $transactions,
             'qrService' => $this->qrService,
             'bot' => $this->bot
@@ -158,7 +158,6 @@ class LandingController extends Controller
         // 1. Obtener rutas comerciales de deBridge (terminan en Polygon 137)
         $bridge = new DeBridgeController();
         $chains = $bridge->getSupportedChainsInfo();
-        //dd($chains);
 
         // 2. Obtener datos técnicos de Chainlink / ChainID Network (con Cache para no saturar)
         // php artisan cache:forget external_chains_info
@@ -403,7 +402,7 @@ class LandingController extends Controller
 
             // --- CASO 1: MISMA RED (Polygon -> Polygon) ---
             if ($srcChainId === $dstChainId) {
-                // Sub-caso A: USDC -> USDC (Transferencia Directa)
+                // Sub-caso A: BASE_TOKEN -> BASE_TOKEN (Transferencia Directa)
                 if (strtolower($srcToken) === strtolower($dstToken)) {
                     return response()->json([
                         'type' => 'direct_transfer',
@@ -416,7 +415,7 @@ class LandingController extends Controller
                     ]);
                 }
 
-                // Sub-caso B: OTRO TOKEN -> USDC (Single Chain Swap)
+                // Sub-caso B: OTRO TOKEN -> BASE_TOKEN (Single Chain Swap)
                 $rawSwap = $bridge->getSameChainTransaction($srcChainId, $srcToken, $amount, $dstToken, $userSignerAddress, $dstWallet);
                 return response()->json([
                     'type' => 'same_chain_swap',

@@ -32,7 +32,7 @@ class TraderWalletController extends WalletController
 
     /**
      * CONSULTAR SALDO (ESTANDARIZADO)
-     * - Devuelve el balance de USDC en Polygon.
+     * - Devuelve el balance de BASE_TOKEN en Polygon.
      * - Si no hay wallet, devuelve error específico.
      * - Si hay wallet pero no balance, devuelve 0.0 sin error.
      */
@@ -50,16 +50,15 @@ class TraderWalletController extends WalletController
         $chainId = (int) $networks[$networkSymbol]["chainId"];
         $tokenMap = InchController::getTokensData($chainId);
 
-        $usdcContract = $tokenMap[env('BASE_TOKEN')]["address"];
+        $token = $tokenMap[env('BASE_TOKEN')];
 
-        $balances = AlchemyController::getTokenBalances($apiKey, $address, [$usdcContract]);
-
+        $balances = AlchemyController::getTokenBalances($apiKey, $address, [$token["address"]]);
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {
             foreach ($balances as $bal) {
                 $hexBal = $bal['tokenBalance'] ?? '0x0';
                 // Conversión humana
-                $humanBal = Web3MathService::hexToDecimal($hexBal, 6);
+                $humanBal = Web3MathService::hexToDecimal($hexBal, $token["decimals"]);
             }
         }
 
@@ -74,9 +73,9 @@ class TraderWalletController extends WalletController
 
         $address = $suscriptor->data['wallet']['address'];
         $apiKey = config("zentrotraderbot.alchemy_api_key");
-        $polUsdcContract = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]))["address"];
+        $token = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]));
 
-        return AlchemyController::getRecentTransactions($apiKey, $address, 'POL', ["erc20"], [$polUsdcContract], 5);
+        return AlchemyController::getRecentTransactions($apiKey, $address, 'POL', ["erc20"], [$token["address"]], 5);
     }
 
     /**
