@@ -43,20 +43,44 @@ class ProcessBlockchainActivity
                 "timestamp": "1773010641",
                 "tenant_code": "59d5e7a3-dea0-4289-88f0-a39765f50bcf"
             }
+            {
+                "network_id": 56,
+                "confirmed": true,
+                "block_number": "85843713",
+                "tx_hash": "0x00c23f02330d55cb95d834bd6a79295aa1672a19a7c9c539c5686103fdd347db",
+                "from": "0x1aaffcab3cb8ec9b207b191c1b2e2ec662486666",
+                "to": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
+                "value": 0.00310539,
+                "token_symbol": "",
+                "token_address": "",
+                "timestamp": "1773175854"
+            }
         */
 
-        // Si no esta confirmada la desechamos
-        if (!$data['confirmed'])
+        // 1. Filtro de Confirmación: Si no esta confirmada la desechamos
+        if (!($data['confirmed'] ?? false))
             return;
 
-        // Si token no existe en el listado oficial provisto por 1inch lo desechamos
-        $token = ConfigService::getToken(strtolower($data['token_address']), $data['network_id']);
-        if (!$token)
-            return;
+        // 2. Normalización de Token Nativo (MATIC, BNB, ETH...)
+        if (empty($data['token_symbol']) && is_numeric($data['network_id'])) {
+            try {
+                $network = ConfigService::getNetworks((int) $data['network_id']);
+                if ($network)
+                    $data['token_symbol'] = strtoupper($network["shortName"]);
+            } catch (\Throwable $th) {
+            }
+        }
+
+        // 3. Filtro Anti-Scam (Solo para Tokens ERC20/BEP20): Si no existe en el listado oficial provisto por 1inch lo desechamos
+        if (!empty($data['token_address'])) {
+            $token = ConfigService::getToken(strtolower($data['token_address']), $data['network_id']);
+            if (!$token)
+                return;
+        }
 
         // Si no trae token_symbol no esta estandarizada para este evento por lo q se desestima
         if (isset($data['token_symbol'])) {
-            // 1. Identificar el Bot/Tenant
+            // 4. Identificar el Bot/Tenant
             $bot = TelegramBots::where('key', $data['tenant_code'])->first();
             if (!$bot) {
                 Log::error("🆘 ProcessBlockchainActivity: Bot no encontrado para tenant: " . ($data['tenant_code'] ?? 'N/A'));
@@ -64,19 +88,10 @@ class ProcessBlockchainActivity
             }
             $bot->connectToThisTenant();
 
-            // 2. Buscar al suscriptor usando la dirección estandarizada
+            // 5. Buscar al suscriptor usando la dirección estandarizada
             $toAddress = strtolower($data['to']);
             $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
             if ($suscriptor) {
-                if ($data['token_symbol'] == "" && is_numeric($data['network_id'])) {
-                    try {
-                        $network = ConfigService::getNetworks((int) $data['network_id']);
-                        if ($network)
-                            $data['token_symbol'] = strtoupper($network["shortName"]);
-                    } catch (\Throwable $th) {
-
-                    }
-                }
                 $botController = new ZentroTraderBotController();
                 $botController->notifyDepositConfirmed(
                     $suscriptor->user_id,
