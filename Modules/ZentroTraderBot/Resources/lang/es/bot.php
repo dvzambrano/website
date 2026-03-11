@@ -58,7 +58,7 @@ return [
                 "header" => "¡Saldo Acreditado!",
                 "warning" => "Ha recibido un depósito de :amount :currency.",
                 "text" => "Sus fondos ya están disponibles en su cuenta para ser utilizados.",
-                "badcurrency" => "Estos fondos NO están en :currency: Intentaremos cambiarlos automaticamente para que pasen a ser dólares disponibles en su cuenta...",
+                "badcurrency" => "Estos fondos están en :currency, los cambiaremos a USD para acreditarlos en su cuenta...",
             ],
 
         ],
