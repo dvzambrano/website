@@ -463,24 +463,38 @@ class ZentroTraderBotController extends JsonsController
     public function notifyDepositConfirmed($user_id, $amount, $currency)
     {
         $autodestroy = 3;
-        $text = "🧏 _" .
-            Lang::get("zentrotraderbot::bot.prompts.buy.completed.badcurrency", [
-                "currency" => $currency
-            ]) . "_";
+        $text =
+            "👍 *" . Lang::get("zentrotraderbot::bot.prompts.buy.badcurrency.header") . "* \n" .
+            "💵 " . Lang::get("zentrotraderbot::bot.prompts.buy.badcurrency.warning", [
+                        "amount" => $amount,
+                        "currency" => $currency
+                    ]) . "\n" .
+            "🧏 _" . Lang::get("zentrotraderbot::bot.prompts.buy.badcurrency.text", [
+                        "currency" => $currency
+                    ]) . "_";
         if (strtoupper($currency) == env('BASE_TOKEN')) {
-            $text = "✨ _" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.text") . "_";
+            $text =
+                "✅ *" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.header") . "* \n" .
+                "💵 " . Lang::get("zentrotraderbot::bot.prompts.buy.completed.warning", [
+                            "amount" => $amount,
+                            "currency" => $currency
+                        ]) . "\n" .
+                "✨ _" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.text") . "_";
             $autodestroy = 0;
         }
 
-        $array = array(
-            "message" => array(
-                "text" =>
-                    "✅ *" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.header") . "* \n" .
-                    "💰 " . Lang::get("zentrotraderbot::bot.prompts.buy.completed.warning", [
+        /*
+        "✅ *" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.header") . "* \n" .
+                    "💵 " . Lang::get("zentrotraderbot::bot.prompts.buy.completed.warning", [
                                 "amount" => $amount,
                                 "currency" => $currency
                             ]) . "\n" .
-                    $text,
+                    $text
+        */
+
+        $array = array(
+            "message" => array(
+                "text" => $text,
                 "chat" => array(
                     "id" => $user_id,
                 ),
