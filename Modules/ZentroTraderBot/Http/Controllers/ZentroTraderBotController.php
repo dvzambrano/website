@@ -380,30 +380,32 @@ class ZentroTraderBotController extends JsonsController
 
         array_push($menu, [
             [
-                "text" => "⛓️‍💥 " . Lang::get("zentrotraderbot::bot.options.topupcripto"),
+                "text" => "🫰 " . Lang::get("zentrotraderbot::bot.options.topupcripto"),
                 "callback_data" => "/wallet"
             ]
         ]);
-        array_push($menu, [
-            [
-                "text" => "💳 " . Lang::get("zentrotraderbot::bot.options.topupramp"),
-                "url" => route('ramp-redirect', array(
-                    "action" => "buy",
-                    "key" => $tenant->key,
-                    "secret" => $tenant->secret,
-                    "user_id" => $actor->user_id
-                ))
-            ],
-            [
-                "text" => "💲 " . Lang::get("zentrotraderbot::bot.options.withdraw"),
-                "url" => route('ramp-redirect', array(
-                    "action" => "sell",
-                    "key" => $tenant->key,
-                    "secret" => $tenant->secret,
-                    "user_id" => $actor->user_id
-                ))
-            ]
-        ]);
+
+        if (env("RAMP_ENABLED", false))
+            array_push($menu, [
+                [
+                    "text" => "💳 " . Lang::get("zentrotraderbot::bot.options.topupramp"),
+                    "url" => route('ramp-redirect', array(
+                        "action" => "buy",
+                        "key" => $tenant->key,
+                        "secret" => $tenant->secret,
+                        "user_id" => $actor->user_id
+                    ))
+                ],
+                [
+                    "text" => "💲 " . Lang::get("zentrotraderbot::bot.options.withdraw"),
+                    "url" => route('ramp-redirect', array(
+                        "action" => "sell",
+                        "key" => $tenant->key,
+                        "secret" => $tenant->secret,
+                        "user_id" => $actor->user_id
+                    ))
+                ]
+            ]);
 
 
         return $this->getMainMenu(
@@ -475,8 +477,12 @@ class ZentroTraderBotController extends JsonsController
 
     public function configMenu($actor)
     {
+        $menu = [];
+        array_push($menu, [["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "confirmation|showprivatekey|wallet"]]);
+
         return $this->getConfigMenu(
-            $actor
+            $actor,
+            $menu,
         );
     }
 
