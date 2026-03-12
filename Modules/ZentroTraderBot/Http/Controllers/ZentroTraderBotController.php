@@ -373,6 +373,7 @@ class ZentroTraderBotController extends JsonsController
             ["text" => "🔔 " . Lang::get("zentrotraderbot::bot.options.subscribtion"), "callback_data" => "suscribemenu"]
         ]);
         */
+        /*
 
         array_push($menu, [
             [
@@ -400,6 +401,7 @@ class ZentroTraderBotController extends JsonsController
                 ))
             ]
         ]);
+        */
 
 
         return $this->getMainMenu(
