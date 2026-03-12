@@ -317,12 +317,15 @@ class ZentroTraderBotController extends JsonsController
                     $message .= "{$p1} {$p2}\n";
                 }
                 $message .= "```";
+                $autodestroy = 1; // se elimina en 1 minuto
                 $reply = [
                     "text" =>
-                        "👇 *Tus " . count($words) . " palabras de seguridad*: \n" .
+                        "👇 *" . Lang::get("zentrotraderbot::bot.prompts.seedphrase.export.line1", [
+                            "count" => count($words),
+                        ]) . "*: \n" .
                         "{$message}\n" .
-                        "📋 _Copie o escanee esta información rapidamente: _\n" .
-                        "⌛️ _Por seguridad este mensaje se elimina en 1 minuto_\n",
+                        "📋 _" . Lang::get("zentrotraderbot::bot.prompts.seedphrase.export.line2") . "_\n" .
+                        "⌛️ _" . Lang::choice('zentrotraderbot::bot.prompts.seedphrase.export.destroy.mins', $autodestroy, ['count' => $autodestroy]) . "_\n",
                     "photo" => "https://quickchart.io/qr?text={$data}&size=220",
                     "chat" => array(
                         "id" => $suscriptor->user_id,
@@ -339,9 +342,9 @@ class ZentroTraderBotController extends JsonsController
                 $reply = $this->getAreYouSurePrompt(
                     $array["pieces"][1],
                     $array["pieces"][2],
-                    "\n🚨 " . Lang::get("zentrotraderbot::bot.prompts.privatekey.warning.line1") . "❗️\n" .
-                    "🆘 " . Lang::get("zentrotraderbot::bot.prompts.privatekey.warning.line2") . ":\n\n" .
-                    "⚠️ _" . Lang::get("zentrotraderbot::bot.prompts.privatekey.warning.line3") . "_\n",
+                    "\n🚨 " . Lang::get("zentrotraderbot::bot.prompts.seedphrase.warning.line1") . "❗️\n" .
+                    "🆘 " . Lang::get("zentrotraderbot::bot.prompts.seedphrase.warning.line2") . ":\n\n" .
+                    "⚠️ _" . Lang::get("zentrotraderbot::bot.prompts.seedphrase.warning.line3") . "_\n",
                     false
                 );
                 return $reply;

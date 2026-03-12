@@ -92,16 +92,24 @@ return [
                 "line3" => "Otra moneda requiere cambiarse a :token obligatoriamente.",
                 "options" => [
                     "debridge" => "Depositar usando DeBridge",
-                    "privatekey" => "Exportar llave privada",
+                    "seedphrase" => "Exportar frase semilla",
                 ],
             ],
 
         ],
-        "privatekey" => [
+        "seedphrase" => [
             "warning" => [
-                "line1" => "Lo que está a punto de exhibir es su *LLAVE PRIVADA*",
+                "line1" => "Lo que está a punto de exhibir es su *FRASE SEMILLA*",
                 "line2" => "Cualquiera que la vea tendrá *CONTROL TOTAL Y PERMANENTE de todos tus fondos*",
                 "line3" => "Asegúrese de que nadie está mirando su pantalla",
+            ],
+            "export" => [
+                "line1" => "Tus :count palabras de seguridad",
+                "line2" => "Copie o escanee esta información rapidamente:",
+                'destroy' => [
+                    "segs" => 'Este mensaje se eliminará en :count segundo|Este mensaje se eliminará en :count segundos',
+                    'mins' => 'Este mensaje se eliminará en :count minuto|Este mensaje se eliminará en :count minutos',
+                ],
             ],
 
         ],
