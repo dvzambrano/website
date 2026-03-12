@@ -411,6 +411,9 @@ trait UsesTelegramBot
                 $reply = $this->ActorsController->notifyAfterMetadataChange($array["pieces"][1]);
                 break;
 
+            case "confirmation":
+                $reply = $this->getAreYouSurePrompt($array["pieces"][1], $array["pieces"][2]);
+                break;
 
             default:
                 $array = $this->actor->data;

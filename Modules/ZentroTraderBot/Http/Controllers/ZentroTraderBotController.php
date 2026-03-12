@@ -233,7 +233,7 @@ class ZentroTraderBotController extends JsonsController
             };
 
 
-        $this->strategies["/wallet"] =
+        $this->strategies["/wallet"] = $this->strategies["wallet"] =
             function () use ($suscriptor) {
                 $address = $suscriptor->getWallet()["address"];
                 $data = "ethereum:" . $address;
@@ -273,7 +273,9 @@ class ZentroTraderBotController extends JsonsController
                                     ))
                                 ]
                             ],
-                            [["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.privatekey"), "callback_data" => "/privatekey"]],
+                            [
+                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.privatekey"), "callback_data" => "confirmation|showprivatekey-{$suscriptor->user_id}|wallet"]
+                            ],
                             [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                         ],
                     ]),
