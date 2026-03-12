@@ -14,6 +14,8 @@ use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Laravel\Http\Controllers\MathController;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Crypt;
+use Modules\Laravel\Http\Controllers\TextController;
 
 class CustomTestController extends BaseController
 {
@@ -51,16 +53,24 @@ class CustomTestController extends BaseController
 
     public function testQr()
     {
-        $this->KashioBot->connectToThisTenant();
-
         $user_id = 816767995;
-        $data = "uno dos tres cuatro cinco seis siete ocho nueve diez once doce";
+        $data = "abstract accident announce anything appetite assembly boundary building calendar campaign champion creative";
+
+        $words = explode(' ', $data);
+        $message = "```\n";
+        for ($i = 0; $i < count($words); $i += 2) {
+            $p1 = str_pad(sprintf("%02d: %s", $i + 1, $words[$i]), 13);
+            $p2 = str_pad(sprintf("%02d: %s", $i + 2, $words[$i + 1]), 13);
+            $message .= "{$p1} {$p2}\n";
+        }
+
+        $message .= "```";
 
         $array = array(
             "message" => array(
                 "text" =>
-                    "🔑 *Llave privada*: \n" .
-                    "`{$data}`\n\n" .
+                    "👇 *Tus " . count($words) . " palabras de seguridad*: \n" .
+                    "{$message}\n" .
                     "📋 _Copie o escanee esta información rapidamente: _\n" .
                     "⌛️ _Por seguridad este mensaje se elimina en 1 minuto_\n",
                 "photo" => "https://quickchart.io/qr?text={$data}&size=220",

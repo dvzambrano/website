@@ -306,20 +306,28 @@ class ZentroTraderBotController extends JsonsController
 
         $this->strategies["showprivatekey"] =
             function () use ($suscriptor) {
-                $key = $suscriptor->data['wallet']['private_key'];
+                $key = $suscriptor->data['wallet']['seed_phrase'];
                 // 🔓 Desencriptamos manualmente
                 $data = Crypt::decryptString($key);
-
+                $words = explode(' ', $data);
+                $message = "```\n";
+                for ($i = 0; $i < count($words); $i += 2) {
+                    $p1 = str_pad(sprintf("%02d: %s", $i + 1, $words[$i]), 13);
+                    $p2 = str_pad(sprintf("%02d: %s", $i + 2, $words[$i + 1]), 13);
+                    $message .= "{$p1} {$p2}\n";
+                }
+                $message .= "```";
                 $reply = [
                     "text" =>
-                        "🔑 *Llave privada*: \n" .
-                        "`{$data}`\n\n" .
+                        "👇 *Tus " . count($words) . " palabras de seguridad*: \n" .
+                        "{$message}\n" .
                         "📋 _Copie o escanee esta información rapidamente: _\n" .
                         "⌛️ _Por seguridad este mensaje se elimina en 1 minuto_\n",
                     "photo" => "https://quickchart.io/qr?text={$data}&size=220",
                     "chat" => array(
                         "id" => $suscriptor->user_id,
                     ),
+                    "autodestroy" => 1
                 ];
 
                 return $reply;
