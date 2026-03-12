@@ -90,6 +90,10 @@ return [
                 "line1" => "Operamos con :token en la red de :network",
                 "line2" => "Los fondos en :token (:network) estarán disponibles automáticamente.",
                 "line3" => "Otra moneda requiere cambiarse a :token obligatoriamente.",
+                "options" => [
+                    "debridge" => "Depositar usando DeBridge",
+                    "privatekey" => "Exportar llave privada",
+                ],
             ],
 
         ],

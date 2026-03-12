@@ -265,8 +265,15 @@ class ZentroTraderBotController extends JsonsController
                     ),
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
-                            [["text" => "🪢 Depositar usando DeBridge", "callback_data" => "menu"]],
-                            [["text" => "🔑 Exportar llave privada", "callback_data" => "menu"]],
+                            [
+                                [
+                                    "text" => "🪢 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.debridge"),
+                                    "url" => route('zentrotraderbot.pay', array(
+                                        "user" => $this->actor->data["telegram"]["username"],
+                                    ))
+                                ]
+                            ],
+                            [["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.privatekey"), "callback_data" => "/privatekey"]],
                             [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                         ],
                     ]),
