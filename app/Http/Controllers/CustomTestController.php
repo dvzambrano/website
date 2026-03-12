@@ -54,27 +54,13 @@ class CustomTestController extends BaseController
         $this->KashioBot->connectToThisTenant();
 
         $user_id = 816767995;
-        $suscriptor = Suscriptions::where("user_id", $user_id)->first();
-        $address = $suscriptor->getWallet()["address"];
-        $data = "ethereum:" . $address;
-
-        $network = ConfigService::getActiveNetwork();
-        $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+        $data = $user_id * rand(1111111111, 9999999999);
 
         $text =
-            "👇 *" . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.header") . "*: \n" .
-            "`{$address}`\n\n" .
-            "🚨 *" . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.line1", [
-                        "token" => $token["symbol"],
-                        "network" => $network["chain"]
-                    ]) . "*:\n" .
-            "👉 _" . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.line2", [
-                        "token" => $token["symbol"],
-                        "network" => $network["chain"]
-                    ]) . "\n" .
-            "🙇🏻 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.line3", [
-                        "token" => $token["symbol"],
-                    ]) . "_\n"
+            "🔑 *Llave privada*: \n" .
+            "`{$data}`\n\n" .
+            "📋 _Copie o escanee esta información rapidamente: _\n" .
+            "⌛️ _Por seguridad este mensaje se elimina en 1 minuto_\n"
         ;
         $array = array(
             "message" => array(
@@ -83,16 +69,9 @@ class CustomTestController extends BaseController
                 "chat" => array(
                     "id" => $user_id,
                 ),
-                "reply_markup" => json_encode([
-                    "inline_keyboard" => [
-                        [["text" => "🪢 Depositar usando DeBridge", "callback_data" => "menu"]],
-                        [["text" => "🔑 Exportar llave privada", "callback_data" => "menu"]],
-                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
-                    ],
-                ]),
             ),
         );
-        TelegramController::sendPhoto($array, $this->KashioBot->token);
+        TelegramController::sendPhoto($array, $this->KashioBot->token, 1);
         die("done!");
 
         $qrService = new QrService();

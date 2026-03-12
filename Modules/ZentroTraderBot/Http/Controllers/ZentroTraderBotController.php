@@ -290,9 +290,9 @@ class ZentroTraderBotController extends JsonsController
                 $reply = $this->getAreYouSurePrompt(
                     $array["pieces"][1],
                     $array["pieces"][2],
-                    "\n🚨 Lo que está a punto de exhibir es su *LLAVE PRIVADA*❗️\n" .
-                    "🆘 Cualquiera que la vea tendrá *CONTROL TOTAL Y PERMANENTE de todos tus fondos*:\n\n" .
-                    "⚠️ _Asegúrese de que nadie está mirando su pantalla_\n",
+                    "\n🚨 " . Lang::get("zentrotraderbot::bot.prompts.privatekey.warning.line1") . "❗️\n" .
+                    "🆘 " . Lang::get("zentrotraderbot::bot.prompts.privatekey.warning.line2") . ":\n\n" .
+                    "⚠️ _" . Lang::get("zentrotraderbot::bot.prompts.privatekey.warning.line3") . "_\n",
                     false
                 );
                 return $reply;

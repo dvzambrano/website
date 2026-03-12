@@ -97,5 +97,13 @@ return [
             ],
 
         ],
+        "privatekey" => [
+            "warning" => [
+                "line1" => "Lo que está a punto de exhibir es su *LLAVE PRIVADA*",
+                "line2" => "Cualquiera que la vea tendrá *CONTROL TOTAL Y PERMANENTE de todos tus fondos*",
+                "line3" => "Asegúrese de que nadie está mirando su pantalla",
+            ],
+
+        ],
     ],
 ];

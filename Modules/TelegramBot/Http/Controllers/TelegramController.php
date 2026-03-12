@@ -187,6 +187,13 @@ class TelegramController extends Controller
 
         $response = TelegramController::send($request, $url);
 
+        self::autodestroyMessage($bot_token, $response, $autodestroy);
+
+        return $response;
+    }
+
+    private static function autodestroyMessage($bot_token, $response, $autodestroy)
+    {
         if ($autodestroy > 0) {
             $array = json_decode($response, true);
             //Log::info("✅ TelegramController sendMessage array: " . json_encode($array));
@@ -199,8 +206,6 @@ class TelegramController extends Controller
                 )->delay(now()->addMinutes((int) $autodestroy));
             }
         }
-
-        return $response;
     }
 
     /**
@@ -251,7 +256,7 @@ class TelegramController extends Controller
      * @param string $bot_token
      * @return string
      */
-    public static function sendPhoto($request, $bot_token)
+    public static function sendPhoto($request, $bot_token, $autodestroy = 0)
     {
         $url = self::buildTelegramUrl($bot_token, 'sendPhoto', [
             'chat_id' => $request["message"]["chat"]["id"],
@@ -260,8 +265,10 @@ class TelegramController extends Controller
         ]);
 
         $response = TelegramController::send($request, $url);
-        $array = json_decode($response, true);
 
+        self::autodestroyMessage($bot_token, $response, $autodestroy);
+
+        $array = json_decode($response, true);
         // if Telegram could not fetch the URL, try uploading ourselves
         if (
             isset($array['ok']) && $array['ok'] === false
