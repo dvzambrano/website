@@ -586,7 +586,7 @@ trait UsesTelegramBot
     {
         $text = "⚠️ *" . Lang::get("telegrambot::bot.prompts.areyousure.header") . "*\n";
         if ($message)
-            $text .= "\n{$message}\n";
+            $text .= "{$message}\n";
         if ($showwarning)
             $text .= "_" . Lang::get("telegrambot::bot.prompts.areyousure.warning") . "_\n\n";
 
