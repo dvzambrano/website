@@ -13,6 +13,7 @@ use Modules\Web3\Http\Controllers\InchController;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Laravel\Http\Controllers\MathController;
+use Illuminate\Support\Facades\Lang;
 
 class CustomTestController extends BaseController
 {
@@ -57,13 +58,38 @@ class CustomTestController extends BaseController
         $address = $suscriptor->getWallet()["address"];
         $data = "ethereum:" . $address;
 
+        $network = ConfigService::getActiveNetwork();
+        $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+
+        $text =
+            "👇 *" . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.header") . "*: \n" .
+            "`{$address}`\n\n" .
+            "🚨 *" . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.line1", [
+                        "token" => $token["symbol"],
+                        "network" => $network["chain"]
+                    ]) . "*:\n" .
+            "👉 _" . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.line2", [
+                        "token" => $token["symbol"],
+                        "network" => $network["chain"]
+                    ]) . "\n" .
+            "🙇🏻 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.line3", [
+                        "token" => $token["symbol"],
+                    ]) . "_\n"
+        ;
         $array = array(
             "message" => array(
-                "text" => "Esta es su billetera de deposito: `{$address}`\nY otra linea mas",
+                "text" => $text,
                 "photo" => "https://quickchart.io/qr?text={$data}&size=220",
                 "chat" => array(
                     "id" => $user_id,
                 ),
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [["text" => "🪢 Depositar usando DeBridge", "callback_data" => "menu"]],
+                        [["text" => "🔑 Exportar llave privada", "callback_data" => "menu"]],
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    ],
+                ]),
             ),
         );
         TelegramController::sendPhoto($array, $this->KashioBot->token);

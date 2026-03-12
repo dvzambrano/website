@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\ZentroTraderBot\Jobs\AlchemyUpdateWebhookAddresses;
 use Modules\ZentroTraderBot\Jobs\MoralisAddAddressToStream;
+use Modules\Web3\Services\ConfigService;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -231,6 +232,49 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+
+        $this->strategies["/wallet"] =
+            function () use ($suscriptor) {
+                $address = $suscriptor->getWallet()["address"];
+                $data = "ethereum:" . $address;
+
+                $network = ConfigService::getActiveNetwork();
+                $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+
+                $text =
+                    "👇 *" . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.header") . "*: \n" .
+                    "`{$address}`\n\n" .
+                    "🚨 *" . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.line1", [
+                                "token" => $token["symbol"],
+                                "network" => $network["chain"]
+                            ]) . "*:\n" .
+                    "👉 _" . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.line2", [
+                                "token" => $token["symbol"],
+                                "network" => $network["chain"]
+                            ]) . "\n" .
+                    "🙇🏻 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.line3", [
+                                "token" => $token["symbol"],
+                            ]) . "_\n";
+
+
+                $reply = [
+                    "text" => $text,
+                    "photo" => "https://quickchart.io/qr?text={$data}&size=220",
+                    "chat" => array(
+                        "id" => $suscriptor->user_id,
+                    ),
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "🪢 Depositar usando DeBridge", "callback_data" => "menu"]],
+                            [["text" => "🔑 Exportar llave privada", "callback_data" => "menu"]],
+                            [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                        ],
+                    ]),
+                ];
+
+                return $reply;
+            };
+
         return $this->getProcessedMessage();
     }
 
@@ -277,16 +321,8 @@ class ZentroTraderBotController extends JsonsController
         array_push($menu, [
             [
                 "text" => "⛓️‍💥 " . Lang::get("zentrotraderbot::bot.options.topupcripto"),
-                'web_app' => ['url' => url('/pay/' . $this->actor->data["telegram"]["username"])],
+                "callback_data" => "/wallet"
             ]
-            /*
-            [
-                "text" => "⛓️‍💥 " . Lang::get("zentrotraderbot::bot.options.topupcripto"),
-                "url" => route('zentrotraderbot.pay', array(
-                    "user" => $this->actor->data["telegram"]["username"],
-                ))
-            ]
-                */
         ]);
         array_push($menu, [
             [

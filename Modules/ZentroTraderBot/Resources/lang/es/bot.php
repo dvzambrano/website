@@ -83,6 +83,15 @@ return [
         "fail" => [
             "suscriptor" => "Lo sentimos, no pudimos encontrar tu billetera configurada.",
             "widgeturl" => "Lo sentimos, hubo un error al generar tu sesión de pago. Por favor, intenta más tarde.",
-        ]
+        ],
+        "topup" => [
+            "cripto" => [
+                "header" => "Esta es su dirección de depósito",
+                "line1" => "Operamos con :token en la red de :network",
+                "line2" => "Los fondos en :token (:network) estarán disponibles automáticamente.",
+                "line3" => "Otra moneda requiere cambiarse a :token obligatoriamente.",
+            ],
+
+        ],
     ],
 ];
