@@ -327,7 +327,6 @@ class ZentroTraderBotController extends JsonsController
                     "chat" => array(
                         "id" => $suscriptor->user_id,
                     ),
-                    "autodestroy" => 1
                 ];
 
                 return $reply;
