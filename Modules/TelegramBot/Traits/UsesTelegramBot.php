@@ -503,7 +503,9 @@ trait UsesTelegramBot
             $menu = [];
 
         if (isset($actor->data["admin_level"]) && $actor->data["admin_level"] == 1) {
-            array_push($menu, ["text" => "👮‍♂️ " . Lang::get("telegrambot::bot.role.admin"), "callback_data" => 'adminmenu']);
+            array_push($menu, [
+                ["text" => "👮‍♂️ " . Lang::get("telegrambot::bot.role.admin"), "callback_data" => 'adminmenu'],
+            ]);
         }
 
         array_push($menu, [

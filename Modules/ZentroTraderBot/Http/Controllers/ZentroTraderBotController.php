@@ -327,6 +327,7 @@ class ZentroTraderBotController extends JsonsController
                     "chat" => array(
                         "id" => $suscriptor->user_id,
                     ),
+                    "autodestroy" => 1
                 ];
 
                 return $reply;
@@ -373,7 +374,6 @@ class ZentroTraderBotController extends JsonsController
             ["text" => "🔔 " . Lang::get("zentrotraderbot::bot.options.subscribtion"), "callback_data" => "suscribemenu"]
         ]);
         */
-        /*
 
         array_push($menu, [
             [
@@ -401,12 +401,11 @@ class ZentroTraderBotController extends JsonsController
                 ))
             ]
         ]);
-        */
 
 
         return $this->getMainMenu(
             $suscriptor,
-            false,
+            $menu,
             $description
         );
     }
