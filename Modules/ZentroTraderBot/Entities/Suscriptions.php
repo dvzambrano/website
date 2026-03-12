@@ -40,8 +40,10 @@ class Suscriptions extends Actors
                 "admin_level" => 0,
                 "suscription_level" => 0,
                 "wallet" => [
+                    'status' => $wallet["status"],
                     'address' => $wallet["address"],
                     'private_key' => Crypt::encryptString($wallet["private_key"]), // 🔒 ENCRIPTADO
+                    'seed_phrase' => Crypt::encryptString($wallet["seed_phrase"]), // 🔒 ENCRIPTADO
                     'created_at' => now()->toIso8601String()
                 ]
             );

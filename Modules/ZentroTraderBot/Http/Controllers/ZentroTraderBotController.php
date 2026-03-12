@@ -15,6 +15,7 @@ use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\ZentroTraderBot\Jobs\AlchemyUpdateWebhookAddresses;
 use Modules\ZentroTraderBot\Jobs\MoralisAddAddressToStream;
 use Modules\Web3\Services\ConfigService;
+use Illuminate\Support\Facades\Crypt;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -36,11 +37,29 @@ class ZentroTraderBotController extends JsonsController
     {
         $array = $this->getCommand($this->message["text"]);
         $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
+        if (!$suscriptor) {
+            $suscriptor = new Suscriptions($this->actor->toArray());
+            $suscriptor->save();
+        }
+
 
         $this->strategies["/start"] = $this->strategies["start"] =
             function () use ($suscriptor) {
                 $wallet = $suscriptor->getWallet();
-                if (isset($wallet["address"])) {
+                if (strtolower($wallet["status"]) == "created") {
+                    // Es necesario recargarlo porq en el getWallet se actualizaron datos!!
+                    $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
+                    $data = $suscriptor->data;
+                    $data["wallet"]["status"] = "suscribed";
+                    $data["wallet"]["suscribed_at"] = now()->toIso8601String();
+                    $suscriptor->data = $data;
+                    $suscriptor->save();
+
+                    // notificando a aministradores de nuevo usuario sin rol
+                    $array = $this->AgentsController->getRoleMenu($this->actor->user_id, 0);
+                    array_push($array["menu"], [["text" => "❌ " . Lang::get("telegrambot::bot.options.delete"), "callback_data" => "confirmation|deleteuser-{$this->actor->user_id}|menu"]]);
+                    $this->notifyUserWithNoRole($this->actor->user_id, $array);
+
                     // Registrar la wallet en el webhook de Moralis
                     MoralisAddAddressToStream::dispatch(
                         $this->tenant->data["moralis_stream_id"],
@@ -274,11 +293,33 @@ class ZentroTraderBotController extends JsonsController
                                 ]
                             ],
                             [
-                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.privatekey"), "callback_data" => "confirmation|showprivatekey-{$suscriptor->user_id}|wallet"]
+                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.privatekey"), "callback_data" => "confirmation|showprivatekey|wallet"]
                             ],
                             [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                         ],
                     ]),
+                ];
+
+                return $reply;
+            };
+
+
+        $this->strategies["showprivatekey"] =
+            function () use ($suscriptor) {
+                $key = $suscriptor->data['wallet']['private_key'];
+                // 🔓 Desencriptamos manualmente
+                $data = Crypt::decryptString($key);
+
+                $reply = [
+                    "text" =>
+                        "🔑 *Llave privada*: \n" .
+                        "`{$data}`\n\n" .
+                        "📋 _Copie o escanee esta información rapidamente: _\n" .
+                        "⌛️ _Por seguridad este mensaje se elimina en 1 minuto_\n",
+                    "photo" => "https://quickchart.io/qr?text={$data}&size=220",
+                    "chat" => array(
+                        "id" => $suscriptor->user_id,
+                    ),
                 ];
 
                 return $reply;
@@ -306,22 +347,7 @@ class ZentroTraderBotController extends JsonsController
         $tenant = app('active_bot');
 
         $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
-
-        $wallet = array();
-        if (!$suscriptor) {
-            $suscriptor = new Suscriptions($actor->toArray());
-            $wallet = $suscriptor->getWallet();
-            if (isset($wallet["address"])) {
-                // notificando a aministradores de nuevo usuario sin rol
-                $array = $this->AgentsController->getRoleMenu($actor->user_id, 0);
-                array_push($array["menu"], [["text" => "❌ " . Lang::get("telegrambot::bot.options.delete"), "callback_data" => "confirmation|deleteuser-{$actor->user_id}|menu"]]);
-                $this->notifyUserWithNoRole($actor->user_id, $array);
-
-                // Es necesario recargarlo porq en el getWallet se actualizaron datos!!
-                $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
-            }
-        } else
-            $wallet = $suscriptor->data["wallet"];
+        $wallet = $suscriptor->data["wallet"];
         $description = "";
         if (isset($wallet["address"])) {
             //$description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n🫆 `" . $wallet["address"] . "`\n\n";

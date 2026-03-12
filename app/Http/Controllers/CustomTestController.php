@@ -54,17 +54,15 @@ class CustomTestController extends BaseController
         $this->KashioBot->connectToThisTenant();
 
         $user_id = 816767995;
-        $data = $user_id * rand(1111111111, 9999999999);
+        $data = "uno dos tres cuatro cinco seis siete ocho nueve diez once doce";
 
-        $text =
-            "🔑 *Llave privada*: \n" .
-            "`{$data}`\n\n" .
-            "📋 _Copie o escanee esta información rapidamente: _\n" .
-            "⌛️ _Por seguridad este mensaje se elimina en 1 minuto_\n"
-        ;
         $array = array(
             "message" => array(
-                "text" => $text,
+                "text" =>
+                    "🔑 *Llave privada*: \n" .
+                    "`{$data}`\n\n" .
+                    "📋 _Copie o escanee esta información rapidamente: _\n" .
+                    "⌛️ _Por seguridad este mensaje se elimina en 1 minuto_\n",
                 "photo" => "https://quickchart.io/qr?text={$data}&size=220",
                 "chat" => array(
                     "id" => $user_id,
