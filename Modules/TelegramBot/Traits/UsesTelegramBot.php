@@ -115,15 +115,15 @@ trait UsesTelegramBot
             ),
             "demo" => $update['demo'] ?? false,
         );
+        $autodestroy = 0;
+        if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
+            $autodestroy = $this->reply["autodestroy"];
         if (isset($this->reply["photo"])) {
-            TelegramController::sendPhoto($array, $this->tenant->token);
+            TelegramController::sendPhoto($array, $this->tenant->token, $autodestroy);
         } else {
             // solo se envia un mensaje si tiene text
             // antes estaba $this->message["text"] pero lo cambie para q mandara el error cuando mandan la captura de un pago sin nombre y cantidad
             if (isset($this->reply["text"]) && $this->reply["text"] != "") {
-                $autodestroy = 0;
-                if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
-                    $autodestroy = $this->reply["autodestroy"];
 
                 TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
             }
