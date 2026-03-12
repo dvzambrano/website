@@ -406,7 +406,7 @@ class ZentroTraderBotController extends JsonsController
 
         return $this->getMainMenu(
             $suscriptor,
-            $menu,
+            false,
             $description
         );
     }
