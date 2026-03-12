@@ -284,6 +284,18 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+
+        $this->strategies["confirmation"] =
+            function () use ($array) {
+                $reply = $this->getAreYouSurePrompt(
+                    $array["pieces"][1],
+                    $array["pieces"][2],
+                    "su llave privada",
+                    false
+                );
+                return $reply;
+            };
+
         return $this->getProcessedMessage();
     }
 

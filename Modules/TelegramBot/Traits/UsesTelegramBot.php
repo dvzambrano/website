@@ -582,13 +582,15 @@ trait UsesTelegramBot
         return $reply;
     }
 
-    public function getAreYouSurePrompt($yes_method, $no_method, $message = false)
+    public function getAreYouSurePrompt($yes_method, $no_method, $message = false, $showwarning = true)
     {
         $text = "⚠️ *" . Lang::get("telegrambot::bot.prompts.areyousure.header") . "*\n";
         if ($message)
             $text .= "\n{$message}\n";
-        $text .= "_" . Lang::get("telegrambot::bot.prompts.areyousure.warning") . "_\n\n" .
-            "👇 " . Lang::get("telegrambot::bot.prompts.areyousure.text");
+        if ($showwarning)
+            $text .= "_" . Lang::get("telegrambot::bot.prompts.areyousure.warning") . "_\n\n";
+
+        $text .= "👇 " . Lang::get("telegrambot::bot.prompts.areyousure.text");
 
         return array(
             "text" => $text,
