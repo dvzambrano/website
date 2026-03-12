@@ -293,7 +293,7 @@ class ZentroTraderBotController extends JsonsController
                                 ]
                             ],
                             [
-                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.privatekey"), "callback_data" => "confirmation|showprivatekey|wallet"]
+                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "confirmation|showprivatekey|wallet"]
                             ],
                             [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                         ],
