@@ -513,9 +513,11 @@ trait UsesTelegramBot
 
         $reply = [
             "text" => $text,
+            /*
             "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
+            */
         ];
 
         return $reply;
