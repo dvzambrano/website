@@ -16,6 +16,7 @@ use Modules\Laravel\Http\Controllers\MathController;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Crypt;
 use Modules\Laravel\Http\Controllers\TextController;
+use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
 
 class CustomTestController extends BaseController
 {
@@ -49,6 +50,61 @@ class CustomTestController extends BaseController
     public function testLocal()
     {
         dd(app()->environment('local'));
+    }
+
+    private function getDots($width, $left, $right)
+    {
+        $paddingLength = $width - strlen($left) - strlen($right);
+        $dots = str_repeat('.', max(1, $paddingLength));
+
+        return "{$left} {$dots} {$right}";
+    }
+
+
+    public function testBalance()
+    {
+        $user_id = 816767995;
+        $this->KashioBot->connectToThisTenant();
+        $suscriptor = Suscriptions::where("user_id", $user_id)->first();
+        $walletController = new TraderWalletController();
+        $balance = 0;
+        $transactions = [];
+        try {
+            // 3. Obtener Balance REAL (específicamente de BASE_TOKEN en Polygon)
+            // El método getBalance que tienes devuelve el portfolio
+            $balance = $walletController->getBalance($suscriptor);
+            // 4. Obtener Transacciones 
+            $transactions = $walletController->getRecentTransactions($suscriptor);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        //dd($transactions);
+
+
+        // 2. Definimos el ancho total de la línea (ejemplo: 35 caracteres)
+        $totalWidth = 35;
+
+        $message = $this->getDots($totalWidth, "Balance", number_format($balance, 2) . " USD") . "\n\n";
+
+        $message .= "📊 Últimas operaciones\n";
+        foreach ($transactions as $tx) {
+            // 1. Formateamos la fecha y el monto
+            $date = $tx['human']['date'];
+            $amount = ($tx['human']['value'] > 0 ? '+' : '') . number_format($tx['human']['value'], 2) . " USD";
+
+            $message .= $this->getDots($totalWidth, $date, $amount) . "\n";
+        }
+
+        $array = array(
+            "message" => array(
+                "text" => $message,
+                "chat" => array(
+                    "id" => $user_id,
+                ),
+            ),
+        );
+        TelegramController::sendMessage($array, $this->KashioBot->token);
+        die("done!");
     }
 
     public function testQr()

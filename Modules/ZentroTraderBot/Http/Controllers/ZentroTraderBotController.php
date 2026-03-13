@@ -293,7 +293,7 @@ class ZentroTraderBotController extends JsonsController
                                 ]
                             ],
                             [
-                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "confirmation|showprivatekey|wallet"]
+                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "confirmation|showseedphrase|wallet"]
                             ],
                             [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                         ],
@@ -304,7 +304,7 @@ class ZentroTraderBotController extends JsonsController
             };
 
 
-        $this->strategies["showprivatekey"] =
+        $this->strategies["showseedphrase"] =
             function () use ($suscriptor) {
                 $key = $suscriptor->data['wallet']['seed_phrase'];
                 // 🔓 Desencriptamos manualmente
@@ -368,15 +368,12 @@ class ZentroTraderBotController extends JsonsController
 
 
         $menu = [];
-        /*
-        array_push($menu, [
-            ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "notimplemented"],
-            ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "notimplemented"],
-        ]);
-        array_push($menu, [
-            ["text" => "🔔 " . Lang::get("zentrotraderbot::bot.options.subscribtion"), "callback_data" => "suscribemenu"]
-        ]);
-        */
+
+        if (env("P2P_ENABLED", false))
+            array_push($menu, [
+                ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "notimplemented"],
+                ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "notimplemented"],
+            ]);
 
         array_push($menu, [
             [
@@ -478,7 +475,7 @@ class ZentroTraderBotController extends JsonsController
     public function configMenu($actor)
     {
         $menu = [];
-        array_push($menu, [["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "confirmation|showprivatekey|wallet"]]);
+        array_push($menu, [["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "confirmation|showseedphrase|wallet"]]);
 
         return $this->getConfigMenu(
             $actor,
