@@ -3,6 +3,7 @@
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
 use Modules\Laravel\Entities\Metadatas;
+use Modules\Laravel\Http\Controllers\TextController;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
@@ -179,33 +180,44 @@ class ZentroTraderBotController extends JsonsController
         // /balance POL
         $this->strategies["/balance"] =
             function () use ($array, $suscriptor) {
-                $reply = [
-                    "text" => "",
-                ];
-
-                $wc = new TraderWalletController();
-
+                $textController = new TextController();
+                $walletController = new TraderWalletController();
+                $balance = 0;
+                $transactions = [];
                 try {
-                    $result = array();
-                    if (isset($array["pieces"][1]))
-                        $result = $wc->getBalance($suscriptor, $array["pieces"][1]);
-                    else
-                        $result = $wc->getBalance($suscriptor);
-
-
-                    $address = $suscriptor->data['wallet']['address'];
-
-                    $text = "🫆 `" . $address . "`\n";
-                    $text .= "💰 " . $result . " *USD*\n";
-
-                    $reply = array(
-                        "text" => $text,
-                    );
-                } catch (\Exception $e) {
-                    $reply = array(
-                        "text" => "❌ " . Lang::get("telegrambot::bot.errors.header") . ": " . $e->getMessage(),
-                    );
+                    // 3. Obtener Balance REAL (específicamente de BASE_TOKEN en Polygon)
+                    $balance = $walletController->getBalance($suscriptor);
+                    // 4. Obtener Transacciones 
+                    $limit = 5;
+                    $transactions = $walletController->getRecentTransactions($suscriptor, $limit);
+                } catch (\Throwable $th) {
+                    //throw $th;
                 }
+
+                // 2. Definimos el ancho total de la línea (ejemplo: 45 caracteres)
+                $totalWidth = 45;
+
+                $message = "💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*:\n";
+                $date = $suscriptor->actor->getLocalDateTime(date("Y-m-d H:i:s"), $this->tenant->code, "Y-m-d h:i a");
+                $message .= $textController->getDots($totalWidth, $date, number_format($balance, 2) . " USD") . "\n\n";
+
+                $message .= "⏱️ *" . Lang::get("zentrotraderbot::bot.prompts.balance.lastoperations") . "*:\n";
+                foreach ($transactions as $tx) {
+                    // 1. Formateamos la fecha y el monto
+                    $date = $suscriptor->actor->getLocalDateTime($tx['human']['date'], $this->tenant->code, "Y-m-d h:i a");
+                    $amount = ($tx['human']['value'] > 0 ? '+' : '') . number_format($tx['human']['value'], 2) . " USD";
+
+                    $message .= $textController->getDots($totalWidth, $date, $amount) . "\n";
+                }
+
+                $reply = [
+                    "text" => $message,
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                        ],
+                    ]),
+                ];
 
                 return $reply;
             };
@@ -368,6 +380,10 @@ class ZentroTraderBotController extends JsonsController
 
 
         $menu = [];
+
+        array_push($menu, [
+            ["text" => "💵 " . Lang::get("zentrotraderbot::bot.options.balance"), "callback_data" => "/balance"],
+        ]);
 
         if (env("P2P_ENABLED", false))
             array_push($menu, [

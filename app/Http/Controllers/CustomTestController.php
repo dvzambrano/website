@@ -74,7 +74,8 @@ class CustomTestController extends BaseController
             // El método getBalance que tienes devuelve el portfolio
             $balance = $walletController->getBalance($suscriptor);
             // 4. Obtener Transacciones 
-            $transactions = $walletController->getRecentTransactions($suscriptor);
+            $limit = 5;
+            $transactions = $walletController->getRecentTransactions($suscriptor, $limit);
         } catch (\Throwable $th) {
             //throw $th;
         }
@@ -82,14 +83,17 @@ class CustomTestController extends BaseController
 
 
         // 2. Definimos el ancho total de la línea (ejemplo: 35 caracteres)
-        $totalWidth = 35;
+        $totalWidth = 45;
 
-        $message = $this->getDots($totalWidth, "Balance", number_format($balance, 2) . " USD") . "\n\n";
 
-        $message .= "📊 Últimas operaciones\n";
+        $message = "💵 *Saldo disponible*:\n";
+        $date = $suscriptor->actor->getLocalDateTime(date("Y-m-d H:i:s"), $this->KashioBot->code, "Y-m-d h:i a");
+        $message .= $this->getDots($totalWidth, $date, number_format($balance, 2) . " USD") . "\n\n";
+
+        $message .= "⏱️ *Últimas operaciones*:\n";
         foreach ($transactions as $tx) {
             // 1. Formateamos la fecha y el monto
-            $date = $tx['human']['date'];
+            $date = $suscriptor->actor->getLocalDateTime($tx['human']['date'], $this->KashioBot->code, "Y-m-d h:i a");
             $amount = ($tx['human']['value'] > 0 ? '+' : '') . number_format($tx['human']['value'], 2) . " USD";
 
             $message .= $this->getDots($totalWidth, $date, $amount) . "\n";

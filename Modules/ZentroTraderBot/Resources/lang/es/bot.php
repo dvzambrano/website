@@ -34,6 +34,7 @@ return [
         "actionlevel2" => "Ejecutar ordenes",
         "selloffer" => "Vender USD",
         "buyoffer" => "Comprar USD",
+        "balance" => "Consultar saldo",
         "topupcripto" => "Depositar Criptomonedas",
         "topupramp" => "Depositar USD",
         "withdraw" => "Extraer USD",
@@ -111,7 +112,10 @@ return [
                     'mins' => 'Este mensaje se eliminará en :count minuto|Este mensaje se eliminará en :count minutos',
                 ],
             ],
-
+        ],
+        "balance" => [
+            "available" => "Saldo disponible",
+            "lastoperations" => "Últimas operaciones:",
         ],
     ],
 ];

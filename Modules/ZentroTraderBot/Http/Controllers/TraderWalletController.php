@@ -64,7 +64,7 @@ class TraderWalletController extends WalletController
 
         return $humanBal;
     }
-    public function getRecentTransactions($suscriptor, $networkSymbol = null)
+    public function getRecentTransactions($suscriptor, $limit = 5)
     {
         // 1. Obtener Wallet
         if (!$suscriptor || !isset($suscriptor->data['wallet']['address'])) {
@@ -75,7 +75,7 @@ class TraderWalletController extends WalletController
         $apiKey = config("zentrotraderbot.alchemy_api_key");
         $token = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]));
 
-        return AlchemyController::getRecentTransactions($apiKey, $address, 'POL', ["erc20"], [$token["address"]], 5);
+        return AlchemyController::getRecentTransactions($apiKey, $address, 'POL', ["erc20"], [$token["address"]], $limit);
     }
 
     /**
