@@ -9,8 +9,10 @@ use Modules\ZentroTraderBot\Observers\RamporderObserver;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Observers\OfferObserver;
 use Illuminate\Support\Facades\Event;
-use Modules\Web3\Events\BlockchainActivityDetected;
-use Modules\ZentroTraderBot\Listeners\ProcessBlockchainActivity;
+use Modules\Web3\Events\WalletActivityDetected;
+use Modules\Web3\Events\ContractActivityDetected;
+use Modules\ZentroTraderBot\Listeners\ProcessWalletActivity;
+use Modules\ZentroTraderBot\Listeners\ProcessContractActivity;
 use Modules\ZentroTraderBot\Console\SyncAlchemyAddresses;
 use Modules\ZentroTraderBot\Console\RegisterAlchemyWebhooks;
 use Modules\ZentroTraderBot\Console\UpdateAlchemyWebhooks;
@@ -49,10 +51,15 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
         Ramporders::observe(RamporderObserver::class);
         // Registramos el observador para el modelo Offer
         Offers::observe(OfferObserver::class);
-        // Registramos el evento q escuchamos cuando Alchemy manda info al webhook del modulo Web3
+        // Registramos el evento q escuchamos cuando Alchemy manda info al webhook de cambios en una wallet
         Event::listen(
-            BlockchainActivityDetected::class,
-            ProcessBlockchainActivity::class
+            WalletActivityDetected::class,
+            ProcessWalletActivity::class
+        );
+        // Registramos el evento q escuchamos cuando Alchemy manda info al webhook de cambios en el contrato
+        Event::listen(
+            ContractActivityDetected::class,
+            ProcessContractActivity::class
         );
     }
 

@@ -2,7 +2,7 @@
 
 namespace Modules\ZentroTraderBot\Listeners;
 
-use Modules\Web3\Events\BlockchainActivityDetected;
+use Modules\Web3\Events\WalletActivityDetected;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 use Modules\TelegramBot\Entities\TelegramBots;
@@ -11,22 +11,22 @@ use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
 use Modules\Laravel\Http\Controllers\MathController;
 
-class ProcessBlockchainActivity
+class ProcessWalletActivity
 {
     /**
      * Procesa eventos de actividad blockchain de manera agnóstica al proveedor.
      * Recibe datos normalizados (DTO) desde cualquier fuente (Moralis, Alchemy, etc.), 
      * identifica el tenant correspondiente y dispara las notificaciones al usuario.
      *
-     * @param BlockchainActivityDetected $event Contiene el DTO normalizado con 
+     * @param WalletActivityDetected $event Contiene el DTO normalizado con 
      * la estructura: 'network_id', 'confirmed', 'tx_hash', 'from', 'to', 'value', 'token_symbol', 'tenant_code'.
      * * @return void
      */
-    public function handle(BlockchainActivityDetected $event)
+    public function handle(WalletActivityDetected $event)
     {
         $data = $event->data;
         /*
-        Log::debug("🐞 ProcessBlockchainActivity handle: ", [
+        Log::debug("🐞 ProcessWalletActivity handle: ", [
             "id" => $data['trace_id'],
             "confirmed" => $data['confirmed'],
             "data" => $data,
@@ -94,7 +94,7 @@ class ProcessBlockchainActivity
             // 4. Identificar el Bot/Tenant
             $bot = TelegramBots::where('key', $data['tenant_code'])->first();
             if (!$bot) {
-                Log::error("🆘 ProcessBlockchainActivity: Bot no encontrado para tenant: " . ($data['tenant_code'] ?? 'N/A'));
+                Log::error("🆘 ProcessWalletActivity: Bot no encontrado para tenant: " . ($data['tenant_code'] ?? 'N/A'));
                 return;
             }
             $bot->connectToThisTenant();
