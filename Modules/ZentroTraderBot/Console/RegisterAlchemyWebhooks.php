@@ -24,11 +24,11 @@ class RegisterAlchemyWebhooks extends Command
 
             // IMPORTANTE: Alchemy requiere al menos una dirección o un array vacío según la versión.
             // Si te da error con [], pon una dirección de prueba '0x0000000000000000000000000000000000000000'
-            // https://micalme.com/webhook/alchemy/772aecb5-0f26-4a3d-9015-c2bee0e04d71
+            // https://micalme.com/webhook/wallet/alchemy/772aecb5-0f26-4a3d-9015-c2bee0e04d71
             $payload = [
                 'network' => 'MATIC_MAINNET',
                 'webhook_type' => 'ADDRESS_ACTIVITY',
-                'webhook_url' => "https://" . rtrim($domain, '/') . "/webhook/alchemy/{$tenant->key}",
+                'webhook_url' => "https://" . rtrim($domain, '/') . "/webhook/wallet/alchemy/{$tenant->key}",
                 'name' => $tenant->code,
                 'addresses' => []
             ];

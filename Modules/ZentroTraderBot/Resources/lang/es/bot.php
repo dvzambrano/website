@@ -115,7 +115,7 @@ return [
         ],
         "balance" => [
             "available" => "Saldo disponible",
-            "lastoperations" => "Últimas operaciones:",
+            "lastoperations" => "Últimas operaciones",
         ],
     ],
 ];

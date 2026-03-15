@@ -48,7 +48,7 @@ class RegisterMoralisStreams extends Command
 
             $this->info("🚀 Creando Stream en Moralis para: {$tenant->code}");
             $payload = [
-                'webhookUrl' => "https://" . rtrim($domain, '/') . "/webhook/blockchain/moralis/{$tenant->key}",
+                'webhookUrl' => "https://" . rtrim($domain, '/') . "/webhook/wallet/blockchain/moralis/{$tenant->key}",
                 'description' => $tenant->code,
                 'chainIds' => [
                     '0x1', // Ethereum
