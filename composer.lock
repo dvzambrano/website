@@ -794,7 +794,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/web3.git",
-                "reference": "6b342e3b055d20eb171f4d19fec06942ddba63ea"
+                "reference": "355fdf97eca809b628f25670334248602f4f241c"
             },
             "require": {
                 "dvzambrano/laravel": "dev-main as 1.0.0",
@@ -842,7 +842,7 @@
                 }
             ],
             "description": "Modulo base para funcionalidades Web3",
-            "time": "2026-03-16T14:24:30+00:00"
+            "time": "2026-03-16T15:30:20+00:00"
         },
         {
             "name": "egulias/email-validator",
