@@ -67,8 +67,15 @@ class ProcessWalletActivity
         if (empty($data['token_symbol']) && is_numeric($data['network_id'])) {
             try {
                 $network = ConfigService::getNetworks((int) $data['network_id']);
-                if ($network)
+                if ($network) {
                     $data['token_symbol'] = strtoupper($network["shortName"]);
+                    if (env("DEBUG_MODE", false))
+                        Log::debug("🐞 ProcessWalletActivity handle update native token_symbol: ", [
+                            "network_id" => $data['network_id'],
+                            "token_symbol" => $data['token_symbol'],
+                            "data" => $data,
+                        ]);
+                }
             } catch (\Throwable $th) {
             }
         }
@@ -80,6 +87,11 @@ class ProcessWalletActivity
                 if (!$token)
                     return;
             } catch (\Throwable $th) {
+                Log::error("🆘 ProcessWalletActivity handle Anti-Scam: ", [
+                    "network_id" => $data['network_id'],
+                    "token_address" => $data['token_address'],
+                    "data" => $data,
+                ]);
             }
         }
 
@@ -88,7 +100,7 @@ class ProcessWalletActivity
             // 4. Identificar el Bot/Tenant
             $bot = TelegramBots::where('key', $data['tenant_code'])->first();
             if (!$bot) {
-                Log::error("🆘 ProcessWalletActivity: Bot no encontrado para tenant: " . ($data['tenant_code'] ?? 'N/A'));
+                Log::error("🆘 ProcessWalletActivity handle: Bot no encontrado para tenant: " . ($data['tenant_code'] ?? 'N/A'));
                 return;
             }
             $bot->connectToThisTenant();
@@ -96,22 +108,26 @@ class ProcessWalletActivity
             // 5. Buscar al suscriptor usando la dirección estandarizada
             $toAddress = strtolower($data['to']);
             $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
-            if ($suscriptor) {
-                $botController = new ZentroTraderBotController();
-                $botController->notifyDepositConfirmed(
-                    $suscriptor->user_id,
-                    MathController::round($data['value'], 4, false),
-                    $data['token_symbol']
-                );
-
-                // Marcar como procesado en caché por 24 horas
-                Cache::put($cacheKey, true, now()->addHours(24));
-
-                Log::info("✅ Depósito procesado exitosamente: ", [
-                    "id" => $data['trace_id'],
-                    "data" => $data,
-                ]);
+            if (!$suscriptor) {
+                Log::error("🆘 ProcessWalletActivity handle: Suscriptor no encontrado para wallet = {$toAddress}");
+                return;
             }
+
+            $botController = new ZentroTraderBotController();
+            $botController->notifyDepositConfirmed(
+                $suscriptor->user_id,
+                MathController::round($data['value'], 4, false),
+                $data['token_symbol']
+            );
+
+            // Marcar como procesado en caché por 24 horas
+            Cache::put($cacheKey, true, now()->addHours(24));
+
+            Log::info("✅ Depósito procesado exitosamente: ", [
+                "id" => $data['trace_id'],
+                "data" => $data,
+            ]);
+
         }
     }
 }
