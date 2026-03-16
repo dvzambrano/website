@@ -1,42 +1,38 @@
 {
-    "payload": {
-        "webhookId": "wh_uyb1br5bmucyh90b",
-        "id": "whevt_gawmtahs8vl15zww",
-        "createdAt": "2026-03-11T19:23:53.993Z",
-        "type": "ADDRESS_ACTIVITY",
-        "event": {
-            "network": "MATIC_MAINNET",
-            "activity": [
-                {
-                    "fromAddress": "0x1aaffcab3cb8ec9b207b191c1b2e2ec662486666",
-                    "toAddress": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
-                    "blockNum": "0x502c894",
-                    "hash": "0xf83225bd56f2fa27cfb410f147fe0313140c9c04c917e5e96afc9720dfcf4cc1",
-                    "value": 1,
-                    "asset": "MATIC",
-                    "category": "external",
-                    "rawContract": {
-                        "rawValue": "0xde0b6b3a7640000",
-                        "decimals": 18
-                    },
-                    "blockTimestamp": "0x69b1c149"
-                }
-            ],
-            "source": "chainlake-kafka"
-        }
-    },
-    "transactions": [
+    "tenant": "59d5e7a3-dea0-4289-88f0-a39765f50bcf",
+    "activities": [
         {
-            "network_id": "MATIC_MAINNET",
-            "confirmed": true,
-            "block_number": 84068500,
-            "tx_hash": "0xf83225bd56f2fa27cfb410f147fe0313140c9c04c917e5e96afc9720dfcf4cc1",
-            "from": "0x1aaffcab3cb8ec9b207b191c1b2e2ec662486666",
-            "to": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
-            "value": 1.0,
-            "token_symbol": "MATIC",
-            "token_address": null,
-            "timestamp": 1773257033
+            "network_id": 80002,
+            "tx_hash": "0x711f439004d42e2835830fc4134dc94e344da2c88e04f0ee3de8e41c411d732f",
+            "contract": "0x8b0180f2101c8260d49339abfee87927412494b4",
+            "topic0": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+            "param1": 3.5478939403999102e47,
+            "param2": "0xc15e5d5173966380fc2b297a59ed89019e4fea12",
+            "block_number": "35246638",
+            "timestamp": "1773620809",
+            "from_address": "0x3e254e81106e19b4c961cbc800390aed2a8fe800"
+        },
+        {
+            "network_id": 80002,
+            "tx_hash": "0x711f439004d42e2835830fc4134dc94e344da2c88e04f0ee3de8e41c411d732f",
+            "contract": "0x8b0180f2101c8260d49339abfee87927412494b4",
+            "topic0": "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925",
+            "param1": 3.5478939403999102e47,
+            "param2": "0xc15e5d5173966380fc2b297a59ed89019e4fea12",
+            "block_number": "35246638",
+            "timestamp": "1773620809",
+            "from_address": "0x3e254e81106e19b4c961cbc800390aed2a8fe800"
+        },
+        {
+            "network_id": 80002,
+            "tx_hash": "0x711f439004d42e2835830fc4134dc94e344da2c88e04f0ee3de8e41c411d732f",
+            "contract": "0xc15e5d5173966380fc2b297a59ed89019e4fea12",
+            "topic0": "0x71cb61698242bdadd31b3db5d7d28894a712a6b311e7cc08164207ed15e0d055",
+            "param1": 20,
+            "param2": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
+            "block_number": "35246638",
+            "timestamp": "1773620809",
+            "from_address": "0x3e254e81106e19b4c961cbc800390aed2a8fe800"
         }
     ]
 }
