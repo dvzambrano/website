@@ -1,25 +1,178 @@
 {
-    "id": "af0c090f-1b52-4572-9c04-f79a9891a533",
-    "confirmed": true,
-    "data": {
+    "tenant": "59d5e7a3-dea0-4289-88f0-a39765f50bcf",
+    "native_txs": 1,
+    "erc20_transfers": 0,
+    "nft_transfers": 0,
+    "contract_logs": 1,
+    "$data": {
         "network_id": 80002,
-        "confirmed": true,
-        "tx_hash": "0x312019fc22fb9c2bd9173b3e2ecc2f27155040c2ae1c5afbca25acb09fe25100",
-        "contract": "0x8b0180f2101c8260d49339abfee87927412494b4",
-        "topic0": "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925",
-        "block_number": "35268999",
-        "timestamp": "1773665531",
-        "from_address": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
-        "decoded": {
-            "name": "Approval",
-            "params": {
-                "owner": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
-                "spender": "0xc15e5d5173966380fc2b297a59ed89019e4fea12",
-                "value": { "phpseclib\\Math\\BigInteger": "10000" }
-            }
-        },
+        "confirmed": false,
+        "block_number": "35275073",
+        "timestamp": "1773677679",
         "tenant_code": "59d5e7a3-dea0-4289-88f0-a39765f50bcf",
         "listener": "moralis",
-        "trace_id": "af0c090f-1b52-4572-9c04-f79a9891a533"
+        "type": "contract_log",
+        "tx_hash": "0x931f38a3e840b61ee1e309beb93047ce0b03307a75a98021d481e41bee8f6f50",
+        "contract": "0xc15e5d5173966380fc2b297a59ed89019e4fea12",
+        "topic0": "0x71cb61698242bdadd31b3db5d7d28894a712a6b311e7cc08164207ed15e0d055",
+        "from_address": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
+        "decoded": {
+            "name": "TradeCreated",
+            "params": {
+                "tradeId": "29",
+                "seller": "0x3e254e81106e19b4c961cbc800390aed2a8fe800"
+            }
+        },
+        "trace_id": "539f7152-c051-4742-b9bf-5b80dbc4806f"
+    },
+    "$payload": {
+        "confirmed": false,
+        "chainId": "0x13882",
+        "abi": [
+            {
+                "name": "ArbiterChanged",
+                "type": "event",
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "type": "address",
+                        "name": "oldArbiter",
+                        "indexed": true
+                    },
+                    { "type": "address", "name": "newArbiter", "indexed": true }
+                ]
+            },
+            {
+                "name": "DisputeOpened",
+                "type": "event",
+                "anonymous": false,
+                "inputs": [
+                    { "type": "uint256", "name": "tradeId", "indexed": true },
+                    { "type": "address", "name": "opener", "indexed": true }
+                ]
+            },
+            {
+                "name": "DisputeResolved",
+                "type": "event",
+                "anonymous": false,
+                "inputs": [
+                    { "type": "uint256", "name": "tradeId", "indexed": true },
+                    { "type": "address", "name": "winner", "indexed": false }
+                ]
+            },
+            {
+                "name": "FeeChanged",
+                "type": "event",
+                "anonymous": false,
+                "inputs": [
+                    { "type": "uint256", "name": "oldFee", "indexed": false },
+                    { "type": "uint256", "name": "newFee", "indexed": false }
+                ]
+            },
+            {
+                "name": "OwnershipTransferred",
+                "type": "event",
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "type": "address",
+                        "name": "previousOwner",
+                        "indexed": true
+                    },
+                    { "type": "address", "name": "newOwner", "indexed": true }
+                ]
+            },
+            {
+                "name": "TradeApplied",
+                "type": "event",
+                "anonymous": false,
+                "inputs": [
+                    { "type": "uint256", "name": "tradeId", "indexed": true },
+                    { "type": "address", "name": "buyer", "indexed": true }
+                ]
+            },
+            {
+                "name": "TradeCancelled",
+                "type": "event",
+                "anonymous": false,
+                "inputs": [
+                    { "type": "uint256", "name": "tradeId", "indexed": true }
+                ]
+            },
+            {
+                "name": "TradeCreated",
+                "type": "event",
+                "anonymous": false,
+                "inputs": [
+                    { "type": "uint256", "name": "tradeId", "indexed": true },
+                    { "type": "address", "name": "seller", "indexed": true }
+                ]
+            },
+            {
+                "name": "TradeMigrated",
+                "type": "event",
+                "anonymous": false,
+                "inputs": [
+                    { "type": "uint256", "name": "tradeId", "indexed": true },
+                    {
+                        "type": "address",
+                        "name": "newContract",
+                        "indexed": true
+                    }
+                ]
+            }
+        ],
+        "streamId": "7468d572-7164-4d29-bb93-83dd3965ee0f",
+        "tag": "8244020104:AAEj3viSh3YhxGN3yeGfrbRyr3VvaR5Vlms",
+        "retries": 0,
+        "block": {
+            "number": "35275073",
+            "hash": "0x10e5f47cf9be0c93351f1f9be75f2f2b4d07989501cf7bee3da3a4049e5dc0fd",
+            "timestamp": "1773677679"
+        },
+        "logs": [
+            {
+                "logIndex": "9",
+                "transactionHash": "0x931f38a3e840b61ee1e309beb93047ce0b03307a75a98021d481e41bee8f6f50",
+                "address": "0xc15e5d5173966380fc2b297a59ed89019e4fea12",
+                "data": "0x",
+                "topic0": "0x71cb61698242bdadd31b3db5d7d28894a712a6b311e7cc08164207ed15e0d055",
+                "topic1": "0x000000000000000000000000000000000000000000000000000000000000001d",
+                "topic2": "0x0000000000000000000000003e254e81106e19b4c961cbc800390aed2a8fe800",
+                "topic3": null,
+                "triggered_by": ["0xc15e5d5173966380fc2b297a59ed89019e4fea12"]
+            }
+        ],
+        "txs": [
+            {
+                "hash": "0x931f38a3e840b61ee1e309beb93047ce0b03307a75a98021d481e41bee8f6f50",
+                "gas": "166518",
+                "gasPrice": "27500000031",
+                "nonce": "91",
+                "input": "0x0c98f22e0000000000000000000000008b0180f2101c8260d49339abfee87927412494b40000000000000000000000000000000000000000000000000000000000002710",
+                "transactionIndex": "2",
+                "fromAddress": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
+                "toAddress": "0xc15e5d5173966380fc2b297a59ed89019e4fea12",
+                "value": "0",
+                "type": "2",
+                "v": "0",
+                "r": "32349390203825181306846430304592094416229511618714814493888269360204089097303",
+                "s": "14524118924151976368512260075210861437261036215928298648127666876148812770266",
+                "receiptCumulativeGasUsed": "365559",
+                "receiptGasUsed": "128186",
+                "receiptContractAddress": null,
+                "receiptRoot": null,
+                "receiptStatus": "1",
+                "transactionFee": "0.003525115003973766",
+                "triggered_by": ["0xc15e5d5173966380fc2b297a59ed89019e4fea12"]
+            }
+        ],
+        "txsInternal": [],
+        "erc20Transfers": [],
+        "erc20Approvals": [],
+        "nftTokenApprovals": [],
+        "nftApprovals": { "ERC721": [], "ERC1155": [] },
+        "nftTransfers": [],
+        "nativeBalances": []
     }
 }

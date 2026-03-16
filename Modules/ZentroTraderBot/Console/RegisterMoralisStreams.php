@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Laravel\Services\BehaviorService;
 use Modules\Web3\Http\Controllers\ScanController;
+use Modules\ZentroTraderBot\Entities\Suscriptions;
 
 class RegisterMoralisStreams extends Command
 {
@@ -28,6 +29,9 @@ class RegisterMoralisStreams extends Command
         }
 
         foreach ($bots as $tenant) {
+            // --- CONFIGURACIÓN DINÁMICA DE LA CONEXIÓN ---
+            $tenant->connectToThisTenant();
+
             $data = $tenant->data;
 
             if (isset($data["moralis_stream_id"])) {
@@ -50,16 +54,31 @@ class RegisterMoralisStreams extends Command
             $this->info("🚀 Creando Stream en Moralis para: {$tenant->code}");
             // Obtener el ABI completo del contrato y pasarlo al stream
             $contractAbi = ScanController::getAbi(env('ETHERSCAN_API_KEY'), env('ESCROW_CONTRACT'), env('ESCROW_CHAIN'));
-            // Filtrar solo eventos del ABI y generar topic0 automáticamente
             $events = array_filter($contractAbi, fn($item) => ($item['type'] ?? '') === 'event');
+            $abiEvents = array_values($events);
 
             $topic0 = array_map(function ($event) {
                 $inputs = array_map(fn($input) => $input['type'], $event['inputs'] ?? []);
-                $signature = $event['name'] . '(' . implode(',', $inputs) . ')';
-                return $signature; // Moralis acepta la signature legible, no necesitas el hash
-            }, array_values($events));
-            // Solo pasar los eventos (no funciones) en el abi
-            $abiEvents = array_values($events);
+                return $event['name'] . '(' . implode(',', $inputs) . ')';
+            }, $abiEvents);
+
+            // Agregar el Transfer ERC-20 si no está ya incluido
+            $transferAbi = [
+                'name' => 'Transfer',
+                'type' => 'event',
+                'anonymous' => false,
+                'inputs' => [
+                    ['type' => 'address', 'name' => 'from', 'indexed' => true],
+                    ['type' => 'address', 'name' => 'to', 'indexed' => true],
+                    ['type' => 'uint256', 'name' => 'value', 'indexed' => false],
+                ],
+            ];
+            $transferTopic = 'Transfer(address,address,uint256)';
+
+            if (!in_array($transferTopic, $topic0)) {
+                $abiEvents[] = $transferAbi;
+                $topic0[] = $transferTopic;
+            }
 
             $payload = [
                 'webhookUrl' => "https://" . rtrim($domain, '/') . "/webhook/blockchain/moralis/{$tenant->key}",
@@ -90,33 +109,6 @@ class RegisterMoralisStreams extends Command
                 'includeInternalTxs' => false, // No necesitas txs internas si solo quieres envíos/recepciones directas
                 'abi' => $abiEvents,  // Solo eventos
                 'topic0' => $topic0,     // Signatures generadas
-                /*
-                'abi' => [
-                    [
-                        'name' => 'Transfer',
-                        'type' => 'event',
-                        'anonymous' => false,
-                        'inputs' => [
-                            [
-                                'type' => 'address',
-                                'name' => 'from',
-                                'indexed' => true,
-                            ],
-                            [
-                                'type' => 'address',
-                                'name' => 'to',
-                                'indexed' => true,
-                            ],
-                            [
-                                'type' => 'uint256',
-                                'name' => 'value',
-                                'indexed' => false,
-                            ],
-                        ],
-                    ],
-                ],
-                'topic0' => ['Transfer(address,address,uint256)'],
-                */
             ];
 
             $response = Http::withHeaders([
@@ -134,6 +126,33 @@ class RegisterMoralisStreams extends Command
                 $tenant->save();
 
                 $this->info("✅ Stream creado con ID: {$streamId}");
+
+                // Después de crear el stream exitosamente...
+
+                // Agregar wallets y contratos al stream
+
+                $addresses = [env('ESCROW_CONTRACT')];
+                $suscriptors = Suscriptions::all();
+                foreach ($suscriptors as $suscriptor)
+                    $addresses[] = $suscriptor->getWallet()["address"];
+
+                if (!empty($addresses)) {
+                    $addResponse = Http::withHeaders([
+                        'x-api-key' => $apiKey,
+                        'Content-Type' => 'application/json',
+                    ])
+                        ->timeout(BehaviorService::timeout())
+                        ->post("https://api.moralis-streams.com/streams/evm/{$streamId}/address", [
+                            'address' => $addresses,
+                        ]);
+
+                    if ($addResponse->successful()) {
+                        $this->info("✅ " . count($addresses) . " direcciones agregadas al stream");
+                    } else {
+                        $this->error("❌ Error agregando direcciones: " . $addResponse->body());
+                    }
+                }
+
             } else {
                 $this->error("❌ Error creando Stream para {$tenant->code}: " . $response->body());
             }
