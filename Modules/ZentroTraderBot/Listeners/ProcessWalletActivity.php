@@ -54,8 +54,13 @@ class ProcessWalletActivity
         */
 
         // 1. Filtro de Confirmación: Si no esta confirmada la desechamos
-        if (!($data['confirmed'] ?? false))
+        if (!($data['confirmed'] ?? false)) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 ProcessWalletActivity handle escaped by !confirmed: ", [
+                    "data" => $data,
+                ]);
             return;
+        }
 
         // 2. Normalización de Token Nativo (MATIC, BNB, ETH...)
         if (empty($data['token_symbol']) && is_numeric($data['network_id'])) {
@@ -78,8 +83,15 @@ class ProcessWalletActivity
         if (!empty($data['token_address'])) {
             try {
                 $token = ConfigService::getToken(strtolower($data['token_address']), $data['network_id']);
-                if (!$token)
+                if (!$token) {
+                    if (env("DEBUG_MODE", false))
+                        Log::debug("🐞 ProcessWalletActivity handle escaped by !token: ", [
+                            "network_id" => $data['network_id'],
+                            "token_address" => $data['token_address'],
+                            "data" => $data,
+                        ]);
                     return;
+                }
             } catch (\Throwable $th) {
                 Log::error("🆘 ProcessWalletActivity handle Anti-Scam: ", [
                     "network_id" => $data['network_id'],
@@ -94,7 +106,10 @@ class ProcessWalletActivity
             // 4. Identificar el Bot/Tenant
             $bot = TelegramBots::where('key', $data['tenant_code'])->first();
             if (!$bot) {
-                Log::error("🆘 ProcessWalletActivity handle: Bot no encontrado para tenant: " . ($data['tenant_code'] ?? 'N/A'));
+                Log::debug("🐞 ProcessWalletActivity handle escaped by !bot: ", [
+                    "tenant_code" => $data['tenant_code'],
+                    "data" => $data,
+                ]);
                 return;
             }
             $bot->connectToThisTenant();
@@ -103,13 +118,21 @@ class ProcessWalletActivity
             $toAddress = strtolower($data['to']);
             $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
             if (!$suscriptor) {
-                Log::error("🆘 ProcessWalletActivity handle: Suscriptor no encontrado para wallet = {$toAddress}");
+                Log::debug("🐞 ProcessWalletActivity handle escaped by !suscriptor: ", [
+                    "address" => $toAddress,
+                    "data" => $data,
+                ]);
                 return;
             }
 
             //  Validación de duplicidad: Verificar si el tx_hash ya fue procesado
             $cacheKey = 'tx_processed_' . $data['tx_hash'];
             if (Cache::has($cacheKey)) {
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 ProcessWalletActivity handle escaped by tx_processed: ", [
+                        "key" => $cacheKey,
+                        "data" => $data,
+                    ]);
                 return;
             }
 
