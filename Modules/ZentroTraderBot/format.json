@@ -1,26 +1,16 @@
 {
-    "id": "8c76c3ee-d057-4939-a0a3-42b7eecf1c52",
+    "network_id": 80002,
     "confirmed": true,
-    "data": {
-        "network_id": 80002,
-        "confirmed": true,
-        "block_number": "35285225",
-        "timestamp": "1773697983",
-        "tenant_code": "59d5e7a3-dea0-4289-88f0-a39765f50bcf",
-        "listener": "moralis",
-        "type": "contract_log",
-        "tx_hash": "0xcdc0c3b846604ccfe68d648c63ca7b8602122d546b4c7ff6bfac5374d6ff8734",
-        "contract": "0x8b0180f2101c8260d49339abfee87927412494b4",
-        "topic0": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-        "from_address": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
-        "decoded": {
-            "name": "Transfer",
-            "params": {
-                "from": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
-                "to": "0xd4b4e6dd4134ce09d910aaa3583bbe5d1172220d",
-                "value": { "phpseclib\\Math\\BigInteger": "1000000" }
-            }
-        },
-        "trace_id": "8c76c3ee-d057-4939-a0a3-42b7eecf1c52"
-    }
+    "block_number": "35286081",
+    "timestamp": "1773699695",
+    "tenant_code": "59d5e7a3-dea0-4289-88f0-a39765f50bcf",
+    "listener": "moralis",
+    "type": "erc20_transfer",
+    "tx_hash": "0xabe7b89fe69451f9870f3a73557318d0f77ab1a28d7d97c088278876ec6f6d9f",
+    "from": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
+    "to": "0xd4b4e6dd4134ce09d910aaa3583bbe5d1172220d",
+    "value": "1",
+    "token_symbol": "USDC",
+    "token_address": "0x8b0180f2101c8260d49339abfee87927412494b4",
+    "trace_id": "a7bc731a-629b-4423-bba3-f3d615f8f896"
 }

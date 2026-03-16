@@ -57,12 +57,6 @@ class ProcessWalletActivity
         if (!($data['confirmed'] ?? false))
             return;
 
-        //  Validación de duplicidad: Verificar si el tx_hash ya fue procesado
-        $cacheKey = 'tx_processed_' . $data['tx_hash'];
-        if (Cache::has($cacheKey)) {
-            return;
-        }
-
         // 2. Normalización de Token Nativo (MATIC, BNB, ETH...)
         if (empty($data['token_symbol']) && is_numeric($data['network_id'])) {
             try {
@@ -110,6 +104,12 @@ class ProcessWalletActivity
             $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
             if (!$suscriptor) {
                 Log::error("🆘 ProcessWalletActivity handle: Suscriptor no encontrado para wallet = {$toAddress}");
+                return;
+            }
+
+            //  Validación de duplicidad: Verificar si el tx_hash ya fue procesado
+            $cacheKey = 'tx_processed_' . $data['tx_hash'];
+            if (Cache::has($cacheKey)) {
                 return;
             }
 
