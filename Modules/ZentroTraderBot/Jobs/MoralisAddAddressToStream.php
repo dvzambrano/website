@@ -32,12 +32,13 @@ class MoralisAddAddressToStream implements ShouldQueue
             $this->api_key,
             $this->address
         );
-        if ($response->successful())
-            Log::debug("🐞 MoralisAddAddressToStream handle", [
-                "stream_id" => $this->stream_id,
-                "address" => $this->address,
-            ]);
-        else
+        if ($response->successful()) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 MoralisAddAddressToStream handle", [
+                    "stream_id" => $this->stream_id,
+                    "address" => $this->address,
+                ]);
+        } else
             Log::error('🆘 MoralisAddAddressToStream handle error', [
                 "stream_id" => $this->stream_id,
                 "api_key" => $this->api_key,

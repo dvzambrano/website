@@ -46,7 +46,8 @@ class TradingViewController extends TelegramBotController
         if (isset($request["user"]))
             $text .= " " . $request["user"];
         $text .= ": ";
-        Log::debug("🐞 " . $text, $data);
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 " . $text, $data);
 
         $bot = new ZentroTraderBotController("ZentroTraderBot");
 
@@ -165,7 +166,8 @@ class TradingViewController extends TelegramBotController
         $balanceAvailable = (float) ($assets[$quote] ?? 0);
 
         if ($balanceAvailable <= 0) {
-            Log::debug("🐞 TradingViewController openLongPosition: Saldo insuficiente de $quote.");
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 TradingViewController openLongPosition: Saldo insuficiente de $quote.");
             return response()->json(['status' => 'skipped', 'message' => "Sin saldo en $quote"]);
         }
 

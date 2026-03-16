@@ -61,7 +61,8 @@ class TransakController extends Controller implements RampProviderInterface
         $array = array();
         $payload = $request->all();
         // Logueamos siempre para auditoría interna
-        Log::debug("🐞 TransakController processWebhook: Evento recibido " . json_encode($payload));
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 TransakController processWebhook: Evento recibido " . json_encode($payload));
 
         try {
             $token = $request->getContent();
@@ -90,7 +91,8 @@ class TransakController extends Controller implements RampProviderInterface
                 $array["status"] = $data['status'];
                 $array["payload"] = $payload;
 
-                Log::debug("🐞 TransakController processWebhook: ORDER Update - User: " . $array["userId"] . " - Order: " . $array["orderId"] . "" . " - Status: " . $array["status"]);
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 TransakController processWebhook: ORDER Update - User: " . $array["userId"] . " - Order: " . $array["orderId"] . "" . " - Status: " . $array["status"]);
             }
 
             // Los eventos de KYC empiezan por "USER_" (ej: USER_KYC_APPROVED)
@@ -99,7 +101,8 @@ class TransakController extends Controller implements RampProviderInterface
                 $array["userId"] = $data['partnerCustomerId'];
                 $array["status"] = $data['kycStatus'];
 
-                Log::debug("🐞 TransakController processWebhook: KYC Update - User: " . $array["userId"] . " - Status: " . $array["status"]);
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 TransakController processWebhook: KYC Update - User: " . $array["userId"] . " - Status: " . $array["status"]);
             }
 
 

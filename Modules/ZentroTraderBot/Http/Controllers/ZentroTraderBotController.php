@@ -75,7 +75,8 @@ class ZentroTraderBotController extends JsonsController
                         $authToken,
                         [$wallet["address"]]
                     )->delay(now()->addSeconds(10));
-                    //Log::debug("🐞 ZentroTraderBotController processMessage /start:" . json_encode($wallet));
+                    if (env("DEBUG_MODE", false))
+                        Log::debug("🐞 ZentroTraderBotController processMessage /start:" . json_encode($wallet));
                 }
 
                 $reply = $this->mainMenu($this->actor);
@@ -131,6 +132,9 @@ class ZentroTraderBotController extends JsonsController
         // /swap 5 POL DAI
         $this->strategies["/swap"] =
             function () use ($array) {
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 ZentroTraderBotController /swap:" . json_encode($array));
+
                 $key = env('BASE_NETWORK');
 
                 $network = ChainidController::getNetworkData();
@@ -138,7 +142,6 @@ class ZentroTraderBotController extends JsonsController
 
                 $wc = new TraderWalletController();
                 $privateKey = $wc->getDecryptedPrivateKey($this->actor->user_id);
-                //Log::debug("🐞 ZentroTraderBotController /swap:" . json_encode($array));
                 $amount = $array["pieces"][1];     // Cantidad a vender (Empieza suave, ej. 2 POL)
                 $from = $array["pieces"][2];   // Token que vendes
                 $to = $array["pieces"][3];  // Token que compras
@@ -168,7 +171,8 @@ class ZentroTraderBotController extends JsonsController
                         );
                     },
                 );
-                //Log::debug("🐞 ZentroTraderBotController /swap:" . json_encode($array));
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 ZentroTraderBotController /swap:" . json_encode($array));
                 $explorer = $network[$key]["explorers"][0]["url"] . "/tx/" . $array["tx_hash"];
                 $reply = array(
                     "text" => "✅ " . Lang::get("zentrotraderbot::bot.prompts.txsuccess") . ": " . $explorer,

@@ -26,40 +26,35 @@ class ProcessContractActivity
     {
         $data = $event->data;
 
-        Log::debug("🐞 ProcessContractActivity handle: ", [
-            "id" => $data['trace_id'],
-            "confirmed" => $data['confirmed'],
-            "data" => $data,
-        ]);
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 ProcessContractActivity handle: ", [
+                "id" => $data['trace_id'],
+                "confirmed" => $data['confirmed'],
+                "data" => $data,
+            ]);
 
         /*
         {
-            "id": "af0c090f-1b52-4572-9c04-f79a9891a533",
+            "network_id": 80002,
             "confirmed": true,
-            "data": {
-                "network_id": 80002,
-                "confirmed": true,
-                "tx_hash": "0x312019fc22fb9c2bd9173b3e2ecc2f27155040c2ae1c5afbca25acb09fe25100",
-                "contract": "0x8b0180f2101c8260d49339abfee87927412494b4",
-                "topic0": "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925",
-                "block_number": "35268999",
-                "timestamp": "1773665531",
-                "from_address": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
-                "decoded": {
-                    "name": "Approval",
-                    "params": {
-                        "owner": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
-                        "spender": "0xc15e5d5173966380fc2b297a59ed89019e4fea12",
-                        "value": { "phpseclib\\Math\\BigInteger": "10000" }
-                    }
-                },
-                "tenant_code": "59d5e7a3-dea0-4289-88f0-a39765f50bcf",
-                "listener": "moralis",
-                "trace_id": "af0c090f-1b52-4572-9c04-f79a9891a533"
-            }
+            "block_number": "35278403",
+            "timestamp": "1773684339",
+            "tenant_code": "59d5e7a3-dea0-4289-88f0-a39765f50bcf",
+            "listener": "moralis",
+            "type": "contract_log",
+            "tx_hash": "0x4292f181957c0bc1d3adf640d785f8c79594a9c4c65c85a6591b6eb698d92a5b",
+            "contract": "0xc15e5d5173966380fc2b297a59ed89019e4fea12",
+            "topic0": "0x71cb61698242bdadd31b3db5d7d28894a712a6b311e7cc08164207ed15e0d055",
+            "from_address": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
+            "decoded": {
+                "name": "TradeCreated",
+                "params": {
+                    "tradeId": "30",
+                    "seller": "0x3e254e81106e19b4c961cbc800390aed2a8fe800"
+                }
+            },
+            "trace_id": "4f3e9b62-3020-4cd5-95d5-731bbb05af4f"
         }
-
-
         */
 
 

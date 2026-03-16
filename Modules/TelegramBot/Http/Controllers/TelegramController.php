@@ -698,10 +698,12 @@ class TelegramController extends Controller
         $auth_data = $request->all();
 
         if (!$this->checkTelegramAuthorization($auth_data, $bot_token)) {
-            //Log::debug("🐞 TelegramController loginCallback !checkTelegramAuthorization: " . json_encode($bot_token) . json_encode($auth_data));
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 TelegramController loginCallback !checkTelegramAuthorization: " . json_encode($bot_token) . json_encode($auth_data));
             return redirect('/')->with('error', 'Fallo de integridad.');
         }
-        //Log::debug("🐞 TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($bot_token) . json_encode($auth_data));
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($bot_token) . json_encode($auth_data));
 
         // 2. Obtener el file_path de la foto de perfil (sin descargar el archivo)
         $avatarPath = null;
@@ -784,8 +786,10 @@ class TelegramController extends Controller
         $hash = hash_hmac('sha256', $data_check_string, $secret_key);
 
         // DEBUG para comparar (Solo en desarrollo)
-        // Log::debug("🐞 TelegramController checkTelegramAuthorization Check String:\n" . $data_check_string);
-        // Log::debug("🐞 TelegramController checkTelegramAuthorization Calculated: $hash vs Original: $check_hash");
+        if (env("DEBUG_MODE", false)) {
+            Log::debug("🐞 TelegramController checkTelegramAuthorization Check String:\n" . $data_check_string);
+            Log::debug("🐞 TelegramController checkTelegramAuthorization Calculated: $hash vs Original: $check_hash");
+        }
 
         return hash_equals($hash, $check_hash);
     }

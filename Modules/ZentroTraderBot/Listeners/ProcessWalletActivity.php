@@ -25,37 +25,31 @@ class ProcessWalletActivity
     public function handle(WalletActivityDetected $event)
     {
         $data = $event->data;
-        /*
-        Log::debug("🐞 ProcessWalletActivity handle: ", [
-            "id" => $data['trace_id'],
-            "confirmed" => $data['confirmed'],
-            "data" => $data,
-        ]);
 
-           {
-                "network_id": "0x89",
-                "confirmed": false,
-                "block_number": "83945304",
-                "tx_hash": "0x19d00883c41d12bae05844ed76b5521fd897afe1ec825ee2cbf6fb2550530b63",
-                "from": "0x697b45689e4b4cce3c316f21ed6c8a6cb053873d",
-                "to": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
-                "value": "1000",
-                "token_symbol": "pedgy",
-                "token_address": "0x1f7aee83037ae9979e6d5b8bc4581e007da53981",
-                "timestamp": "1773010641",
-                "tenant_code": "59d5e7a3-dea0-4289-88f0-a39765f50bcf"
-            }
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 ProcessWalletActivity handle: ", [
+                "id" => $data['trace_id'],
+                "confirmed" => $data['confirmed'],
+                "data" => $data,
+            ]);
+
+        /*
+
             {
-                "network_id": 56,
+                "network_id": 80002,
                 "confirmed": true,
-                "block_number": "85843713",
-                "tx_hash": "0x00c23f02330d55cb95d834bd6a79295aa1672a19a7c9c539c5686103fdd347db",
-                "from": "0x1aaffcab3cb8ec9b207b191c1b2e2ec662486666",
-                "to": "0xd2531438b90232f4aab4ddfc6f146474e84e1ea1",
-                "value": 0.00310539,
-                "token_symbol": "",
+                "block_number": "35278590",
+                "timestamp": "1773684713",
+                "tenant_code": "59d5e7a3-dea0-4289-88f0-a39765f50bcf",
+                "listener": "moralis",
+                "type": "native_tx",
+                "tx_hash": "0x22d6fc283e705c7695819c9782dba7d103eaae89e82325355c435c853ad5051b",
+                "from": "0x3e254e81106e19b4c961cbc800390aed2a8fe800",
+                "to": "0xd4b4e6dd4134ce09d910aaa3583bbe5d1172220d",
+                "value": 0.1,
+                "token_symbol": "POLYGONAMOY",
                 "token_address": "",
-                "timestamp": "1773175854"
+                "trace_id": "7edf328d-ffaf-4f3c-b106-9cfa0aa61b45"
             }
         */
 

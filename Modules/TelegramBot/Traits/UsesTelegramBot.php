@@ -147,7 +147,8 @@ trait UsesTelegramBot
     }
     public function getProcessedMessage($array = false)
     {
-        // Log::debug("🐞 UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
 
         // validando q el usuario tenga un @username
         if (

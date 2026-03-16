@@ -101,7 +101,7 @@ class RegisterMoralisStreams extends Command
                     '0x8f', // Monad
                     '0x13882', // Amoy (Test net polygon)
                 ],
-                'tag' => $tenant->token,
+                'tag' => $tenant->key,
                 'includeNativeTxs' => true,        // ✅ Para transferencias nativas (ETH, MATIC, etc.)
                 'includeContractLogs' => true,      // ✅ Necesario para detectar ERC-20 transfers
                 'allAddresses' => false,            // ✅ Correcto, agregas wallets después
