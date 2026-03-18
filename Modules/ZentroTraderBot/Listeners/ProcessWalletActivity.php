@@ -74,13 +74,23 @@ class ProcessWalletActivity
                             "token_symbol" => $data['token_symbol'],
                             "data" => $data,
                         ]);
+                } else {
+                    // ERROR: Si es una red desconocida y no tenemos símbolo, 
+                    // no podemos notificar correctamente. Abortamos.
+                    if (env("DEBUG_MODE", false))
+                        Log::debug("🐞 ProcessWalletActivity handle escaped by !network: ", [
+                            "data" => $data,
+                        ]);
+                    return;
                 }
             } catch (\Throwable $th) {
             }
         }
 
-        // 3. Filtro Anti-Scam (Solo para Tokens ERC20/BEP20): Si no existe en el listado oficial provisto por 1inch lo desechamos
+        // 3. Filtro Anti-Scam (Solo para Tokens ERC20)
         if (!empty($data['token_address'])) {
+            // CASO A: Es un Token (ERC20). 
+            // Si no existe en el listado oficial provisto por 1inch lo desechamos
             try {
                 $token = ConfigService::getToken(strtolower($data['token_address']), $data['network_id']);
                 if (!$token) {
@@ -92,6 +102,8 @@ class ProcessWalletActivity
                         ]);
                     return;
                 }
+                // IMPORTANTE: Sobreescribimos el symbol con el que nos da nuestra fuente de confianza
+                $data['token_symbol'] = strtoupper($token['symbol']);
             } catch (\Throwable $th) {
                 Log::error("🆘 ProcessWalletActivity handle Anti-Scam: ", [
                     "network_id" => $data['network_id'],
@@ -99,58 +111,78 @@ class ProcessWalletActivity
                     "data" => $data,
                 ]);
             }
-        }
-
-        // Si no trae token_symbol no esta estandarizada para este evento por lo q se desestima
-        if (isset($data['token_symbol'])) {
-            // 4. Identificar el Bot/Tenant
-            $bot = TelegramBots::where('key', $data['tenant_code'])->first();
-            if (!$bot) {
-                Log::debug("🐞 ProcessWalletActivity handle escaped by !bot: ", [
-                    "tenant_code" => $data['tenant_code'],
-                    "data" => $data,
-                ]);
-                return;
-            }
-            $bot->connectToThisTenant();
-
-            // 5. Buscar al suscriptor usando la dirección estandarizada
-            $toAddress = strtolower($data['to']);
-            $suscriptor = Suscriptions::on('tenant')->where('data->wallet->address', $toAddress)->first();
-            if (!$suscriptor) {
-                Log::debug("🐞 ProcessWalletActivity handle escaped by !suscriptor: ", [
-                    "address" => $toAddress,
-                    "data" => $data,
-                ]);
-                return;
-            }
-
-            //  Validación de duplicidad: Verificar si el tx_hash ya fue procesado
-            $cacheKey = 'tx_processed_' . $data['tx_hash'];
-            if (Cache::has($cacheKey)) {
+        } else {
+            // CASO B: Es moneda Nativa (MATIC/POL, ETH...).
+            // Obligatorio: El símbolo debe haberse resuelto en el paso 2 (ConfigService::getNetworks).
+            if (empty($data['token_symbol'])) {
                 if (env("DEBUG_MODE", false))
-                    Log::debug("🐞 ProcessWalletActivity handle escaped by tx_processed: ", [
-                        "key" => $cacheKey,
+                    Log::debug("🐞 ProcessWalletActivity handle escaped by !token_symbol: ", [
                         "data" => $data,
                     ]);
                 return;
             }
+        }
 
-            $botController = new ZentroTraderBotController();
+
+        // 4. Identificar el Bot/Tenant
+        $bot = TelegramBots::where('key', $data['tenant_code'])->first();
+        if (!$bot) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 ProcessWalletActivity handle escaped by !bot: ", [
+                    "tenant_code" => $data['tenant_code'],
+                    "data" => $data,
+                ]);
+            return;
+        }
+        $bot->connectToThisTenant();
+
+        // 5. Buscar al suscriptor usando la dirección estandarizada
+        $toAddress = strtolower($data['to']);
+        $suscriptor = Suscriptions::on('tenant')
+            ->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(data, "$.wallet.address"))) = ?', [$toAddress])
+            ->first();
+        if (!$suscriptor) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 ProcessWalletActivity handle escaped by !suscriptor: ", [
+                    "address" => $toAddress,
+                    "data" => $data,
+                ]);
+            return;
+        }
+
+        //  Validación de duplicidad: Verificar si el tx_hash ya fue procesado
+        $cacheKey = 'tx_processed_' . $data['tx_hash'];
+        // 1. Idempotencia Atómica (Evita procesar 2 veces el mismo Hash)
+        // Cache::add solo retorna true si la llave NO existía.
+        if (!Cache::add($cacheKey, true, now()->addDays(1))) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 ProcessWalletActivity handle escaped by tx_processed: ", [
+                    "key" => $cacheKey,
+                    "data" => $data,
+                ]);
+            return;
+        }
+
+        try {
+            //$botController = new ZentroTraderBotController();
+            $botController = app(ZentroTraderBotController::class);
             $botController->notifyDepositConfirmed(
                 $suscriptor->user_id,
                 MathController::round($data['value'], 4, false),
                 $data['token_symbol']
             );
 
-            // Marcar como procesado en caché por 24 horas
-            Cache::put($cacheKey, true, now()->addHours(24));
-
             Log::info("✅ Depósito procesado exitosamente: ", [
                 "id" => $data['trace_id'],
                 "data" => $data,
             ]);
-
+        } catch (\Exception $e) {
+            // Si falla el envío, borramos el candado para que el re-intento de Moralis 
+            Cache::forget($cacheKey);
+            Log::error("🆘 ProcessWalletActivity handle Notification: ", [
+                "message" => $e->getMessage()
+            ]);
         }
+
     }
 }
