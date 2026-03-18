@@ -3,8 +3,9 @@
 namespace Modules\ZentroTraderBot\Observers;
 
 use Modules\ZentroTraderBot\Entities\Offers;
-use Modules\ZentroTraderBot\Entities\OffersAlerts; // Asumiendo que OffersAlerts también está en el módulo
+use Modules\ZentroTraderBot\Entities\OffersAlerts;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Modules\ZentroTraderBot\Entities\Suscriptions;
 
 class OfferObserver
 {
@@ -13,6 +14,8 @@ class OfferObserver
      */
     public function created(Offers $offer): void
     {
+        $bot = app('active_bot');
+
         // Buscamos las alertas que coincidan
         $matchingAlerts = OffersAlerts::where('type', $offer->type)
             ->where('payment_method', $offer->payment_method)
@@ -34,7 +37,6 @@ class OfferObserver
 
                 // Enviar notificación directamente (evita usar variables indefinidas en closure)
                 $communityChat = config('metadata.system.app.zentrotraderbot.telegram.community.group');
-                $botToken = config('metadata.system.app.zentrotraderbot.telegram.bot_token') ?? null;
 
                 $text = "🚀 Nueva oferta detectada: {$offer->amount} USD vía {$offer->payment_method}";
                 $payload = [
@@ -45,8 +47,8 @@ class OfferObserver
                 ];
 
                 // Intentamos enviar si tenemos token configurado
-                if ($botToken) {
-                    TelegramController::sendMessage($payload, $botToken);
+                if ($bot->token) {
+                    TelegramController::sendMessage($payload, $bot->token);
                 } else {
                     // Fallback: intentar enviar al usuario directamente si no hay token global
                     $userChat = $alert->user->telegram_id;
@@ -57,12 +59,95 @@ class OfferObserver
                                 'text' => $text,
                             ],
                         ];
-                        TelegramController::sendMessage($personalPayload, $botToken);
+                        TelegramController::sendMessage($personalPayload, $bot->token);
                     }
                 }
 
 
             }
+        }
+    }
+
+    /**
+     * Manejar el evento "updated" de la Oferta.
+     */
+    public function updated(Offers $offer): void
+    {
+        // Solo actuamos si el status ha cambiado
+        if (!$offer->isDirty('status')) {
+            return;
+        }
+
+        $bot = app('active_bot');
+
+        $newStatus = $offer->status;
+        $oldStatus = $offer->getOriginal('status');
+
+        // Identificamos a los interesados (User es el creador, Buyer es quien aplicó)
+        $ownerTelegramId = $offer->user ? $offer->user->telegram_id : null;
+
+        switch (strtoupper($newStatus)) {
+            case 'LOCKED':
+                // Alguien aplicó al Escrow (TradeApplied)
+                $text = "🔒 ¡Tu oferta de {$offer->amount} USD ha sido bloqueada!\n" .
+                    "Un comprador ha aplicado. Por favor, procede con el intercambio FIAT.";
+                $this->notifyUser($ownerTelegramId, $text, $bot->token);
+                break;
+
+            case 'COMPLETED':
+                // Los fondos se liberaron (DisputeResolved o Signatures)
+                $text = "✅ ¡Transacción Completada!\n" .
+                    "Los fondos de la oferta #{$offer->blockchain_trade_id} han sido liberados con éxito.";
+                $this->notifyUser($ownerTelegramId, $text, $bot->token);
+
+                // Si tenemos el Telegram ID del comprador, también le avisamos a él
+                if ($offer->buyer_address) {
+                    $this->notifyByAddress($offer->buyer_address, "💰 ¡Fondos recibidos! El Escrow ha liberado tus tokens.", $bot->token);
+                }
+                break;
+
+            case 'DISPUTED':
+                // Se abrió una disputa (DisputeOpened)
+                $text = "⚠️ ATENCIÓN: Se ha abierto una DISPUTA en tu trade #{$offer->blockchain_trade_id}.\n" .
+                    "Un administrador revisará el caso pronto.";
+                $this->notifyUser($ownerTelegramId, $text, $bot->token);
+                break;
+
+            case 'CANCELLED':
+                // El trade se canceló (TradeCancelled)
+                $text = "❌ La oferta #{$offer->blockchain_trade_id} ha sido cancelada y los fondos devueltos a la wallet de origen.";
+                $this->notifyUser($ownerTelegramId, $text, $bot->token);
+                break;
+        }
+    }
+
+    /**
+     * Helper para enviar mensajes directos vía TelegramController
+     */
+    private function notifyUser($telegramId, $text, $token)
+    {
+        if (!$telegramId || !$token)
+            return;
+
+        $payload = [
+            'message' => [
+                'chat' => ['id' => $telegramId],
+                'text' => $text,
+            ],
+        ];
+        TelegramController::sendMessage($payload, $token);
+    }
+
+    /**
+     * Helper para notificar buscando al usuario por su wallet address
+     */
+    private function notifyByAddress($address, $text, $token)
+    {
+        $suscriptor = Suscriptions::on('tenant')
+            ->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(data, "$.wallet.address"))) = ?', [$address])
+            ->first();
+        if ($suscriptor && $suscriptor->user_id) {
+            $this->notifyUser($suscriptor->user_id, $text, $token);
         }
     }
 }

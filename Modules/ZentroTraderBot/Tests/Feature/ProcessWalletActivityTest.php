@@ -5,16 +5,12 @@ namespace Tests\Feature;
 use Modules\Web3\Events\WalletActivityDetected;
 use Modules\ZentroTraderBot\Listeners\ProcessWalletActivity;
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
-use Modules\ZentroTraderBot\Entities\Suscriptions;
-use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Mockery;
 use Modules\ZentroTraderBot\Tests\TestCase;
 use Modules\TelegramBot\Entities\TelegramBots;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\App;
 
 class ProcessWalletActivityTest extends TestCase
 {
@@ -32,7 +28,7 @@ class ProcessWalletActivityTest extends TestCase
         $data = [
             'network_id' => 80002,
             'confirmed' => true,
-            'token_symbol' => 'POLYGONAMOY', // Ya normalizado para evitar fallos de ConfigService
+            'token_symbol' => 'POLYGONAMOY',
             'token_address' => '',
             'tx_hash' => $hash,
             'to' => '0xd4b4e6dd4134ce09d910aaa3583bbe5d1172220d',
@@ -60,7 +56,7 @@ class ProcessWalletActivityTest extends TestCase
             'tx_hash' => $hash,
             'tenant_code' => '59d5e7a3-dea0-4289-88f0-a39765f50bcf',
             'trace_id' => (string) Str::uuid(),
-            'token_address' => '', // Al estar vacío, entra en el "Caso B" (Nativo)
+            'token_address' => '', // Al estar vacío, lo detecta como Nativo
             'to' => '0xd4b4e6dd4134ce09d910aaa3583bbe5d1172220d',
             'value' => 1,
         ];
@@ -68,8 +64,6 @@ class ProcessWalletActivityTest extends TestCase
         $listener = new ProcessWalletActivity();
         $listener->handle(new WalletActivityDetected($data));
 
-        // Ahora sí debería ser FALSE porque el código hace: 
-        // if (empty($data['token_symbol'])) return;
         $this->assertFalse(Cache::has('tx_processed_' . $hash));
     }
 
@@ -81,7 +75,7 @@ class ProcessWalletActivityTest extends TestCase
             'network_id' => 137,
             'tx_hash' => '0x_hash_scam',
             'trace_id' => (string) Str::uuid(),
-            'token_symbol' => 'POLYGONAMOY', // Ya normalizado para evitar fallos de ConfigService
+            'token_symbol' => 'POLYGONAMOY',
             'to' => '0xd4b4e6dd4134ce09d910aaa3583bbe5d1172220d',
             'value' => rand(2, 9),
             'tenant_code' => '59d5e7a3-dea0-4289-88f0-a39765f50bcf',
@@ -133,7 +127,7 @@ class ProcessWalletActivityTest extends TestCase
             'tx_hash' => '0x_non_existent_bot_hash',
             'tenant_code' => 'codigo-que-no-existe-en-db',
             'trace_id' => (string) Str::uuid(),
-            'token_symbol' => 'POLYGONAMOY', // Ya normalizado para evitar fallos de ConfigService
+            'token_symbol' => 'POLYGONAMOY',
             'token_address' => '',
             'to' => '0xd4b4e6dd4134ce09d910aaa3583bbe5d1172220d',
             'value' => rand(2, 9),
@@ -230,7 +224,6 @@ class ProcessWalletActivityTest extends TestCase
         $listener = new ProcessWalletActivity();
         $listener->handle(new WalletActivityDetected($data));
 
-        // Si tu SQL LOWER(...) funciona, esto será TRUE
         $this->assertTrue(Cache::has('tx_processed_' . $hash));
     }
 
@@ -256,7 +249,7 @@ class ProcessWalletActivityTest extends TestCase
             'token_address' => $polygonUsdcAddress,
             'tx_hash' => $hash,
             'to' => $userWallet,
-            'value' => 50.0, // 50 USDC
+            'value' => rand(60, 99),
             'tenant_code' => $tenantCode,
             'trace_id' => (string) Str::uuid(),
             'token_symbol' => 'TEMP' // Debería cambiar a 'USDC' tras el ConfigService

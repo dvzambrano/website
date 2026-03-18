@@ -10,10 +10,13 @@ use Illuminate\Support\Facades\Log;
 use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
 use Modules\Laravel\Http\Controllers\MathController;
+use Modules\ZentroTraderBot\Entities\Offers;
 
 class ProcessContractActivity
 {
     /**
+     * Procesa eventos provenientes del contrato de Escrow.
+     * Maneja: TradeCreated, TradeApplied, TradeCancelled, DisputeOpened, DisputeResolved.
      * Procesa eventos de actividad blockchain de manera agnóstica al proveedor.
      * Recibe datos normalizados (DTO) desde cualquier fuente (Moralis, Alchemy, etc.), 
      * identifica el tenant correspondiente y dispara las notificaciones al usuario.
@@ -30,6 +33,7 @@ class ProcessContractActivity
             Log::debug("🐞 ProcessContractActivity handle: ", [
                 "id" => $data['trace_id'],
                 "confirmed" => $data['confirmed'],
+                "event_name" => $data['decoded']['name'] ?? 'Unknown',
                 "data" => $data,
             ]);
 
@@ -57,6 +61,162 @@ class ProcessContractActivity
         }
         */
 
+        // 1. Filtro de Confirmación (Seguridad Blockchain)
+        if (!($data['confirmed'] ?? false)) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 ProcessContractActivity handle escaped by !confirmed: ", [
+                    "data" => $data,
+                ]);
+            return;
+        }
 
+        // 2. Identificar el Bot/Tenant
+        $bot = TelegramBots::where('key', $data['tenant_code'])->first();
+        if (!$bot) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 ProcessContractActivity handle escaped by !bot: ", [
+                    "tenant_code" => $data['tenant_code'],
+                    "data" => $data,
+                ]);
+            return;
+        }
+        $bot->connectToThisTenant();
+
+        // Idempotencia: tx_hash + log_index (por si una TX dispara varios eventos)
+        $cacheKey = 'escrow_ev_processed_' . $data['tx_hash'] . '_' . ($data['log_index'] ?? 0);
+        if (!Cache::add($cacheKey, true, now()->addDays(2))) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 ProcessContractActivity handle escaped by tx_processed: ", [
+                    "key" => $cacheKey,
+                    "data" => $data,
+                ]);
+            return;
+        }
+
+        try {
+            $eventName = $data['decoded']['name'];
+            $params = $data['decoded']['params'];
+            $tradeId = $params['tradeId'];
+
+            switch (strtoupper($eventName)) {
+                case 'TRADECREATED':
+                    $this->syncTradeCreated($tradeId, $params, $data);
+                    break;
+
+                case 'TRADEAPPLIED':
+                    $this->updateOfferStatus($tradeId, 'LOCKED', [
+                        'buyer_address' => strtolower($params['buyer'])
+                    ]);
+                    break;
+
+                case 'TRADECANCELLED':
+                    $this->updateOfferStatus($tradeId, 'CANCELLED');
+                    break;
+
+                case 'DISPUTEOPENED':
+                    $this->updateOfferStatus($tradeId, 'DISPUTED');
+                    break;
+
+                case 'DISPUTERESOLVED':
+                    $this->updateOfferStatus($tradeId, 'COMPLETED');
+                    break;
+
+                case 'TRADEMIGRATED':
+                    Log::info("📦 Trade #{$tradeId} migrado a {$params['newContract']}");
+                    break;
+            }
+        } catch (\Exception $e) {
+            Cache::forget($cacheKey);
+            Log::error("🆘 ProcessContractActivity handle Listener: ", [
+                "message" => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Vincula el evento de creación con un anuncio existente o crea uno nuevo.
+     */
+    private function syncTradeCreated($blockchainId, $params, $rawData)
+    {
+        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+
+        $seller = strtolower($params['seller']);
+
+        // --- NORMALIZACIÓN DE DECIMALES ---
+        $rawAmount = $params['amount']; // Viene en formato BigInt (wei/satoshi) desde el evento
+
+        // 2. Conversión a Humano usando MathController (para mantener tu estándar)
+        // humanAmount = rawAmount / 10^decimals
+        $amount = $rawAmount / pow(10, $token['decimals']);
+        // Redondeamos a 4 decimales para que coincida con tu migración decimal(20, 4)
+        $amount = MathController::round($amount, 4, false);
+
+        // 3. INTENTO DE VINCULACIÓN: ¿Es una respuesta a una oferta de COMPRA existente?
+        $offer = Offers::on('tenant')
+            ->where('type', 'buy')
+            ->where('status', 'active')
+            ->where('amount', $amount)
+            ->whereNull('blockchain_trade_id') // Aseguramos que no esté ya vinculada
+            ->first();
+
+        if ($offer) {
+            // Actualizamos la oferta de compra existente. 
+            // Esto disparará el evento "updated" del Observer (si lo necesitas).
+            $offer->update([
+                'blockchain_trade_id' => $blockchainId,
+                'seller_address' => $seller,
+                'status' => 'active',
+                'tx_hash_deposit' => $rawData['tx_hash'],
+                'network_id' => $rawData['network_id']
+            ]);
+            Log::info("✅ Oferta actualizada exitosamente: ", [
+                "data" => $offer,
+            ]);
+            return;
+        }
+
+        // Intentar encontrar al dueño de la wallet antes de crear
+        $suscriptor = Suscriptions::on('tenant')
+            ->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(data, "$.wallet.address"))) = ?', [$seller])
+            ->first();
+        if (!$suscriptor) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 ProcessContractActivity syncTradeCreated escaped by !suscriptor: ", [
+                    "address" => $seller,
+                    "params" => $params,
+                ]);
+            return;
+        }
+
+        // 4. CREACIÓN: Si no hay coincidencia, es una oferta de VENTA nueva iniciada on Chain.
+        // Al ejecutar 'create', el OfferObserver->created() se disparará y enviará las alertas.
+        $offer = Offers::on('tenant')->create([
+            'user_id' => $suscriptor->user_id,
+            'type' => 'sell',
+            'amount' => $amount,
+            'status' => 'active',
+            'blockchain_trade_id' => $blockchainId,
+            'seller_address' => $seller,
+            'tx_hash_deposit' => $rawData['tx_hash'],
+            'network_id' => $rawData['network_id'],
+            'payment_method' => 'TBD', // El usuario deberá completar esto en el bot luego
+            'currency' => 'USD',
+            'min_limit' => 1.00, // Valor por defecto o el mismo amount
+            'price_per_usd' => 1.00, // Valor inicial
+        ]);
+        Log::info("✅ Oferta creada exitosamente: ", [
+            "data" => $offer,
+        ]);
+    }
+
+    private function updateOfferStatus($blockchainId, $status, $extra = [])
+    {
+        $offer = Offers::on('tenant')->where('blockchain_trade_id', $blockchainId)->first();
+        if ($offer) {
+            $offer->update(array_merge(['status' => $status], $extra));
+            Log::info("✅ Oferta actualizada exitosamente: ", [
+                "data" => $offer,
+            ]);
+        }
     }
 }

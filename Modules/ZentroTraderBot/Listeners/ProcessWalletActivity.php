@@ -154,7 +154,7 @@ class ProcessWalletActivity
         $cacheKey = 'tx_processed_' . $data['tx_hash'];
         // 1. Idempotencia Atómica (Evita procesar 2 veces el mismo Hash)
         // Cache::add solo retorna true si la llave NO existía.
-        if (!Cache::add($cacheKey, true, now()->addDays(1))) {
+        if (!Cache::add($cacheKey, true, now()->addDays(2))) {
             if (env("DEBUG_MODE", false))
                 Log::debug("🐞 ProcessWalletActivity handle escaped by tx_processed: ", [
                     "key" => $cacheKey,
