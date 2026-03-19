@@ -139,14 +139,9 @@ class ProcessContractActivity
                     break;
 
                 case 'TRADEMIGRATED':
-                    /*
-                    $this->updateOfferStatus($tradeId, 'COMPLETED', [ // O el estado que prefieras para marcar que salió de este contrato
-                        'contract_address' => strtolower($params['newContract']),
-                        'metadata' => ['migrated_from' => $data['contract']]
-                    ]);
-                    */
+                    // Marcamos como completado para sacarlo del flujo de este contrato
+                    $this->updateOfferStatus($tradeId, 'COMPLETED');
                     Log::info("📦 Trade #{$tradeId} migrado al nuevo contrato: {$params['newContract']}");
-                    break;
             }
         } catch (\Exception $e) {
             Cache::forget($cacheKey);

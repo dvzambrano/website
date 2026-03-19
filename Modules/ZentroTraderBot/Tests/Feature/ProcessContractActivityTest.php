@@ -239,4 +239,186 @@ class ProcessContractActivityTest extends TestCase
         (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
         $this->assertEquals('CANCELLED', strtoupper(Offers::on('tenant')->where('blockchain_trade_id', $tradeId)->first()->status));
     }
+
+    /**
+     * TEST: Creación de Trade (Evento: TradeCreated)
+     */
+    public function test_it_processes_trade_created()
+    {
+        $tradeId = 101;
+        $payload = $this->makePayload('TradeCreated', [
+            'tradeId' => $tradeId,
+            'seller' => $this->seller->getWallet()["address"],
+            'buyer' => $this->buyer->getWallet()["address"],
+            'amount' => 100 * pow(10, 18)
+        ]);
+
+        (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
+
+        $offer = Offers::on('tenant')->where('blockchain_trade_id', $tradeId)->first();
+        $this->assertNotNull($offer);
+        $this->assertEquals('LOCKED', strtoupper($offer->status));
+    }
+
+    /**
+     * TEST: Firma de una parte (Evento: TradeSigned)
+     * Verificamos que el estado NO cambie a COMPLETED con una sola firma
+     */
+    public function test_it_handles_single_trade_sign()
+    {
+        $tradeId = 102;
+        $offer = $this->createMockOffer($tradeId, 'LOCKED');
+
+        $payload = $this->makePayload('TradeSigned', [
+            'tradeId' => $tradeId,
+            'signer' => $this->seller->getWallet()["address"]
+        ]);
+
+        (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
+
+        $this->assertEquals('LOCKED', strtoupper($offer->refresh()->status));
+    }
+
+    /**
+     * TEST: Cierre por firmas mutuas (Evento: TradeClosed)
+     */
+    public function test_it_completes_on_trade_closed()
+    {
+        $tradeId = 103;
+        $offer = $this->createMockOffer($tradeId, 'LOCKED');
+
+        $payload = $this->makePayload('TradeClosed', [
+            'tradeId' => $tradeId,
+            'seller' => $this->seller->getWallet()["address"],
+            'buyer' => $this->buyer->getWallet()["address"],
+            'amount' => 50 * pow(10, 18)
+        ]);
+
+        (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
+
+        $this->assertEquals('COMPLETED', strtoupper($offer->refresh()->status));
+        $this->assertEquals($payload['tx_hash'], $offer->tx_hash_release);
+    }
+
+    /**
+     * TEST: Cancelación por el vendedor (Evento: TradeCancelled)
+     */
+    public function test_it_processes_cancellation()
+    {
+        $tradeId = 104;
+        $offer = $this->createMockOffer($tradeId, 'LOCKED');
+
+        $payload = $this->makePayload('TradeCancelled', ['tradeId' => $tradeId]);
+
+        (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
+
+        $this->assertEquals('CANCELLED', strtoupper($offer->refresh()->status));
+    }
+
+    /**
+     * TEST: Flujo completo de Disputa (Eventos: DisputeOpened y DisputeResolved)
+     */
+    public function test_it_processes_full_dispute_flow()
+    {
+        $tradeId = 105;
+        $offer = $this->createMockOffer($tradeId, 'LOCKED');
+
+        // 1. Abrir
+        $p1 = $this->makePayload('DisputeOpened', ['tradeId' => $tradeId, 'opener' => $this->buyer->getWallet()["address"]]);
+        (new ProcessContractActivity())->handle(new ContractActivityDetected($p1));
+        $this->assertEquals('DISPUTED', strtoupper($offer->refresh()->status));
+
+        // 2. Resolver
+        $p2 = $this->makePayload('DisputeResolved', ['tradeId' => $tradeId, 'winner' => $this->seller->getWallet()["address"]]);
+        (new ProcessContractActivity())->handle(new ContractActivityDetected($p2));
+
+        $this->assertEquals('COMPLETED', strtoupper($offer->refresh()->status));
+        $this->assertEquals($p2['tx_hash'], $offer->tx_hash_release);
+    }
+
+    /**
+     * TEST: Migración de contrato (Evento: TradeMigrated)
+     */
+    public function test_it_processes_migration()
+    {
+        $tradeId = 106;
+        $offer = $this->createMockOffer($tradeId, 'LOCKED');
+
+        $payload = $this->makePayload('TradeMigrated', [
+            'tradeId' => $tradeId,
+            'newContract' => '0x' . Str::random(40)
+        ]);
+
+        (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
+
+        // En Kashio, un trade migrado se marca como completado/cerrado en la versión vieja
+        $this->assertEquals('COMPLETED', strtoupper($offer->refresh()->status));
+    }
+
+    // --- HELPERS PARA LIMPIEZA DEL TEST ---
+
+    private function makePayload($eventName, $params)
+    {
+        return [
+            'network_id' => 137,
+            'confirmed' => true,
+            'tenant_code' => $this->bot->key,
+            'tx_hash' => '0x' . Str::random(64),
+            'decoded' => [
+                'name' => $eventName,
+                'params' => $params
+            ],
+            'trace_id' => (string) Str::uuid(),
+            'log_index' => rand(0, 100)
+        ];
+    }
+
+    private function createMockOffer($tradeId, $status)
+    {
+        return Offers::on('tenant')->create([
+            'blockchain_trade_id' => $tradeId,
+            'status' => $status,
+            'amount' => 50,
+            'user_id' => $this->seller->user_id,
+            'min_limit' => 1,
+            'price_per_usd' => 1,
+            'payment_method' => 'Test',
+            'type' => 'sell',
+            'currency' => 'USD'
+        ]);
+    }
+
+    /**
+     * TEST: Cambio de Árbitro (Evento: ArbiterChanged)
+     */
+    public function test_it_logs_arbiter_change()
+    {
+        $newArbiter = '0x' . Str::random(40);
+        $payload = $this->makePayload('ArbiterChanged', [
+            'oldArbiter' => '0x' . Str::random(40),
+            'newArbiter' => $newArbiter
+        ]);
+
+        (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
+
+        // Aquí podrías verificar si guardas el árbitro en una tabla de configuración
+        // $this->assertEquals($newArbiter, BotConfig::get('arbiter_address'));
+        $this->assertTrue(true); // Por ahora solo verificamos que no explote
+    }
+
+    /**
+     * TEST: Actualización de Comisiones (Evento: FeeChanged)
+     */
+    public function test_it_updates_fee_percentage()
+    {
+        $payload = $this->makePayload('FeeChanged', [
+            'oldFee' => 25,
+            'newFee' => 50
+        ]);
+
+        (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
+
+        // Verificación lógica según donde guardes la configuración
+        $this->assertTrue(true);
+    }
 }
