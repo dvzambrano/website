@@ -4,7 +4,6 @@ namespace Modules\ZentroTraderBot\Listeners;
 
 use Modules\Web3\Events\ContractActivityDetected;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
-use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Services\ConfigService;
@@ -94,23 +93,21 @@ class ProcessContractActivity
         }
 
         try {
-            $eventName = $data['decoded']['name'];
+            $eventName = strtoupper($data['decoded']['name']);
             $params = $data['decoded']['params'];
             $tradeId = $params['tradeId'];
 
-            switch (strtoupper($eventName)) {
+            switch ($eventName) {
                 case 'TRADECREATED':
+                    // En el nuevo contrato, el trade ya nace LOCKED (bloqueado)
                     $this->syncTradeCreated($tradeId, $params, $data);
                     break;
 
-                case 'TRADEAPPLIED':
-                    $this->updateOfferStatus($tradeId, 'LOCKED', [
-                        'buyer_address' => strtolower($params['buyer'])
-                    ]);
-                    break;
-
                 case 'TRADECANCELLED':
-                    $this->updateOfferStatus($tradeId, 'CANCELLED');
+                    // El vendedor canceló antes de que el comprador firmara
+                    $this->updateOfferStatus($tradeId, 'CANCELLED', [
+                        'updated_at' => now()
+                    ]);
                     break;
 
                 case 'DISPUTEOPENED':
@@ -118,11 +115,37 @@ class ProcessContractActivity
                     break;
 
                 case 'DISPUTERESOLVED':
-                    $this->updateOfferStatus($tradeId, 'COMPLETED');
+                    // El arbitro decidió un ganador
+                    $this->updateOfferStatus($tradeId, 'COMPLETED', [
+                        //'winner_address' => strtolower($params['winner']),
+                        // Si no tienes la columna winner_address, mejor guárdalo en metadata
+                        //'metadata' => json_encode(['winner' => strtolower($params['winner'])])
+                        'tx_hash_release' => $data['tx_hash'],
+                        'updated_at' => now()
+                    ]);
+                    break;
+
+                case 'TRADESIGNED':
+                    // Útil para avisar al otro: "¡Oye, ya firmaron, solo faltas tú!"
+                    $this->handleTradeSigned($tradeId, $params['signer']);
+                    break;
+
+                case 'TRADECLOSED':
+                    // Ambos firmaron y los fondos volaron al comprador
+                    $this->updateOfferStatus($tradeId, 'COMPLETED', [
+                        'tx_hash_release' => $data['tx_hash'],
+                        'updated_at' => now()
+                    ]);
                     break;
 
                 case 'TRADEMIGRATED':
-                    Log::info("📦 Trade #{$tradeId} migrado a {$params['newContract']}");
+                    /*
+                    $this->updateOfferStatus($tradeId, 'COMPLETED', [ // O el estado que prefieras para marcar que salió de este contrato
+                        'contract_address' => strtolower($params['newContract']),
+                        'metadata' => ['migrated_from' => $data['contract']]
+                    ]);
+                    */
+                    Log::info("📦 Trade #{$tradeId} migrado al nuevo contrato: {$params['newContract']}");
                     break;
             }
         } catch (\Exception $e) {
@@ -139,19 +162,14 @@ class ProcessContractActivity
     private function syncTradeCreated($blockchainId, $params, $rawData)
     {
         $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
-
         $seller = strtolower($params['seller']);
+        $buyer = strtolower($params['buyer']);
 
-        // --- NORMALIZACIÓN DE DECIMALES ---
-        $rawAmount = $params['amount']; // Viene en formato BigInt (wei/satoshi) desde el evento
-
-        // 2. Conversión a Humano usando MathController (para mantener tu estándar)
-        // humanAmount = rawAmount / 10^decimals
-        $amount = $rawAmount / pow(10, $token['decimals']);
-        // Redondeamos a 4 decimales para que coincida con tu migración decimal(20, 4)
+        // Conversión a humano (considerando decimales del token)
+        $amount = $params['amount'] / pow(10, $token['decimals'] ?? 18);
         $amount = MathController::round($amount, 4, false);
 
-        // 3. INTENTO DE VINCULACIÓN: ¿Es una respuesta a una oferta de COMPRA existente?
+        // 1. Intentar vincular con una oferta de COMPRA existente que coincida en monto
         $offer = Offers::on('tenant')
             ->where('type', 'buy')
             ->where('status', 'active')
@@ -165,9 +183,9 @@ class ProcessContractActivity
             $offer->update([
                 'blockchain_trade_id' => $blockchainId,
                 'seller_address' => $seller,
-                'status' => 'active',
-                'tx_hash_deposit' => $rawData['tx_hash'],
-                'network_id' => $rawData['network_id']
+                'buyer_address' => $buyer,
+                'status' => 'LOCKED', // Cambiamos a bloqueado porque los fondos ya están en el contrato
+                'tx_hash_deposit' => $rawData['tx_hash']
             ]);
             Log::info("✅ Oferta actualizada exitosamente: ", [
                 "data" => $offer,
@@ -175,7 +193,7 @@ class ProcessContractActivity
             return;
         }
 
-        // Intentar encontrar al dueño de la wallet antes de crear
+        // 2. Si no existe, crear una nueva oferta de VENTA (iniciada desde la wallet directamente)
         $suscriptor = Suscriptions::on('tenant')
             ->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(data, "$.wallet.address"))) = ?', [$seller])
             ->first();
@@ -194,9 +212,10 @@ class ProcessContractActivity
             'user_id' => $suscriptor->user_id,
             'type' => 'sell',
             'amount' => $amount,
-            'status' => 'active',
+            'status' => 'LOCKED',
             'blockchain_trade_id' => $blockchainId,
             'seller_address' => $seller,
+            'buyer_address' => $buyer,
             'tx_hash_deposit' => $rawData['tx_hash'],
             'network_id' => $rawData['network_id'],
             'payment_method' => 'TBD', // El usuario deberá completar esto en el bot luego
@@ -218,5 +237,12 @@ class ProcessContractActivity
                 "data" => $offer,
             ]);
         }
+    }
+
+    private function handleTradeSigned($blockchainId, $signerAddress)
+    {
+        // Por ahora solo logueamos para que el test no explote
+        // T2: Aquí enviaremos la notificación por Telegram
+        Log::info("✍️ Firma detectada para el Trade #{$blockchainId} por {$signerAddress}");
     }
 }
