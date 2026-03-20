@@ -91,7 +91,7 @@ class OfferObserver
                 // Alguien aplicó al Escrow (TradeApplied)
                 $amount = $offer->amount * $offer->price_per_usd;
                 $text = "🔑 *¡Intercambio asegurado!*\n" .
-                    "🔒 Se han bloquedado *{$offer->amount} USD* de la Oferta `{$offer->id}.`\n" .
+                    "🔒 Se han bloquedado *{$offer->amount} USD* de la Oferta `{$offer->blockchain_trade_id}.`\n" .
                     "🟢 _En este momento es seguro para Ud proceder con el intercambio FIAT._\n\n" .
                     "👉 Realice el pago de {$amount} {$offer->currency} y entregue su comprobante para verificación.";
                 $this->notifyByAddress(
@@ -102,7 +102,7 @@ class OfferObserver
 
 
                 $text = "🔑 *¡Intercambio asegurado!*\n" .
-                    "🔒 Se han bloquedado *{$offer->amount} USD* de su cuenta para cumplir con la Oferta `{$offer->id}.`\n" .
+                    "🔒 Se han bloquedado *{$offer->amount} USD* de su cuenta para cumplir con la Oferta `{$offer->blockchain_trade_id}.`\n" .
                     "👉 Se ha instruido a comprador para que realice el pago de {$amount} {$offer->currency} y entregue su comprobante para verificación.";
                 $this->notifyByAddress(
                     $offer->seller_address,
@@ -112,15 +112,23 @@ class OfferObserver
                 break;
 
             case 'COMPLETED':
-                // Los fondos se liberaron (DisputeResolved o Signatures)
-                $text = "✅ ¡Transacción Completada!\n" .
-                    "Los fondos de la oferta #{$offer->blockchain_trade_id} han sido liberados con éxito.";
-                $this->notifyUser($ownerTelegramId, $text, $bot->token);
+                $text = "✅ *¡Transacción Completada!* \n" .
+                    "👉 La Oferta `{$offer->blockchain_trade_id}` ha terminado.\n" .
+                    "🟢 _Se han liberado *{$offer->amount} USD* a la cuenta del comprador._";
+                $this->notifyByAddress(
+                    $offer->seller_address,
+                    $text,
+                    $bot->token
+                );
 
-                // Si tenemos el Telegram ID del comprador, también le avisamos a él
-                if ($offer->buyer_address) {
-                    $this->notifyByAddress($offer->buyer_address, "💰 ¡Fondos recibidos! El Escrow ha liberado tus tokens.", $bot->token);
-                }
+                $text = "✅ *¡Transacción Completada!* \n" .
+                    "👉 La Oferta `{$offer->blockchain_trade_id}` ha terminado.\n" .
+                    "🟢 _Se han liberado *{$offer->amount} USD* a su cuenta._";
+                $this->notifyByAddress(
+                    $offer->buyer_address,
+                    $text,
+                    $bot->token
+                );
                 break;
 
             case 'DISPUTED':
