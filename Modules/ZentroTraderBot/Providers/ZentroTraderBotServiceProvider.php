@@ -18,6 +18,7 @@ use Modules\ZentroTraderBot\Console\RegisterAlchemyWebhooks;
 use Modules\ZentroTraderBot\Console\UpdateAlchemyWebhooks;
 use Modules\ZentroTraderBot\Console\RegisterMoralisStreams;
 use Modules\ZentroTraderBot\Console\DeleteMoralisStream;
+use Modules\ZentroTraderBot\Console\StartScrowSimulation;
 use Modules\TelegramBot\Middleware\TenantMiddleware;
 
 class ZentroTraderBotServiceProvider extends ServiceProvider
@@ -79,6 +80,7 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
             UpdateAlchemyWebhooks::class,
             RegisterMoralisStreams::class,
             DeleteMoralisStream::class,
+            StartScrowSimulation::class,
         ]);
     }
 

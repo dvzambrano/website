@@ -15,8 +15,7 @@ class ProcessContractActivity
 {
     /**
      * Procesa eventos provenientes del contrato de Escrow.
-     * Maneja: TradeCreated, TradeApplied, TradeCancelled, DisputeOpened, DisputeResolved.
-     * Procesa eventos de actividad blockchain de manera agnóstica al proveedor.
+     * Maneja: TradeCreated, TradeCancelled, DisputeOpened, DisputeResolved, TradeSigned, TradeClosed
      * Recibe datos normalizados (DTO) desde cualquier fuente (Moralis, Alchemy, etc.), 
      * identifica el tenant correspondiente y dispara las notificaciones al usuario.
      *
@@ -101,6 +100,9 @@ class ProcessContractActivity
                 case 'TRADECREATED':
                     // En el nuevo contrato, el trade ya nace LOCKED (bloqueado)
                     $this->syncTradeCreated($tradeId, $params, $data);
+                    /*
+                    "¡Hola! @vendedor ha bloqueado 100 DAI para ti. Tienes el contrato listo para pagar."
+                    */
                     break;
 
                 case 'TRADECANCELLED':
@@ -112,6 +114,9 @@ class ProcessContractActivity
 
                 case 'DISPUTEOPENED':
                     $this->updateOfferStatus($tradeId, 'DISPUTED');
+                    /*
+                    Se ha abierto una disputa en el Trade #105. Un agente de Kashio revisará el caso pronto.
+                    */
                     break;
 
                 case 'DISPUTERESOLVED':
@@ -128,6 +133,10 @@ class ProcessContractActivity
                 case 'TRADESIGNED':
                     // Útil para avisar al otro: "¡Oye, ya firmaron, solo faltas tú!"
                     $this->handleTradeSigned($tradeId, $params['signer']);
+
+                    /*
+                    "¡Buenas noticias! El comprador ya marcó el trade como pagado (firmó). Verifica tu cuenta bancaria/móvil y libera los fondos."
+                    */
                     break;
 
                 case 'TRADECLOSED':
