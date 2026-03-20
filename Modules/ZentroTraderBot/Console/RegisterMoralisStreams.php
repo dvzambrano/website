@@ -31,10 +31,52 @@ class RegisterMoralisStreams extends Command
         foreach ($bots as $tenant) {
             // --- CONFIGURACIÓN DINÁMICA DE LA CONEXIÓN ---
             $tenant->connectToThisTenant();
-
             $data = $tenant->data;
 
+
+            $localAddresses = [env('ESCROW_CONTRACT')];
+            $suscriptors = Suscriptions::all();
+            foreach ($suscriptors as $suscriptor)
+                $localAddresses[] = $suscriptor->getWallet()["address"];
+
+            $addressesFromMoralis = [];
             if (isset($data["moralis_stream_id"])) {
+                $streamId = $data["moralis_stream_id"];
+                $cursor = null;
+
+                $this->info("📋 Recuperando wallets suscritas a: " . $data["moralis_stream_id"]);
+                do {
+                    // Preparamos los parámetros de la consulta
+                    $queryParams = ['limit' => 100]; // El máximo permitido por Moralis
+                    if ($cursor) {
+                        $queryParams['cursor'] = $cursor;
+                    }
+
+                    $getAddressesResponse = Http::withHeaders(['x-api-key' => $apiKey])
+                        ->timeout(BehaviorService::timeout())
+                        ->get("https://api.moralis-streams.com/streams/evm/{$streamId}/address", $queryParams);
+
+                    if ($getAddressesResponse->successful()) {
+                        $body = $getAddressesResponse->json();
+
+                        // Extraemos las direcciones de esta página
+                        $pageAddresses = collect($body['result'])->pluck('address')->toArray();
+                        $addressesFromMoralis = array_merge($addressesFromMoralis, $pageAddresses);
+
+                        // Verificamos si hay más páginas
+                        $cursor = $body['cursor'] ?? null;
+
+                        if ($cursor) {
+                            $this->info("⏬ Cargando siguiente página de wallets...");
+                        }
+                    } else {
+                        $this->error("❌ Falló el respaldo de wallets: " . $getAddressesResponse->body());
+                        $cursor = null; // Rompemos el bucle en caso de error
+                    }
+                } while ($cursor !== null);
+                $this->info("✅ Recuperadas " . count($addressesFromMoralis) . " addresses suscritas a: " . $data["moralis_stream_id"]);
+
+
                 $this->info("🗑 Eliminando Stream existente: " . $data["moralis_stream_id"]);
                 $response = Http::withHeaders([
                     'x-api-key' => $apiKey,
@@ -130,11 +172,17 @@ class RegisterMoralisStreams extends Command
                 // Después de crear el stream exitosamente...
 
                 // Agregar wallets y contratos al stream
-
-                $addresses = [env('ESCROW_CONTRACT')];
-                $suscriptors = Suscriptions::all();
-                foreach ($suscriptors as $suscriptor)
-                    $addresses[] = $suscriptor->getWallet()["address"];
+                $addresses = collect($localAddresses)
+                    ->merge($addressesFromMoralis)
+                    // Filtramos posibles valores nulos o vacíos
+                    ->filter()
+                    // Convertimos a minúsculas para comparar manzanas con manzanas
+                    //->map(fn($address) => strtolower(trim($address)))
+                    // Eliminamos duplicados
+                    ->unique()
+                    // Reindexamos el array para que sea un JSON válido [0,1,2...]
+                    ->values()
+                    ->toArray();
 
                 if (!empty($addresses)) {
                     $addResponse = Http::withHeaders([
