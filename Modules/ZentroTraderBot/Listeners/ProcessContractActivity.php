@@ -100,9 +100,6 @@ class ProcessContractActivity
                 case 'TRADECREATED':
                     // En el nuevo contrato, el trade ya nace LOCKED (bloqueado)
                     $this->syncTradeCreated($tradeId, $params, $data);
-                    /*
-                    "¡Hola! @vendedor ha bloqueado 100 DAI para ti. Tienes el contrato listo para pagar."
-                    */
                     break;
 
                 case 'TRADECANCELLED':
@@ -172,30 +169,6 @@ class ProcessContractActivity
         // Conversión a humano (considerando decimales del token)
         $amount = $params['amount'] / pow(10, $token['decimals'] ?? 18);
         $amount = MathController::round($amount, 4, false);
-
-        // 1. Intentar vincular con una oferta de COMPRA existente que coincida en monto
-        $offer = Offers::on('tenant')
-            ->where('type', 'buy')
-            ->where('status', 'active')
-            ->where('amount', $amount)
-            ->whereNull('blockchain_trade_id') // Aseguramos que no esté ya vinculada
-            ->first();
-
-        if ($offer) {
-            // Actualizamos la oferta de compra existente. 
-            // Esto disparará el evento "updated" del Observer (si lo necesitas).
-            $offer->update([
-                'blockchain_trade_id' => $blockchainId,
-                'seller_address' => $seller,
-                'buyer_address' => $buyer,
-                'status' => 'LOCKED', // Cambiamos a bloqueado porque los fondos ya están en el contrato
-                'tx_hash_deposit' => $rawData['tx_hash']
-            ]);
-            Log::info("✅ Oferta actualizada exitosamente: ", [
-                "data" => $offer,
-            ]);
-            return;
-        }
 
         // 2. Si no existe, crear una nueva oferta de VENTA (iniciada desde la wallet directamente)
         $suscriptor = Suscriptions::on('tenant')

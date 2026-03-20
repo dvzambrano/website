@@ -89,9 +89,26 @@ class OfferObserver
         switch (strtoupper($newStatus)) {
             case 'LOCKED':
                 // Alguien aplicó al Escrow (TradeApplied)
-                $text = "🔒 ¡Tu oferta de {$offer->amount} USD ha sido bloqueada!\n" .
-                    "Un comprador ha aplicado. Por favor, procede con el intercambio FIAT.";
-                $this->notifyUser($ownerTelegramId, $text, $bot->token);
+                $amount = $offer->amount * $offer->price_per_usd;
+                $text = "🔑 *¡Intercambio asegurado!*\n" .
+                    "🔒 Se han bloquedado *{$offer->amount} USD* de la Oferta `{$offer->id}.`\n" .
+                    "🟢 _En este momento es seguro para Ud proceder con el intercambio FIAT._\n\n" .
+                    "👉 Realice el pago de {$amount} {$offer->currency} y entregue su comprobante para verificación.";
+                $this->notifyByAddress(
+                    $offer->buyer_address,
+                    $text,
+                    $bot->token
+                );
+
+
+                $text = "🔑 *¡Intercambio asegurado!*\n" .
+                    "🔒 Se han bloquedado *{$offer->amount} USD* de su cuenta para cumplir con la Oferta `{$offer->id}.`\n" .
+                    "👉 Se ha instruido a comprador para que realice el pago de {$amount} {$offer->currency} y entregue su comprobante para verificación.";
+                $this->notifyByAddress(
+                    $offer->seller_address,
+                    $text,
+                    $bot->token
+                );
                 break;
 
             case 'COMPLETED':
