@@ -114,7 +114,7 @@ class OfferObserver
             case 'COMPLETED':
                 $text = "✅ *¡Transacción Completada!* \n" .
                     "👉 La Oferta `{$offer->blockchain_trade_id}` ha terminado.\n" .
-                    "🟢 _Se han liberado *{$offer->amount} USD* a la cuenta del comprador._";
+                    "💵 Se han *liberado {$offer->amount} USD* a la cuenta del comprador.";
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $text,
@@ -123,7 +123,7 @@ class OfferObserver
 
                 $text = "✅ *¡Transacción Completada!* \n" .
                     "👉 La Oferta `{$offer->blockchain_trade_id}` ha terminado.\n" .
-                    "🟢 _Se han liberado *{$offer->amount} USD* a su cuenta._";
+                    "💵 Se han *liberado {$offer->amount} USD* a su cuenta.";
                 $this->notifyByAddress(
                     $offer->buyer_address,
                     $text,
@@ -139,9 +139,23 @@ class OfferObserver
                 break;
 
             case 'CANCELLED':
-                // El trade se canceló (TradeCancelled)
-                $text = "❌ La oferta #{$offer->blockchain_trade_id} ha sido cancelada y los fondos devueltos a la wallet de origen.";
-                $this->notifyUser($ownerTelegramId, $text, $bot->token);
+                $text = "❌ *Oferta Cancelada!* \n" .
+                    "👉 La Oferta `{$offer->blockchain_trade_id}` ha sido cancelada satisfactoriamente.\n" .
+                    "💵 Se han *devuelto *{$offer->amount} USD* a su cuenta.";
+                $this->notifyByAddress(
+                    $offer->seller_address,
+                    $text,
+                    $bot->token
+                );
+
+                $text = "❌ *Oferta Cancelada!* \n" .
+                    "👉 La Oferta `{$offer->blockchain_trade_id}` ha sido cancelada por el vendedor.\n" .
+                    "🟢 _Hemos permitido la cancelación porque no se había efectuado ningún pago aún_";
+                $this->notifyByAddress(
+                    $offer->buyer_address,
+                    $text,
+                    $bot->token
+                );
                 break;
         }
     }
