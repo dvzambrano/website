@@ -61,6 +61,8 @@ class SimulateScrowAction implements ShouldQueue
             $this->token['decimals']
         );
         $tradeId = $payload['decoded']['params']['tradeId'];
+        $amountWei = $payload['decoded']['params']['amount'];
+        $amountHuman = $amountWei / pow(10, $this->token['decimals']);
 
 
         ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(1));
@@ -119,9 +121,6 @@ class SimulateScrowAction implements ShouldQueue
                     );
                     ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(4));
                 }
-
-                $amountWei = $payload['decoded']['params']['amount'];
-                $amountHuman = $amountWei / pow(10, $this->token['decimals']);
 
                 $payload = ScrowMockService::getTradeClosedPayload(
                     $this->tenant,
