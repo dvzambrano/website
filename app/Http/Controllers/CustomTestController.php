@@ -52,6 +52,13 @@ class CustomTestController extends BaseController
         dd(app()->environment('local'));
     }
 
+    public function testNetworks()
+    {
+        $network = ConfigService::getNetworks(env("ESCROW_CHAIN"));
+        $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
+        dd($network, $token);
+    }
+
     private function getDots($width, $left, $right)
     {
         $paddingLength = $width - strlen($left) - strlen($right);
