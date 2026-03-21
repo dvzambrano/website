@@ -102,6 +102,13 @@ class ProcessContractActivity
                     $this->syncTradeCreated($tradeId, $params, $data);
                     break;
 
+                case 'TRADEEXPIRED':
+                    // El tiempo se agotó y el vendedor ejecutó la reclamación
+                    $this->updateOfferStatus($tradeId, 'DISPUTED', [
+                        'updated_at' => now()
+                    ]);
+                    break;
+
                 case 'TRADECANCELLED':
                     // El vendedor canceló antes de que el comprador firmara
                     $this->updateOfferStatus($tradeId, 'CANCELLED', [
@@ -110,7 +117,9 @@ class ProcessContractActivity
                     break;
 
                 case 'DISPUTEOPENED':
-                    $this->updateOfferStatus($tradeId, 'DISPUTED');
+                    $this->updateOfferStatus($tradeId, 'DISPUTED', [
+                        'updated_at' => now()
+                    ]);
                     /*
                     Se ha abierto una disputa en el Trade #105. Un agente de Kashio revisará el caso pronto.
                     */
@@ -162,18 +171,25 @@ class ProcessContractActivity
      */
     private function syncTradeCreated($blockchainId, $params, $rawData)
     {
+        // 1. Identificar el token directamente desde el evento
+        // Usamos el ConfigService con la dirección que el evento nos da ahora
+        $tokenAddress = strtolower($params['token']);
+        //$token = ConfigService::getToken($tokenAddress, $rawData['network_id']);
         $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+
+
         $seller = strtolower($params['seller']);
         $buyer = strtolower($params['buyer']);
 
-        // Conversión a humano (considerando decimales del token)
+        // 2. Conversión a humano usando el amount
         $amount = $params['amount'] / pow(10, $token['decimals'] ?? 18);
         $amount = MathController::round($amount, 4, false);
 
-        // 2. Si no existe, crear una nueva oferta de VENTA (iniciada desde la wallet directamente)
+        // 3. Buscar suscriptor (Vendedor)
         $suscriptor = Suscriptions::on('tenant')
             ->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(data, "$.wallet.address"))) = ?', [$seller])
             ->first();
+
         if (!$suscriptor) {
             if (env("DEBUG_MODE", false))
                 Log::debug("🐞 ProcessContractActivity syncTradeCreated escaped by !suscriptor: ", [
@@ -197,12 +213,21 @@ class ProcessContractActivity
             'network_id' => $rawData['network_id'],
             'payment_method' => 'TBD', // El usuario deberá completar esto en el bot luego
             'currency' => 'USD',
-            'min_limit' => 1.00, // Valor por defecto o el mismo amount
-            'price_per_usd' => 1.00, // Valor inicial
+            'min_limit' => 1.00,
+            'price_per_usd' => 1.00,
         ]);
-        Log::info("✅ Oferta creada exitosamente: ", [
+
+        /*
+            // Aprovechamos el timeoutAt para saber cuándo expira
+            'expires_at' => date('Y-m-d H:i:s', $params['timeoutAt']),
+             */
+
+        Log::info("✅ Oferta {$offer->id} creada exitosamente: ", [
+            "id" => $offer->id,
+            "blockchainId" => $blockchainId,
             "data" => $offer,
         ]);
+
     }
 
     private function updateOfferStatus($blockchainId, $status, $extra = [])

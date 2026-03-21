@@ -54,9 +54,11 @@ class ProcessContractActivityTest extends TestCase
                 'name' => 'TradeCreated',
                 'params' => [
                     'tradeId' => $tradeId,
+                    'token' => $this->token['address'], // Requerido por el nuevo listener
                     'seller' => $this->seller->getWallet()["address"],
                     'buyer' => $this->buyer->getWallet()["address"], // Nuevo en este contrato
-                    'amount' => $amount * pow(10, $this->token['decimals'])
+                    'amount' => $amount * pow(10, $this->token['decimals']),
+                    'timeoutAt' => time() + 3600 // Requerido por el nuevo listener
                 ]
             ],
             'trace_id' => (string) Str::uuid(),
@@ -248,9 +250,11 @@ class ProcessContractActivityTest extends TestCase
         $tradeId = 101;
         $payload = $this->makePayload('TradeCreated', [
             'tradeId' => $tradeId,
+            'token' => $this->token['address'], // Requerido por el nuevo listener
             'seller' => $this->seller->getWallet()["address"],
             'buyer' => $this->buyer->getWallet()["address"],
-            'amount' => 100 * pow(10, 18)
+            'amount' => 100 * pow(10, 18),
+            'timeoutAt' => time() + 3600 // Requerido por el nuevo listener
         ]);
 
         (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));

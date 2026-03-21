@@ -51,9 +51,11 @@ class ScrowMockService
             'name' => 'TradeCreated',
             'params' => [
                 'tradeId' => self::getTradeId($tradeId),
+                'token' => env('BASE_TOKEN'),
                 'seller' => $seller_address,
                 'buyer' => $buyer_address,
-                'amount' => self::getAmount($amount) * pow(10, $decimals)
+                'amount' => self::getAmount($amount) * pow(10, $decimals),
+                'timeoutAt' => time() + 3600
             ]
         ];
         return $payload;
@@ -93,6 +95,18 @@ class ScrowMockService
         $payload['decoded'] = [
             'name' => 'TradeCancelled',
             'params' => ['tradeId' => $tradeId]
+        ];
+        return $payload;
+    }
+
+    public static function getTradeExpiredPayload($tenant_code, $tradeId = false)
+    {
+        $payload = self::getPayload($tenant_code);
+        $payload['decoded'] = [
+            'name' => 'TradeExpired',
+            'params' => [
+                'tradeId' => self::getTradeId($tradeId)
+            ]
         ];
         return $payload;
     }

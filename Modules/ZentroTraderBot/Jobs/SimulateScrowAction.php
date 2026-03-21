@@ -61,64 +61,78 @@ class SimulateScrowAction implements ShouldQueue
             $this->token['decimals']
         );
         $tradeId = $payload['decoded']['params']['tradeId'];
-        $amount = $payload['decoded']['params']['amount'];
 
 
         ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(1));
 
-        $rand = rand(1, 100);
-        // si es un multiplo de 5 cancelamos el trade
-        if ($rand % 5 == 0) {
-            $payload = ScrowMockService::getTradeCancelledPayload(
-                $this->tenant,
-                $tradeId
-            );
-            ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(2));
-        } else {
+        $action = rand(1, 10);
+        switch ($action) {
+            // 10% de probabilidad: El Comprador se arrepiente y cancela
+            case 1:
+                $payload = ScrowMockService::getTradeCancelledPayload(
+                    $this->tenant,
+                    $tradeId
+                );
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(2));
+                break;
+
+            // 10% de probabilidad: El trade expira (Vendedor reclama por falta de pago)
+            case 2:
+                $payload = ScrowMockService::getTradeExpiredPayload(
+                    $this->tenant,
+                    $tradeId
+                );
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(65));
+                break;
+
             // simulamos un flujo normal de firma y cierre del trade
-            $rand = rand(1, 2);
-            if ($rand == 1) {
-                // firma primero el vendedor (raro pero posible) q recibio el pago
-                $payload = ScrowMockService::getTradeSignedPayload(
+            default:
+                $rand = rand(1, 2);
+                if ($rand == 1) {
+                    // firma primero el vendedor (raro pero posible) q recibio el pago
+                    $payload = ScrowMockService::getTradeSignedPayload(
+                        $this->tenant,
+                        $this->seller->getWallet()["address"],
+                        $tradeId
+                    );
+                    ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(2));
+
+                    $payload = ScrowMockService::getTradeSignedPayload(
+                        $this->tenant,
+                        $this->buyer->getWallet()["address"],
+                        $tradeId
+                    );
+                    ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(4));
+                } else {
+                    // firma primero el comprador indicando q ya pago
+                    $payload = ScrowMockService::getTradeSignedPayload(
+                        $this->tenant,
+                        $this->buyer->getWallet()["address"],
+                        $tradeId
+                    );
+                    ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(2));
+
+                    $payload = ScrowMockService::getTradeSignedPayload(
+                        $this->tenant,
+                        $this->seller->getWallet()["address"],
+                        $tradeId
+                    );
+                    ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(4));
+                }
+
+                $amountWei = $payload['decoded']['params']['amount'];
+                $amountHuman = $amountWei / pow(10, $this->token['decimals']);
+
+                $payload = ScrowMockService::getTradeClosedPayload(
                     $this->tenant,
                     $this->seller->getWallet()["address"],
-                    $tradeId
-                );
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(2));
-
-                $payload = ScrowMockService::getTradeSignedPayload(
-                    $this->tenant,
                     $this->buyer->getWallet()["address"],
+                    $this->token['decimals'],
+                    $amountHuman,
                     $tradeId
                 );
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(4));
-            } else {
-                // firma primero el comprador indicando q ya pago
-                $payload = ScrowMockService::getTradeSignedPayload(
-                    $this->tenant,
-                    $this->buyer->getWallet()["address"],
-                    $tradeId
-                );
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(2));
-
-                $payload = ScrowMockService::getTradeSignedPayload(
-                    $this->tenant,
-                    $this->seller->getWallet()["address"],
-                    $tradeId
-                );
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(4));
-            }
-
-
-            $payload = ScrowMockService::getTradeClosedPayload(
-                $this->tenant,
-                $this->seller->getWallet()["address"],
-                $this->buyer->getWallet()["address"],
-                $this->token['decimals'],
-                $amount,
-                $tradeId
-            );
-            ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(6));
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(6));
+                break;
         }
 
         if (env("ESCROW_TEST_MODE", false))
