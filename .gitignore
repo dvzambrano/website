@@ -33,3 +33,4 @@ yarn-error.log
 /.zed
 /Modules/TelegramBot/Database/Seeders/TelegramBotsSeeder.php
 /Modules/ZentroTraderBot/Database/Seeders/MetadataSeeder.php
+Modules/ZentroTraderBot/storage/framework/cache
