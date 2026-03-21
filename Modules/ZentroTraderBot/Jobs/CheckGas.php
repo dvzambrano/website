@@ -8,6 +8,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
 
@@ -28,14 +30,14 @@ class CheckGas implements ShouldQueue
         $this->userId = $userId;
         $this->chatId = $chatId;
 
-        $this->minFee = 0.10; // USD
-        $this->gasEstimated = 386220;
-        $this->alertMargin = 0.03; // Avisar si la ganancia baja de 3 centavos
+        $this->minFee = 0.10; // USD (Comisión que cobras)
+        $this->gasEstimated = 386220; // Unidades de Gas estimadas por trade
+        $this->alertMargin = 0.03; // Margen de seguridad (3 centavos)
     }
 
     public function handle()
     {
-        // 1. Obtener Tenant (sin lanzar excepción fatal si falla)
+        // 1. Obtener Tenant y conectar
         $tenant = TelegramBots::find($this->tenantId);
         if (!$tenant)
             return;
@@ -43,56 +45,78 @@ class CheckGas implements ShouldQueue
         $tenant->connectToThisTenant();
 
         try {
-            // 1. Obtener precio del Gas (Sugerencia: Usar un RPC de Polygon o PolygonScan API)
-            // Usaremos el standard gas price de una fuente confiable
-            $response = Http::get('https://gasstation-mainnet.polygon.technology/v2');
+            // 2. Obtener precio de la moneda nativa (POL/MATIC) con CACHÉ (15 min)
+            // Esto evita que CoinGecko te bloquee por exceso de peticiones
+            $maticPrice = Cache::remember('coingecko_pol_price', 900, function () {
+                $res = Http::get('https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd');
+                return $res->json()['matic-network']['usd'] ?? 0.0;
+            });
 
-            if (!$response->successful()) {
-                throw new \Exception("No se pudo obtener el precio del gas");
-            }
+            if ($maticPrice <= 0)
+                throw new \Exception("No se pudo obtener el precio de MATIC/POL");
+
+            // 3. Gas Station de Polygon (V2 para EIP-1559)
+            $response = Http::get('https://gasstation-mainnet.polygon.technology/v2');
+            if (!$response->successful())
+                throw new \Exception("Gas Station Down");
 
             $gasData = $response->json();
-            $gasPriceGwei = $gasData['fast']['maxFee']; // Usamos 'fast' para asegurar que el bot no se quede pegado
+            $gasPriceGwei = $gasData['fast']['maxFee']; // Prioridad 'fast'
 
-            // 2. Obtener precio de MATIC (vía CoinGecko o similar)
-            $maticPriceRes = Http::get('https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd');
-            $maticPrice = $maticPriceRes->json()['matic-network']['usd'] ?? 1.0;
-
-            // 3. Cálculos matemáticos
-            // (GasUnits * GasPriceInGwei) / 1,000,000,000 = Costo en MATIC
+            // 4. Cálculos Financieros
             $costInMatic = ($this->gasEstimated * $gasPriceGwei) / 1000000000;
             $costInUsd = $costInMatic * $maticPrice;
             $profit = $this->minFee - $costInUsd;
 
-            $message = "";
-            // 4. Lógica de Alertas usando tu TelegramController
+            $msg = "";
+            $alertType = null;
+
+            // 5. Lógica de Alertas
             if ($costInUsd >= $this->minFee) {
-                $msg = "🚨 *KASHIO: PÉRDIDA DETECTADA*\n\n";
-                $msg .= "El gas está carísimo: *\${$costInUsd}* por trade.\n";
-                $msg .= "Tu fee mínimo es de: *\$" . $this->minFee . "*.\n\n";
-                $msg .= "👉 _Donel, sube el minFeePerToken ahora mismo._";
+                $alertType = 'critical';
+                $msg = "🚨 *KASHIO: GAS ALERT* 🚨\n\n";
+                $msg .= "El costo por trade ha superado tu comisión.\n";
+                $msg .= "Costo Gas: *\$" . number_format($costInUsd, 4) . "*\n";
+                $msg .= "Tu Fee: *\$" . number_format($this->minFee, 4) . "*\n\n";
+                $msg .= "⚠️ *Operación en pérdida detectada.*";
             } elseif ($profit < $this->alertMargin) {
-                $msg = "⚠️ *KASHIO: MARGEN ESTRECHO*\n\n";
-                $msg .= "Ganancia limpia por trade: *\${$profit}*.\n";
-                $msg .= "La red Polygon está subiendo de precio.";
+                $alertType = 'warning';
+                $msg = "⚠️ *KASHIO: MARGEN BAJO*\n\n";
+                $msg .= "Ganancia neta: *\$" . number_format($profit, 4) . "*\n";
+                $msg .= "Costo Gas: *\$" . number_format($costInUsd, 4) . "*\n";
+                $msg .= "⚠️ *Margen menor a \$" . $this->alertMargin . "*";
             }
 
-            if (!empty($message)) {
-                $payload = array(
-                    "message" => array(
-                        "text" => $message,
-                        "chat" => array(
-                            "id" => $this->userId,
-                        ),
-                    ),
-                );
-                TelegramController::sendMessage($payload, $tenant->token);
+            // 6. Sistema de Cooldown (Enfriamiento de notificaciones)
+            // Si hay un mensaje, verificamos si ya enviamos esta misma alerta hace poco
+            if (!empty($msg)) {
+                $cacheKey = "gas_alert_sent_{$this->tenantId}_{$alertType}";
+
+                if (!Cache::has($cacheKey)) {
+                    $payload = [
+                        "message" => [
+                            "text" => $msg,
+                            "chat" => ["id" => $this->userId],
+                            "parse_mode" => "Markdown"
+                        ],
+                    ];
+                    TelegramController::sendMessage($payload, $tenant->token);
+
+                    // Guardamos en caché por 1 hora para no repetir la alerta
+                    Cache::put($cacheKey, true, 3600);
+                }
+            } else {
+                // Si el gas volvió a la normalidad, limpiamos los flags para que la próxima alerta se dispare
+                Cache::forget("gas_alert_sent_{$this->tenantId}_critical");
+                Cache::forget("gas_alert_sent_{$this->tenantId}_warning");
             }
 
         } catch (\Exception $e) {
-
+            Log::error("❌ CheckGas Error: " . $e->getMessage());
         }
 
-        self::dispatch()->delay(now()->addMinutes(5));
+        // 7. Re-despachar el Job para monitoreo constante
+        self::dispatch($this->tenantId, $this->userId, $this->chatId)
+            ->delay(now()->addMinutes(5));
     }
 }
