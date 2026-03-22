@@ -56,8 +56,21 @@ class CheckGas implements ShouldQueue
             $multiplier = 1 + ($margin / 100);
             $idealMinFeeUsd = $costInUsd * $multiplier;
 
-            $breakEvenTrade = ($currentMinFeeUsd > 0 && $feePercentage > 0)
-                ? ($currentMinFeeUsd / ($feePercentage / 10000)) : 0;
+            // 1. Convertimos el entero (BPS) a decimal real
+            // Si feePercentage es 25, $realFeeFactor será 0.0025
+            $realFeeFactor = $feePercentage / 10000;
+
+            $breakEvenTrade = 0;
+            // Evitamos división por cero por si acaso
+            if ($realFeeFactor > 0) {
+                if ($currentMinFeeUsd > 0) {
+                    // El punto donde el % alcanza al mínimo fijo
+                    $breakEvenTrade = $currentMinFeeUsd / $realFeeFactor;
+                } else {
+                    // Si el MinFee es 0, el punto donde el % cubre el costo de GAS
+                    $breakEvenTrade = $costInUsd / $realFeeFactor;
+                }
+            }
 
             // --- ESTRATEGIA BASE (Para recuperación) ---
             $baseFeeBps = 25; // 0.25%
@@ -67,17 +80,28 @@ class CheckGas implements ShouldQueue
             $msg = "";
             $alertType = null;
 
-            if ($idealMinFeeUsd > 2.00) {
+            if ($costInUsd > 2.00) {
                 $alertType = 'critical';
-                $suggestedBps = ($idealMinFeeUsd * 10000) / 10;
-                $msg = "☢️ *CATÁSTROFE DE RED *\n";
+
+                // 1. Definimos un trade de referencia (ej. $100)
+                $referenceTrade = 100;
+
+                // 2. Calculamos qué % representaría ese gas sobre $100
+                // ($2.50 / $100) * 10000 = 250 BPS (2.5%)
+                $neededBps = ($costInUsd / $referenceTrade) * 10000;
+
+                // 3. CAP: No sugerir nunca más del 5% (500 BPS) para no ser abusivos
+                $suggestedBps = min(round($neededBps), 500);
+
+                $msg = "☢️ *CATÁSTROFE DE RED*\n";
                 $msg .= "⛽️ Gas prohibitivo: *\$" . number_format($costInUsd, 2) . "*\n";
-                $msg .= "🔺 `feePercentage` = `" . round($suggestedBps) . "` (*" . number_format($idealMinFeeUsd, 2) . "*%)";
+                $msg .= "🔺 `feePercentage` = `" . $suggestedBps . "` (*" . ($suggestedBps / 100) . "%*)\n";
+                $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (*\$" . number_format($idealMinFeeUsd, 2) . "*)";
             } elseif ($costInUsd >= $currentMinFeeUsd) {
                 $alertType = 'critical';
                 $msg = "🔴 *PROTECCIÓN DUST FALLIDA *\n";
                 $msg .= "⛽️ Gas " . number_format($costInUsd, 4) . " > " . number_format($currentMinFeeUsd, 4) . " (MinFee)\n";
-                $msg .= "📉 *Trades < " . number_format($breakEvenTrade, 2) . " dan pérdida*.\n";
+                $msg .= "📉 *Trades < " . number_format($breakEvenTrade, 2) . "  dan pérdida*.\n";
                 $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (*" . number_format($idealMinFeeUsd, 4) . "*)";
             } elseif ($currentMinFeeUsd < $idealMinFeeUsd) {
                 $alertType = 'warning';
