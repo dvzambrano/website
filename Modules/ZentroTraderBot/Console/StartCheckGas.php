@@ -3,19 +3,18 @@
 namespace Modules\ZentroTraderBot\Console;
 
 use Illuminate\Console\Command;
-use Modules\ZentroTraderBot\Jobs\SimulateScrowAction;
 use Modules\ZentroTraderBot\Jobs\CheckGas;
+use Modules\TelegramBot\Entities\TelegramBots;
 class StartCheckGas extends Command
 {
-    protected $signature = 'zentrotraderbot:start-check-gas';
-    protected $description = 'Ejecuta el Job CheckGas que comienza a monitorear el gas de la red para modificar el min_fee en el contrato';
+    protected $signature = 'zentrotraderbot:start-check-gas {bot=KashioBot} {user=816767995}';
+    protected $description = 'Ejecuta el Job CheckGas que comienza a monitorear el gas de la red';
 
     public function handle()
     {
-        $gas = new CheckGas("59d5e7a3-dea0-4289-88f0-a39765f50bcf", "816767995");
-        $gas->handle();
+        $tenant = TelegramBots::where('name', '@' . $this->argument('bot'))->first();
 
-        //SimulateScrowAction::dispatch()->delay(now()->addSeconds(5));
-        $this->info("🟢 Se ha comenzado a monitorear!");
+        CheckGas::dispatch($tenant->key, $this->argument('user'))->delay(now()->addSeconds(5));
+        $this->info("▶️  Ejecutando monitoreo de Gas para {$tenant->code} notificando a " . $this->argument('user'));
     }
 }
