@@ -28,7 +28,13 @@ class CheckGas implements ShouldQueue
 
     public function handle()
     {
-        // 1. Obtener datos centralizados del Controller
+        // 1. Conectar al Tenant para obtener el token del bot
+        $tenant = TelegramBots::where('key', $this->tenant)->first();
+        if (!$tenant)
+            return;
+        $tenant->connectToThisTenant();
+
+        // 2. Obtener datos centralizados del Controller
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
 
@@ -36,12 +42,6 @@ class CheckGas implements ShouldQueue
             Log::error("❌ CheckGas: No se pudieron obtener los datos de la blockchain.");
             return;
         }
-
-        // 2. Conectar al Tenant para obtener el token del bot
-        $tenant = TelegramBots::where('key', $this->tenant)->first();
-        if (!$tenant)
-            return;
-        $tenant->connectToThisTenant();
 
         try {
             // Extraemos variables para legibilidad (Mapping del array de getStatus)
