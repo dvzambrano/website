@@ -22,8 +22,6 @@ class BlockchainController extends Controller
             $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
             $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
             $escrow = new EscrowController();
-            $scannerKey = env('ETHERSCAN_API_KEY');
-            $contractAddress = env('ESCROW_CONTRACT');
 
             // 1. Obtener Gas Price en WEI (unidad mínima)
             $gasPriceWei = $this->rpcCallWithFallback($rpcUrls, function ($rpc) {

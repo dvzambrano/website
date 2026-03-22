@@ -43,10 +43,5 @@ class ResetCheckGas extends Command
 
             $this->info("🧹 Caché de alertas para '{$chain}' limpiada con éxito.");
         }
-
-        // 3. Despachamos el Job inmediatamente (sin el delay de 5 min)
-        CheckGas::dispatch($tenant->key, $userId);
-
-        $this->info("🚀 Job CheckGas despachado para {$tenant->key}. Recibirás un mensaje en Telegram en breve.");
     }
 }
