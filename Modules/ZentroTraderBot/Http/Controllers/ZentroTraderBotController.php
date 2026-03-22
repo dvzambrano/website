@@ -651,18 +651,19 @@ class ZentroTraderBotController extends JsonsController
             $gasPriceGwei = $status['gasPriceGwei'];
             $feePercentage = $status['feePercentage'];
             $currentMinFeeUsd = $status['currentMinFeeUsd'];
+            $referenceTrade = $status['referenceTrade'];
 
             // 3. Construimos el reporte de estado
             $msg = "🌐 *ESTADO DE : {$network['title']}*\n\n";
-            $msg .= "🪙 *Token Principal:* `{$token['symbol']}`\n";
+            $msg .= "💰 *Token Principal:* `{$token['symbol']}`\n";
             $msg .= "⛽ *Gas Actual:* `" . number_format($gasPriceGwei, 2) . "` Gwei\n";
             $msg .= "💸 *Costo de Tx:* `\$" . number_format($costInUsd, 4) . "`\n";
             $msg .= "📈 *Fee Escrow:* `" . ($feePercentage / 100) . "%` (" . round($feePercentage) . " bps)\n";
-            $msg .= "💰 *MinFee Actual:* `\$" . number_format($currentMinFeeUsd, 4) . "`\n\n";
+            $msg .= "💲 *MinFee Actual:* `\$" . number_format($currentMinFeeUsd, 4) . "`\n\n";
 
             // Diagnóstico dinámico
             if ($costInUsd > $currentMinFeeUsd) {
-                $msg .= "⚠️ *ALERTA:* Estás operando en pérdida con trades pequeños (Dust). El costo supera al MinFee.";
+                $msg .= "⚠️ *ALERTA:* Estás operando en pérdida con trades de: 💲*" . number_format($referenceTrade, 2) . "*";
             } else {
                 $margin = (($currentMinFeeUsd - $costInUsd) / $currentMinFeeUsd) * 100;
                 $msg .= "✅ *SISTEMA SALUDABLE:* Tienes un margen del `" . round($margin) . "%` sobre el MinFee.";

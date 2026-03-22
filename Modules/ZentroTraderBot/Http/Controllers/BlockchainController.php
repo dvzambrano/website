@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Modules\Web3\Traits\BlockchainTools;
+use Modules\ZentroTraderBot\Entities\Offers;
 
 class BlockchainController extends Controller
 {
@@ -49,6 +50,16 @@ class BlockchainController extends Controller
             });
             $currentMinFeeUsd = (float) $currentMinFeeRaw / pow(10, $token["decimals"]);
 
+            $referenceTrade = 100; // Valor por defecto
+            try {
+                // Promediamos el 'amount' de las ofertas completadas
+                $avgAmount = Offers::where('status', 'completed')->avg('amount');
+                if ($avgAmount && $avgAmount > 0) {
+                    $referenceTrade = (float) $avgAmount;
+                }
+            } catch (\Exception $e) {
+            }
+
             $array = [
                 "network" => $network,
                 "token" => $token,
@@ -59,6 +70,7 @@ class BlockchainController extends Controller
                 "costInUsd" => $costInUsd,
                 "currentMinFeeRaw" => $currentMinFeeRaw,
                 "currentMinFeeUsd" => $currentMinFeeUsd,
+                "referenceTrade" => $referenceTrade,
             ];
             if (env("DEBUG_MODE", false))
                 Log::debug("🐞 CheckGas Job handle", $array);
