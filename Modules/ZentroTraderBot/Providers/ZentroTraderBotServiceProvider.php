@@ -21,6 +21,7 @@ use Modules\ZentroTraderBot\Console\GetMoralisStreamAdresses;
 use Modules\ZentroTraderBot\Console\DeleteMoralisStream;
 use Modules\ZentroTraderBot\Console\StartScrowSimulation;
 use Modules\ZentroTraderBot\Console\StartCheckGas;
+use Modules\ZentroTraderBot\Console\ResetCheckGas;
 use Modules\TelegramBot\Middleware\TenantMiddleware;
 
 class ZentroTraderBotServiceProvider extends ServiceProvider
@@ -85,6 +86,7 @@ class ZentroTraderBotServiceProvider extends ServiceProvider
             DeleteMoralisStream::class,
             StartScrowSimulation::class,
             StartCheckGas::class,
+            ResetCheckGas::class,
         ]);
     }
 
