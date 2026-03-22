@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
+use Modules\ZentroTraderBot\Entities\Offers;
 
 class CheckGas implements ShouldQueue
 {
@@ -83,8 +84,16 @@ class CheckGas implements ShouldQueue
             if ($costInUsd > 2.00) {
                 $alertType = 'critical';
 
-                // 1. Definimos un trade de referencia (ej. $100)
-                $referenceTrade = 100;
+                // --- LÓGICA DE REALISMO DINÁMICO ---
+                $referenceTrade = 100; // Valor por defecto
+                try {
+                    // Promediamos el 'amount' de las ofertas completadas
+                    $avgAmount = Offers::where('status', 'completed')->avg('amount');
+                    if ($avgAmount && $avgAmount > 0) {
+                        $referenceTrade = (float) $avgAmount;
+                    }
+                } catch (\Exception $e) {
+                }
 
                 // 2. Calculamos qué % representaría ese gas sobre $100
                 // ($2.50 / $100) * 10000 = 250 BPS (2.5%)
@@ -95,6 +104,7 @@ class CheckGas implements ShouldQueue
 
                 $msg = "☢️ *CATÁSTROFE DE RED*\n";
                 $msg .= "⛽️ Gas prohibitivo: *\$" . number_format($costInUsd, 2) . "*\n";
+                $msg .= "💡 Basado en trades promedio de: *\$" . number_format($referenceTrade, 2) . "*\n";
                 $msg .= "🔺 `feePercentage` = `" . $suggestedBps . "` (*" . ($suggestedBps / 100) . "%*)\n";
                 $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (*\$" . number_format($idealMinFeeUsd, 2) . "*)";
             } elseif ($costInUsd >= $currentMinFeeUsd) {
