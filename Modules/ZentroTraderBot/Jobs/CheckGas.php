@@ -75,7 +75,7 @@ class CheckGas implements ShouldQueue
 
             // --- ESTRATEGIA BASE (Para recuperación) ---
             $baseFeeBps = 25; // 0.25%
-            $baseMinFeeUsd = 0.05; // Tu suelo ideal por defecto
+            $baseMinFeeUsd = 0.01; // Tu suelo ideal por defecto
 
             // 4. LÓGICA DE ALERTAS
             $msg = "";
