@@ -56,6 +56,9 @@ class BlockchainController extends Controller
                     $referenceTrade = (float) $avgAmount;
                 }
             } catch (\Exception $e) {
+                Log::error('🆘 BlockchainController referenceTrade error', [
+                    'message' => $e->getMessage()
+                ]);
             }
 
             // 1. Convertimos el entero (BPS) a decimal real
