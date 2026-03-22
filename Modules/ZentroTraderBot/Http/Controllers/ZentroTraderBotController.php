@@ -665,7 +665,7 @@ class ZentroTraderBotController extends JsonsController
             // Diagnóstico dinámico
             if ($costInUsd > $currentMinFeeUsd) {
                 $msg .= "💡 Basado en trades promedio de: 💲*" . number_format($referenceTrade, 2) . "*\n";
-                $msg .= "⚠️ *ALERTA:* Estás operando en pérdida con trades de: 💲" . number_format($breakEvenTrade, 2) . "*";
+                $msg .= "⚠️ *ALERTA:* Estás operando en pérdida con trades de: 💲" . number_format($breakEvenTrade, 2);
             } else {
                 $margin = (($currentMinFeeUsd - $costInUsd) / $currentMinFeeUsd) * 100;
                 $msg .= "✅ *SISTEMA SALUDABLE:* Tienes un margen del `" . round($margin) . "%` sobre el MinFee.";
