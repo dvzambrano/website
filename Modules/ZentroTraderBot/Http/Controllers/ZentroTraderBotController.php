@@ -17,6 +17,7 @@ use Modules\ZentroTraderBot\Jobs\AlchemyUpdateWebhookAddresses;
 use Modules\ZentroTraderBot\Jobs\MoralisAddAddressToStream;
 use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Crypt;
+use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -366,6 +367,13 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+        $this->strategies["/network"] =
+            function () use ($array) {
+                $reply = $this->notifyNetworkStatus();
+                return $reply;
+            };
+
+
         return $this->getProcessedMessage();
     }
 
@@ -620,6 +628,57 @@ class ZentroTraderBotController extends JsonsController
             ),
         );
         TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
+    }
+
+    private function notifyNetworkStatus()
+    {
+        // 1. Instanciamos el controlador que centraliza la data
+        $blockchain = new BlockchainController();
+        $status = $blockchain->getStatus();
+
+        if (!$status) {
+            return [
+                "text" => "❌ Error: No se pudo conectar con la Blockchain.",
+                "chat" => ["id" => $this->actor->user_id]
+            ];
+        }
+
+        try {
+            // 2. Extraemos variables del array unificado
+            $network = $status['network'];
+            $token = $status['token'];
+            $costInUsd = $status['costInUsd'];
+            $gasPriceGwei = $status['gasPriceGwei'];
+            $feePercentage = $status['feePercentage'];
+            $currentMinFeeUsd = $status['currentMinFeeUsd'];
+
+            // 3. Construimos el reporte de estado
+            $msg = "🌐 *ESTADO DE : {$network['title']}*\n\n";
+            $msg .= "🪙 *Token Principal:* `{$token['symbol']}`\n";
+            $msg .= "⛽ *Gas Actual:* `" . number_format($gasPriceGwei, 2) . "` Gwei\n";
+            $msg .= "💸 *Costo de Tx:* `\$" . number_format($costInUsd, 4) . "`\n";
+            $msg .= "📈 *Fee Escrow:* `" . ($feePercentage / 100) . "%` (" . round($feePercentage) . " bps)\n";
+            $msg .= "💰 *MinFee Actual:* `\$" . number_format($currentMinFeeUsd, 4) . "`\n\n";
+
+            // Diagnóstico dinámico
+            if ($costInUsd > $currentMinFeeUsd) {
+                $msg .= "⚠️ *ALERTA:* Estás operando en pérdida con trades pequeños (Dust). El costo supera al MinFee.";
+            } else {
+                $margin = (($currentMinFeeUsd - $costInUsd) / $currentMinFeeUsd) * 100;
+                $msg .= "✅ *SISTEMA SALUDABLE:* Tienes un margen del `" . round($margin) . "%` sobre el MinFee.";
+            }
+
+            return [
+                "text" => $msg,
+                "chat" => ["id" => $this->actor->user_id],
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                "text" => "❌ Error al procesar el reporte: " . $e->getMessage(),
+                "chat" => ["id" => $this->actor->user_id]
+            ];
+        }
     }
 
 }
