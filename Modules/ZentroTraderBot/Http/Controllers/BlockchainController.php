@@ -43,7 +43,7 @@ class BlockchainController extends Controller
             $currentMinFeeRaw = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $token) {
                 return $escrow->getMinFeePerToken($rpc, env('ESCROW_CONTRACT'), $network['chainId'], $token["address"], env('ETHERSCAN_API_KEY'));
             });
-            $currentMinFeeUsd = (float) $currentMinFeeRaw / $token["decimals"];
+            $currentMinFeeUsd = (float) $currentMinFeeRaw / pow(10, $token["decimals"]);
 
             $array = [
                 "network" => $network,
