@@ -60,6 +60,22 @@ class BlockchainController extends Controller
             } catch (\Exception $e) {
             }
 
+            // 1. Convertimos el entero (BPS) a decimal real
+            // Si feePercentage es 25, $realFeeFactor será 0.0025
+            $realFeeFactor = $feePercentage / 10000;
+
+            $breakEvenTrade = 0;
+            // Evitamos división por cero por si acaso
+            if ($realFeeFactor > 0) {
+                if ($currentMinFeeUsd > 0) {
+                    // El punto donde el % alcanza al mínimo fijo
+                    $breakEvenTrade = $currentMinFeeUsd / $realFeeFactor;
+                } else {
+                    // Si el MinFee es 0, el punto donde el % cubre el costo de GAS
+                    $breakEvenTrade = $costInUsd / $realFeeFactor;
+                }
+            }
+
             $array = [
                 "network" => $network,
                 "token" => $token,
@@ -71,6 +87,8 @@ class BlockchainController extends Controller
                 "currentMinFeeRaw" => $currentMinFeeRaw,
                 "currentMinFeeUsd" => $currentMinFeeUsd,
                 "referenceTrade" => $referenceTrade,
+                "breakEvenTrade" => $breakEvenTrade,
+                "realFeeFactor" => $realFeeFactor,
             ];
             if (env("DEBUG_MODE", false))
                 Log::debug("🐞 CheckGas Job handle", $array);

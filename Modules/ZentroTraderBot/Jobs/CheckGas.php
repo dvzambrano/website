@@ -48,30 +48,14 @@ class CheckGas implements ShouldQueue
             $token = $status['token'];
             $network = $status['network'];
             $costInUsd = $status['costInUsd'];
-            $feePercentage = $status['feePercentage'];
             $currentMinFeeUsd = $status['currentMinFeeUsd'];
             $referenceTrade = $status['referenceTrade'];
+            $breakEvenTrade = $status['breakEvenTrade'];
 
             // 3. ANÁLISIS ECONÓMICO 
             $margin = 30; // 30% beneficio
             $multiplier = 1 + ($margin / 100);
             $idealMinFeeUsd = $costInUsd * $multiplier;
-
-            // 1. Convertimos el entero (BPS) a decimal real
-            // Si feePercentage es 25, $realFeeFactor será 0.0025
-            $realFeeFactor = $feePercentage / 10000;
-
-            $breakEvenTrade = 0;
-            // Evitamos división por cero por si acaso
-            if ($realFeeFactor > 0) {
-                if ($currentMinFeeUsd > 0) {
-                    // El punto donde el % alcanza al mínimo fijo
-                    $breakEvenTrade = $currentMinFeeUsd / $realFeeFactor;
-                } else {
-                    // Si el MinFee es 0, el punto donde el % cubre el costo de GAS
-                    $breakEvenTrade = $costInUsd / $realFeeFactor;
-                }
-            }
 
             // --- ESTRATEGIA BASE (Para recuperación) ---
             $baseFeeBps = 25; // 0.25%
@@ -100,7 +84,7 @@ class CheckGas implements ShouldQueue
                 $msg = "🔴 *PROTECCIÓN DUST FALLIDA *\n";
                 $msg .= "⛽️ Gas " . number_format($costInUsd, 4) . " > " . number_format($currentMinFeeUsd, 4) . " (MinFee)\n";
                 $msg .= "💡 Basado en trades promedio de: 💲*" . number_format($referenceTrade, 2) . "*\n";
-                $msg .= "💸 *Trades < 💲" . number_format($breakEvenTrade, 2) . "  dan pérdida*\n";
+                $msg .= "💸 *Trades < 💲" . number_format($breakEvenTrade, 2) . " dan pérdida*\n";
                 $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (*" . number_format($idealMinFeeUsd, 4) . "*)";
             } elseif ($currentMinFeeUsd < $idealMinFeeUsd) {
                 $alertType = 'warning';

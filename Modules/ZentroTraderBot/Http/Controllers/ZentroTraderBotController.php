@@ -652,6 +652,7 @@ class ZentroTraderBotController extends JsonsController
             $feePercentage = $status['feePercentage'];
             $currentMinFeeUsd = $status['currentMinFeeUsd'];
             $referenceTrade = $status['referenceTrade'];
+            $breakEvenTrade = $status['breakEvenTrade'];
 
             // 3. Construimos el reporte de estado
             $msg = "🌐 *ESTADO DE : {$network['title']}*\n\n";
@@ -663,7 +664,8 @@ class ZentroTraderBotController extends JsonsController
 
             // Diagnóstico dinámico
             if ($costInUsd > $currentMinFeeUsd) {
-                $msg .= "⚠️ *ALERTA:* Estás operando en pérdida con trades de: 💲*" . number_format($referenceTrade, 2) . "*";
+                $msg .= "💡 Basado en trades promedio de: 💲*" . number_format($referenceTrade, 2) . "*\n";
+                $msg .= "⚠️ *ALERTA:* Estás operando en pérdida con trades de: 💲" . number_format($breakEvenTrade, 2) . "*";
             } else {
                 $margin = (($currentMinFeeUsd - $costInUsd) / $currentMinFeeUsd) * 100;
                 $msg .= "✅ *SISTEMA SALUDABLE:* Tienes un margen del `" . round($margin) . "%` sobre el MinFee.";
