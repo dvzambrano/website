@@ -7,19 +7,15 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
-use Modules\Web3\Http\Controllers\EscrowController;
-use Modules\Web3\Services\ConfigService;
-use Modules\Web3\Traits\BlockchainTools;
-use Web3\Utils;
+use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 
 class CheckGas implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BlockchainTools;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $tenant;
     protected $userId;
@@ -32,54 +28,33 @@ class CheckGas implements ShouldQueue
 
     public function handle()
     {
-        // 1. Configuración de Red y Tenant
-        $network = ConfigService::getNetworks(env("ESCROW_CHAIN"));
-        if (!$network)
-            return;
-        $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
+        // 1. Obtener datos centralizados del Controller
+        $blockchain = new BlockchainController();
+        $status = $blockchain->getStatus();
 
+        if (!$status) {
+            Log::error("❌ CheckGas: No se pudieron obtener los datos de la blockchain.");
+            return;
+        }
+
+        // 2. Conectar al Tenant para obtener el token del bot
         $tenant = TelegramBots::where('key', $this->tenant)->first();
         if (!$tenant)
             return;
         $tenant->connectToThisTenant();
 
-        $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
-        $escrow = new EscrowController();
-
         try {
-            // 2. CONSULTA AL CONTRATO
-            $feePercentage = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network) {
-                return $escrow->getFeePercentage($rpc, env('ESCROW_CONTRACT'), $network['chainId'], env('ETHERSCAN_API_KEY'));
-            });
+            // Extraemos variables para legibilidad (Mapping del array de getStatus)
+            $token = $status['token'];
+            $network = $status['network'];
+            $costInUsd = $status['costInUsd'];
+            $feePercentage = $status['feePercentage'];
+            $currentMinFeeUsd = $status['currentMinFeeUsd'];
 
-            $currentMinFeeRaw = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $token) {
-                return $escrow->getMinFeePerToken(
-                    $rpc,
-                    env('ESCROW_CONTRACT'),
-                    $network['chainId'],
-                    $token["address"],
-                    env('ETHERSCAN_API_KEY')
-                );
-            });
-
-            // 3. DATOS DE MERCADO
-            $gasPriceGwei = $this->rpcCallWithFallback($rpcUrls, function ($rpc) {
-                $gasPriceHex = $this->rpcCall($rpc, 'eth_gasPrice', [], true);
-                return hexdec($gasPriceHex) / 1000000000;
-            });
-
-            $nativePrice = $this->getPriceFromLlama($network);
-            if ($nativePrice <= 0)
-                throw new \Exception("Precio DeFiLlama no disponible.");
-
-            // 4. ANÁLISIS ECONÓMICO
-            $gasEstimated = 386220;
-            $costInUsd = ($gasEstimated * $gasPriceGwei) / 1000000000 * $nativePrice;
+            // 3. ANÁLISIS ECONÓMICO 
             $margin = 30; // 30% beneficio
             $multiplier = 1 + ($margin / 100);
-
             $idealMinFeeUsd = $costInUsd * $multiplier;
-            $currentMinFeeUsd = (float) $currentMinFeeRaw / $token["decimals"];
 
             $breakEvenTrade = ($currentMinFeeUsd > 0 && $feePercentage > 0)
                 ? ($currentMinFeeUsd / ($feePercentage / 10000)) : 0;
@@ -88,17 +63,7 @@ class CheckGas implements ShouldQueue
             $baseFeeBps = 25; // 0.25%
             $baseMinFeeUsd = 0.05; // Tu suelo ideal por defecto
 
-
-            if (env("DEBUG_MODE", false))
-                Log::debug("🐞 CheckGas Job handle", [
-                    "network" => $network['name'],
-                    "cost" => $costInUsd,
-                    "feePercentage" => $feePercentage,
-                    "currentMinFeeRaw" => $currentMinFeeRaw,
-                    "gasPriceGwei" => $gasPriceGwei,
-                ]);
-
-            // 5. LÓGICA DE ALERTAS
+            // 4. LÓGICA DE ALERTAS
             $msg = "";
             $alertType = null;
 
@@ -122,7 +87,7 @@ class CheckGas implements ShouldQueue
                 $msg .= "🔸 `setMinFeePerToken` = `" . round($idealMinFeeUsd * $token["decimals"]) . "` (*" . number_format($idealMinFeeUsd, 4) . "*)";
             }
 
-            // 6. GESTIÓN DE ENVÍO Y RECUPERACIÓN
+            // 5. GESTIÓN DE ENVÍO Y RECUPERACIÓN
             $statusKey = "gas_status_{$this->tenant}_" . strtolower($network['chain']);
 
             if (!empty($msg)) {
@@ -149,6 +114,7 @@ class CheckGas implements ShouldQueue
             Log::error("❌ CheckGas Error [{$network['chain']}]: " . $e->getMessage());
         }
 
+        // Re-despacho automático cada 5 min
         self::dispatch($this->tenant, $this->userId)->delay(now()->addMinutes(5));
     }
 
@@ -157,16 +123,5 @@ class CheckGas implements ShouldQueue
         $base = "gas_alert_{$this->tenant}_" . strtolower($chain);
         Cache::forget("{$base}_critical");
         Cache::forget("{$base}_warning");
-    }
-
-    private function getPriceFromLlama($config)
-    {
-        $chainName = strtolower($config['chain'] ?? $config['name']);
-        $address = ($chainName === 'polygon') ? "0x0000000000000000000000000000000000001010" : "0x0000000000000000000000000000000000000000";
-        $id = "{$chainName}:{$address}";
-        return Cache::remember("llama_p_{$id}", 300, function () use ($id) {
-            $res = Http::get("https://coins.llama.fi/prices/current/{$id}");
-            return $res->json()['coins'][$id]['price'] ?? 0.0;
-        });
     }
 }
