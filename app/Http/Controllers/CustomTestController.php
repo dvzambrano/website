@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Crypt;
 use Modules\Laravel\Http\Controllers\TextController;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
+use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 
 class CustomTestController extends BaseController
 {
@@ -47,6 +48,11 @@ class CustomTestController extends BaseController
     }
 
 
+    public function testStatus()
+    {
+        $controller = new BlockchainController();
+        dd($controller->getStatus());
+    }
     public function testLocal()
     {
         dd(app()->environment('local'));

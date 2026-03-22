@@ -78,13 +78,13 @@ class CheckGas implements ShouldQueue
                 $msg = "🔴 *PROTECCIÓN DUST FALLIDA *\n";
                 $msg .= "⛽️ Gas " . number_format($costInUsd, 4) . " > " . number_format($currentMinFeeUsd, 4) . " (MinFee)\n";
                 $msg .= "📉 *Trades < " . number_format($breakEvenTrade, 2) . " dan pérdida*.\n";
-                $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * $token["decimals"]) . "` (*" . number_format($idealMinFeeUsd, 4) . "*)";
+                $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (*" . number_format($idealMinFeeUsd, 4) . "*)";
             } elseif ($currentMinFeeUsd < $idealMinFeeUsd) {
                 $alertType = 'warning';
                 $msg = "🟠 *MARGEN ESTRECHO *\n";
                 $msg .= "⛽️ Gas " . number_format($costInUsd, 4) . " < " . number_format($currentMinFeeUsd, 4) . " (MinFee)\n";
                 $msg .= "📉 *Trades < " . number_format($breakEvenTrade, 2) . " dan pérdida*.\n";
-                $msg .= "🔸 `setMinFeePerToken` = `" . round($idealMinFeeUsd * $token["decimals"]) . "` (*" . number_format($idealMinFeeUsd, 4) . "*)";
+                $msg .= "🔸 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (*" . number_format($idealMinFeeUsd, 4) . "*)";
             }
 
             // 5. GESTIÓN DE ENVÍO Y RECUPERACIÓN
@@ -102,7 +102,7 @@ class CheckGas implements ShouldQueue
                 if (Cache::get($statusKey) === 'alert') {
                     $recoveryMsg = "✅ *BLOCKCHAIN RECUPERADA*\n";
                     $recoveryMsg .= "⛽️ Gas " . number_format($costInUsd, 4) . " | " . number_format($currentMinFeeUsd, 4) . " (MinFee)\n";
-                    $recoveryMsg .= "🔻 `setMinFeePerToken` = `" . ($baseMinFeeUsd * $token["decimals"]) . "` (*\$" . number_format($baseMinFeeUsd, 2) . "*)\n";
+                    $recoveryMsg .= "🔻 `setMinFeePerToken` = `" . ($baseMinFeeUsd * pow(10, $token["decimals"])) . "` (*\$" . number_format($baseMinFeeUsd, 2) . "*)\n";
                     $recoveryMsg .= "🔻 `feePercentage` = `" . $baseFeeBps . "` (*" . number_format(($baseFeeBps / 100), 2) . "*%)";
                     TelegramController::sendMessage(["message" => ["text" => $recoveryMsg, "chat" => ["id" => $this->userId]]], $tenant->token);
                     Cache::forget($statusKey);

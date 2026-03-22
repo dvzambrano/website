@@ -21,25 +21,29 @@ class BlockchainController extends Controller
             $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
             $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
             $escrow = new EscrowController();
+            $scannerKey = env('ETHERSCAN_API_KEY');
+            $contractAddress = env('ESCROW_CONTRACT');
 
-            // Obtenemos Gas y Precios
-            $gasPriceGwei = $this->rpcCallWithFallback($rpcUrls, function ($rpc) {
+            // 1. Obtener Gas Price en WEI (unidad mínima)
+            $gasPriceWei = $this->rpcCallWithFallback($rpcUrls, function ($rpc) {
                 $gasPriceHex = $this->rpcCall($rpc, 'eth_gasPrice', [], true);
-                return hexdec($gasPriceHex) / 1000000000;
+                return hexdec($gasPriceHex);
             });
+            $gasPriceGwei = $gasPriceWei / 1000000000;
 
-            $nativePrice = $this->getPriceFromLlama($network); // Asegúrate de tener este método accesible
+            $nativePrice = $this->getPriceFromLlama($network);
 
-            // Obtenemos estado del contrato
+            // 2. Obtener estado del contrato
             $feePercentage = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network) {
                 return $escrow->getFeePercentage($rpc, env('ESCROW_CONTRACT'), $network['chainId'], env('ETHERSCAN_API_KEY'));
             });
 
-            // Cálculos de costos
-            $gasEstimated = 386220;
-            $costInUsd = ($gasEstimated * $gasPriceGwei) / 1000000000 * $nativePrice;
+            // 3. CÁLCULO DE COSTO (Corregido)
+            $gasEstimated = env("ESCROW_GAS_ESTIMATED", 600000); // Gas de Funciones Operativas del Escrow: se obtiene del reporte "forge test --gas-report" en el 
+            // (Gas * GasPrice en Wei) / 10^18 (para obtener POL/ETH) * Precio USD
+            $costInUsd = ($gasEstimated * $gasPriceWei / pow(10, 18)) * $nativePrice;
 
-            // Diagnóstico 
+            // 4. Diagnóstico MinFee (Corregido)
             $currentMinFeeRaw = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $token) {
                 return $escrow->getMinFeePerToken($rpc, env('ESCROW_CONTRACT'), $network['chainId'], $token["address"], env('ETHERSCAN_API_KEY'));
             });
@@ -50,7 +54,7 @@ class BlockchainController extends Controller
                 "token" => $token,
                 "gasPriceGwei" => $gasPriceGwei,
                 "nativePrice" => $nativePrice,
-                "feePercentage" => $feePercentage,
+                "feePercentage" => (int) $feePercentage,
                 "gasEstimated" => $gasEstimated,
                 "costInUsd" => $costInUsd,
                 "currentMinFeeRaw" => $currentMinFeeRaw,
@@ -64,9 +68,9 @@ class BlockchainController extends Controller
         } catch (\Exception $e) {
             Log::error('🆘 BlockchainController error', [
                 "chain" => env("ESCROW_CHAIN"),
-                "token" => env("ESCROW_TOKEN"),
                 'message' => $e->getMessage()
             ]);
+            return null;
         }
     }
 
