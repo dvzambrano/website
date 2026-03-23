@@ -85,6 +85,35 @@ class ZentroOwnerBotController extends JsonsController
                 }
             };
 
+        $this->strategies["/fee"] =
+            function () use ($array) {
+                try {
+                    $controller = new EscrowController();
+                    $controller->setMinFeePerToken();
+                    $license = $this->generateZentroLicence(array(
+                        "name" => $array["pieces"][1],
+                        "pc" => $array["pieces"][2],
+                        "end" => $array["pieces"][3],
+                        "build" => "FU",
+                    ));
+
+                    $time = 2 * ZentroOwnerBotController::$AUTODESTROY_TIME_IN_MINS;
+                    return array(
+                        "text" =>
+                            "💻 *" . $array["pieces"][1] . "*\n\n" .
+                            "🔐 `" . $license["licence"] . "`\n" .
+                            "📅 " . $license["installed"] . " ❌ " . $license["expire"] . " _" . $license["given"] . "_\n\n" .
+                            "_" . Lang::choice("zentroownerbot::bot.prompts.password.warning", $time, ['count' => $time]) . "_"
+                        ,
+                        "autodestroy" => $time,
+                    );
+                } catch (\Exception $e) {
+                    return array(
+                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                    );
+                }
+            };
+
         return $this->getProcessedMessage();
     }
 
