@@ -12,30 +12,24 @@ class EscrowController extends Controller
 {
     use BlockchainTools;
 
-    public function setMinFeePerToken($minFeeHuman = 0)
+    /**
+     * Método Helper para centralizar la ejecución de transacciones en el Escrow.
+     */
+    private function executeTransaction(callable $callback)
     {
         try {
             $network = ConfigService::getNetworks(env("ESCROW_CHAIN"));
-            $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
-
             $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
-            return $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($minFeeHuman, $token) {
-                $escrow = new BotEscrowController();
 
-                $minFeeWei = $minFeeHuman * pow(10, $token["decimals"]);
-                $txHash = $escrow->setMinFeePerToken(
-                    $rpc,
-                    env('ESCROW_ARBITER_KEY'),
-                    env('ESCROW_CONTRACT'),
-                    env('ESCROW_CHAIN'),
-                    env('ESCROW_TOKEN'),
-                    $minFeeWei,
-                    env('ETHERSCAN_API_KEY'),
-                );
+            return $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($callback, $network) {
+                $escrow = new BotEscrowController();
+                // Pasamos rpc y escrow al callback para realizar la acción específica
+                $txHash = $callback($rpc, $escrow, $network);
 
                 if (env("DEBUG_MODE", false))
-                    Log::debug("🐞 EscrowController setMinFeePerToken", [
-                        "txHash" => $txHash
+                    Log::debug("🐞 EscrowController executeTransaction", [
+                        "txHash" => $txHash,
+                        "network" => $network
                     ]);
 
                 return $txHash;
@@ -48,5 +42,100 @@ class EscrowController extends Controller
             ]);
             return null;
         }
+    }
+
+    public function proposeArbiter($address)
+    {
+        return $this->executeTransaction(function ($rpc, $escrow) use ($address) {
+            // $escrow = new BotEscrowController();
+            return $escrow->proposeArbiter(
+                $rpc,
+                env('ESCROW_ARBITER_KEY'),
+                env('ESCROW_CONTRACT'),
+                env('ESCROW_CHAIN'),
+                $address,
+                env('ETHERSCAN_API_KEY')
+            );
+        });
+    }
+
+    public function resolveDispute($tradeId, $winner)
+    {
+        return $this->executeTransaction(function ($rpc, $escrow) use ($tradeId, $winner) {
+            // $escrow = new BotEscrowController();
+            return $escrow->resolveDispute(
+                $rpc,
+                env('ESCROW_ARBITER_KEY'),
+                env('ESCROW_CONTRACT'),
+                env('ESCROW_CHAIN'),
+                $tradeId,
+                $winner,
+                env('ETHERSCAN_API_KEY')
+            );
+        });
+    }
+
+    public function rescueTokens($address)
+    {
+        return $this->executeTransaction(function ($rpc, $escrow) use ($address) {
+            // $escrow = new BotEscrowController();
+            return $escrow->rescueTokens(
+                $rpc,
+                env('ESCROW_ARBITER_KEY'),
+                env('ESCROW_CONTRACT'),
+                env('ESCROW_CHAIN'),
+                $address,
+                env('ETHERSCAN_API_KEY')
+            );
+        });
+    }
+
+    public function setFee($feeHuman = 0)
+    {
+        return $this->executeTransaction(function ($rpc, $escrow) use ($feeHuman) {
+            $feeBps = $feeHuman * 100; // Pasamos de humano a Base Points (ej: 0.25 -> 25)
+            // $escrow = new BotEscrowController();
+            return $escrow->setFee(
+                $rpc,
+                env('ESCROW_ARBITER_KEY'),
+                env('ESCROW_CONTRACT'),
+                env('ESCROW_CHAIN'),
+                $feeBps,
+                env('ETHERSCAN_API_KEY')
+            );
+        });
+    }
+
+    public function setMinFeePerToken($feeHuman = 0)
+    {
+        return $this->executeTransaction(function ($rpc, $escrow, $network) use ($feeHuman) {
+            $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
+            $minFeeWei = $feeHuman * pow(10, $token["decimals"]);
+            // $escrow = new BotEscrowController();
+            return $escrow->setMinFeePerToken(
+                $rpc,
+                env('ESCROW_ARBITER_KEY'),
+                env('ESCROW_CONTRACT'),
+                env('ESCROW_CHAIN'),
+                env('ESCROW_TOKEN'),
+                $minFeeWei,
+                env('ETHERSCAN_API_KEY')
+            );
+        });
+    }
+
+    public function withdrawFees()
+    {
+        return $this->executeTransaction(function ($rpc, $escrow) {
+            // $escrow = new BotEscrowController();
+            return $escrow->withdrawFees(
+                $rpc,
+                env('ESCROW_ARBITER_KEY'),
+                env('ESCROW_CONTRACT'),
+                env('ESCROW_CHAIN'),
+                env('ESCROW_TOKEN'),
+                env('ETHERSCAN_API_KEY')
+            );
+        });
     }
 }

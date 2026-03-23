@@ -85,13 +85,97 @@ class ZentroOwnerBotController extends JsonsController
                 }
             };
 
-        $this->strategies["/fee"] =
+
+        // Kashio Commmands -------------------------------------------------------------------------------
+
+        $this->strategies["/arbiter"] =
             function () use ($array) {
                 try {
                     $controller = new EscrowController();
-                    $controller->setMinFeePerToken($array["pieces"][1]);
+                    $hash = $controller->proposeArbiter($array["pieces"][1]);
                     return array(
-                        "text" => "✅ DONE!",
+                        "text" => "✅ proposeArbiter DONE: `{$hash}`",
+                        "autodestroy" => 1,
+                    );
+                } catch (\Exception $e) {
+                    return array(
+                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                    );
+                }
+            };
+
+        $this->strategies["/dispute"] =
+            function () use ($array) {
+                try {
+                    $controller = new EscrowController();
+                    $hash = $controller->resolveDispute($array["pieces"][1], $array["pieces"][2]);
+                    return array(
+                        "text" => "✅ resolveDispute DONE: `{$hash}`",
+                        "autodestroy" => 1,
+                    );
+                } catch (\Exception $e) {
+                    return array(
+                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                    );
+                }
+            };
+
+        $this->strategies["/rescue"] =
+            function () use ($array) {
+                try {
+                    $controller = new EscrowController();
+                    $hash = $controller->rescueTokens($array["pieces"][1]);
+                    return array(
+                        "text" => "✅ rescueTokens DONE: `{$hash}`",
+                        "autodestroy" => 1,
+                    );
+                } catch (\Exception $e) {
+                    return array(
+                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                    );
+                }
+            };
+
+        $this->strategies["/percentagefee"] =
+            function () use ($array) {
+                try {
+                    $controller = new EscrowController();
+                    $hash = $controller->setFee($array["pieces"][1]);
+                    return array(
+                        "text" => "✅ setFee DONE: `{$hash}`",
+                        "autodestroy" => 1,
+                    );
+                } catch (\Exception $e) {
+                    return array(
+                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                    );
+                }
+            };
+
+        $this->strategies["/tokenfee"] =
+            function () use ($array) {
+                try {
+                    $controller = new EscrowController();
+                    $hash = $controller->setMinFeePerToken($array["pieces"][1]);
+                    return array(
+                        "text" => "✅ setMinFeePerToken DONE: `{$hash}`",
+                        "autodestroy" => 1,
+                    );
+                } catch (\Exception $e) {
+                    return array(
+                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                    );
+                }
+            };
+
+
+        $this->strategies["/withdraw"] =
+            function () use ($array) {
+                try {
+                    $controller = new EscrowController();
+                    $hash = $controller->withdrawFees();
+                    return array(
+                        "text" => "✅ withdrawFees DONE: `{$hash}`",
                         "autodestroy" => 1,
                     );
                 } catch (\Exception $e) {
