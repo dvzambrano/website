@@ -69,20 +69,20 @@ class CheckEmails implements ShouldQueue
 
         $bots = TelegramBots::whereJsonContainsKey('data->email')->get();
         foreach ($bots as $tenant) {
-            $client = Client::make([
-                'host' => $tenant->data["email"]["host"],     // ej: 'mail.micalme.com'
-                'port' => $tenant->data["email"]["port"] ?? 993,     // ej: 993
-                'encryption' => $tenant->data["email"]["encryption"] ?? 'ssl', // ej: 'ssl' o 'tls'
-                'validate_cert' => $tenant->data["email"]["cert"],
-                'username' => $tenant->data["email"]["username"],     // ej: 'guto@micalme.com'
-                'password' => $tenant->data["email"]["password"], // La contraseña guardada
-                'protocol' => 'imap'
-            ]);
-
-            app()->instance('active_bot', $tenant);
-            $bot = new GutoTradeBotController();
-
             try {
+                $client = Client::make([
+                    'host' => $tenant->data["email"]["host"],     // ej: 'mail.micalme.com'
+                    'port' => $tenant->data["email"]["port"] ?? 993,     // ej: 993
+                    'encryption' => $tenant->data["email"]["encryption"] ?? 'ssl', // ej: 'ssl' o 'tls'
+                    'validate_cert' => $tenant->data["email"]["cert"],
+                    'username' => $tenant->data["email"]["username"],     // ej: 'guto@micalme.com'
+                    'password' => $tenant->data["email"]["password"], // La contraseña guardada
+                    'protocol' => 'imap'
+                ]);
+
+                app()->instance('active_bot', $tenant);
+                $bot = new GutoTradeBotController();
+
                 $client->connect();
                 // Abrir la bandeja de entrada
                 $inbox = $client->getFolder('INBOX');
