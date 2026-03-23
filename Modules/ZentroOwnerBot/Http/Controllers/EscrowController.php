@@ -2,73 +2,51 @@
 
 namespace Modules\ZentroOwnerBot\Http\Controllers;
 
-use Illuminate\Container\Attributes\Config;
-use Modules\TelegramBot\Traits\UsesTelegramBot;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
-use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Http\Controllers\Controller;
 use Modules\Web3\Services\ConfigService;
 use Modules\Web3\Traits\BlockchainTools;
+use Illuminate\Support\Facades\Log;
 use Modules\Web3\Http\Controllers\EscrowController as BotEscrowController;
 
 class EscrowController extends Controller
 {
     use BlockchainTools;
 
-    private $escrow;
-    private $rpc;
-    private $apiKey;
-    private $contract;
-    private $chainId;
-    private $token;
-    private $decimals;
-    public function __construct()
+    public function setMinFeePerToken($minFeeHuman = 0)
     {
-        $this->escrow = new BotEscrowController();
+        try {
+            $network = ConfigService::getNetworks(env("ESCROW_CHAIN"));
+            $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
 
-        $network = ConfigService::getNetworks(env('ESCROW_CHAIN'));
+            $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+            return $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($minFeeHuman, $token) {
+                $escrow = new BotEscrowController();
 
+                $minFeeWei = $minFeeHuman * pow(10, $token["decimals"]);
+                $txHash = $escrow->setMinFeePerToken(
+                    $rpc,
+                    env('ESCROW_ARBITER_KEY'),
+                    env('ESCROW_CONTRACT'),
+                    env('ESCROW_CHAIN'),
+                    env('ESCROW_TOKEN'),
+                    $minFeeWei,
+                    env('ETHERSCAN_API_KEY'),
+                );
 
-        // Configuración de Polygon Amoy (Testnet)
-        $this->rpc = "https://rpc-amoy.polygon.technology";
-        $this->apiKey = env('ETHERSCAN_API_KEY');
-        $this->contract = env('ESCROW_CONTRACT');
-        $this->chainId = 80002;
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 EscrowController setMinFeePerToken", [
+                        "txHash" => $txHash
+                    ]);
 
-        $this->token = "0x8b0180f2101c8260d49339abfee87927412494b4";
-        $this->decimals = $this->escrow->getTokenDecimals($this->rpc, $this->token);
-    }
+                return $txHash;
+            });
 
-    public function processMessage()
-    {
-
-    }
-
-    public function test_admin_set_min_fee($minFeeHuman)
-    {
-        $arbiterKey = env('ESCROW_ARBITER_KEY'); // Wallet del Árbitro
-
-
-        $this->escrow = new EscrowController();
-
-
-        $minFeeWei = $minFeeHuman * pow(10, $this->decimals);
-
-        fwrite(STDOUT, "\n--- [ADMIN] Estableciendo Fee Mínimo a $minFeeHuman Tokens (" . $minFeeWei . ") ---\n");
-
-        $txHash = $this->escrow->setMinFeePerToken(
-            $this->rpc,
-            $arbiterKey,
-            $this->contract,
-            $this->chainId,
-            $this->token,
-            $minFeeWei,
-            $this->apiKey
-        );
-
-        $this->assertNotNull($txHash);
-        $this->waitForConfirmation($this->rpc, $txHash);
-        fwrite(STDOUT, "[OK] Fee mínimo actualizado.\n");
+        } catch (\Exception $e) {
+            Log::error('🆘 EscrowController error', [
+                "chain" => env("ESCROW_CHAIN"),
+                'message' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 }
