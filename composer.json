@@ -9,25 +9,21 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
-        "laravel/framework": "^12.0",
-        "laravel/socialite": "^5.21",
-        "laravel/tinker": "^2.10.1",
-        "nwidart/laravel-modules": "^12.0",
-        "pragmarx/google2fa-laravel": "^2.3",
-        "socialiteproviders/google": "^4.1",
-        "wikimedia/composer-merge-plugin": "^2.1",
+        "php": "^8.3",
         "dvzambrano/laravel": "dev-main",
-        "dvzambrano/web3": "dev-main"
+        "dvzambrano/web3": "dev-main",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10|^3.0",
+        "nwidart/laravel-modules": "^12.0",
+        "pragmarx/google2fa-laravel": "^3.0",
+        "wikimedia/composer-merge-plugin": "^2.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
-        "laravel/breeze": "^2.3",
-        "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.24",
-        "laravel/sail": "^1.41",
+        "laravel/pail": "^1.2.5",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
+        "orchestra/testbench": "^10.0",
         "phpunit/phpunit": "^11.5.50"
     },
     "repositories": [
@@ -46,7 +42,10 @@
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
             "Modules\\": "Modules/"
-        }
+        },
+        "exclude-from-classmap": [
+            "Modules/**/Database/Migrations"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
