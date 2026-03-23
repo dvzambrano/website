@@ -187,6 +187,13 @@ class TelegramController extends Controller
 
         $response = TelegramController::send($request, $url);
 
+        self::autodestroyMessage($bot_token, $response, $autodestroy);
+
+        return $response;
+    }
+
+    private static function autodestroyMessage($bot_token, $response, $autodestroy)
+    {
         if ($autodestroy > 0) {
             $array = json_decode($response, true);
             //Log::info("✅ TelegramController sendMessage array: " . json_encode($array));
@@ -199,8 +206,6 @@ class TelegramController extends Controller
                 )->delay(now()->addMinutes((int) $autodestroy));
             }
         }
-
-        return $response;
     }
 
     /**
@@ -251,7 +256,7 @@ class TelegramController extends Controller
      * @param string $bot_token
      * @return string
      */
-    public static function sendPhoto($request, $bot_token)
+    public static function sendPhoto($request, $bot_token, $autodestroy = 0)
     {
         $url = self::buildTelegramUrl($bot_token, 'sendPhoto', [
             'chat_id' => $request["message"]["chat"]["id"],
@@ -260,8 +265,10 @@ class TelegramController extends Controller
         ]);
 
         $response = TelegramController::send($request, $url);
-        $array = json_decode($response, true);
 
+        self::autodestroyMessage($bot_token, $response, $autodestroy);
+
+        $array = json_decode($response, true);
         // if Telegram could not fetch the URL, try uploading ourselves
         if (
             isset($array['ok']) && $array['ok'] === false
@@ -521,8 +528,8 @@ class TelegramController extends Controller
 
         $json = array(
             "result" => array(
-                "full_name" => "👤 {$userId}",
-                "full_info" => "👤 {$userId}",
+                "full_name" => "{$userId}",
+                "full_info" => "{$userId}",
             ),
         );
 
@@ -531,7 +538,7 @@ class TelegramController extends Controller
             $json = $response->json();
 
             // Formando un text personalizado con los datos del usuario
-            $text = "👤 ";
+            $text = "";
             if (isset($json["result"]["first_name"])) {
                 $text .= TelegramController::cleanText4Url($json["result"]["first_name"]);
             }
@@ -691,10 +698,12 @@ class TelegramController extends Controller
         $auth_data = $request->all();
 
         if (!$this->checkTelegramAuthorization($auth_data, $bot_token)) {
-            //Log::debug("🐞 TelegramController loginCallback !checkTelegramAuthorization: " . json_encode($bot_token) . json_encode($auth_data));
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 TelegramController loginCallback !checkTelegramAuthorization: " . json_encode($bot_token) . json_encode($auth_data));
             return redirect('/')->with('error', 'Fallo de integridad.');
         }
-        //Log::debug("🐞 TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($bot_token) . json_encode($auth_data));
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 TelegramController loginCallback checkTelegramAuthorization OK: " . json_encode($bot_token) . json_encode($auth_data));
 
         // 2. Obtener el file_path de la foto de perfil (sin descargar el archivo)
         $avatarPath = null;
@@ -777,8 +786,10 @@ class TelegramController extends Controller
         $hash = hash_hmac('sha256', $data_check_string, $secret_key);
 
         // DEBUG para comparar (Solo en desarrollo)
-        // Log::debug("🐞 TelegramController checkTelegramAuthorization Check String:\n" . $data_check_string);
-        // Log::debug("🐞 TelegramController checkTelegramAuthorization Calculated: $hash vs Original: $check_hash");
+        if (env("DEBUG_MODE", false)) {
+            Log::debug("🐞 TelegramController checkTelegramAuthorization Check String:\n" . $data_check_string);
+            Log::debug("🐞 TelegramController checkTelegramAuthorization Calculated: $hash vs Original: $check_hash");
+        }
 
         return hash_equals($hash, $check_hash);
     }

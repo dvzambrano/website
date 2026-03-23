@@ -8,28 +8,21 @@ use Modules\Web3\Http\Controllers\WalletController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\AlchemyController;
 use Modules\Web3\Services\Web3MathService;
+use Modules\Web3\Http\Controllers\InchController;
+use Modules\Web3\Http\Controllers\ChainidController;
+use Modules\Web3\Services\ConfigService;
 
 class TraderWalletController extends WalletController
 {
     /**
      * Se llama cuando el usuario inicia el bot (/start).
      */
-    public function getWallet($tenant)
+    public function getWallet()
     {
         $wallet = null;
 
         try {
             $wallet = $this->generateWallet();
-
-            $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
-            AlchemyController::updateWebhookAddresses(
-                $tenant->data["alchemy_webhook_id"],
-                $authToken,
-                [$wallet["address"]]
-            );
-
-            return $wallet;
-
         } catch (\Exception $e) {
             Log::error("🆘 TraderWalletController getWallet: Error generando wallet: " . $e->getMessage());
         }
@@ -39,11 +32,11 @@ class TraderWalletController extends WalletController
 
     /**
      * CONSULTAR SALDO (ESTANDARIZADO)
-     * - Devuelve el balance de USDC en Polygon.
+     * - Devuelve el balance de BASE_TOKEN en Polygon.
      * - Si no hay wallet, devuelve error específico.
      * - Si hay wallet pero no balance, devuelve 0.0 sin error.
      */
-    public function getBalance($suscriptor, $networkSymbol = null)
+    public function getBalance($suscriptor, $networkSymbol = "POL")
     {
         // 1. Obtener Wallet
         if (!$suscriptor || !isset($suscriptor->data['wallet']['address'])) {
@@ -51,21 +44,27 @@ class TraderWalletController extends WalletController
         }
 
         $address = $suscriptor->data['wallet']['address'];
-        $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
-        $usdcContract = config('web3.networks.POL.tokens.USDC.address');
-        $balances = AlchemyController::getTokenBalances($authToken, $address, [$usdcContract]);
+        $apiKey = config('zentrotraderbot.alchemy_api_key');
+
+        $networks = ChainidController::getNetworkData();
+        $chainId = (int) $networks[$networkSymbol]["chainId"];
+        $tokenMap = InchController::getTokensData($chainId);
+
+        $token = $tokenMap[env('BASE_TOKEN')];
+
+        $balances = AlchemyController::getTokenBalances($apiKey, $address, [$token["address"]]);
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {
             foreach ($balances as $bal) {
                 $hexBal = $bal['tokenBalance'] ?? '0x0';
                 // Conversión humana
-                $humanBal = Web3MathService::hexToDecimal($hexBal, 6);
+                $humanBal = Web3MathService::hexToDecimal($hexBal, $token["decimals"]);
             }
         }
 
         return $humanBal;
     }
-    public function getRecentTransactions($suscriptor, $networkSymbol = null)
+    public function getRecentTransactions($suscriptor, $limit = 5)
     {
         // 1. Obtener Wallet
         if (!$suscriptor || !isset($suscriptor->data['wallet']['address'])) {
@@ -73,12 +72,10 @@ class TraderWalletController extends WalletController
         }
 
         $address = $suscriptor->data['wallet']['address'];
-        $authToken = config('metadata.system.app.zentrotraderbot.alchemy.authtoken');
-        //app_zentrotraderbot_alchemy_authtoken
-        $usdcContract = config('web3.networks.POL.tokens.USDC.address');
-        $polUsdcContract = config('web3.networks.POL.tokens.USDC.address');
+        $apiKey = config("zentrotraderbot.alchemy_api_key");
+        $token = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]));
 
-        return AlchemyController::getRecentTransactions($authToken, $address, 'POL', ["erc20"], [$polUsdcContract], 5);
+        return AlchemyController::getRecentTransactions($apiKey, $address, 'POL', ["erc20"], [$token["address"]], $limit);
     }
 
     /**

@@ -31,10 +31,8 @@ class Suscriptions extends Actors
         $wallet = array();
         // si el usuario no tiene wallet es recien suscrito y hay q completar su estructura
         if (!isset($currentData["wallet"])) {
-            $tenant = app('active_bot');
-
             $wc = new TraderWalletController();
-            $wallet = $wc->getWallet($tenant);
+            $wallet = $wc->getWallet();
             if (!$wallet)
                 return null;
 
@@ -42,13 +40,16 @@ class Suscriptions extends Actors
                 "admin_level" => 0,
                 "suscription_level" => 0,
                 "wallet" => [
+                    'status' => $wallet["status"],
                     'address' => $wallet["address"],
                     'private_key' => Crypt::encryptString($wallet["private_key"]), // 🔒 ENCRIPTADO
+                    'seed_phrase' => Crypt::encryptString($wallet["seed_phrase"]), // 🔒 ENCRIPTADO
                     'created_at' => now()->toIso8601String()
                 ]
             );
             $this->save();
-            Log::debug("🐞 Suscriptions getWallet: Wallet " . $wallet["address"] . " generada en JSON para usuario " . $this->user_id);
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 Suscriptions getWallet: Wallet " . $wallet["address"] . " generada en JSON para usuario " . $this->user_id);
 
         } else
             $wallet = $this->data["wallet"];

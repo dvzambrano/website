@@ -34,7 +34,8 @@ return [
         "actionlevel2" => "Ejecutar ordenes",
         "selloffer" => "Vender USD",
         "buyoffer" => "Comprar USD",
-        "topupcripto" => "Depositar USD",
+        "balance" => "Consultar saldo",
+        "topupcripto" => "Depositar Criptomonedas",
         "topupramp" => "Depositar USD",
         "withdraw" => "Extraer USD",
     ],
@@ -55,8 +56,14 @@ return [
                 "processing" => "Estamos procesando su solicitud.",
             ],
             "completed" => [
-                "header" => "Saldo Acreditado!",
-                "text" => "Hemos recibido un depósito para Ud de :amount :currency correctamente",
+                "header" => "¡Saldo Acreditado!",
+                "warning" => "Ha recibido un depósito de :amount USD.",
+                "text" => "Sus fondos ya están disponibles en su cuenta para ser utilizados.",
+            ],
+            "badcurrency" => [
+                "header" => "¡Saldo Recibido!",
+                "warning" => "Ha recibido un depósito de :amount :currency.",
+                "text" => "Estos fondos están en :currency, los cambiaremos a USD para acreditarlos en su cuenta...",
             ],
 
         ],
@@ -77,6 +84,38 @@ return [
         "fail" => [
             "suscriptor" => "Lo sentimos, no pudimos encontrar tu billetera configurada.",
             "widgeturl" => "Lo sentimos, hubo un error al generar tu sesión de pago. Por favor, intenta más tarde.",
-        ]
+        ],
+        "topup" => [
+            "cripto" => [
+                "header" => "Esta es su dirección de depósito",
+                "line1" => "Operamos con :token en la red de :network",
+                "line2" => "Los fondos en :token (:network) estarán disponibles automáticamente.",
+                "line3" => "Otra moneda requiere cambiarse a :token obligatoriamente.",
+                "options" => [
+                    "debridge" => "Depositar usando DeBridge",
+                    "seedphrase" => "Exportar frase semilla",
+                ],
+            ],
+
+        ],
+        "seedphrase" => [
+            "warning" => [
+                "line1" => "Lo que está a punto de exhibir es su *FRASE SEMILLA*",
+                "line2" => "Cualquiera que la vea tendrá *CONTROL TOTAL Y PERMANENTE de todos tus fondos*",
+                "line3" => "Asegúrese de que nadie está mirando su pantalla",
+            ],
+            "export" => [
+                "line1" => "Tus :count palabras de seguridad",
+                "line2" => "Copie o escanee esta información rapidamente:",
+                'destroy' => [
+                    "segs" => 'Este mensaje se eliminará en :count segundo|Este mensaje se eliminará en :count segundos',
+                    'mins' => 'Este mensaje se eliminará en :count minuto|Este mensaje se eliminará en :count minutos',
+                ],
+            ],
+        ],
+        "balance" => [
+            "available" => "Saldo disponible",
+            "lastoperations" => "Últimas operaciones",
+        ],
     ],
 ];

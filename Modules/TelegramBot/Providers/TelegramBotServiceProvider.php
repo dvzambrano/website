@@ -8,6 +8,7 @@ use Modules\TelegramBot\Console\GetTelegramWebhook;
 use Modules\TelegramBot\Console\SetTelegramWebhook;
 use Modules\TelegramBot\Console\ResetTelegramWebhooks;
 use Modules\TelegramBot\Console\BotSimulate;
+use Modules\TelegramBot\Console\BotTokenLeaked;
 use Illuminate\Routing\Router;
 use Modules\TelegramBot\Middleware\TenantMiddleware;
 use Modules\TelegramBot\Middleware\TelegramBotDataMiddleware;
@@ -58,6 +59,7 @@ class TelegramBotServiceProvider extends ServiceProvider
             SetTelegramWebhook::class,
             ResetTelegramWebhooks::class,
             BotSimulate::class,
+            BotTokenLeaked::class,
         ]);
     }
 

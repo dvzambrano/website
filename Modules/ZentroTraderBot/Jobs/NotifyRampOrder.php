@@ -31,14 +31,15 @@ class NotifyRampOrder implements ShouldQueue
         $orderId = $this->order['order_id'];
         $status = strtoupper($this->order['status']);
         $amount = number_format($this->order['amount'], 2);
-        $currency = $this->order['currency'] ?? 'USDC';
+        $currency = $this->order['currency'] ?? env('BASE_TOKEN');
         $userId = $this->order['user_id'];
         $statusemoji = $this->order['statusemoji'];
         $createdAt = $this->order['created_at'];
 
         $token = $this->bot['token'];
 
-        Log::debug("🐞 NotifyRampOrder handle bot: " . json_encode($this->bot) . " order: " . json_encode($this->order));
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 NotifyRampOrder handle bot: " . json_encode($this->bot) . " order: " . json_encode($this->order));
 
         // Construimos un mensaje atractivo
         $message = "🔔 *" . Lang::get("zentrotraderbot::bot.prompts.buy.update.header") . "* \n\n";

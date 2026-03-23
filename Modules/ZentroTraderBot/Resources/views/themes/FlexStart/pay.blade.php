@@ -3,17 +3,41 @@
 @section('templatehead')
     {{-- Incluir el partial del Web3Modal --}}
     @include('web3::partials.wallet-connect', [
-        'projectId' => config('zentrotraderbot.wallet_connect_api_key'),
+        'projectId' => env('WALLET_CONNECT_API_KEY'),
         'walletName' => config('zentrotraderbot.bot'),
         'walletDescription' => 'Wallet inteligente',
         'walletIcon' => 'https://avatars.githubusercontent.com/u/37784886',
         'themeMode' => 'light',
         'lang' => 'es',
-        'chainsData' => app(Modules\ZentroTraderBot\Http\Controllers\LandingController::class)->getRoutes()->getData(true),
+        'socials' => [], // ['google', 'github']
+        'email' => false,
+        'chainsData' => app(Modules\ZentroTraderBot\Http\Controllers\LandingController::class)->getChains()->getData(true),
     ])
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* Asegura que el main y el body ocupen el 100% de la altura */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #main {
+            min-height: 100vh;
+            /* Altura mínima de 100% de la pantalla */
+            display: flex;
+            align-items: center;
+            /* Centrado vertical */
+            justify-content: center;
+            /* Centrado horizontal */
+        }
+
+        /* Ajuste opcional para la sección */
+        .values {
+            width: 100%;
+        }
+
         /* Estilos Core de Kashio (Sin Tailwind) */
         .custom-card {
             padding: 2rem;
@@ -166,8 +190,8 @@
 
 @section('templatebody')
     <main id="main">
-        <section id="values" class="values hero" style="overflow:visible; padding:10px;">
-            <div class="container col-md-5 text-center" data-aos="zoom-in">
+        <section id="values" class="values" style="overflow:visible; padding:10px;">
+            <div class="container col-md-5 text-center">
 
                 <div id="payment-section" x-data="{
                     step: 'connect',
@@ -185,8 +209,27 @@
                                 <div class="kashio-icon-container">
                                     <i class="fas fa-bolt text-2xl text-white"></i>
                                 </div>
-                                <h2 class="text-2xl font-extrabold text-dark">Recarga con cripto</h2>
-                                <p class="text-slate-500 small mt-1">Depósito inteligente a tu billetera USD</p>
+                                <h2 class="text-2xl font-extrabold text-dark">Enviar USD a un usuario</h2>
+                                <p class="text-slate-500 small mt-1">usando criptomonedas existentes en su billetera</p>
+                                <br />
+                                <div
+                                    class="user-logged-info d-flex align-items-center p-2 shadow-sm rounded border bg-light">
+                                    @if (!empty($user['photo_url']))
+                                        <img src="{{ route('avatar.proxy', ['bot_token' => $bot->token, 'file_path' => $user['photo_url']]) }}"
+                                            class="rounded-circle me-2" referrerpolicy="no-referrer"
+                                            style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #0088cc;">
+                                    @else
+                                        <div class="rounded-circle me-2 bg-primary d-flex align-items-center justify-content-center text-white"
+                                            style="width: 40px; height: 40px;">
+                                            {{ substr($user['full_name'], 0, 1) }}
+                                        </div>
+                                    @endif
+                                    <div class="text-start">
+                                        <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1;">Ud está
+                                            a punto de enviar USD a:</small>
+                                        <span class="fw-bold text-dark">{{ $user['full_name'] }}</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <button onclick="connectAndScan()" class="btn btn-primary btn-lg w-100 shadow-sm">
@@ -194,7 +237,7 @@
                                 <span>Conectar Billetera</span>
                             </button>
                             <p class="text-slate-400 small px-4 mt-3" style="font-size: 11px;">
-                                Escanearemos tus balances para facilitar el depósito.
+                                Una vez conectada, escanearemos tus activos para facilitar la selección.
                             </p>
                         </div>
 
@@ -224,6 +267,8 @@
                                     <i class="fas fa-list-ul text-2xl text-white"></i>
                                 </div>
                                 <h2 class="text-2xl font-extrabold text-dark">Selecciona tu moneda</h2>
+                                <p class="small mt-1" style="font-size: 10px;">para enviar USD a {{ $user['full_name'] }}
+                                </p>
                                 <p class="text-slate-500 small mt-1">¿Qué activo deseas convertir a USD?</p>
                             </div>
 
@@ -368,19 +413,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" type="text/javascript"></script>
 
     <script>
-        // Definimos KASHIO antes de que cualquier otro script intente leerlo
-        window.KASHIO = {
-            web3: @json(config('web3.networks')),
-            destChain: 137,
-            destToken: "{{ config('web3.networks.POL.tokens.USDC.address') }}",
-            userWallet: "{{ $userWallet }}",
+        // Definimos SWAP antes de que cualquier otro script intente leerlo
+        window.SWAP = {
+            destChain: "{{ $destChain }}",
+            destToken: "{{ $destToken }}",
+            dstWallet: "{{ $dstWallet }}",
             quoteUrl: "{{ route('pay.api.quote') }}",
-            tokensUrl: "{{ route('pay.api.tokens') }}",
+            balancesUrl: "{{ route('pay.api.balances') }}",
             createOrderUrl: "{{ route('pay.api.order') }}"
         };
 
         let isAlreadyConnected = false;
-
         window.onWalletConnected = function(address, chainId) {
             if (isAlreadyConnected) return;
 
@@ -395,7 +438,7 @@
 
                 console.log("🚀 Kashio: Procesando conexión única para", address);
 
-                // Ahora sí, cuando esto se ejecute, window.KASHIO ya existe
+                // Ahora sí, cuando esto se ejecute, window.SWAP ya existe
                 if (typeof window.startScanning === 'function') {
                     window.startScanning(address, chainId);
                 }

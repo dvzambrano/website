@@ -38,7 +38,8 @@ class RampController extends Controller
         $provider = $this->getProvider($providerName);
 
         $url = $provider->getWidgetUrl($tenant, $suscriptor, strtoupper($action));
-        Log::debug("🐞 RampController redirect: success redirect hit " . json_encode(request()->all()));
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 RampController redirect: success redirect hit " . json_encode(request()->all()));
         if (!$url) {
             return Lang::get("zentrotraderbot::bot.prompts.fail.widgeturl");
         }
@@ -101,37 +102,52 @@ class RampController extends Controller
 
     public function processWebhook()
     {
-        // Recuperamos el bot que el Middleware ya encontró y guardó
-        $tenant = app('active_bot');
-        // Decidir el proveedor de RAMP activo para este bot
-        $providerName = $tenant->data['ramp'] ?? 'transak';
-        $provider = $this->getProvider($providerName);
+        try {
+            // Recuperamos el bot que el Middleware ya encontró y guardó
+            $tenant = app('active_bot');
+            // Decidir el proveedor de RAMP activo para este bot
+            $providerName = $tenant->data['ramp'] ?? 'transak';
+            $provider = $this->getProvider($providerName);
 
-        $array = $provider->processWebhook(request());
+            $array = $provider->processWebhook(request());
 
-        // El provider detecto una actualizacion de Orden
-        if (isset($array["order"])) {
-            $order = $this->createRamporder(
-                $array['botId'],
-                $array['orderId'],
-                $array['userId'],
-                $array['amount'],
-                $array['status'],
-                $array['payload']
-            );
-        }
-        // El provider detecto una actualizacion de KYC
-        if (isset($array["kyc"])) {
-            $suscriptor = Suscriptions::on('tenant')->where("user_id", $array['userId'])->first();
-            if ($suscriptor) {
-                $data = $suscriptor->data;
-                $data['kyc'] = $array['status'];
-                $suscriptor->data = $data;
-                $suscriptor->save();
+            // El provider detecto una actualizacion de Orden
+            if (isset($array["order"])) {
+                $order = $this->createRamporder(
+                    $array['botId'],
+                    $array['orderId'],
+                    $array['userId'],
+                    $array['amount'],
+                    $array['status'],
+                    $array['payload']
+                );
             }
+            // El provider detecto una actualizacion de KYC
+            if (isset($array["kyc"])) {
+                $suscriptor = Suscriptions::on('tenant')->where("user_id", $array['userId'])->first();
+                if ($suscriptor) {
+                    $data = $suscriptor->data;
+                    $data['kyc'] = $array['status'];
+                    $suscriptor->data = $data;
+                    $suscriptor->save();
+                }
+            }
+
+        } catch (\Exception $e) {
+            // Logueamos el error pero devolvemos 200 para que Alchemy no marque el webhook como "Caído"
+            Log::error("Error procesando Webhook de Alchemy: " . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error interno al procesar el webhook.',
+                'timestamp' => now()->toIso8601String()
+            ], 200);
         }
 
-        return response()->json(['status' => 'processed'], 200);
+        // Respuesta estándar
+        return response()->json([
+            'status' => 'success',
+            'timestamp' => now()->toIso8601String()
+        ], 200);
     }
 
     private function createRamporder($botId, $orderId, $userId, $amount, $status, $payload)

@@ -115,15 +115,15 @@ trait UsesTelegramBot
             ),
             "demo" => $update['demo'] ?? false,
         );
+        $autodestroy = 0;
+        if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
+            $autodestroy = $this->reply["autodestroy"];
         if (isset($this->reply["photo"])) {
-            TelegramController::sendPhoto($array, $this->tenant->token);
+            TelegramController::sendPhoto($array, $this->tenant->token, $autodestroy);
         } else {
             // solo se envia un mensaje si tiene text
             // antes estaba $this->message["text"] pero lo cambie para q mandara el error cuando mandan la captura de un pago sin nombre y cantidad
             if (isset($this->reply["text"]) && $this->reply["text"] != "") {
-                $autodestroy = 0;
-                if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
-                    $autodestroy = $this->reply["autodestroy"];
 
                 TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
             }
@@ -147,7 +147,8 @@ trait UsesTelegramBot
     }
     public function getProcessedMessage($array = false)
     {
-        // Log::debug("🐞 UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
 
         // validando q el usuario tenga un @username
         if (
@@ -411,6 +412,9 @@ trait UsesTelegramBot
                 $reply = $this->ActorsController->notifyAfterMetadataChange($array["pieces"][1]);
                 break;
 
+            case "confirmation":
+                $reply = $this->getAreYouSurePrompt($array["pieces"][1], $array["pieces"][2]);
+                break;
 
             default:
                 $array = $this->actor->data;
@@ -500,7 +504,9 @@ trait UsesTelegramBot
             $menu = [];
 
         if (isset($actor->data["admin_level"]) && $actor->data["admin_level"] == 1) {
-            array_push($menu, ["text" => "👮‍♂️ " . Lang::get("telegrambot::bot.role.admin"), "callback_data" => 'adminmenu']);
+            array_push($menu, [
+                ["text" => "👮‍♂️ " . Lang::get("telegrambot::bot.role.admin"), "callback_data" => 'adminmenu'],
+            ]);
         }
 
         array_push($menu, [
@@ -579,13 +585,15 @@ trait UsesTelegramBot
         return $reply;
     }
 
-    public function getAreYouSurePrompt($yes_method, $no_method, $message = false)
+    public function getAreYouSurePrompt($yes_method, $no_method, $message = false, $showwarning = true)
     {
         $text = "⚠️ *" . Lang::get("telegrambot::bot.prompts.areyousure.header") . "*\n";
         if ($message)
-            $text .= "\n{$message}\n";
-        $text .= "_" . Lang::get("telegrambot::bot.prompts.areyousure.warning") . "_\n\n" .
-            "👇 " . Lang::get("telegrambot::bot.prompts.areyousure.text");
+            $text .= "{$message}\n";
+        if ($showwarning)
+            $text .= "_" . Lang::get("telegrambot::bot.prompts.areyousure.warning") . "_\n\n";
+
+        $text .= "👇 " . Lang::get("telegrambot::bot.prompts.areyousure.text");
 
         return array(
             "text" => $text,

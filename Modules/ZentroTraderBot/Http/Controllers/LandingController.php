@@ -5,14 +5,18 @@ namespace Modules\ZentroTraderBot\Http\Controllers;
 use Modules\Laravel\Http\Controllers\Controller;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\TelegramBot\Entities\Actors;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\DeBridgeController;
+use Modules\Web3\Http\Controllers\AlchemyController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Modules\Laravel\Services\BehaviorService;
+use Modules\Web3\Services\Web3MathService;
+use Modules\Web3\Services\ConfigService;
 
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 
@@ -45,7 +49,7 @@ class LandingController extends Controller
     public function getSuscriptor()
     {
         // 1. Obtener el ID de Telegram del usuario desde la sesión
-        $telegramUser = session('telegram_user');
+        $sessionUser = session('telegram_user');
 
         $controller = new ZentroTraderBotController();
         $controller->receiveMessage($this->bot, [
@@ -53,17 +57,17 @@ class LandingController extends Controller
                 'message_id' => "",
                 'text' => "/start",
                 'chat' => [
-                    'id' => $telegramUser['user_id'],
+                    'id' => $sessionUser['user_id'],
                     'type' => "web"
                 ],
                 'from' => [
-                    'id' => $telegramUser['user_id']
+                    'id' => $sessionUser['user_id']
                 ]
             ]
         ]);
 
         // tiene q ir aqui abajo porq arriba se esta simulando el comando /start del bot q suscribe al usuario y le crea su wallet
-        return Suscriptions::where("user_id", $telegramUser['user_id'])->first();
+        return Suscriptions::where("user_id", $sessionUser['user_id'])->first();
     }
 
     public function index()
@@ -87,20 +91,21 @@ class LandingController extends Controller
         // 2. Instanciar el controlador de Wallets
         $walletController = new TraderWalletController();
 
-        $usdcBalance = 0;
+        $balance = 0;
         $transactions = [];
         try {
-            // 3. Obtener Balance REAL (específicamente de USDC en Polygon)
+            // 3. Obtener Balance REAL (específicamente de BASE_TOKEN en Polygon)
             // El método getBalance que tienes devuelve el portfolio
-            $usdcBalance = $walletController->getBalance($suscriptor);
+            $balance = $walletController->getBalance($suscriptor);
             // 4. Obtener Transacciones 
             $transactions = $walletController->getRecentTransactions($suscriptor);
         } catch (\Throwable $th) {
             //throw $th;
         }
+        //dd($suscriptor->data, $balance, $transactions);
 
         return view("zentrotraderbot::themes.{$this->theme}.dashboard", [
-            'balance' => $usdcBalance,
+            'balance' => $balance,
             'transactions' => $transactions,
             'qrService' => $this->qrService,
             'bot' => $this->bot
@@ -109,6 +114,8 @@ class LandingController extends Controller
 
     public function pay($user)
     {
+        $tenant = app('active_bot');
+
         $actor = Actors::where('data->telegram->username', $user)->first();
         if (!$actor)
             abort(404);
@@ -117,27 +124,53 @@ class LandingController extends Controller
             abort(404);
         //dd($suscriptor->getWallet()["address"]);
 
+        $user = json_decode(TelegramController::getUserInfo($actor->user_id, $tenant->token), true)["result"];
+        //dd($user);
+
+        $user["photo_url"] = "";
+        $photos = TelegramController::getUserPhotos($actor->user_id, $tenant->token);
+        if (!empty($photos) && isset($photos[0][0]['file_id'])) {
+            $fileId = $photos[0][0]['file_id'];
+            $fileResponse = json_decode(self::getFileUrl($fileId, $tenant->token), true);
+            if (isset($fileResponse['ok']) && $fileResponse['ok'])
+                $user["photo_url"] = $fileResponse['result']['file_path'];
+        }
+
+        $destChain = (int) ConfigService::getActiveNetwork()['chainId'];
+        //dd(strtoupper(ConfigService::getActiveNetwork()['shortName']));
+        $destToken = ConfigService::getToken(
+            env('BASE_TOKEN'),
+            strtoupper(ConfigService::getActiveNetwork()['shortName'])
+        )['address'];
+
         return view("zentrotraderbot::themes.{$this->theme}.pay", [
-            'userWallet' => $suscriptor->getWallet()["address"],
+            'user' => $user,
+            'dstWallet' => $suscriptor->getWallet()["address"],
+            'destChain' => $destChain,
+            'destToken' => $destToken,
             'bot' => $this->bot // Datos del bot para el branding
         ]);
     }
 
     // PASO 1: Obtener rutas soportadas
-    public function getRoutes()
+    public function getChains()
     {
         // 1. Obtener rutas comerciales de deBridge (terminan en Polygon 137)
         $bridge = new DeBridgeController();
-        $debridgeRoutes = $bridge->getSupportedChainsInfo(137);
+        $chains = $bridge->getSupportedChainsInfo();
 
         // 2. Obtener datos técnicos de Chainlink / ChainID Network (con Cache para no saturar)
+        // php artisan cache:forget external_chains_info
         $allChainsData = BehaviorService::cache('external_chains_info', function () {
+            Log::info("✅ Refrescando base de datos de ChainID desde chainid.network.");
             $response = Http::timeout(BehaviorService::timeout())->get('https://chainid.network/chains.json');
             return $response->collect();
-        });
+        }, 604800, 172800);
+        // 604800 es una semana en segundos
+        // 172800 son 2 dias en segundos
 
-        $enrichedRoutes = [];
-        foreach ($debridgeRoutes as $id => $route) {
+        $enrichedChains = [];
+        foreach ($chains as $route) {
             $chainId = (int) $route['chainId'];
 
             // Buscamos la info técnica oficial por ChainID
@@ -181,51 +214,97 @@ class LandingController extends Controller
                 $chainInfo['explorers'] = array_values((array) ($chainInfo['explorers'] ?? []));
 
 
-                $enrichedRoutes[$chainInfo['chainId']] = $chainInfo;
+                $enrichedChains[$chainInfo['chainId']] = $chainInfo;
 
                 //dd($chainInfo, $route);
             }
         }
 
-        return response()->json($enrichedRoutes);
+        //dd($enrichedChains);
+        return response()->json($enrichedChains);
     }
 
-    public function getTokens($chainId = 137)
+    public function getBalances(string $address, $chainId = 137, $networkKey = "POL")
     {
         $bridge = new DeBridgeController();
-        $tokens = $bridge->tokenList($chainId);
-        return response()->json($tokens);
+        $tokensData = $bridge->tokenList($chainId, 604800);
+        $supportedTokens = collect($tokensData["tokens"]);
+
+        // 1. Obtener Balances desde Alchemy
+        $nativeHex = AlchemyController::getNativeBalance(config('zentrotraderbot.alchemy_api_key'), $address, $networkKey);
+        $erc20Balances = AlchemyController::getTokenBalances(config('zentrotraderbot.alchemy_api_key'), $address, [], $networkKey);
+
+        // 2. Unificar balances en una sola colección para el Map
+        // Añadimos el nativo como si fuera un resultado más de Alchemy
+        $allBalances = collect($erc20Balances)->prepend([
+            'contractAddress' => '0x0000000000000000000000000000000000000000',
+            'tokenBalance' => $nativeHex
+        ]);
+
+        // 3. Procesar todo con una sola lógica
+        $portfolio = $allBalances->map(function ($balance) use ($supportedTokens) {
+            $contract = strtolower($balance['contractAddress']);
+
+            // Filtro rápido: si el balance es cero, ni buscamos info
+            if ($balance['tokenBalance'] === '0x' . str_repeat('0', 64) || $balance['tokenBalance'] === '0x0') {
+                return null;
+            }
+
+            $info = $supportedTokens->firstWhere('address', $contract);
+
+            if ($info) {
+                $amount = Web3MathService::hexToDecimal($balance['tokenBalance'], $info['decimals']);
+                if ($amount > 0.00009) {// Si el balance es menor a 0.0001, lo ignoramos
+                    $info['balance'] = Web3MathService::hexToDecimal($balance['tokenBalance'], $info['decimals']);
+                    return $info;
+                }
+            }
+
+            return null;
+        })->filter()->values();
+
+        return response()->json($portfolio);
     }
 
     // PASO 2: Obtener Estimación
     public function getQuote(Request $request)
     {
+        /*
+        http://localhost/website/pay/quote?
+        // srcChainId=137&
+        // srcToken=0x3c499c542cef5e3811e1192ce70d8cc03d5c3359&
+        // amount=1200&
+        // dstChainId=137&dstToken=0x3c499c542cef5e3811e1192ce70d8cc03d5c3359
+
+         */
         $bridge = new DeBridgeController();
 
-        $srcChainId = (int) $request->srcChainId;
-        $dstChainId = config('web3.networks.POL.chain_id'); // Tu destino fijo en Polygon
-        $srcToken = $request->srcToken;
-        $amount = $request->amount;
-        $dstToken = config('web3.networks.POL.tokens.USDC.address');// USDC Polygon
+        $srcChainId = (int) $request->input('srcChainId');
+        $srcToken = $request->input('srcToken');
+        $amount = $request->input('amount'); // Ya viene en unidades mínimas (BigInt string)
+        $dstChainId = (int) $request->input('dstChainId');
+        $dstToken = $request->input('dstToken');
+        $dstWallet = $request->input('dstWallet');
+
+
+
+
 
         // CASO A: Misma Red (Polygon -> Polygon)
         if ($srcChainId === $dstChainId) {
             if (strtolower($srcToken) === strtolower($dstToken)) {
-                $suscriptor = $this->getSuscriptor();
-                $address = $suscriptor->getWallet()["address"];
-
                 // RESPUESTA MANUAL PARA TRANSFERENCIA DIRECTA
                 return response()->json([
                     'isDirectTransfer' => true,
                     'estimation' => [
                         'srcChainTokenIn' => [
-                            'symbol' => 'USDC',
-                            'decimals' => config('web3.networks.POL.tokens.USDC.decimals'),
+                            'symbol' => env('BASE_TOKEN'),
+                            'decimals' => ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'))["decimals"],
                             'amount' => $amount
                         ],
                         'dstChainTokenOut' => [
-                            'symbol' => 'USDC',
-                            'decimals' => config('web3.networks.POL.tokens.USDC.decimals'),
+                            'symbol' => env('BASE_TOKEN'),
+                            'decimals' => ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'))["decimals"],
                             'amount' => $amount,
                             'recommendedAmount' => $amount
                         ]
@@ -235,7 +314,7 @@ class LandingController extends Controller
                         'to' => $dstToken, // El contrato del token
                         //'address' => $address, // El destinatario
                         // Codificamos la función transfer(address _to, uint256 _value)
-                        'data' => $this->encodeERC20Transfer($suscriptor->getWallet()["address"], $amount),
+                        'data' => $this->encodeERC20Transfer($dstWallet, $amount),
                         'value' => "0"
                     ]
                 ]);
@@ -323,7 +402,7 @@ class LandingController extends Controller
 
             // --- CASO 1: MISMA RED (Polygon -> Polygon) ---
             if ($srcChainId === $dstChainId) {
-                // Sub-caso A: USDC -> USDC (Transferencia Directa)
+                // Sub-caso A: BASE_TOKEN -> BASE_TOKEN (Transferencia Directa)
                 if (strtolower($srcToken) === strtolower($dstToken)) {
                     return response()->json([
                         'type' => 'direct_transfer',
@@ -336,7 +415,7 @@ class LandingController extends Controller
                     ]);
                 }
 
-                // Sub-caso B: OTRO TOKEN -> USDC (Single Chain Swap)
+                // Sub-caso B: OTRO TOKEN -> BASE_TOKEN (Single Chain Swap)
                 $rawSwap = $bridge->getSameChainTransaction($srcChainId, $srcToken, $amount, $dstToken, $userSignerAddress, $dstWallet);
                 return response()->json([
                     'type' => 'same_chain_swap',

@@ -56,23 +56,13 @@ class TransakController extends Controller implements RampProviderInterface
         return Redirect::to($widgetUrl);
     }
 
-    public function processWebhook1(Request $request): JsonResponse
-    {
-
-        // Si el soporte de Transak está probando el endpoint, 
-        // esto responderá con éxito antes de intentar procesar lógica compleja.
-        return response()->json([
-            'status' => 'success',
-            'timestamp' => now()->toIso8601String()
-        ], 200);
-    }
-
     public function processWebhook(Request $request): array
     {
         $array = array();
         $payload = $request->all();
         // Logueamos siempre para auditoría interna
-        Log::debug("🐞 TransakController processWebhook: Evento recibido " . json_encode($payload));
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 TransakController processWebhook: Evento recibido " . json_encode($payload));
 
         try {
             $token = $request->getContent();
@@ -101,7 +91,8 @@ class TransakController extends Controller implements RampProviderInterface
                 $array["status"] = $data['status'];
                 $array["payload"] = $payload;
 
-                Log::debug("🐞 TransakController processWebhook: ORDER Update - User: " . $array["userId"] . " - Order: " . $array["orderId"] . "" . " - Status: " . $array["status"]);
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 TransakController processWebhook: ORDER Update - User: " . $array["userId"] . " - Order: " . $array["orderId"] . "" . " - Status: " . $array["status"]);
             }
 
             // Los eventos de KYC empiezan por "USER_" (ej: USER_KYC_APPROVED)
@@ -110,7 +101,8 @@ class TransakController extends Controller implements RampProviderInterface
                 $array["userId"] = $data['partnerCustomerId'];
                 $array["status"] = $data['kycStatus'];
 
-                Log::debug("🐞 TransakController processWebhook: KYC Update - User: " . $array["userId"] . " - Status: " . $array["status"]);
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 TransakController processWebhook: KYC Update - User: " . $array["userId"] . " - Status: " . $array["status"]);
             }
 
 
@@ -181,7 +173,7 @@ class TransakController extends Controller implements RampProviderInterface
                         'referrerDomain' => request()->getHost(),
                         //'defaultCryptoAmount' => 1,
                         //'cryptoAmount' => 1,
-                        'cryptoCurrencyCode' => 'USDC',
+                        'cryptoCurrencyCode' => env('BASE_TOKEN'),
                         'network' => 'polygon',
                         //'networks' => 'ethereum, polygon,terra, mainnet',
                         'walletAddress' => $wallet,
