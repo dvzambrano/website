@@ -20,7 +20,7 @@ class OfferObserver
         $price = $offer->amount * $offer->price_per_usd;
         $text = "🛡 *¡Intercambio asegurado!*\n" .
             "🔒 Se han bloquedado *{$amount} USD* para Ud.\n" .
-            "🆔 *Intercambio*: `{$offer->blockchain_trade_id}.`\n\n" .
+            "🆔 *Intercambio*: `{$offer->uuid}.`\n\n" .
             "🟢 _Ahora es seguro para Ud proceder:_\n" .
             "👉 Realice el pago de {$price} {$offer->currency} y entregue su comprobante para verificación.";
         $this->notifyByAddress(
@@ -32,7 +32,7 @@ class OfferObserver
 
         $text = "🛡 *¡Intercambio asegurado!*\n" .
             "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n" .
-            "🆔 *Intercambio*: `{$offer->blockchain_trade_id}.`\n\n" .
+            "🆔 *Intercambio*: `{$offer->uuid}.`\n\n" .
             "👉 _Se ha instruido a comprador para que realice el pago de {$price} {$offer->currency} y entregue su comprobante para verificación_.";
         $this->notifyByAddress(
             $offer->seller_address,
@@ -122,7 +122,7 @@ class OfferObserver
 
             case 'COMPLETED':
                 $text = "✅ *¡Transacción Completada!* \n" .
-                    "👉 La Oferta `{$offer->blockchain_trade_id}` ha terminado.\n" .
+                    "👉 La Oferta `{$offer->uuid}` ha terminado.\n" .
                     "💵 Se han *liberado {$offer->amount} USD* a la cuenta del comprador.";
                 $this->notifyByAddress(
                     $offer->seller_address,
@@ -131,7 +131,7 @@ class OfferObserver
                 );
 
                 $text = "✅ *¡Transacción Completada!* \n" .
-                    "👉 La Oferta `{$offer->blockchain_trade_id}` ha terminado.\n" .
+                    "👉 La Oferta `{$offer->uuid}` ha terminado.\n" .
                     "💵 Se han *liberado {$offer->amount} USD* a su cuenta.";
                 $this->notifyByAddress(
                     $offer->buyer_address,
@@ -142,14 +142,14 @@ class OfferObserver
 
             case 'DISPUTED':
                 // Se abrió una disputa (DisputeOpened)
-                $text = "⚠️ ATENCIÓN: Se ha abierto una DISPUTA en tu trade #{$offer->blockchain_trade_id}.\n" .
+                $text = "⚠️ ATENCIÓN: Se ha abierto una DISPUTA en tu trade #{$offer->uuid}.\n" .
                     "Un administrador revisará el caso pronto.";
                 $this->notifyUser($ownerTelegramId, $text, $bot->token);
                 break;
 
             case 'CANCELLED':
                 $text = "❌ *Oferta Cancelada!* \n" .
-                    "👉 La Oferta `{$offer->blockchain_trade_id}` ha sido cancelada satisfactoriamente.\n" .
+                    "👉 La Oferta `{$offer->uuid}` ha sido cancelada satisfactoriamente.\n" .
                     "💵 Se han *devuelto *{$offer->amount} USD* a su cuenta.";
                 $this->notifyByAddress(
                     $offer->seller_address,
@@ -158,7 +158,7 @@ class OfferObserver
                 );
 
                 $text = "❌ *Oferta Cancelada!* \n" .
-                    "👉 La Oferta `{$offer->blockchain_trade_id}` ha sido cancelada por el vendedor.\n" .
+                    "👉 La Oferta `{$offer->uuid}` ha sido cancelada por el vendedor.\n" .
                     "🟢 _Hemos permitido la cancelación porque no se había efectuado ningún pago aún_";
                 $this->notifyByAddress(
                     $offer->buyer_address,

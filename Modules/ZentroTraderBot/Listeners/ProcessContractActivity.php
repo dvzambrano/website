@@ -10,6 +10,7 @@ use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
 use Modules\Laravel\Http\Controllers\MathController;
 use Modules\ZentroTraderBot\Entities\Offers;
+use Illuminate\Support\Str;
 
 class ProcessContractActivity
 {
@@ -202,6 +203,7 @@ class ProcessContractActivity
         // 4. CREACIÓN: Si no hay coincidencia, es una oferta de VENTA nueva iniciada on Chain.
         // Al ejecutar 'create', el OfferObserver->created() se disparará y enviará las alertas.
         $offer = Offers::on('tenant')->create([
+            'uuid' => (string) Str::uuid(),
             'user_id' => $suscriptor->user_id,
             'type' => 'sell',
             'amount' => $amount,
@@ -213,7 +215,6 @@ class ProcessContractActivity
             'network_id' => $rawData['network_id'],
             'payment_method' => 'TBD', // El usuario deberá completar esto en el bot luego
             'currency' => 'USD',
-            'min_limit' => 1.00,
             'price_per_usd' => 1.00,
         ]);
 

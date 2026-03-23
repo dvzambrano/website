@@ -82,13 +82,13 @@ class ProcessContractActivityTest extends TestCase
         // Simulamos que ya existe un trade #5
         $tradeId = 5;
         Offers::on('tenant')->create([
+            'uuid' => (string) Str::uuid(),
             'blockchain_trade_id' => $tradeId,
             'status' => 'LOCKED',
             'amount' => 50,
             'seller_address' => $this->seller->getWallet()["address"],
             'buyer_address' => $this->buyer->getWallet()["address"],
             'user_id' => $this->seller->user_id,
-            'min_limit' => 1,
             'price_per_usd' => 1,
             'payment_method' => 'Test',
         ]);
@@ -121,11 +121,11 @@ class ProcessContractActivityTest extends TestCase
     {
         $tradeId = 10;
         Offers::on('tenant')->create([
+            'uuid' => (string) Str::uuid(),
             'blockchain_trade_id' => $tradeId,
             'status' => 'LOCKED',
             'amount' => 10,
             'user_id' => $this->seller->user_id,
-            'min_limit' => 1,
             'price_per_usd' => 1,
             'payment_method' => 'Test',
         ]);
@@ -161,11 +161,11 @@ class ProcessContractActivityTest extends TestCase
     {
         $tradeId = 99;
         $offer = Offers::on('tenant')->create([
+            'uuid' => (string) Str::uuid(),
             'blockchain_trade_id' => $tradeId,
             'status' => 'LOCKED',
             'amount' => 20,
             'user_id' => $this->seller->user_id,
-            'min_limit' => 1,
             'price_per_usd' => 1,
             'payment_method' => 'Test',
         ]);
@@ -215,11 +215,11 @@ class ProcessContractActivityTest extends TestCase
     {
         $tradeId = 500;
         Offers::on('tenant')->create([
+            'uuid' => (string) Str::uuid(),
             'blockchain_trade_id' => $tradeId,
             'status' => 'LOCKED',
             'amount' => 1.5,
             'user_id' => $this->seller->user_id,
-            'min_limit' => 1,
             'price_per_usd' => 1,
             'payment_method' => 'Test',
         ]);
@@ -380,11 +380,11 @@ class ProcessContractActivityTest extends TestCase
     private function createMockOffer($tradeId, $status)
     {
         return Offers::on('tenant')->create([
+            'uuid' => (string) Str::uuid(),
             'blockchain_trade_id' => $tradeId,
             'status' => $status,
             'amount' => 50,
             'user_id' => $this->seller->user_id,
-            'min_limit' => 1,
             'price_per_usd' => 1,
             'payment_method' => 'Test',
             'type' => 'sell',
