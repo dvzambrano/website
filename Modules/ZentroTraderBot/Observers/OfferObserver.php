@@ -16,6 +16,31 @@ class OfferObserver
     {
         $bot = app('active_bot');
 
+        $amount = $offer->amount * $offer->price_per_usd;
+        $text = "🔑 *¡Intercambio asegurado!*\n" .
+            "🔒 Se han bloquedado *{$offer->amount} USD* de la Oferta `{$offer->blockchain_trade_id}.`\n" .
+            "🟢 _En este momento es seguro para Ud proceder con el intercambio FIAT._\n\n" .
+            "👉 Realice el pago de {$amount} {$offer->currency} y entregue su comprobante para verificación.";
+        $this->notifyByAddress(
+            $offer->buyer_address,
+            $text,
+            $bot->token
+        );
+
+
+        $text = "🔑 *¡Intercambio asegurado!*\n" .
+            "🔒 Se han bloquedado *{$offer->amount} USD* de su cuenta para cumplir con la Oferta `{$offer->blockchain_trade_id}.`\n" .
+            "👉 Se ha instruido a comprador para que realice el pago de {$amount} {$offer->currency} y entregue su comprobante para verificación.";
+        $this->notifyByAddress(
+            $offer->seller_address,
+            $text,
+            $bot->token
+        );
+
+
+
+
+
         // Buscamos las alertas que coincidan
         $matchingAlerts = OffersAlerts::where('type', $offer->type)
             ->where('payment_method', $offer->payment_method)
@@ -89,26 +114,7 @@ class OfferObserver
         switch (strtoupper($newStatus)) {
             case 'LOCKED':
                 // Alguien aplicó al Escrow (TradeApplied)
-                $amount = $offer->amount * $offer->price_per_usd;
-                $text = "🔑 *¡Intercambio asegurado!*\n" .
-                    "🔒 Se han bloquedado *{$offer->amount} USD* de la Oferta `{$offer->blockchain_trade_id}.`\n" .
-                    "🟢 _En este momento es seguro para Ud proceder con el intercambio FIAT._\n\n" .
-                    "👉 Realice el pago de {$amount} {$offer->currency} y entregue su comprobante para verificación.";
-                $this->notifyByAddress(
-                    $offer->buyer_address,
-                    $text,
-                    $bot->token
-                );
 
-
-                $text = "🔑 *¡Intercambio asegurado!*\n" .
-                    "🔒 Se han bloquedado *{$offer->amount} USD* de su cuenta para cumplir con la Oferta `{$offer->blockchain_trade_id}.`\n" .
-                    "👉 Se ha instruido a comprador para que realice el pago de {$amount} {$offer->currency} y entregue su comprobante para verificación.";
-                $this->notifyByAddress(
-                    $offer->seller_address,
-                    $text,
-                    $bot->token
-                );
                 break;
 
             case 'COMPLETED':
