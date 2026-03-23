@@ -16,6 +16,7 @@
         "laravel/tinker": "^2.10|^3.0",
         "nwidart/laravel-modules": "^12.0",
         "pragmarx/google2fa-laravel": "^3.0",
+        "webklex/laravel-imap": "^6.2",
         "wikimedia/composer-merge-plugin": "^2.1"
     },
     "require-dev": {
