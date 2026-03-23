@@ -20,9 +20,11 @@ class OfferObserver
         $price = $offer->amount * $offer->price_per_usd;
         $text = "🛡 *¡Intercambio asegurado!*\n" .
             "🔒 Se han bloquedado *{$amount} USD* para Ud.\n" .
-            "🆔 *Intercambio*: `{$offer->uuid}.`\n\n" .
-            "🟢 _Ahora es seguro para Ud proceder:_\n" .
-            "👉 Realice el pago de {$price} {$offer->currency} y entregue su comprobante para verificación.";
+            "🆔 `{$offer->uuid}.`\n\n" .
+            "🟢 _Ahora es seguro proceder:_\n" .
+            "💳 Realice el pago de {$price} {$offer->currency} a:_\n" .
+            "📋 `{$offer->payment_details}`\n" .
+            "👉 _Luego, entregue su comprobante para verificación._";
         $this->notifyByAddress(
             $offer->buyer_address,
             $text,
@@ -32,8 +34,10 @@ class OfferObserver
 
         $text = "🛡 *¡Intercambio asegurado!*\n" .
             "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n" .
-            "🆔 *Intercambio*: `{$offer->uuid}.`\n\n" .
-            "👉 _Se ha instruido a comprador para que realice el pago de {$price} {$offer->currency} y entregue su comprobante para verificación_.";
+            "🆔 `{$offer->uuid}.`\n\n" .
+            "👉 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
+            "📋 _{$offer->payment_details}_\n" .
+            "👉 _Y luego, enviará su comprobante para verificación._";
         $this->notifyByAddress(
             $offer->seller_address,
             $text,
