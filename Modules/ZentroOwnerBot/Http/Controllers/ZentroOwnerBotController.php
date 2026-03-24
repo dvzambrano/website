@@ -94,8 +94,9 @@ class ZentroOwnerBotController extends JsonsController
                     $controller = new EscrowController();
                     $hash = $controller->proposeArbiter($array["pieces"][1]);
                     return array(
-                        "text" => "✅ proposeArbiter DONE: `{$hash}`",
-                        "autodestroy" => 1,
+                        "text" =>
+                            "✅ proposeArbiter `" . $array["pieces"][1] . "` DONE:\n" .
+                            "`{$hash}`",
                     );
                 } catch (\Exception $e) {
                     return array(
@@ -110,8 +111,10 @@ class ZentroOwnerBotController extends JsonsController
                     $controller = new EscrowController();
                     $hash = $controller->resolveDispute($array["pieces"][1], $array["pieces"][2]);
                     return array(
-                        "text" => "✅ resolveDispute DONE: `{$hash}`",
-                        "autodestroy" => 1,
+                        "text" =>
+                            "✅ resolveDispute `" . $array["pieces"][1] . "` DONE:\n" .
+                            "🥇 Winner=`" . $array["pieces"][2] . "`\n" .
+                            "`{$hash}`",
                     );
                 } catch (\Exception $e) {
                     return array(
@@ -126,8 +129,9 @@ class ZentroOwnerBotController extends JsonsController
                     $controller = new EscrowController();
                     $hash = $controller->rescueTokens($array["pieces"][1]);
                     return array(
-                        "text" => "✅ rescueTokens DONE: `{$hash}`",
-                        "autodestroy" => 1,
+                        "text" =>
+                            "✅ rescueTokens `" . $array["pieces"][1] . "` DONE:\n" .
+                            "`{$hash}`",
                     );
                 } catch (\Exception $e) {
                     return array(
@@ -142,8 +146,9 @@ class ZentroOwnerBotController extends JsonsController
                     $controller = new EscrowController();
                     $hash = $controller->setFee($array["pieces"][1]);
                     return array(
-                        "text" => "✅ setFee DONE: `{$hash}`",
-                        "autodestroy" => 1,
+                        "text" =>
+                            "✅ setFee `" . $array["pieces"][1] . "` DONE:\n" .
+                            "`{$hash}`",
                     );
                 } catch (\Exception $e) {
                     return array(
@@ -158,8 +163,9 @@ class ZentroOwnerBotController extends JsonsController
                     $controller = new EscrowController();
                     $hash = $controller->setMinFeePerToken($array["pieces"][1]);
                     return array(
-                        "text" => "✅ setMinFeePerToken DONE: `{$hash}`",
-                        "autodestroy" => 1,
+                        "text" =>
+                            "✅ setMinFeePerToken `" . $array["pieces"][1] . "` DONE:\n" .
+                            "`{$hash}`",
                     );
                 } catch (\Exception $e) {
                     return array(
@@ -175,8 +181,9 @@ class ZentroOwnerBotController extends JsonsController
                     $controller = new EscrowController();
                     $hash = $controller->withdrawFees();
                     return array(
-                        "text" => "✅ withdrawFees DONE: `{$hash}`",
-                        "autodestroy" => 1,
+                        "text" =>
+                            "✅ withdrawFees DONE:\n" .
+                            "`{$hash}`",
                     );
                 } catch (\Exception $e) {
                     return array(
