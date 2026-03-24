@@ -34,7 +34,9 @@ class CreateOffersTable extends Migration
                 'disputed',  // DISPUTED en contrato
                 'completed', // COMPLETED (fondos liberados)
                 'cancelled', // CANCELLED (fondos devueltos)
-                'signed'     // Solo local (oculto en el bot)
+                'signed',     // Solo local (oculto en el bot)
+                'solved',     // Solo local (oculto en el bot)
+                'expired',     // Solo local (oculto en el bot)
             ])->default('locked');
 
             // --- Identificación en Blockchain ---
@@ -46,10 +48,15 @@ class CreateOffersTable extends Migration
             // --- Actores del P2P ---
             $table->string('seller_address')->nullable()->index(); // Wallet del que deposita
             $table->string('buyer_address')->nullable()->index();  // Wallet del que recibe
+            $table->text('winner_address')->nullable(); // Wallet que gana la disputa si la hubiera
 
             // --- Auditoría ---
             $table->string('tx_hash_deposit')->nullable();  // Hash del createTrade
             $table->string('tx_hash_release')->nullable();  // Hash de la liberación/resolución
+
+            // --- Datos extra ---
+            $table->jsonb('data');
+
             $table->timestamps();
 
             $table->index(['type', 'status', 'blockchain_trade_id', 'payment_method']);

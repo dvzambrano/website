@@ -20,21 +20,19 @@ class OfferObserver
 
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
-
-
         $diff = MathController::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
-        //
 
         $amount = number_format($offer->amount, 2);
         $price = number_format($offer->amount * $offer->price_per_usd, 2);
         $text = "🛡 *¡Intercambio asegurado!*\n" .
             "🆔 `{$offer->uuid}`\n" .
             "🔒 Se han bloquedado *{$amount} USD* para Ud\n" .
-            "🟢 _Ahora es seguro proceder:_\n\n" .
-            "💳 _Realice el pago de {$price} {$offer->currency} a:_\n" .
+            "🟢 *Ahora es seguro proceder:*\n\n" .
+            "💳 Realice el pago de {$price} {$offer->currency} a:\n" .
             "🏦 `{$offer->payment_details}`\n" .
-            "👉 _y luego, entregue su comprobante para verificación._\n\n" .
-            "⏱️ *Tiene un margen de " . $diff["legible"] . " para completar su pago.* Luego de ese tiempo los {$amount} USD estarán disponibles para que el vendedor los recupere.";
+            "👉 y luego, entregue su comprobante para verificación.\n\n" .
+            "⏱️ *Tiene un margen de " . $diff["legible"] . " para completar su pago.*\n" .
+            "_Luego de ese tiempo los USD estarán disponibles para que el vendedor los recupere._";
         $this->notifyByAddress(
             $offer->buyer_address,
             $text,
@@ -70,23 +68,45 @@ class OfferObserver
         $newStatus = $offer->status;
         $amount = number_format($offer->amount, 2);
 
+        $blockchain = new BlockchainController();
+        $status = $blockchain->getStatus();
+        $diff = MathController::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+
         switch (strtoupper($newStatus)) {
             case 'COMPLETED':
-                $text = "🎉 *¡FELICIDADES: transacción completada!* \n" .
-                    "🆔 `{$offer->uuid}`\n" .
-                    "✅ Ambas partes han confirmado el intercambio satisfactorio.\n\n";
-                $this->notifyByAddress(
-                    $offer->seller_address,
-                    $text .
-                    "💵 _Se han descontado {$amount} USD de su cuenta._",
-                    $bot->token
-                );
-                $this->notifyByAddress(
-                    $offer->buyer_address,
-                    $text .
-                    "💵 _Se han liberado {$amount} USD a su cuenta._",
-                    $bot->token
-                );
+                $isDispute = !empty($offer->winner_address);
+                $uuid = $offer->uuid;
+
+                // 1. Mensaje para el Vendedor (Seller)
+                if ($isDispute) {
+                    $msgSeller = "✅ *TRANSACCIÓN COMPLETADA* \n" .
+                        "🆔 `{$uuid}`\n" .
+                        "⚖️ _La transacción ha sido finalizada tras el arbitraje._\n" .
+                        "📦 *Estado final:* Fondos procesados.";
+                } else {
+                    $msgSeller = "🎉 *¡FELICIDADES: transacción completada!* \n" .
+                        "🆔 `{$uuid}`\n" .
+                        "✅ El intercambio se realizó con éxito.\n" .
+                        "💵 _Se han descontado {$amount} USD de su cuenta._";
+                }
+
+                // 2. Mensaje para el Comprador (Buyer)
+                if ($isDispute) {
+                    $msgBuyer = "✅ *TRANSACCIÓN COMPLETADA* \n" .
+                        "🆔 `{$uuid}`\n" .
+                        "⚖️ _La transacción ha sido finalizada tras el arbitraje._\n" .
+                        "💰 *Estado final:* Saldo actualizado.";
+                } else {
+                    $msgBuyer = "🎉 *¡FELICIDADES: transacción completada!* \n" .
+                        "🆔 `{$uuid}`\n" .
+                        "✅ El intercambio se realizó con éxito.\n" .
+                        "💵 _Se han liberado {$amount} USD a su cuenta._";
+                }
+
+                // 3. Notificaciones finales
+                $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token);
+                $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token);
+
                 break;
 
             case 'DISPUTED':
@@ -106,6 +126,7 @@ class OfferObserver
                     $text,
                     $bot->token
                 );
+                // falta notificar a los arbitros
                 break;
 
             case 'CANCELLED':
@@ -118,6 +139,90 @@ class OfferObserver
                     $text,
                     $bot->token
                 );
+                break;
+
+            case 'SIGNED':
+                // 1. Identificamos quién es el que falta por firmar
+                $json = $offer->data;
+                $hasSigned = strtolower($json["signer"]);
+                $seller = strtolower($offer->seller_address);
+                $buyer = strtolower($offer->buyer_address);
+
+                // El objetivo del mensaje es quien NO ha firmado
+                $pendingParty = ($hasSigned == $seller) ? $buyer : $seller;
+                $text = "✍️ *¡Firma Pendiente!* \n" .
+                    "🆔 `{$offer->uuid}`\n" .
+                    "☑️ La contraparte ya ha firmado y depositado su confianza en esta transacción.\n\n" .
+                    "✍️ *Proceda a firmar la transacción*; evite que entre en disputa o se retrase el envío de fondos.\n" .
+                    "⏳ _Estamos esperando por Ud..._";
+                $this->notifyByAddress(
+                    $pendingParty,
+                    $text,
+                    $bot->token
+                );
+
+                // Opcional: Notificar al que YA firmó que estamos avisando al otro
+                $text = "👍 *¡Firma REGISTRADA!* \n" .
+                    "🆔 `{$offer->uuid}`\n" .
+                    "✍️ Su firma ha sido registrada.\n\n" .
+                    "🔔 *Estamos notificando a la contraparte* para que confirme.\n" .
+                    "⏳ _Le avisaremos en cuanto la transacción avance..._";
+                $this->notifyByAddress(
+                    $hasSigned,
+                    $text,
+                    $bot->token
+                );
+                break;
+
+            case 'SOLVED':
+                // mandar mensaje a winner felicitando y a perdedor informando
+                $winner = $offer->buyer_address;
+                $looser = $offer->seller_address;
+                if (strtolower($offer->winner_address) == strtolower($offer->seller_address)) {
+                    $winner = $offer->seller_address;
+                    $looser = $offer->buyer_address;
+                }
+                $text = "👩‍💻 *¡Transacción REVISADA!*\n" .
+                    "🆔 `{$offer->uuid}`\n" .
+                    "⚖️ _Un adminstrador ha revisado las evidencias presentadas._\n";
+                $this->notifyByAddress(
+                    $winner,
+                    $text .
+                    "🏆 *La disputa ha finalizado a su favor.*.\n\n" .
+                    "💵 _Se han liberado {$amount} USD a su cuenta._\n" .
+                    "🙏 _¡Gracias por confiar en nosotros!_\n",
+                    $bot->token
+                );
+                $this->notifyByAddress(
+                    $looser,
+                    $text .
+                    "🛑 *Le informamos que el arbitraje ha concluido a favor de la contraparte*.\n\n" .
+                    "🤝 _Si tiene dudas, contacte a soporte con el ID único de la transacción._" .
+                    "🙏 _¡Gracias por confiar en nosotros!_\n",
+                    $bot->token
+                );
+                // cambiar estado a COMPLETED
+                $offer->updateStatus('COMPLETED', [
+                    'updated_at' => now()
+                ]);
+                break;
+
+            case 'EXPIRED':
+                // mandar mensaje al comprador de q se le ha vencido el tiempo y entramos en disputa
+                $text = "⏱️ *¡Transacción en EXPIRADA!* \n" .
+                    "🆔 `{$offer->uuid}`\n" .
+                    "👉 _El vendedor ha informado que esta operación no fue pagada en " . $diff["legible"] . "._\n" .
+                    "🚨 *Se abrirá una DISPUTA automáticamente*.\n\n" .
+                    "🔒 _Los fondos estarán congelados hasta que la administración revise el caso._";
+                $this->notifyByAddress(
+                    $offer->buyer_address,
+                    $text,
+                    $bot->token
+                );
+                // cambiar estado a DISPUTED
+                $offer->updateStatus('DISPUTED', [
+                    'updated_at' => now()
+                ]);
                 break;
         }
     }
