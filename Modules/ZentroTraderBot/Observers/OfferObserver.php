@@ -142,36 +142,53 @@ class OfferObserver
                 break;
 
             case 'SIGNED':
-                // 1. Identificamos quién es el que falta por firmar
-                $json = $offer->data;
-                $hasSigned = strtolower($json["signer"]);
+                $json = $offer->data ?? [];
+                $currentSigner = strtolower($json["signer"]); // El que acaba de firmar ahora
+
+                // Recuperamos la lista de firmas anteriores (si no existe, empezamos array vacío)
+                $alreadySigned = $json['already_signed'] ?? [];
+
+                // Si el que firma ahora no está en la lista, lo añadimos
+                if (!in_array($currentSigner, $alreadySigned)) {
+                    $alreadySigned[] = $currentSigner;
+                }
+
                 $seller = strtolower($offer->seller_address);
                 $buyer = strtolower($offer->buyer_address);
 
-                // El objetivo del mensaje es quien NO ha firmado
-                $pendingParty = ($hasSigned == $seller) ? $buyer : $seller;
-                $text = "⚠️ *¡Firma Pendiente!* \n" .
+                // ¿Ya firmaron los dos?
+                if (count($alreadySigned) >= 2) {
+                    // OPCIONAL: Aquí podrías disparar un mensaje de "Ambos han firmado, procesando..."
+                    // Aunque normalmente aquí el estado debería saltar a COMPLETED o LOCKED solo
+                    break;
+                }
+
+                // Si solo hay UNA firma en el historial:
+                $pendingParty = ($currentSigner == $seller) ? $buyer : $seller;
+
+                // 1. Notificar al que FALTA (Solo si es la primera firma)
+                $textPending = "⚠️ *¡Firma Pendiente!* \n" .
                     "🆔 `{$offer->uuid}`\n" .
-                    "☑️ La contraparte ya ha firmado y depositado su confianza en esta transacción.\n\n" .
+                    "☑️ La contraparte ya ha firmado y depositado su confianza.\n\n" .
                     "✍️ *Proceda a firmar*; evite que entre en disputa o haya retrasos.\n" .
                     "⏳ _Estamos esperando por Ud..._";
-                $this->notifyByAddress(
-                    $pendingParty,
-                    $text,
-                    $bot->token
-                );
 
-                // Opcional: Notificar al que YA firmó que estamos avisando al otro
-                $text = "👍 *¡Firma REGISTRADA!* \n" .
+                $this->notifyByAddress($pendingParty, $textPending, $bot->token);
+
+                // 2. Notificar al que ACABA DE FIRMAR
+                $textSuccess = "👍 *¡Firma REGISTRADA!* \n" .
                     "🆔 `{$offer->uuid}`\n" .
                     "✍️ Su firma ha sido registrada.\n\n" .
                     "🔔 *Estamos notificando a la contraparte* para que confirme.\n" .
                     "⏳ _Le avisaremos en cuanto la transacción avance..._";
-                $this->notifyByAddress(
-                    $hasSigned,
-                    $text,
-                    $bot->token
-                );
+
+                $this->notifyByAddress($currentSigner, $textSuccess, $bot->token);
+
+                // 3. IMPORTANTÍSIMO: Guardar el historial de firmas en la data de la oferta
+                $json['already_signed'] = $alreadySigned;
+                $offer->data = $json;
+                $offer->save();
+
                 break;
 
             case 'SOLVED':
