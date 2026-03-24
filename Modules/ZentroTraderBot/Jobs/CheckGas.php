@@ -11,8 +11,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\Web3\Services\Web3MathService;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\ZentroTraderBot\Jobs\ManageScrow;
+use Modules\Laravel\Http\Controllers\MathController;
 
 class CheckGas implements ShouldQueue
 {
@@ -83,7 +85,7 @@ class CheckGas implements ShouldQueue
                 // Ajustar el valor automaticamente
                 ManageScrow::dispatch(
                     $this->userId,
-                    "/tokenfee " . $idealMinFeeUsd
+                    "/tokenfee " . MathController::round($idealMinFeeUsd, 2, true)
                 )->delay(now()->addSeconds(50));
             } elseif ($costInUsd >= $currentMinFeeUsd) {
                 $alertType = 'critical';
@@ -95,7 +97,7 @@ class CheckGas implements ShouldQueue
                 // Ajustar el valor automaticamente
                 ManageScrow::dispatch(
                     $this->userId,
-                    "/tokenfee " . $idealMinFeeUsd
+                    "/tokenfee " . MathController::round($idealMinFeeUsd, 2, true)
                 )->delay(now()->addSeconds(50));
             } elseif ($currentMinFeeUsd < $idealMinFeeUsd) {
                 $alertType = 'warning';
