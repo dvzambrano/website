@@ -36,6 +36,9 @@ class BlockchainController extends Controller
             $feePercentage = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network) {
                 return $escrow->getFeePercentage($rpc, env('ESCROW_CONTRACT'), $network['chainId'], env('ETHERSCAN_API_KEY'));
             });
+            $tradeTimeout = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network) {
+                return $escrow->getTradeTimeout($rpc, env('ESCROW_CONTRACT'), $network['chainId'], env('ETHERSCAN_API_KEY'));
+            });
 
             // 3. CÁLCULO DE COSTO (Corregido)
             $gasEstimated = env("ESCROW_GAS_ESTIMATED", 600000); // Gas de Funciones Operativas del Escrow: se obtiene del reporte "forge test --gas-report" en el 
@@ -83,6 +86,7 @@ class BlockchainController extends Controller
                 "gasPriceGwei" => $gasPriceGwei,
                 "nativePrice" => $nativePrice,
                 "feePercentage" => (int) $feePercentage,
+                "tradeTimeout" => (int) $tradeTimeout,
                 "gasEstimated" => $gasEstimated,
                 "costInUsd" => $costInUsd,
                 "currentMinFeeRaw" => $currentMinFeeRaw,

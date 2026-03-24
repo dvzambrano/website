@@ -5,6 +5,7 @@ namespace Modules\ZentroTraderBot\Observers;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
+use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 
 class OfferObserver
 {
@@ -15,15 +16,20 @@ class OfferObserver
     {
         $bot = app('active_bot');
 
+        $blockchain = new BlockchainController();
+        $status = $blockchain->getStatus();
+        // $status["tradeTimeout"]
+
         $amount = number_format($offer->amount, 2);
         $price = number_format($offer->amount * $offer->price_per_usd, 2);
         $text = "🛡 *¡Intercambio asegurado!*\n" .
+            "🆔 `{$offer->uuid}`\n" .
             "🔒 Se han bloquedado *{$amount} USD* para Ud\n" .
-            "🆔 `{$offer->uuid}`\n\n" .
-            "🟢 _Ahora es seguro proceder:_\n" .
-            "💳 Realice el pago de {$price} {$offer->currency} a:_\n" .
+            "🟢 _Ahora es seguro proceder:_\n\n" .
+            "💳 _Realice el pago de {$price} {$offer->currency} a:_\n" .
             "🏦 `{$offer->payment_details}`\n" .
-            "👉 _Luego, entregue su comprobante para verificación._";
+            "👉 _y luego, entregue su comprobante para verificación._\n\n" .
+            "⏱️ *Tiene un*";
         $this->notifyByAddress(
             $offer->buyer_address,
             $text,
@@ -32,11 +38,11 @@ class OfferObserver
 
         $text = "🛡 *¡Intercambio asegurado!*\n" .
             "🆔 `{$offer->uuid}`\n" .
-            "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n" .
+            "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n\n" .
             "💳 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
             "🏦 _{$offer->payment_details}_\n" .
             "📋 _Y luego, enviará su comprobante para verificación._\n\n" .
-            "🚨 _Nunca libere los fondos sin comprobar el recibo de los {$price} {$offer->currency} en su cuenta_";
+            "🚨 *Nunca libere los fondos sin comprobar el recibo de los {$price} {$offer->currency} en su cuenta*";
         $this->notifyByAddress(
             $offer->seller_address,
             $text,
