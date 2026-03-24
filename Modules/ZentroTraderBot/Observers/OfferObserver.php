@@ -18,8 +18,8 @@ class OfferObserver
         $amount = number_format($offer->amount, 2);
         $price = number_format($offer->amount * $offer->price_per_usd, 2);
         $text = "🛡 *¡Intercambio asegurado!*\n" .
-            "🔒 Se han bloquedado *{$amount} USD* para Ud.\n" .
-            "🆔 `{$offer->uuid}.`\n\n" .
+            "🔒 Se han bloquedado *{$amount} USD* para Ud\n" .
+            "🆔 `{$offer->uuid}`\n\n" .
             "🟢 _Ahora es seguro proceder:_\n" .
             "💳 Realice el pago de {$price} {$offer->currency} a:_\n" .
             "📋 `{$offer->payment_details}`\n" .
@@ -32,10 +32,11 @@ class OfferObserver
 
         $text = "🛡 *¡Intercambio asegurado!*\n" .
             "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n" .
-            "🆔 `{$offer->uuid}.`\n\n" .
-            "👉 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
+            "🆔 `{$offer->uuid}`\n" .
+            "💳 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
             "📋 _{$offer->payment_details}_\n" .
-            "🎟 _Y luego, enviará su comprobante para verificación._";
+            "📑 _Y luego, enviará su comprobante para verificación._\n\n" .
+            "🚨 _Nunca libere los fondos sin comprobar el recibo de los {$price} {$offer->currency} en su cuenta_";
         $this->notifyByAddress(
             $offer->seller_address,
             $text,
@@ -61,7 +62,7 @@ class OfferObserver
         switch (strtoupper($newStatus)) {
             case 'COMPLETED':
                 $text = "✅ *¡Transacción Completada!* \n" .
-                    "🆔 `{$offer->uuid}.`\n\n" .
+                    "🆔 `{$offer->uuid}`\n\n" .
                     "👉 _Ambas partes han confirmado satisfactoriamente._\n" .
                     "💵 Se han *descontado {$amount} USD* de su cuenta.";
                 $this->notifyByAddress(
@@ -71,7 +72,7 @@ class OfferObserver
                 );
 
                 $text = "✅ *¡Transacción Completada!* \n" .
-                    "🆔 `{$offer->uuid}.`\n\n" .
+                    "🆔 `{$offer->uuid}`\n\n" .
                     "👉 _Ambas partes han confirmado satisfactoriamente._\n" .
                     "💵 Se han *liberado {$amount} USD* a su cuenta.";
                 $this->notifyByAddress(
@@ -84,7 +85,7 @@ class OfferObserver
             case 'DISPUTED':
                 // Se abrió una disputa (DisputeOpened)
                 $text = "🙇🏻 *¡Transacción en DISPUTA!* \n" .
-                    "🆔 `{$offer->uuid}.`\n\n" .
+                    "🆔 `{$offer->uuid}`\n\n" .
                     "👉 _Se ha iniciado una reclamación de esta operación._\n" .
                     "👮‍♀️ *Un administrador revisará el caso pronto*." .
                     "⚠️ *Tenga a mano evidencia* de que cumplió con su parte del acuerdo para cuando se la soliciten.";
@@ -102,7 +103,7 @@ class OfferObserver
 
             case 'CANCELLED':
                 $text = "❌ *Oferta Cancelada!* \n" .
-                    "🆔 `{$offer->uuid}.`\n\n" .
+                    "🆔 `{$offer->uuid}`\n\n" .
                     "👉 _La Oferta ha sido cancelada por el comprador._\n" .
                     "💵 Se han *devuelto *{$amount} USD* a su cuenta.";
                 $this->notifyByAddress(
