@@ -22,7 +22,7 @@ class OfferObserver
             "🆔 `{$offer->uuid}`\n\n" .
             "🟢 _Ahora es seguro proceder:_\n" .
             "💳 Realice el pago de {$price} {$offer->currency} a:_\n" .
-            "📋 `{$offer->payment_details}`\n" .
+            "🏦 `{$offer->payment_details}`\n" .
             "👉 _Luego, entregue su comprobante para verificación._";
         $this->notifyByAddress(
             $offer->buyer_address,
@@ -31,11 +31,11 @@ class OfferObserver
         );
 
         $text = "🛡 *¡Intercambio asegurado!*\n" .
-            "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n" .
             "🆔 `{$offer->uuid}`\n" .
+            "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n" .
             "💳 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
-            "📋 _{$offer->payment_details}_\n" .
-            "📑 _Y luego, enviará su comprobante para verificación._\n\n" .
+            "🏦 _{$offer->payment_details}_\n" .
+            "📋 _Y luego, enviará su comprobante para verificación._\n\n" .
             "🚨 _Nunca libere los fondos sin comprobar el recibo de los {$price} {$offer->currency} en su cuenta_";
         $this->notifyByAddress(
             $offer->seller_address,
@@ -85,10 +85,10 @@ class OfferObserver
             case 'DISPUTED':
                 // Se abrió una disputa (DisputeOpened)
                 $text = "🙇🏻 *¡Transacción en DISPUTA!* \n" .
-                    "🆔 `{$offer->uuid}`\n\n" .
+                    "🆔 `{$offer->uuid}`\n" .
                     "👉 _Se ha iniciado una reclamación de esta operación._\n" .
-                    "👮‍♀️ *Un administrador revisará el caso pronto*." .
-                    "⚠️ *Tenga a mano evidencia* de que cumplió con su parte del acuerdo para cuando se la soliciten.";
+                    "👮‍♀️ *Un administrador revisará el caso pronto*.\n\n" .
+                    "⚠️ *Tenga a mano evidencia* de que cumplió con su parte del acuerdo.";
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $text,
