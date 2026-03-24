@@ -80,13 +80,18 @@ class CheckGas implements ShouldQueue
                 $msg .= "💡 Basado en trades promedio de: 💲*" . number_format($referenceTrade, 2) . "*\n";
                 $msg .= "🔺 `feePercentage` = `" . $suggestedBps . "` (*" . ($suggestedBps / 100) . "%*)\n";
                 $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (💲*" . number_format($idealMinFeeUsd, 2) . "*)";
+                // Ajustar el valor automaticamente
+                ManageScrow::dispatch(
+                    $this->userId,
+                    "/tokenfee " . $idealMinFeeUsd
+                )->delay(now()->addSeconds(50));
             } elseif ($costInUsd >= $currentMinFeeUsd) {
                 $alertType = 'critical';
-                $msg = "🔴 *PROTECCIÓN DUST FALLIDA *\n";
+                $msg = "🔴 *MARGEN PERDIDO*\n";
                 $msg .= "⛽️ Gas " . number_format($costInUsd, 4) . " > " . number_format($currentMinFeeUsd, 4) . " (MinFee)\n";
                 $msg .= "💡 Basado en trades promedio de: 💲*" . number_format($referenceTrade, 2) . "*\n";
                 $msg .= "💸 *Trades < 💲" . number_format($breakEvenTrade, 2) . " dan pérdida*\n";
-                $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (*" . number_format($idealMinFeeUsd, 4) . "*)";
+                $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (💲*" . number_format($idealMinFeeUsd, 4) . "*)";
                 // Ajustar el valor automaticamente
                 ManageScrow::dispatch(
                     $this->userId,
@@ -94,7 +99,7 @@ class CheckGas implements ShouldQueue
                 )->delay(now()->addSeconds(50));
             } elseif ($currentMinFeeUsd < $idealMinFeeUsd) {
                 $alertType = 'warning';
-                $msg = "🟠 *MARGEN ESTRECHO *\n";
+                $msg = "🟠 *MARGEN ESTRECHO*\n";
                 $msg .= "⛽️ Gas " . number_format($costInUsd, 4) . " < " . number_format($currentMinFeeUsd, 4) . " (MinFee)\n";
                 $msg .= "💡 Basado en trades promedio de: 💲*" . number_format($referenceTrade, 2) . "*\n";
                 $msg .= "💸 *Trades < 💲" . number_format($breakEvenTrade, 2) . " dan pérdida*\n";
