@@ -72,23 +72,19 @@ class OfferObserver
 
         switch (strtoupper($newStatus)) {
             case 'COMPLETED':
-                $text = "✅ *¡Transacción Completada!* \n" .
-                    "🆔 `{$offer->uuid}`\n\n" .
-                    "👉 _Ambas partes han confirmado satisfactoriamente._\n" .
-                    "💵 Se han *descontado {$amount} USD* de su cuenta.";
+                $text = "🎉 *¡FELICIDADES: transacción completada!* \n" .
+                    "🆔 `{$offer->uuid}`\n" .
+                    "✅ Ambas partes han confirmado el intercambio satisfactorio.\n\n";
                 $this->notifyByAddress(
                     $offer->seller_address,
-                    $text,
+                    $text .
+                    "💵 _Se han descontado {$amount} USD de su cuenta._",
                     $bot->token
                 );
-
-                $text = "✅ *¡Transacción Completada!* \n" .
-                    "🆔 `{$offer->uuid}`\n\n" .
-                    "👉 _Ambas partes han confirmado satisfactoriamente._\n" .
-                    "💵 Se han *liberado {$amount} USD* a su cuenta.";
                 $this->notifyByAddress(
                     $offer->buyer_address,
-                    $text,
+                    $text .
+                    "💵 _Se han liberado {$amount} USD a su cuenta._",
                     $bot->token
                 );
                 break;
