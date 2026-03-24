@@ -150,10 +150,10 @@ class OfferObserver
 
                 // El objetivo del mensaje es quien NO ha firmado
                 $pendingParty = ($hasSigned == $seller) ? $buyer : $seller;
-                $text = "✍️ *¡Firma Pendiente!* \n" .
+                $text = "⚠️ *¡Firma Pendiente!* \n" .
                     "🆔 `{$offer->uuid}`\n" .
                     "☑️ La contraparte ya ha firmado y depositado su confianza en esta transacción.\n\n" .
-                    "✍️ *Proceda a firmar la transacción*; evite que entre en disputa o se retrase el envío de fondos.\n" .
+                    "✍️ *Proceda a firmar*; evite que entre en disputa o haya retrasos.\n" .
                     "⏳ _Estamos esperando por Ud..._";
                 $this->notifyByAddress(
                     $pendingParty,
