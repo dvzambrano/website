@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Crypt;
 use Modules\Laravel\Http\Controllers\TextController;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
+use Illuminate\Support\Facades\Http;
 
 class CustomTestController extends BaseController
 {
@@ -45,6 +46,41 @@ class CustomTestController extends BaseController
 
         // 2. Si no hay nombre o el método no existe, ejecutamos la lógica base del paquete
         return parent::test($request);
+    }
+    public function testCall()
+    {
+        $bot = TelegramBots::where('name', "@ZentroOwnerBot")->first();
+
+        $user_id = 816767995;
+        $url = "https://dev.micalme.com/telegram/bot/" . $bot->key;
+        $text = "/start";
+        $payload = [
+            'message' => [
+                'message_id' => rand(1, 100),
+                'from' => [
+                    'id' => $user_id,
+                    'username' => 'sim_user',
+                ],
+                'chat' => [
+                    'id' => $user_id,
+                    'type' => 'private',
+                ],
+                'date' => time(),
+                'text' => $text,
+            ]
+        ];
+
+
+        try {
+            $response = Http::withHeaders([
+                'X-Telegram-Bot-Api-Secret-Token' => $bot->secret,
+                'Content-Type' => 'application/json',
+            ])->post($url, $payload);
+            dd($response->body());
+            return $response->body();
+        } catch (\Throwable $th) {
+            die("🆘 TelegramController getFileUrl: " . $th->getTraceAsString());
+        }
     }
 
 

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
+use Modules\ZentroTraderBot\Jobs\ManageScrow;
 
 class CheckGas implements ShouldQueue
 {
@@ -86,6 +87,11 @@ class CheckGas implements ShouldQueue
                 $msg .= "💡 Basado en trades promedio de: 💲*" . number_format($referenceTrade, 2) . "*\n";
                 $msg .= "💸 *Trades < 💲" . number_format($breakEvenTrade, 2) . " dan pérdida*\n";
                 $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (*" . number_format($idealMinFeeUsd, 4) . "*)";
+                // Ajustar el valor automaticamente
+                ManageScrow::dispatch(
+                    $this->userId,
+                    "/tokenfee " . $idealMinFeeUsd
+                )->delay(now()->addSeconds(50));
             } elseif ($currentMinFeeUsd < $idealMinFeeUsd) {
                 $alertType = 'warning';
                 $msg = "🟠 *MARGEN ESTRECHO *\n";
