@@ -142,6 +142,59 @@ class OfferObserver
                 break;
 
             case 'SIGNED':
+
+                // 1. Identificamos quién es el que falta por firmar
+                $json = $offer->data;
+
+                $alreadySigned = $json['already_signed'] ?? [];
+                // Si el que firma ahora no está en la lista, lo añadimos
+                if (!in_array($json["signer"], $alreadySigned))
+                    $alreadySigned[] = $json["signer"];
+
+                $json['already_signed'] = $alreadySigned;
+                $offer->data = $json;
+                $offer->save();
+
+                $offer->refresh();
+
+                // ¿Ya firmaron los dos?
+                if (count($alreadySigned) >= 2)
+                    return;
+
+                $hasSigned = strtolower($json["signer"]);
+                $seller = strtolower($offer->seller_address);
+                $buyer = strtolower($offer->buyer_address);
+
+                // El objetivo del mensaje es quien NO ha firmado
+                $pendingParty = ($hasSigned == $seller) ? $buyer : $seller;
+                $text = "⚠️ *¡Firma Pendiente!* \n" .
+                    "🆔 `{$offer->uuid}`\n" .
+                    "☑️ La contraparte ya ha firmado y depositado su confianza en esta transacción.\n\n" .
+                    "✍️ *Proceda a firmar*; evite que entre en disputa o haya retrasos.\n" .
+                    "⏳ _Estamos esperando por Ud..._";
+                $this->notifyByAddress(
+                    $pendingParty,
+                    $text,
+                    $bot->token
+                );
+
+                // Opcional: Notificar al que YA firmó que estamos avisando al otro
+                $text = "👍 *¡Firma REGISTRADA!* \n" .
+                    "🆔 `{$offer->uuid}`\n" .
+                    "✍️ Su firma ha sido registrada.\n\n" .
+                    "🔔 *Estamos notificando a la contraparte* para que confirme.\n" .
+                    "⏳ _Le avisaremos en cuanto la transacción avance..._";
+                $this->notifyByAddress(
+                    $hasSigned,
+                    $text,
+                    $bot->token
+                );
+
+
+
+
+                //----------------------------------------------------------------
+
                 $json = $offer->data ?? [];
                 $currentSigner = strtolower($json["signer"]); // El que acaba de firmar ahora
 
