@@ -27,7 +27,7 @@ class ScrowMockService
     private static function getAmount($amount = false)
     {
         if (!$amount)
-            $amount = rand(1, 100);
+            $amount = rand(1, 1000);
         return $amount;
     }
     private static function getPayload($tenant_code)
