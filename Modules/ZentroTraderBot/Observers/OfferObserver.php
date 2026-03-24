@@ -144,22 +144,6 @@ class OfferObserver
             case 'SIGNED':
                 // 1. Identificamos quién es el que falta por firmar
                 $json = $offer->data;
-
-                $alreadySigned = $json['already_signed'] ?? [];
-                // Si el que firma ahora no está en la lista, lo añadimos
-                if (!in_array($json["signer"], $alreadySigned))
-                    $alreadySigned[] = $json["signer"];
-
-                $json['already_signed'] = $alreadySigned;
-                $offer->data = $json;
-                $offer->save();
-
-                $offer->refresh();
-
-                // ¿Ya firmaron los dos?
-                if (count($alreadySigned) >= 2)
-                    return;
-
                 $hasSigned = strtolower($json["signer"]);
                 $seller = strtolower($offer->seller_address);
                 $buyer = strtolower($offer->buyer_address);
