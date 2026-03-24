@@ -84,12 +84,24 @@ class SimulateScrowAction implements ShouldQueue
                 $rand = rand(1, 2);
                 if ($rand == 1)
                     $address = $this->buyer->getWallet()["address"];
+                // abrir la disputa
                 $payload = ScrowMockService::getDisputeOpenedPayload(
                     $this->tenant,
                     $address,
                     $tradeId
                 );
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(20));
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(10));
+                // resolverla 
+                $address = $this->seller->getWallet()["address"];
+                $rand = rand(1, 2);
+                if ($rand == 1)
+                    $address = $this->buyer->getWallet()["address"];
+                $payload = ScrowMockService::getDisputeResolvedPayload(
+                    $this->tenant,
+                    $address,
+                    $tradeId
+                );
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(15));
                 break;
 
             // simulamos un flujo normal de firma y cierre del trade
