@@ -110,4 +110,30 @@ class ScrowMockService
         ];
         return $payload;
     }
+
+    public static function getDisputeOpenedPayload($tenant_code, $address, $tradeId = false)
+    {
+        $payload = self::getPayload($tenant_code);
+        $payload['decoded'] = [
+            'name' => 'DisputeOpened',
+            'params' => [
+                'tradeId' => self::getTradeId($tradeId),
+                'opener' => $address,
+            ]
+        ];
+        return $payload;
+    }
+
+    public static function getDisputeResolvedPayload($tenant_code, $address, $tradeId = false)
+    {
+        $payload = self::getPayload($tenant_code);
+        $payload['decoded'] = [
+            'name' => 'DisputeResolved',
+            'params' => [
+                'tradeId' => self::getTradeId($tradeId),
+                'winner' => $address,
+            ]
+        ];
+        return $payload;
+    }
 }

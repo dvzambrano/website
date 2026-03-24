@@ -7,15 +7,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Modules\Web3\Http\Controllers\MoralisController;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Modules\ZentroTraderBot\Tests\TestCase;
 use Modules\TelegramBot\Entities\TelegramBots;
-use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
-use Modules\Web3\Events\ContractActivityDetected;
-use Modules\ZentroTraderBot\Listeners\ProcessContractActivity;
 use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Services\ScrowMockService;
 
@@ -51,8 +44,6 @@ class SimulateScrowAction implements ShouldQueue
         $this->seller = Suscriptions::on('tenant')->find($seller);
         $this->buyer = Suscriptions::on('tenant')->find($buyer);
 
-        $handler = new ProcessContractActivity();
-
         // creamos el trade
         $payload = ScrowMockService::getTradeCreatedPayload(
             $this->tenant,
@@ -85,6 +76,20 @@ class SimulateScrowAction implements ShouldQueue
                     $tradeId
                 );
                 ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(65));
+                break;
+
+            // 10% de probabilidad: Alguien abre una disputa
+            case 8:
+                $address = $this->seller->getWallet()["address"];
+                $rand = rand(1, 2);
+                if ($rand == 1)
+                    $address = $this->buyer->getWallet()["address"];
+                $payload = ScrowMockService::getDisputeOpenedPayload(
+                    $this->tenant,
+                    $address,
+                    $tradeId
+                );
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(20));
                 break;
 
             // simulamos un flujo normal de firma y cierre del trade

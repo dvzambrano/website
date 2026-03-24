@@ -16,8 +16,8 @@ class OfferObserver
     {
         $bot = app('active_bot');
 
-        $amount = $offer->amount;
-        $price = $offer->amount * $offer->price_per_usd;
+        $amount = number_format($offer->amount, 2);
+        $price = number_format($offer->amount * $offer->price_per_usd, 2);
         $text = "🛡 *¡Intercambio asegurado!*\n" .
             "🔒 Se han bloquedado *{$amount} USD* para Ud.\n" .
             "🆔 `{$offer->uuid}.`\n\n" .
@@ -37,7 +37,7 @@ class OfferObserver
             "🆔 `{$offer->uuid}.`\n\n" .
             "👉 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
             "📋 _{$offer->payment_details}_\n" .
-            "👉 _Y luego, enviará su comprobante para verificación._";
+            "🎟 _Y luego, enviará su comprobante para verificación._";
         $this->notifyByAddress(
             $offer->seller_address,
             $text,
@@ -114,20 +114,17 @@ class OfferObserver
 
         $newStatus = $offer->status;
         $oldStatus = $offer->getOriginal('status');
+        $amount = number_format($offer->amount, 2);
 
         // Identificamos a los interesados (User es el creador, Buyer es quien aplicó)
         $ownerTelegramId = $offer->user ? $offer->user->telegram_id : null;
 
         switch (strtoupper($newStatus)) {
-            case 'LOCKED':
-                // Alguien aplicó al Escrow (TradeApplied)
-
-                break;
-
             case 'COMPLETED':
                 $text = "✅ *¡Transacción Completada!* \n" .
-                    "👉 La Oferta `{$offer->uuid}` ha terminado.\n" .
-                    "💵 Se han *liberado {$offer->amount} USD* a la cuenta del comprador.";
+                    "🆔 `{$offer->uuid}.`\n\n" .
+                    "👉 _Ambas partes han confirmado satisfactoriamente._\n" .
+                    "💵 Se han *descontado {$amount} USD* de su cuenta.";
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $text,
@@ -135,8 +132,9 @@ class OfferObserver
                 );
 
                 $text = "✅ *¡Transacción Completada!* \n" .
-                    "👉 La Oferta `{$offer->uuid}` ha terminado.\n" .
-                    "💵 Se han *liberado {$offer->amount} USD* a su cuenta.";
+                    "🆔 `{$offer->uuid}.`\n\n" .
+                    "👉 _Ambas partes han confirmado satisfactoriamente._\n" .
+                    "💵 Se han *liberado {$amount} USD* a su cuenta.";
                 $this->notifyByAddress(
                     $offer->buyer_address,
                     $text,
@@ -146,15 +144,27 @@ class OfferObserver
 
             case 'DISPUTED':
                 // Se abrió una disputa (DisputeOpened)
-                $text = "⚠️ ATENCIÓN: Se ha abierto una DISPUTA en tu trade #{$offer->uuid}.\n" .
-                    "Un administrador revisará el caso pronto.";
-                $this->notifyUser($ownerTelegramId, $text, $bot->token);
+                $text = "🙇🏻 *¡Transacción en DISPUTA!* \n" .
+                    "🆔 `{$offer->uuid}.`\n\n" .
+                    "👉 _Se ha iniciado una reclamación de esta operación._\n" .
+                    "👮‍♀️ *Un administrador revisará el caso pronto*." .
+                    "⚠️ *Tenga a mano evidencia* de que cumplió con su parte del acuerdo para cuando se la soliciten.";
+                $this->notifyByAddress(
+                    $offer->seller_address,
+                    $text,
+                    $bot->token
+                );
+                $this->notifyByAddress(
+                    $offer->buyer_address,
+                    $text,
+                    $bot->token
+                );
                 break;
 
             case 'CANCELLED':
                 $text = "❌ *Oferta Cancelada!* \n" .
                     "👉 La Oferta `{$offer->uuid}` ha sido cancelada satisfactoriamente.\n" .
-                    "💵 Se han *devuelto *{$offer->amount} USD* a su cuenta.";
+                    "💵 Se han *devuelto *{$amount} USD* a su cuenta.";
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $text,
