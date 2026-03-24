@@ -144,23 +144,25 @@ class OfferObserver
             case 'SIGNED':
                 // 1. Identificamos quién es el que falta por firmar
                 $json = $offer->data;
-                $hasSigned = strtolower($json["signer"]);
-                $seller = strtolower($offer->seller_address);
-                $buyer = strtolower($offer->buyer_address);
 
-                // El objetivo del mensaje es quien NO ha firmado
-                $pendingParty = ($hasSigned == $seller) ? $buyer : $seller;
+                $signer = $offer->buyer_address;
+                $pending = $offer->seller_address;
+                if (strtolower($json["signer"]) == strtolower($offer->seller_address)) {
+                    $signer = $offer->seller_address;
+                    $pending = $offer->buyer_address;
+                }
+
                 $text = "⚠️ *¡Firma Pendiente!* \n" .
                     "🆔 `{$offer->uuid}`\n" .
                     "☑️ La contraparte ya ha firmado y depositado su confianza en esta transacción.\n\n" .
                     "✍️ *Proceda a firmar*; evite que entre en disputa o haya retrasos.\n" .
                     "⏳ _Estamos esperando por Ud..._";
                 $this->notifyByAddress(
-                    $pendingParty,
+                    $pending,
                     $text,
                     $bot->token
                 );
-
+                /*
                 // Opcional: Notificar al que YA firmó que estamos avisando al otro
                 $text = "👍 *¡Firma REGISTRADA!* \n" .
                     "🆔 `{$offer->uuid}`\n" .
@@ -168,10 +170,11 @@ class OfferObserver
                     "🔔 *Estamos notificando a la contraparte* para que confirme.\n" .
                     "⏳ _Le avisaremos en cuanto la transacción avance..._";
                 $this->notifyByAddress(
-                    $hasSigned,
+                    $signer,
                     $text,
                     $bot->token
                 );
+                */
                 break;
 
             case 'SOLVED':
