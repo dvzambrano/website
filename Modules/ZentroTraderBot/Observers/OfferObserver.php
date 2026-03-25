@@ -191,7 +191,7 @@ class OfferObserver
                 $this->notifyByAddress(
                     $winner,
                     $text .
-                    "🏆 *La disputa ha finalizado a su favor.*.\n\n" .
+                    "🏆 *La disputa ha finalizado a su favor.*\n\n" .
                     "💵 _Se han liberado {$amount} USD a su cuenta._\n" .
                     "🙏 _¡Gracias por confiar en nosotros!_\n",
                     $bot->token
