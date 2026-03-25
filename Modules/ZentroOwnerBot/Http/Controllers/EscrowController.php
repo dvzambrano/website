@@ -65,7 +65,7 @@ class EscrowController extends Controller
             // $escrow = new BotEscrowController();
             return $escrow->resolveDispute(
                 $rpc,
-                env('ESCROW_ARBITER_KEY'),
+                decryptValue(env('ESCROW_ARBITER_KEY')),
                 env('ESCROW_CONTRACT'),
                 env('BASE_NETWORK'),
                 $tradeId,
@@ -81,7 +81,7 @@ class EscrowController extends Controller
             // $escrow = new BotEscrowController();
             return $escrow->rescueTokens(
                 $rpc,
-                env('ESCROW_ARBITER_KEY'),
+                decryptValue(env('ESCROW_ARBITER_KEY')),
                 env('ESCROW_CONTRACT'),
                 env('BASE_NETWORK'),
                 $address,
@@ -97,7 +97,7 @@ class EscrowController extends Controller
             // $escrow = new BotEscrowController();
             return $escrow->setFee(
                 $rpc,
-                env('ESCROW_ARBITER_KEY'),
+                decryptValue(env('ESCROW_ARBITER_KEY')),
                 env('ESCROW_CONTRACT'),
                 env('BASE_NETWORK'),
                 $feeBps,
@@ -114,7 +114,7 @@ class EscrowController extends Controller
             // $escrow = new BotEscrowController();
             return $escrow->setMinFeePerToken(
                 $rpc,
-                env('ESCROW_ARBITER_KEY'),
+                decryptValue(env('ESCROW_ARBITER_KEY')),
                 env('ESCROW_CONTRACT'),
                 env('BASE_NETWORK'),
                 env('BASE_TOKEN'),
@@ -130,7 +130,7 @@ class EscrowController extends Controller
             // $escrow = new BotEscrowController();
             return $escrow->withdrawFees(
                 $rpc,
-                env('ESCROW_ARBITER_KEY'),
+                decryptValue(env('ESCROW_ARBITER_KEY')),
                 env('ESCROW_CONTRACT'),
                 env('BASE_NETWORK'),
                 env('BASE_TOKEN'),
