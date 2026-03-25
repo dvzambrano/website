@@ -61,8 +61,8 @@ class CheckGas implements ShouldQueue
             $idealMinFeeUsd = $costInUsd * $multiplier;
 
             // --- ESTRATEGIA BASE (Para recuperación) ---
-            $baseFeeBps = 25; // 0.25%
-            $baseMinFeeUsd = 0.01; // Tu suelo ideal por defecto
+            $baseFeeBps = env("ESCROW_FEE_PERCENTAGE", 0.25) * 100;// 0.25%
+            $baseMinFeeUsd = env("ESCROW_MIN_FEE", 0.01); // 0.01 USD
 
             // 4. LÓGICA DE ALERTAS
             $msg = "";

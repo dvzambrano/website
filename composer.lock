@@ -749,7 +749,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/laravel.git",
-                "reference": "dbc0a561747231b3dced78f9d962a4a31ef9a027"
+                "reference": "02aa733cb3fa680c6bacba51ada4bfca88ec58e1"
             },
             "require": {
                 "amenadiel/jpgraph": "*",
@@ -757,6 +757,9 @@
                 "laravel/framework": "^12.0",
                 "php": "^8.2",
                 "phpoffice/phpspreadsheet": "^1.29"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.9"
             },
             "default-branch": true,
             "type": "library",
@@ -773,7 +776,8 @@
                     "Modules\\Laravel\\": ""
                 },
                 "files": [
-                    "Helpers/ModuleHelper.php"
+                    "Helpers/ModuleHelper.php",
+                    "Helpers/EncryptionHelper.php"
                 ]
             },
             "license": [
@@ -786,7 +790,7 @@
                 }
             ],
             "description": "Modulo base para funcionalidades de Laravel",
-            "time": "2026-03-17T20:24:55+00:00"
+            "time": "2026-03-25T19:42:13+00:00"
         },
         {
             "name": "dvzambrano/web3",

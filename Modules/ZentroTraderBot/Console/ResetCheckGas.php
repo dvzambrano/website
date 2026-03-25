@@ -40,7 +40,7 @@ class ResetCheckGas extends Command
             Cache::forget("{$baseKey}_warning");
             Cache::forget($statusKey);
 
-            $this->info("🧹 Caché de alertas para '{$chain}' limpiada con éxito.");
+            $this->warn("🧹 Caché de alertas para '{$chain}' limpiada con éxito.");
         }
     }
 }

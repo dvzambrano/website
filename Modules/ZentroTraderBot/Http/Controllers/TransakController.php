@@ -2,12 +2,14 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
+use Illuminate\Container\Attributes\Config;
 use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -163,6 +165,8 @@ class TransakController extends Controller implements RampProviderInterface
 
         $wallet = $suscriptor->data["wallet"]["address"];
 
+        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+
         $response = Http::withHeaders([
             'accept' => 'application/json',
             'access-token' => $accessToken,
@@ -173,7 +177,7 @@ class TransakController extends Controller implements RampProviderInterface
                         'referrerDomain' => request()->getHost(),
                         //'defaultCryptoAmount' => 1,
                         //'cryptoAmount' => 1,
-                        'cryptoCurrencyCode' => env('BASE_TOKEN'),
+                        'cryptoCurrencyCode' => $token["symbol"],
                         'network' => 'polygon',
                         //'networks' => 'ethereum, polygon,terra, mainnet',
                         'walletAddress' => $wallet,

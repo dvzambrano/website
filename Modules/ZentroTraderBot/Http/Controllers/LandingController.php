@@ -293,18 +293,19 @@ class LandingController extends Controller
         // CASO A: Misma Red (Polygon -> Polygon)
         if ($srcChainId === $dstChainId) {
             if (strtolower($srcToken) === strtolower($dstToken)) {
+                $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
                 // RESPUESTA MANUAL PARA TRANSFERENCIA DIRECTA
                 return response()->json([
                     'isDirectTransfer' => true,
                     'estimation' => [
                         'srcChainTokenIn' => [
-                            'symbol' => env('BASE_TOKEN'),
-                            'decimals' => ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'))["decimals"],
+                            'symbol' => $token["symbol"],
+                            'decimals' => $token["decimals"],
                             'amount' => $amount
                         ],
                         'dstChainTokenOut' => [
-                            'symbol' => env('BASE_TOKEN'),
-                            'decimals' => ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'))["decimals"],
+                            'symbol' => $token["symbol"],
+                            'decimals' => $token["decimals"],
                             'amount' => $amount,
                             'recommendedAmount' => $amount
                         ]

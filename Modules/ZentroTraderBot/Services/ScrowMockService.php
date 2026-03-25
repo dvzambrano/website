@@ -33,7 +33,7 @@ class ScrowMockService
     private static function getPayload($tenant_code)
     {
         $payload = [
-            'network_id' => env("ESCROW_CHAIN"),
+            'network_id' => env("BASE_NETWORK"),
             'confirmed' => true,
             'tenant_code' => $tenant_code,
             'tx_hash' => '0x' . Str::random(64),
@@ -46,12 +46,13 @@ class ScrowMockService
 
     public static function getTradeCreatedPayload($tenant_code, $seller_address, $buyer_address, $decimals, $amount = false, $tradeId = false)
     {
+        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
         $payload = self::getPayload($tenant_code);
         $payload['decoded'] = [
             'name' => 'TradeCreated',
             'params' => [
                 'tradeId' => self::getTradeId($tradeId),
-                'token' => env('BASE_TOKEN'),
+                'token' => $token["symbol"],
                 'seller' => $seller_address,
                 'buyer' => $buyer_address,
                 'amount' => self::getAmount($amount) * pow(10, $decimals),

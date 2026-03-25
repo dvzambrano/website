@@ -18,8 +18,8 @@ class BlockchainController extends Controller
     public function getStatus()
     {
         try {
-            $network = ConfigService::getNetworks(env("ESCROW_CHAIN"));
-            $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
+            $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+            $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
             $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
             $escrow = new EscrowController();
 
@@ -102,7 +102,7 @@ class BlockchainController extends Controller
 
         } catch (\Exception $e) {
             Log::error('🆘 BlockchainController error', [
-                "chain" => env("ESCROW_CHAIN"),
+                "chain" => env("BASE_NETWORK"),
                 'message' => $e->getMessage()
             ]);
             return null;

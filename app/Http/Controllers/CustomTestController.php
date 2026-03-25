@@ -84,6 +84,16 @@ class CustomTestController extends BaseController
     }
 
 
+    public function testEncryption()
+    {
+        // 1. Intentamos descifrar la llave maestra
+        $encrypted = env("ESCROW_ARBITER_KEY");
+        $decrypted = decryptValue($encrypted);
+
+        dd($decrypted, $encrypted);
+    }
+
+
     public function testStatus()
     {
         $controller = new BlockchainController();
@@ -96,8 +106,11 @@ class CustomTestController extends BaseController
 
     public function testNetworks()
     {
-        $network = ConfigService::getNetworks(env("ESCROW_CHAIN"));
-        $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
+        //$network = ConfigService::getNetworks(137);
+        //dd($network);
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        //dd($network);
+        $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
         dd($network, $token);
     }
 
@@ -212,7 +225,7 @@ class CustomTestController extends BaseController
 
     public function testWalletController()
     {
-        $address = "0xd2531438b90232f4Aab4DDfC6f146474e84E1Ea1";
+        $address = env("TEST_WALLET");
         $apiKey = config('zentrotraderbot.alchemy_api_key');
         $token = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]));
         $balances = AlchemyController::getTokenBalances($apiKey, $address, [$token["address"]]);
@@ -226,7 +239,10 @@ class CustomTestController extends BaseController
         }
 
 
-        $txs = AlchemyController::getRecentTransactions($apiKey, $address, env('BASE_NETWORK'), ["erc20"], [$token["address"]]);
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        $symbol = strtoupper($network["shortName"]);
+        //dd($symbol);
+        $txs = AlchemyController::getRecentTransactions($apiKey, $address, $symbol, ["erc20"], [$token["address"]]);
 
         dd($apiKey, $address, $token["address"], $balances, $humanBal, $txs);
     }

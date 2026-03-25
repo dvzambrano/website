@@ -169,7 +169,7 @@ class ProcessWalletActivity
             $botController->notifyDepositConfirmed(
                 $suscriptor->user_id,
                 MathController::round($data['value'], 4, false),
-                $data['token_symbol']
+                $data['token_address']
             );
 
             Log::info("✅ Depósito procesado exitosamente: ", [
