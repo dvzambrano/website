@@ -15,6 +15,6 @@ class StartCheckGas extends Command
         $tenant = TelegramBots::where('name', '@' . $this->argument('bot'))->first();
 
         CheckGas::dispatch($tenant->key, $this->argument('user'))->delay(now()->addSeconds(5));
-        $this->info("▶️  Ejecutando monitoreo de Gas para {$tenant->code} notificando a " . $this->argument('user'));
+        $this->warn("⛽ Ejecutando monitoreo de Gas para {$tenant->code} notificando a " . $this->argument('user'));
     }
 }

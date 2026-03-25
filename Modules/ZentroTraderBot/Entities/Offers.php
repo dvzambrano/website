@@ -11,6 +11,9 @@ class Offers extends Model
 
     protected $table = 'offers';
     protected $guarded = [];
+    protected $casts = [
+        'data' => 'json',
+    ];
 
     public function scopeFilter($query, $filters)
     {
@@ -18,5 +21,10 @@ class Offers extends Model
             ->when($filters['type'] ?? null, fn($q, $t) => $q->where('type', $t))
             ->when($filters['method'] ?? null, fn($q, $m) => $q->where('payment_method', $m))
             ->orderBy($filters['sort'] ?? 'price_per_usd', 'asc');
+    }
+
+    public function updateStatus($status, $extra = [])
+    {
+        $this->update(array_merge(['status' => $status], $extra));
     }
 }

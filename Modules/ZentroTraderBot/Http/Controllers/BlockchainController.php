@@ -18,8 +18,8 @@ class BlockchainController extends Controller
     public function getStatus()
     {
         try {
-            $network = ConfigService::getNetworks(env("ESCROW_CHAIN"));
-            $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
+            $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+            $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
             $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
             $escrow = new EscrowController();
 
@@ -35,6 +35,9 @@ class BlockchainController extends Controller
             // 2. Obtener estado del contrato
             $feePercentage = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network) {
                 return $escrow->getFeePercentage($rpc, env('ESCROW_CONTRACT'), $network['chainId'], env('ETHERSCAN_API_KEY'));
+            });
+            $tradeTimeout = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network) {
+                return $escrow->getTradeTimeout($rpc, env('ESCROW_CONTRACT'), $network['chainId'], env('ETHERSCAN_API_KEY'));
             });
 
             // 3. CÁLCULO DE COSTO (Corregido)
@@ -83,6 +86,7 @@ class BlockchainController extends Controller
                 "gasPriceGwei" => $gasPriceGwei,
                 "nativePrice" => $nativePrice,
                 "feePercentage" => (int) $feePercentage,
+                "tradeTimeout" => (int) $tradeTimeout,
                 "gasEstimated" => $gasEstimated,
                 "costInUsd" => $costInUsd,
                 "currentMinFeeRaw" => $currentMinFeeRaw,
@@ -98,7 +102,7 @@ class BlockchainController extends Controller
 
         } catch (\Exception $e) {
             Log::error('🆘 BlockchainController error', [
-                "chain" => env("ESCROW_CHAIN"),
+                "chain" => env("BASE_NETWORK"),
                 'message' => $e->getMessage()
             ]);
             return null;

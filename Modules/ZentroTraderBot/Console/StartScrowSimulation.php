@@ -12,6 +12,8 @@ class StartScrowSimulation extends Command
     public function handle()
     {
         SimulateScrowAction::dispatch()->delay(now()->addSeconds(5));
-        $this->info("🟢 Se ha comenzado a simular! Para parar la reaccion en cadena cambia ESCROW_TEST_MODE a falso en el .env durante al menos 1 hora");
+        $this->warn("🏃💨 Se ha comenzado a simular operaciones en el ESCROW!");
+        $this->info("✋ Para parar la reaccion en cadena cambia ESCROW_TEST_MODE a false en el .env");
+        $this->info("⏱️  Debe ser al menos 1 hora para que terminen los Jobs activos");
     }
 }

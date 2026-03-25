@@ -46,11 +46,7 @@ class TraderWalletController extends WalletController
         $address = $suscriptor->data['wallet']['address'];
         $apiKey = config('zentrotraderbot.alchemy_api_key');
 
-        $networks = ChainidController::getNetworkData();
-        $chainId = (int) $networks[$networkSymbol]["chainId"];
-        $tokenMap = InchController::getTokensData($chainId);
-
-        $token = $tokenMap[env('BASE_TOKEN')];
+        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
 
         $balances = AlchemyController::getTokenBalances($apiKey, $address, [$token["address"]]);
         $humanBal = "0.0";
@@ -73,9 +69,11 @@ class TraderWalletController extends WalletController
 
         $address = $suscriptor->data['wallet']['address'];
         $apiKey = config("zentrotraderbot.alchemy_api_key");
-        $token = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]));
 
-        return AlchemyController::getRecentTransactions($apiKey, $address, 'POL', ["erc20"], [$token["address"]], $limit);
+        $network = ConfigService::getActiveNetwork();
+        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+
+        return AlchemyController::getRecentTransactions($apiKey, $address, strtoupper($network["shortName"]), ["erc20"], [$token["address"]], $limit);
     }
 
     /**

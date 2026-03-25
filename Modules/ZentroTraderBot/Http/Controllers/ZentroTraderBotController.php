@@ -275,7 +275,7 @@ class ZentroTraderBotController extends JsonsController
                 $data = "ethereum:" . $address;
 
                 $network = ConfigService::getActiveNetwork();
-                $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+                $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
 
                 $text =
                     "👇 *" . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.header") . "*: \n" .
@@ -587,37 +587,30 @@ class ZentroTraderBotController extends JsonsController
         return $reply;
     }
 
-    public function notifyDepositConfirmed($user_id, $amount, $currency)
+    public function notifyDepositConfirmed($user_id, $amount, $token_address)
     {
+        $token = ConfigService::getToken($token_address, env("BASE_NETWORK"));
+
         $autodestroy = 3;
         $text =
             "👍 *" . Lang::get("zentrotraderbot::bot.prompts.buy.badcurrency.header") . "* \n" .
             "💵 " . Lang::get("zentrotraderbot::bot.prompts.buy.badcurrency.warning", [
                         "amount" => $amount,
-                        "currency" => $currency
+                        "currency" => $token["symbol"]
                     ]) . "\n" .
             "🧏 _" . Lang::get("zentrotraderbot::bot.prompts.buy.badcurrency.text", [
-                        "currency" => $currency
+                        "currency" => $token["symbol"]
                     ]) . "_";
-        if (strtoupper($currency) == env('BASE_TOKEN')) {
+        if (strtolower($token_address) == strtolower(env('BASE_TOKEN'))) {
             $text =
                 "✅ *" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.header") . "* \n" .
                 "💵 " . Lang::get("zentrotraderbot::bot.prompts.buy.completed.warning", [
                             "amount" => $amount,
-                            "currency" => $currency
+                            "currency" => $token["symbol"]
                         ]) . "\n" .
                 "✨ _" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.text") . "_";
             $autodestroy = 0;
         }
-
-        /*
-        "✅ *" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.header") . "* \n" .
-                    "💵 " . Lang::get("zentrotraderbot::bot.prompts.buy.completed.warning", [
-                                "amount" => $amount,
-                                "currency" => $currency
-                            ]) . "\n" .
-                    $text
-        */
 
         $array = array(
             "message" => array(

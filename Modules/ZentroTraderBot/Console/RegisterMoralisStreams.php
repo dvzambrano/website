@@ -95,7 +95,7 @@ class RegisterMoralisStreams extends Command
 
             $this->info("🚀 Creando Stream en Moralis para: {$tenant->code}");
             // Obtener el ABI completo del contrato y pasarlo al stream
-            $contractAbi = ScanController::getAbi(env('ETHERSCAN_API_KEY'), env('ESCROW_CONTRACT'), env('ESCROW_CHAIN'));
+            $contractAbi = ScanController::getAbi(env('ETHERSCAN_API_KEY'), env('ESCROW_CONTRACT'), env('BASE_NETWORK'));
             $events = array_filter($contractAbi, fn($item) => ($item['type'] ?? '') === 'event');
             $abiEvents = array_values($events);
 

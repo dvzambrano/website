@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\Web3\Services\Web3MathService;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
+use Modules\ZentroTraderBot\Jobs\ManageScrow;
+use Modules\Laravel\Http\Controllers\MathController;
 
 class CheckGas implements ShouldQueue
 {
@@ -58,8 +61,8 @@ class CheckGas implements ShouldQueue
             $idealMinFeeUsd = $costInUsd * $multiplier;
 
             // --- ESTRATEGIA BASE (Para recuperación) ---
-            $baseFeeBps = 25; // 0.25%
-            $baseMinFeeUsd = 0.01; // Tu suelo ideal por defecto
+            $baseFeeBps = env("ESCROW_FEE_PERCENTAGE", 0.25) * 100;// 0.25%
+            $baseMinFeeUsd = env("ESCROW_MIN_FEE", 0.01); // 0.01 USD
 
             // 4. LÓGICA DE ALERTAS
             $msg = "";
@@ -79,16 +82,26 @@ class CheckGas implements ShouldQueue
                 $msg .= "💡 Basado en trades promedio de: 💲*" . number_format($referenceTrade, 2) . "*\n";
                 $msg .= "🔺 `feePercentage` = `" . $suggestedBps . "` (*" . ($suggestedBps / 100) . "%*)\n";
                 $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (💲*" . number_format($idealMinFeeUsd, 2) . "*)";
+                // Ajustar el valor automaticamente
+                ManageScrow::dispatch(
+                    $this->userId,
+                    "/tokenfee " . MathController::round($idealMinFeeUsd, 2, true)
+                )->delay(now()->addSeconds(50));
             } elseif ($costInUsd >= $currentMinFeeUsd) {
                 $alertType = 'critical';
-                $msg = "🔴 *PROTECCIÓN DUST FALLIDA *\n";
+                $msg = "🔴 *MARGEN PERDIDO*\n";
                 $msg .= "⛽️ Gas " . number_format($costInUsd, 4) . " > " . number_format($currentMinFeeUsd, 4) . " (MinFee)\n";
                 $msg .= "💡 Basado en trades promedio de: 💲*" . number_format($referenceTrade, 2) . "*\n";
                 $msg .= "💸 *Trades < 💲" . number_format($breakEvenTrade, 2) . " dan pérdida*\n";
-                $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (*" . number_format($idealMinFeeUsd, 4) . "*)";
+                $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (💲*" . number_format($idealMinFeeUsd, 4) . "*)";
+                // Ajustar el valor automaticamente
+                ManageScrow::dispatch(
+                    $this->userId,
+                    "/tokenfee " . MathController::round($idealMinFeeUsd, 2, true)
+                )->delay(now()->addSeconds(50));
             } elseif ($currentMinFeeUsd < $idealMinFeeUsd) {
                 $alertType = 'warning';
-                $msg = "🟠 *MARGEN ESTRECHO *\n";
+                $msg = "🟠 *MARGEN ESTRECHO*\n";
                 $msg .= "⛽️ Gas " . number_format($costInUsd, 4) . " < " . number_format($currentMinFeeUsd, 4) . " (MinFee)\n";
                 $msg .= "💡 Basado en trades promedio de: 💲*" . number_format($referenceTrade, 2) . "*\n";
                 $msg .= "💸 *Trades < 💲" . number_format($breakEvenTrade, 2) . " dan pérdida*\n";

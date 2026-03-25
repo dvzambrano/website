@@ -10,6 +10,7 @@ use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
 use Modules\Laravel\Http\Controllers\MathController;
 use Modules\ZentroTraderBot\Entities\Offers;
+use Illuminate\Support\Str;
 
 class ProcessContractActivity
 {
@@ -95,6 +96,7 @@ class ProcessContractActivity
             $eventName = strtoupper($data['decoded']['name']);
             $params = $data['decoded']['params'];
             $tradeId = $params['tradeId'];
+            $offer = Offers::on('tenant')->where('blockchain_trade_id', $tradeId)->first();
 
             switch ($eventName) {
                 case 'TRADECREATED':
@@ -104,33 +106,28 @@ class ProcessContractActivity
 
                 case 'TRADEEXPIRED':
                     // El tiempo se agotó y el vendedor ejecutó la reclamación
-                    $this->updateOfferStatus($tradeId, 'DISPUTED', [
+                    $offer->updateStatus('EXPIRED', [
                         'updated_at' => now()
                     ]);
                     break;
 
                 case 'TRADECANCELLED':
                     // El vendedor canceló antes de que el comprador firmara
-                    $this->updateOfferStatus($tradeId, 'CANCELLED', [
+                    $offer->updateStatus('CANCELLED', [
                         'updated_at' => now()
                     ]);
                     break;
 
                 case 'DISPUTEOPENED':
-                    $this->updateOfferStatus($tradeId, 'DISPUTED', [
+                    $offer->updateStatus('DISPUTED', [
                         'updated_at' => now()
                     ]);
-                    /*
-                    Se ha abierto una disputa en el Trade #105. Un agente de Kashio revisará el caso pronto.
-                    */
                     break;
 
                 case 'DISPUTERESOLVED':
                     // El arbitro decidió un ganador
-                    $this->updateOfferStatus($tradeId, 'COMPLETED', [
-                        //'winner_address' => strtolower($params['winner']),
-                        // Si no tienes la columna winner_address, mejor guárdalo en metadata
-                        //'metadata' => json_encode(['winner' => strtolower($params['winner'])])
+                    $offer->updateStatus('SOLVED', [
+                        'winner_address' => $params['winner'],
                         'tx_hash_release' => $data['tx_hash'],
                         'updated_at' => now()
                     ]);
@@ -138,25 +135,27 @@ class ProcessContractActivity
 
                 case 'TRADESIGNED':
                     // Útil para avisar al otro: "¡Oye, ya firmaron, solo faltas tú!"
-                    $this->handleTradeSigned($tradeId, $params['signer']);
+                    $json = $offer->data;
+                    $json["signer"] = $params['signer'];
+                    $offer->data = $json;
+                    $offer->save();
+                    $offer->refresh();
 
-                    /*
-                    "¡Buenas noticias! El comprador ya marcó el trade como pagado (firmó). Verifica tu cuenta bancaria/móvil y libera los fondos."
-                    */
+                    $offer->updateStatus('SIGNED', [
+                        'updated_at' => now()
+                    ]);
                     break;
 
                 case 'TRADECLOSED':
                     // Ambos firmaron y los fondos volaron al comprador
-                    $this->updateOfferStatus($tradeId, 'COMPLETED', [
+                    $offer->updateStatus('COMPLETED', [
                         'tx_hash_release' => $data['tx_hash'],
                         'updated_at' => now()
                     ]);
                     break;
 
-                case 'TRADEMIGRATED':
-                    // Marcamos como completado para sacarlo del flujo de este contrato
-                    $this->updateOfferStatus($tradeId, 'COMPLETED');
-                    Log::info("📦 Trade #{$tradeId} migrado al nuevo contrato: {$params['newContract']}");
+                default:
+                    break;
             }
         } catch (\Exception $e) {
             Cache::forget($cacheKey);
@@ -202,6 +201,7 @@ class ProcessContractActivity
         // 4. CREACIÓN: Si no hay coincidencia, es una oferta de VENTA nueva iniciada on Chain.
         // Al ejecutar 'create', el OfferObserver->created() se disparará y enviará las alertas.
         $offer = Offers::on('tenant')->create([
+            'uuid' => (string) Str::uuid(),
             'user_id' => $suscriptor->user_id,
             'type' => 'sell',
             'amount' => $amount,
@@ -211,9 +211,9 @@ class ProcessContractActivity
             'buyer_address' => $buyer,
             'tx_hash_deposit' => $rawData['tx_hash'],
             'network_id' => $rawData['network_id'],
+            'token_address' => $params['token'],
             'payment_method' => 'TBD', // El usuario deberá completar esto en el bot luego
             'currency' => 'USD',
-            'min_limit' => 1.00,
             'price_per_usd' => 1.00,
         ]);
 
@@ -228,23 +228,5 @@ class ProcessContractActivity
             "data" => $offer,
         ]);
 
-    }
-
-    private function updateOfferStatus($blockchainId, $status, $extra = [])
-    {
-        $offer = Offers::on('tenant')->where('blockchain_trade_id', $blockchainId)->first();
-        if ($offer) {
-            $offer->update(array_merge(['status' => $status], $extra));
-            Log::info("✅ Oferta actualizada exitosamente: ", [
-                "data" => $offer,
-            ]);
-        }
-    }
-
-    private function handleTradeSigned($blockchainId, $signerAddress)
-    {
-        // Por ahora solo logueamos para que el test no explote
-        // T2: Aquí enviaremos la notificación por Telegram
-        Log::info("✍️ Firma detectada para el Trade #{$blockchainId} por {$signerAddress}");
     }
 }

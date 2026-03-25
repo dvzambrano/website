@@ -3,6 +3,7 @@
 namespace Modules\ZentroTraderBot\Jobs;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Container\Attributes\Config;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Modules\Web3\Services\ConfigService;
 
 class NotifyRampOrder implements ShouldQueue
 {
@@ -27,16 +29,16 @@ class NotifyRampOrder implements ShouldQueue
 
     public function handle()
     {
+        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+
         // Usamos los datos del array
         $orderId = $this->order['order_id'];
         $status = strtoupper($this->order['status']);
         $amount = number_format($this->order['amount'], 2);
-        $currency = $this->order['currency'] ?? env('BASE_TOKEN');
+        $currency = $this->order['currency'] ?? $token["symbol"];
         $userId = $this->order['user_id'];
         $statusemoji = $this->order['statusemoji'];
         $createdAt = $this->order['created_at'];
-
-        $token = $this->bot['token'];
 
         if (env("DEBUG_MODE", false))
             Log::debug("🐞 NotifyRampOrder handle bot: " . json_encode($this->bot) . " order: " . json_encode($this->order));
@@ -65,7 +67,7 @@ class NotifyRampOrder implements ShouldQueue
                     ),
                 ),
             ),
-            $token
+            $this->bot['token']
         );
     }
 }
