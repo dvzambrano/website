@@ -99,6 +99,7 @@ class BlockchainController extends Controller
                 Log::debug("🐞 CheckGas Job handle", $array);
 
             return $array;
+            BASE_NETWORK
 
         } catch (\Exception $e) {
             Log::error('🆘 BlockchainController error', [

@@ -18,7 +18,7 @@ class EscrowController extends Controller
     private function executeTransaction(callable $callback)
     {
         try {
-            $network = ConfigService::getNetworks(env("ESCROW_CHAIN"));
+            $network = ConfigService::getNetworks(env("BASE_NETWORK"));
             $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
 
             return $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($callback, $network) {
@@ -37,7 +37,7 @@ class EscrowController extends Controller
 
         } catch (\Exception $e) {
             Log::error('🆘 EscrowController error', [
-                "chain" => env("ESCROW_CHAIN"),
+                "chain" => env("BASE_NETWORK"),
                 'message' => $e->getMessage()
             ]);
             return null;
@@ -50,9 +50,9 @@ class EscrowController extends Controller
             // $escrow = new BotEscrowController();
             return $escrow->proposeArbiter(
                 $rpc,
-                env('ESCROW_ARBITER_KEY'),
+                decryptValue(env('ESCROW_ARBITER_KEY')),
                 env('ESCROW_CONTRACT'),
-                env('ESCROW_CHAIN'),
+                env('BASE_NETWORK'),
                 $address,
                 env('ETHERSCAN_API_KEY')
             );
@@ -67,7 +67,7 @@ class EscrowController extends Controller
                 $rpc,
                 env('ESCROW_ARBITER_KEY'),
                 env('ESCROW_CONTRACT'),
-                env('ESCROW_CHAIN'),
+                env('BASE_NETWORK'),
                 $tradeId,
                 $winner,
                 env('ETHERSCAN_API_KEY')
@@ -83,7 +83,7 @@ class EscrowController extends Controller
                 $rpc,
                 env('ESCROW_ARBITER_KEY'),
                 env('ESCROW_CONTRACT'),
-                env('ESCROW_CHAIN'),
+                env('BASE_NETWORK'),
                 $address,
                 env('ETHERSCAN_API_KEY')
             );
@@ -99,7 +99,7 @@ class EscrowController extends Controller
                 $rpc,
                 env('ESCROW_ARBITER_KEY'),
                 env('ESCROW_CONTRACT'),
-                env('ESCROW_CHAIN'),
+                env('BASE_NETWORK'),
                 $feeBps,
                 env('ETHERSCAN_API_KEY')
             );
@@ -109,15 +109,15 @@ class EscrowController extends Controller
     public function setMinFeePerToken($feeHuman = 0)
     {
         return $this->executeTransaction(function ($rpc, $escrow, $network) use ($feeHuman) {
-            $token = ConfigService::getToken(env('ESCROW_TOKEN'), $network["chainId"]);
+            $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
             $minFeeWei = $feeHuman * pow(10, $token["decimals"]);
             // $escrow = new BotEscrowController();
             return $escrow->setMinFeePerToken(
                 $rpc,
                 env('ESCROW_ARBITER_KEY'),
                 env('ESCROW_CONTRACT'),
-                env('ESCROW_CHAIN'),
-                env('ESCROW_TOKEN'),
+                env('BASE_NETWORK'),
+                env('BASE_TOKEN'),
                 $minFeeWei,
                 env('ETHERSCAN_API_KEY')
             );
@@ -132,8 +132,8 @@ class EscrowController extends Controller
                 $rpc,
                 env('ESCROW_ARBITER_KEY'),
                 env('ESCROW_CONTRACT'),
-                env('ESCROW_CHAIN'),
-                env('ESCROW_TOKEN'),
+                env('BASE_NETWORK'),
+                env('BASE_TOKEN'),
                 env('ETHERSCAN_API_KEY')
             );
         });

@@ -749,7 +749,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/laravel.git",
-                "reference": "679cf0cd7cd0932525b7383d79aaa9447786e1e0"
+                "reference": "b3806f660f5bffe2ac9cdee794fdf76970f5a724"
             },
             "require": {
                 "amenadiel/jpgraph": "*",
@@ -757,6 +757,9 @@
                 "laravel/framework": "^12.0",
                 "php": "^8.2",
                 "phpoffice/phpspreadsheet": "^1.29"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.9"
             },
             "default-branch": true,
             "type": "library",
@@ -773,7 +776,8 @@
                     "Modules\\Laravel\\": ""
                 },
                 "files": [
-                    "Helpers/ModuleHelper.php"
+                    "Helpers/ModuleHelper.php",
+                    "Helpers/EncryptionHelper.php"
                 ]
             },
             "license": [
@@ -786,7 +790,7 @@
                 }
             ],
             "description": "Modulo base para funcionalidades de Laravel",
-            "time": "2026-03-19T16:04:31+00:00"
+            "time": "2026-03-25T20:04:21+00:00"
         },
         {
             "name": "dvzambrano/web3",
@@ -794,7 +798,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/web3.git",
-                "reference": "d4fce2a577dc027cde51224de8d88398ceb53df9"
+                "reference": "8404de6fa900ed529189500caa3321994b865ae5"
             },
             "require": {
                 "dvzambrano/laravel": "dev-main as 1.0.0",
@@ -842,7 +846,7 @@
                 }
             ],
             "description": "Modulo base para funcionalidades Web3",
-            "time": "2026-03-23T18:15:06+00:00"
+            "time": "2026-03-24T15:13:17+00:00"
         },
         {
             "name": "egulias/email-validator",
