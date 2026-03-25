@@ -200,7 +200,7 @@ class OfferObserver
                     $looser,
                     $text .
                     "🛑 *Le informamos que el arbitraje ha concluido a favor de la contraparte*.\n\n" .
-                    "🤝 _Si tiene dudas, contacte a soporte con el ID único de la transacción._" .
+                    "🤝 _Si tiene dudas, contacte a soporte con el ID único de la transacción._\n" .
                     "🙏 _¡Gracias por confiar en nosotros!_\n",
                     $bot->token
                 );
