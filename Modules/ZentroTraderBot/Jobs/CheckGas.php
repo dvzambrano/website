@@ -135,6 +135,16 @@ class CheckGas implements ShouldQueue
             Log::error("❌ CheckGas Error [{$network['chain']}]: " . $e->getMessage());
         }
 
+        // Identificamos el nombre corto de este Job (ej: "CheckGas")
+        $jobName = strtolower(class_basename($this));
+        $stopKey = "stop_job_{$jobName}_{$this->tenant}";
+        // ¿Hay orden de parada?
+        if (Cache::has($stopKey)) {
+            Log::info("🛑 Cadena interrumpida para {$jobName} en Tenant {$this->tenant}");
+            Cache::forget($stopKey); // Limpiamos para futuros reinicios
+            return; // SE DETIENE LA RECURSIVIDAD
+        }
+
         // Re-despacho automático cada 5 min
         self::dispatch($this->tenant, $this->userId)->delay(now()->addMinutes(5));
     }

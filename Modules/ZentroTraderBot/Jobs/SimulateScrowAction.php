@@ -11,6 +11,8 @@ use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Services\ScrowMockService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class SimulateScrowAction implements ShouldQueue
 {
@@ -22,13 +24,13 @@ class SimulateScrowAction implements ShouldQueue
     protected $seller;
     protected $buyer;
 
-    public function __construct()
+    public function __construct($tenant)
     {
+        $this->tenant = $tenant;
     }
 
     public function handle()
     {
-        $this->tenant = '59d5e7a3-dea0-4289-88f0-a39765f50bcf';
         // 1. Aseguramos que el bot existe y conectamos
         $this->bot = TelegramBots::where('key', $this->tenant)->first();
         $this->bot->connectToThisTenant();
@@ -151,7 +153,18 @@ class SimulateScrowAction implements ShouldQueue
                 break;
         }
 
-        if (env("ESCROW_TEST_MODE", false))
-            self::dispatch()->delay(now()->addMinutes(rand(2, 12)));
+
+
+        // Identificamos el nombre corto de este Job (ej: "SimulateScrowAction")
+        $jobName = strtolower(class_basename($this));
+        $stopKey = "stop_job_{$jobName}_{$this->tenant}";
+        // ¿Hay orden de parada?
+        if (Cache::has($stopKey)) {
+            Log::info("🛑 Cadena interrumpida para {$jobName} en Tenant {$this->tenant}");
+            Cache::forget($stopKey); // Limpiamos para futuros reinicios
+            return; // SE DETIENE LA RECURSIVIDAD
+        }
+
+        self::dispatch($this->tenant)->delay(now()->addMinutes(rand(2, 12)));
     }
 }
