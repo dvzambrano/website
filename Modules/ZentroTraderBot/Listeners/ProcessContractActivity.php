@@ -96,7 +96,7 @@ class ProcessContractActivity
             $eventName = strtoupper($data['decoded']['name']);
             $params = $data['decoded']['params'];
             $tradeId = $params['tradeId'];
-            $offer = Offers::on('tenant')->where('blockchain_trade_id', $tradeId)->first();
+            $offer = Offers::on('tenant')->where('id', $tradeId)->first();
 
             switch ($eventName) {
                 case 'TRADECREATED':
@@ -173,8 +173,7 @@ class ProcessContractActivity
         // 1. Identificar el token directamente desde el evento
         // Usamos el ConfigService con la dirección que el evento nos da ahora
         $tokenAddress = strtolower($params['token']);
-        //$token = ConfigService::getToken($tokenAddress, $rawData['network_id']);
-        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+        $token = ConfigService::getToken($tokenAddress, $rawData['network_id']);
 
 
         $seller = strtolower($params['seller']);
@@ -206,7 +205,6 @@ class ProcessContractActivity
             'type' => 'sell',
             'amount' => $amount,
             'status' => 'LOCKED',
-            'blockchain_trade_id' => $blockchainId,
             'seller_address' => $seller,
             'buyer_address' => $buyer,
             'tx_hash_deposit' => $rawData['tx_hash'],

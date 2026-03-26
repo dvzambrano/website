@@ -69,7 +69,7 @@ class ProcessContractActivityTest extends TestCase
         (new ProcessContractActivity())->handle($event);
 
         // 5. VERIFICACIONES
-        $offer = Offers::on('tenant')->where('blockchain_trade_id', $tradeId)->first();
+        $offer = Offers::on('tenant')->where('id', $tradeId)->first();
 
         $this->assertNotNull($offer);
         $this->assertEquals('LOCKED', strtoupper($offer->status), "El nuevo contrato bloquea fondos al crear.");
@@ -83,7 +83,6 @@ class ProcessContractActivityTest extends TestCase
         $tradeId = 5;
         Offers::on('tenant')->create([
             'uuid' => (string) Str::uuid(),
-            'blockchain_trade_id' => $tradeId,
             'status' => 'LOCKED',
             'amount' => 50,
             'seller_address' => $this->seller->getWallet()["address"],
@@ -113,7 +112,7 @@ class ProcessContractActivityTest extends TestCase
         (new ProcessContractActivity())->handle($event);
 
         // El estado no cambia con una sola firma, pero verificamos que no rompa nada
-        $offer = Offers::on('tenant')->where('blockchain_trade_id', $tradeId)->first();
+        $offer = Offers::on('tenant')->where('id', $tradeId)->first();
         $this->assertEquals('LOCKED', strtoupper($offer->status));
     }
 
@@ -122,7 +121,6 @@ class ProcessContractActivityTest extends TestCase
         $tradeId = 10;
         Offers::on('tenant')->create([
             'uuid' => (string) Str::uuid(),
-            'blockchain_trade_id' => $tradeId,
             'status' => 'LOCKED',
             'amount' => 10,
             'user_id' => $this->seller->user_id,
@@ -152,7 +150,7 @@ class ProcessContractActivityTest extends TestCase
         // 4. Ejecutamos el Listener
         (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
 
-        $offer = Offers::on('tenant')->where('blockchain_trade_id', $tradeId)->first();
+        $offer = Offers::on('tenant')->where('id', $tradeId)->first();
         $this->assertEquals('COMPLETED', strtoupper($offer->status));
         $this->assertEquals($txHashFinal, $offer->tx_hash_release);
     }
@@ -162,7 +160,6 @@ class ProcessContractActivityTest extends TestCase
         $tradeId = 99;
         $offer = Offers::on('tenant')->create([
             'uuid' => (string) Str::uuid(),
-            'blockchain_trade_id' => $tradeId,
             'status' => 'LOCKED',
             'amount' => 20,
             'user_id' => $this->seller->user_id,
@@ -216,7 +213,6 @@ class ProcessContractActivityTest extends TestCase
         $tradeId = 500;
         Offers::on('tenant')->create([
             'uuid' => (string) Str::uuid(),
-            'blockchain_trade_id' => $tradeId,
             'status' => 'LOCKED',
             'amount' => 1.5,
             'user_id' => $this->seller->user_id,
@@ -239,7 +235,7 @@ class ProcessContractActivityTest extends TestCase
 
         // 4. Ejecutamos el Listener
         (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
-        $this->assertEquals('CANCELLED', strtoupper(Offers::on('tenant')->where('blockchain_trade_id', $tradeId)->first()->status));
+        $this->assertEquals('CANCELLED', strtoupper(Offers::on('tenant')->where('id', $tradeId)->first()->status));
     }
 
     /**
@@ -259,7 +255,7 @@ class ProcessContractActivityTest extends TestCase
 
         (new ProcessContractActivity())->handle(new ContractActivityDetected($payload));
 
-        $offer = Offers::on('tenant')->where('blockchain_trade_id', $tradeId)->first();
+        $offer = Offers::on('tenant')->where('id', $tradeId)->first();
         $this->assertNotNull($offer);
         $this->assertEquals('LOCKED', strtoupper($offer->status));
     }
@@ -381,7 +377,6 @@ class ProcessContractActivityTest extends TestCase
     {
         return Offers::on('tenant')->create([
             'uuid' => (string) Str::uuid(),
-            'blockchain_trade_id' => $tradeId,
             'status' => $status,
             'amount' => 50,
             'user_id' => $this->seller->user_id,
