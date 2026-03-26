@@ -2,7 +2,6 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Http\Controllers\WalletController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;

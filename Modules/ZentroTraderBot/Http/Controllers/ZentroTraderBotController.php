@@ -16,7 +16,6 @@ use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\ZentroTraderBot\Jobs\AlchemyUpdateWebhookAddresses;
 use Modules\ZentroTraderBot\Jobs\MoralisAddAddressToStream;
 use Modules\Web3\Services\ConfigService;
-use Illuminate\Support\Facades\Crypt;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 
 class ZentroTraderBotController extends JsonsController

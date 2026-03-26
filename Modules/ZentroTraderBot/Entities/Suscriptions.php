@@ -5,7 +5,6 @@ namespace Modules\ZentroTraderBot\Entities;
 use Modules\TelegramBot\Entities\Actors;
 use Modules\Laravel\Traits\TenantTrait;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 
 
