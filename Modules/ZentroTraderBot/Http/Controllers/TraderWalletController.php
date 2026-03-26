@@ -91,7 +91,7 @@ class TraderWalletController extends WalletController
         $encryptedKey = $suscriptor->data['wallet']['private_key'];
 
         // 🔓 Desencriptamos manualmente
-        return Crypt::decryptString($encryptedKey);
+        return decryptValue($encryptedKey);
     }
 
     /**

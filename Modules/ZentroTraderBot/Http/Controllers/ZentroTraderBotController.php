@@ -325,7 +325,7 @@ class ZentroTraderBotController extends JsonsController
             function () use ($suscriptor) {
                 $key = $suscriptor->data['wallet']['seed_phrase'];
                 // 🔓 Desencriptamos manualmente
-                $data = Crypt::decryptString($key);
+                $data = decryptValue($key);
                 $words = explode(' ', $data);
                 $message = "```\n";
                 for ($i = 0; $i < count($words); $i += 2) {

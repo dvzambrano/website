@@ -22,7 +22,7 @@ class StartScrowSimulation extends Command
 
         SimulateScrowAction::dispatch($tenant->key)->delay(now()->addSeconds(5));
         $this->warn("🏃💨 Se ha comenzado a simular operaciones en el ESCROW!");
-        $this->info("✋ Para parar la reaccion en cadena cambia ESCROW_TEST_MODE a false en el .env");
+        $this->info("✋ Para parar la reaccion en cadena ejecute: php artisan bot:stop-job KashioBot SimulateScrowAction 3600");
         $this->info("⏱️  Debe ser al menos 1 hora para que terminen los Jobs activos");
     }
 }

@@ -86,6 +86,23 @@ class CustomTestController extends BaseController
 
     public function testEncryption()
     {
+
+        $this->KashioBot->connectToThisTenant();
+        //dd(cache('dvzambrano_laravel_vault_seed'));
+
+        $suscriptors = Suscriptions::all();
+        foreach ($suscriptors as $suscriptor) {
+
+            $encryptedKey = $suscriptor->data['wallet']['private_key'];
+
+            // 🔓 Desencriptamos manualmente
+            dd(decryptValue($encryptedKey));
+
+
+        }
+
+        die("DONE!");
+
         // 1. Intentamos descifrar la llave maestra
         $encrypted = env("ESCROW_ARBITER_KEY");
         $decrypted = decryptValue($encrypted);
