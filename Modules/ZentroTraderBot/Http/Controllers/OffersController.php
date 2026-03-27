@@ -14,11 +14,7 @@ class OffersController extends Controller
 {
     public function sell($bot)
     {
-        // --- NORMALIZACIÓN DE ENTRADA ---
-        // Si es un callback (botón), el valor real está en callback_query['data']
-        $isCallback = isset($bot->callback_query);
-        $text = $isCallback ? $bot->callback_query['data'] : ($bot->message["text"] ?? null);
-
+        $text = $bot->message["text"] ?? null;
         $userId = $bot->actor->user_id;
         $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
 
@@ -34,11 +30,14 @@ class OffersController extends Controller
         // --- GESTIÓN DE SALIDA EXPLÍCITA ---
         if ($text === '/wizardcancel') {
             Cache::forget($cacheKey);
+            // Si viene de un botón (callback), editamos el mensaje actual
+            // Si escribió el comando manualmente, enviamos uno nuevo
+            $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
             return [
                 "text" => "❌ *Operación cancelada.*\nEl borrador de tu oferta ha sido eliminado.",
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["remove_keyboard" => true]),
-                "editprevious" => $isCallback ? 1 : 0
+                "editprevious" => $isCallback ? 1 : 0 // Solo editamos si ya existía el mensaje del Wizard
             ];
         }
 
@@ -51,7 +50,6 @@ class OffersController extends Controller
 
             // Limpiamos el texto para que al re-entrar solo pinte la pregunta
             $bot->message["text"] = null;
-            unset($bot->callback_query); // Limpiamos para evitar bucles de lógica
             return $this->sell($bot);
         }
 
@@ -69,7 +67,7 @@ class OffersController extends Controller
                     }
                     $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
                     $state['data']['amount'] = $text;
-                    $state['step'] = 'STEP_CURRENCY';
+                    $state['step'] = 'STEP_PRICE';
                     Cache::forever($cacheKey, $state);
 
                     // LIMPIEZA PARA RECURSIÓN: Evita el salto automático al siguiente paso
@@ -83,17 +81,42 @@ class OffersController extends Controller
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]])
                 ];
 
+            case 'STEP_PRICE':
+                $this->deleteUserText($bot); // Limpia el "100" del usuario
+                if ($text !== null) {
+                    if (!is_numeric($text) || $text <= 0) {
+                        return ["text" => "❌ Precio inválido.", "chat" => ["id" => $userId], "editprevious" => 1];
+                    }
+                    $state['history'][] = ['step' => 'STEP_PRICE', 'data' => $state['data']];
+                    $state['data']['price'] = $text;
+                    $state['step'] = 'STEP_CURRENCY';
+                    Cache::forever($cacheKey, $state);
+                    $bot->message["text"] = null;
+                    return $this->sell($bot);
+                }
+
+                return [
+                    "text" => "2️⃣ *Precio de venta*\n_¿A qué precio por cada USD?_\n\nEscriba solo el número. _Por ejemplo:_`1.02`\n_En el ejemplo estaría cobrando 2% de recargo._",
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [
+                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
+                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
+                            ]
+                        ]
+                    ]),
+                    "editprevious" => 1
+                ];
+
             case 'STEP_CURRENCY':
                 $this->deleteUserText($bot);
-                if ($text !== null && $isCallback) {
+                if ($text !== null) {
                     $state['history'][] = ['step' => 'STEP_CURRENCY', 'data' => $state['data']];
                     $state['data']['currency'] = $text;
-                    $state['step'] = 'STEP_PRICE';
+                    $state['step'] = 'STEP_METHOD';
                     Cache::forever($cacheKey, $state);
-
-                    // IMPORTANTE: Limpiamos el rastro del callback antes de la recursión
                     $bot->message["text"] = null;
-                    unset($bot->callback_query);
                     return $this->sell($bot);
                 }
 
@@ -110,46 +133,16 @@ class OffersController extends Controller
                 $buttons[] = [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]];
 
                 return [
-                    "text" => "2️⃣ *Moneda a recibir*\n_¿En qué moneda recibirás el pago?_\n\n👇 Seleccione una desde las disponibles",
+                    "text" => "3️⃣ *Moneda a recibir*\n_¿En qué moneda recibirás el pago?_\n\n👇 Seleccione una desde las disponibles",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
                     "editprevious" => 1
                 ];
 
-            case 'STEP_PRICE':
-                $this->deleteUserText($bot);
-                // Si venimos de la recursión de CURRENCY, $isCallback ya es false gracias al unset
-                if ($text !== null && !$isCallback) {
-                    if (!is_numeric($text) || $text <= 0) {
-                        return ["text" => "❌ Precio inválido.", "chat" => ["id" => $userId], "editprevious" => 1];
-                    }
-                    $state['history'][] = ['step' => 'STEP_PRICE', 'data' => $state['data']];
-                    $state['data']['price'] = $text;
-                    $state['step'] = 'STEP_METHOD';
-                    Cache::forever($cacheKey, $state);
-
-                    $bot->message["text"] = null;
-                    return $this->sell($bot);
-                }
-
-                $currency = $state['data']['currency'];
-                return [
-                    "text" => "3️⃣ *Precio de venta*\n_¿A qué precio por cada USD?_\n\nEscriba el valor en *{$currency}*. _Por ejemplo:_ `1.02` o `1250`",
-                    "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [
-                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
-                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
-                            ]
-                        ]
-                    ]),
-                    "editprevious" => 1
-                ];
-
             case 'STEP_METHOD':
                 $this->deleteUserText($bot);
-                if ($text !== null && $isCallback) {
+                if ($text !== null) {
+                    // Obtener info del método para validar límites o mostrar instrucciones
                     $currency = Currencies::where('code', $state['data']['currency'])->first();
                     $methodInfo = $currency->paymentmethods()->where('identifier', $text)->first();
 
@@ -158,9 +151,7 @@ class OffersController extends Controller
                     $state['data']['method_name'] = $methodInfo->name ?? $text;
                     $state['step'] = 'STEP_DETAILS';
                     Cache::forever($cacheKey, $state);
-
                     $bot->message["text"] = null;
-                    unset($bot->callback_query); // Limpieza para el siguiente paso de texto
                     return $this->sell($bot);
                 }
 
@@ -179,7 +170,7 @@ class OffersController extends Controller
                 $buttons[] = [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]];
 
                 return [
-                    "text" => "4️⃣ *Método de pago*\n_¿Por qué vía desea recibir {$state['data']['currency']}?_\n\n👇 Seleccione una de las opciones configuradas",
+                    "text" => "4️⃣ *Método de pago*\n_¿Por qué vía desea recibir {$state['data']['currency']}?_\n\n👇 Seleccione una desde las disponibles",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
                     "editprevious" => 1
@@ -187,7 +178,7 @@ class OffersController extends Controller
 
             case 'STEP_DETAILS':
                 $this->deleteUserText($bot);
-                if ($text !== null && !$isCallback) {
+                if ($text !== null) {
                     $state['history'][] = ['step' => 'STEP_DETAILS', 'data' => $state['data']];
                     $state['data']['details'] = $text;
                     $state['step'] = 'CONFIRM';
@@ -198,7 +189,7 @@ class OffersController extends Controller
 
                 $methodName = $state['data']['method_name'] ?? $state['data']['method'];
                 return [
-                    "text" => "5️⃣ *Datos de la cuenta*\n_Escriba los detalles de su cuenta *{$methodName}*:_\n\n*Recuerde ser explícito*, incluya nombre, número de cuenta y tipo.",
+                    "text" => "5️⃣ *Datos de la cuenta*\n_Escriba los detalles de su cuenta *{$methodName}*:_\n\n*Recuerde ser explícito*, cualquier dato faltante podría afectar el tiempo de recepción de su dinero.",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -213,7 +204,6 @@ class OffersController extends Controller
 
             case 'CONFIRM':
                 $this->deleteUserText($bot);
-                // Si el usuario confirma por botón
                 if ($text === '/offerconfirm') {
                     return $this->publishOffer($bot, $state);
                 }
@@ -246,8 +236,11 @@ class OffersController extends Controller
 
     private function deleteUserText($bot)
     {
-        // Solo borramos si NO es un callback (un mensaje de texto escrito por el usuario)
-        if (!isset($bot->callback_query) && !empty($bot->message["message_id"])) {
+        // IMPORTANTE: Solo borrar si es un mensaje de texto real del usuario
+        // Si es un callback_query, no hay "mensaje de usuario" que borrar, 
+        // y el message_id que trae es el del propio Bot.
+        $isCallback = isset($bot->callback_query) || isset($bot->message['reply_markup']);
+        if (!$isCallback && !empty($bot->message["message_id"])) {
             try {
                 $array = [
                     "message" => [
@@ -281,6 +274,7 @@ class OffersController extends Controller
         ]);
         */
         Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
+
         return [
             "text" => "✅ *¡Oferta publicada!*",
             "chat" => ["id" => $bot->actor->user_id],
