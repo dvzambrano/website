@@ -74,7 +74,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "1️⃣ *Definir el monto*\n\n💵 ¿Cuánto USD desea vender?\n_Escriba solo el número. Por ejemplo:_`100`",
+                    "text" => "1️⃣ *Definir el monto*\n_¿Cuánto USD desea vender?_\n\nEscriba solo el número. _Por ejemplo:_  `100`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]])
                 ];
@@ -94,7 +94,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "2️⃣ *Precio de venta*\n\n💰 ¿A qué precio por cada USD?\n_Escriba solo el número. Por ejemplo:_`1.02`\n_En el ejemplo estaría cobrando 2% de recargo._",
+                    "text" => "2️⃣ *Precio de venta*\n_¿A qué precio por cada USD?_\n\nEscriba solo el número. _Por ejemplo:_`1.02`\n_En el ejemplo estaría cobrando 2% de recargo._",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -119,7 +119,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "3️⃣ *Moneda a recibir*\n\n💱 ¿En qué moneda recibirás el pago?\n\n👇 _Seleccione una desde las disponibles_",
+                    "text" => "3️⃣ *Moneda a recibir*\n_¿En qué moneda recibirás el pago?_\n\n👇 Seleccione una desde las disponibles",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -146,7 +146,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "4️⃣ *Método de pago*\n\n🏦 ¿Por qué vía desea recibir *{$state['data']['currency']}*?\n\n👇 _Seleccione una desde las disponibles_",
+                    "text" => "4️⃣ *Método de pago*\n_¿Por qué vía desea recibir {$state['data']['currency']}?_\n\n👇 Seleccione una desde las disponibles",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -173,7 +173,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "5️⃣ *Datos de la cuenta*\n\n📝 Escriba los detalles de su cuenta *{$state['data']['method']}*:\n\n_Recuerde ser explícito, cualquier dato faltante podría afectar el tiempo de recepción de su dinero._",
+                    "text" => "5️⃣ *Datos de la cuenta*\n_Escriba los detalles de su cuenta {$state['data']['method']}:_\n\n*Recuerde ser explícito*, cualquier dato faltante podría afectar el tiempo de recepción de su dinero.",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -197,11 +197,11 @@ class OffersController extends Controller
 
                 return [
                     "text" => "🌟 *Resumen de su Oferta*\n"
-                        . "Vendes: *{$state['data']['amount']} USD*\n"
-                        . "Precio: *{$state['data']['price']} {$currency}*\n"
-                        . "Recibes: *{$total} {$currency}*\n"
-                        . "Método: *{$state['data']['method']}*\n"
-                        . "Datos: `{$state['data']['details']}`",
+                        . "💵 Vendes: *{$state['data']['amount']} USD*\n"
+                        . "💰 Precio: *{$state['data']['price']} {$currency}*\n"
+                        . "💱 Recibes: *{$total} {$currency}*\n"
+                        . "🏦 Método: *{$state['data']['method']}*\n"
+                        . "📝 Datos: `{$state['data']['details']}`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -222,7 +222,6 @@ class OffersController extends Controller
         // IMPORTANTE: Solo borrar si es un mensaje de texto real del usuario
         // Si es un callback_query, no hay "mensaje de usuario" que borrar, 
         // y el message_id que trae es el del propio Bot.
-        /*
         $isCallback = isset($bot->callback_query) || isset($bot->message['reply_markup']);
         if (!$isCallback && !empty($bot->message["message_id"])) {
             try {
@@ -237,7 +236,6 @@ class OffersController extends Controller
                 // Log::error("Error borrando: " . $th->getMessage());
             }
         }
-        */
     }
 
     private function publishOffer($bot, $state)
