@@ -17,6 +17,7 @@ class OffersController extends Controller
         $text = $bot->message["text"] ?? null;
         $userId = $bot->actor->user_id;
         $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
+        $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
 
         $state = Cache::get($cacheKey, [
             'controller' => self::class,
@@ -29,7 +30,6 @@ class OffersController extends Controller
         // --- SALIDA Y RETROCESO ---
         if ($text === '/wizardcancel') {
             Cache::forget($cacheKey);
-            $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
             return [
                 "text" => "❌ *Operación cancelada.*",
                 "chat" => ["id" => $userId],
@@ -68,7 +68,8 @@ class OffersController extends Controller
                 return [
                     "text" => "1️⃣ *Definir el monto*\n_¿Cuánto USD desea vender?_",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]])
+                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
+                    "editprevious" => $isCallback ? 1 : 0
                 ];
 
             case 'STEP_CURRENCY':
@@ -169,7 +170,7 @@ class OffersController extends Controller
 
                 $methodName = $state['data']['method_name'] ?? $state['data']['method'];
                 return [
-                    "text" => "5️⃣ *Datos de la cuenta*\n_Escribe los detalles para *{$methodName}*:_",
+                    "text" => "5️⃣ *Datos de la cuenta*\n_Escribe los detalles para {$methodName}:_",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
