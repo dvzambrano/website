@@ -51,6 +51,7 @@ class OffersController extends Controller
 
             // Limpiamos el texto para que al re-entrar solo pinte la pregunta
             $bot->message["text"] = null;
+            unset($bot->callback_query); // Limpiamos para evitar bucles de lógica
             return $this->sell($bot);
         }
 
@@ -68,7 +69,7 @@ class OffersController extends Controller
                     }
                     $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
                     $state['data']['amount'] = $text;
-                    $state['step'] = 'STEP_CURRENCY'; // CAMBIO: Ahora va a Moneda
+                    $state['step'] = 'STEP_CURRENCY';
                     Cache::forever($cacheKey, $state);
 
                     // LIMPIEZA PARA RECURSIÓN: Evita el salto automático al siguiente paso
@@ -84,12 +85,15 @@ class OffersController extends Controller
 
             case 'STEP_CURRENCY':
                 $this->deleteUserText($bot);
-                if ($text !== null && $isCallback) { // Las monedas vienen por botones (callback)
+                if ($text !== null && $isCallback) {
                     $state['history'][] = ['step' => 'STEP_CURRENCY', 'data' => $state['data']];
                     $state['data']['currency'] = $text;
-                    $state['step'] = 'STEP_PRICE'; // CAMBIO: Ahora va a Precio
+                    $state['step'] = 'STEP_PRICE';
                     Cache::forever($cacheKey, $state);
+
+                    // IMPORTANTE: Limpiamos el rastro del callback antes de la recursión
                     $bot->message["text"] = null;
+                    unset($bot->callback_query);
                     return $this->sell($bot);
                 }
 
@@ -114,6 +118,7 @@ class OffersController extends Controller
 
             case 'STEP_PRICE':
                 $this->deleteUserText($bot);
+                // Si venimos de la recursión de CURRENCY, $isCallback ya es false gracias al unset
                 if ($text !== null && !$isCallback) {
                     if (!is_numeric($text) || $text <= 0) {
                         return ["text" => "❌ Precio inválido.", "chat" => ["id" => $userId], "editprevious" => 1];
@@ -122,6 +127,7 @@ class OffersController extends Controller
                     $state['data']['price'] = $text;
                     $state['step'] = 'STEP_METHOD';
                     Cache::forever($cacheKey, $state);
+
                     $bot->message["text"] = null;
                     return $this->sell($bot);
                 }
@@ -152,7 +158,9 @@ class OffersController extends Controller
                     $state['data']['method_name'] = $methodInfo->name ?? $text;
                     $state['step'] = 'STEP_DETAILS';
                     Cache::forever($cacheKey, $state);
+
                     $bot->message["text"] = null;
+                    unset($bot->callback_query); // Limpieza para el siguiente paso de texto
                     return $this->sell($bot);
                 }
 
@@ -205,6 +213,7 @@ class OffersController extends Controller
 
             case 'CONFIRM':
                 $this->deleteUserText($bot);
+                // Si el usuario confirma por botón
                 if ($text === '/offerconfirm') {
                     return $this->publishOffer($bot, $state);
                 }
@@ -272,7 +281,6 @@ class OffersController extends Controller
         ]);
         */
         Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
-
         return [
             "text" => "✅ *¡Oferta publicada!*",
             "chat" => ["id" => $bot->actor->user_id],
