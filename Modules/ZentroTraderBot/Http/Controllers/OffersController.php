@@ -17,7 +17,6 @@ class OffersController extends Controller
         $text = $bot->message["text"] ?? null;
         $userId = $bot->actor->user_id;
         $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
-        $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
 
         $state = Cache::get($cacheKey, [
             'controller' => self::class,
@@ -30,6 +29,7 @@ class OffersController extends Controller
         // --- SALIDA Y RETROCESO ---
         if ($text === '/wizardcancel') {
             Cache::forget($cacheKey);
+            $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
             return [
                 "text" => "❌ *Operación cancelada.*",
                 "chat" => ["id" => $userId],
@@ -68,8 +68,7 @@ class OffersController extends Controller
                 return [
                     "text" => "1️⃣ *Definir el monto*\n_¿Cuánto USD desea vender?_",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
-                    "editprevious" => $isCallback ? 1 : 0
+                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]])
                 ];
 
             case 'STEP_CURRENCY':
@@ -83,7 +82,9 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
-                $currencies = Currencies::where('is_active', true)->get();
+                $currencies = Currencies::where('is_active', true)
+                    ->has('paymentmethods') // Filtro de relación
+                    ->get();
                 $buttons = [];
                 foreach ($currencies->chunk(2) as $chunk) {
                     $row = [];
