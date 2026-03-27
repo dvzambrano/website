@@ -125,7 +125,10 @@ class OffersController extends Controller
                         "inline_keyboard" => [
                             [["text" => "EUR", "callback_data" => "EUR"], ["text" => "USD", "callback_data" => "USD"]],
                             [["text" => "CUP", "callback_data" => "CUP"], ["text" => "MLC", "callback_data" => "MLC"]],
-                            [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"]]
+                            [
+                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
+                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
+                            ]
                         ]
                     ]),
                     "editprevious" => 1
@@ -149,7 +152,10 @@ class OffersController extends Controller
                         "inline_keyboard" => [
                             [["text" => "Zelle", "callback_data" => "Zelle"], ["text" => "Bizum", "callback_data" => "Bizum"]],
                             [["text" => "Transferencia", "callback_data" => "Transferencia"]],
-                            [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"]]
+                            [
+                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
+                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
+                            ]
                         ]
                     ]),
                     "editprevious" => 1
@@ -169,7 +175,14 @@ class OffersController extends Controller
                 return [
                     "text" => "📝 *Paso 5:* Detalles de tu cuenta (*{$state['data']['method']}*):",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"]]]]),
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [
+                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
+                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
+                            ]
+                        ]
+                    ]),
                     "editprevious" => 1
                 ];
 
@@ -193,7 +206,10 @@ class OffersController extends Controller
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [["text" => "🚀 Publicar", "callback_data" => "/offerconfirm"]],
-                            [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"]]
+                            [
+                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
+                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
+                            ]
                         ]
                     ]),
                     "editprevious" => 1
