@@ -372,6 +372,13 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+        $this->strategies["/p2psell"] =
+            function () {
+                $controller = new OffersController();
+                $reply = $controller->sell($this);
+                return $reply;
+            };
+
 
         return $this->getProcessedMessage();
     }

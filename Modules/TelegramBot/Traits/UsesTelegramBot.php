@@ -159,6 +159,14 @@ trait UsesTelegramBot
             return $this->notifyUsernameRequired($this->actor->user_id);
         }
 
+        // Esta en medio de un asistente?
+        $cacheKey = "wizard_{$this->tenant->key}_{$this->actor->user_id}";
+        if (Cache::has($cacheKey)) {
+            $wizard = Cache::get($cacheKey);
+            return app()->make($wizard['controller'])
+                ->{$wizard['method']}($this);
+        }
+
         // preparando respuesta generica para un texto no reconocido en el bot
         $reply = [
             "text" => "🙇🏻 " . Lang::get("telegrambot::bot.errors.unrecognizedcommand.text", ["text" => $this->message["text"]]) .
