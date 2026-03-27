@@ -6,7 +6,6 @@ use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Modules\ZentroTraderBot\Entities\Offers;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 class OffersController extends Controller
 {
@@ -57,16 +56,7 @@ class OffersController extends Controller
                 // Si hay texto y no es el comando inicial, procesamos el dato
                 if ($text !== null && $text !== '/p2psell') {
                     if (!is_numeric($text) || $text <= 0) {
-                        TelegramController::editMessageText(
-                            [
-                                "message" => [
-                                    "chat" => ["id" => $userId],
-                                    "message_id" => $state['message_id'],
-                                    "text" => "❌ Por favor, envía un monto válido.",
-                                ]
-                            ],
-                            $bot->tenant->token
-                        );
+                        return ["text" => "❌ Por favor, envía un monto válido.", "chat" => ["id" => $userId]];
                     }
                     $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
                     $state['data']['amount'] = $text;
@@ -78,28 +68,12 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
-                // Si text es null, mostramos la pregunta
-                $response = json_decode(TelegramController::sendMessage(
-                    array(
-                        "message" => array(
-                            "text" => "💰 *Paso 1:* ¿Cuánto USD deseas vender?\n_(Escribe solo el número)_",
-                            "chat" => ["id" => $userId],
-                            "reply_markup" => json_encode([
-                                "inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]
-                            ])
-                        ),
-                    ),
-                    $bot->tenant->token
-                ), true);
-                $message_id = false;
-                if (isset($response["result"]["message_id"]) && $response["result"]["message_id"] > -1)
-                    $message_id = $response["result"]["message_id"];
-                $state['message_id'] = $message_id;
-                Cache::forever($cacheKey, $state);
-
-                // haciendo q no haya respuesta
                 return [
-                    "text" => "",
+                    "text" => "💰 *Paso 1:* ¿Cuánto USD deseas vender?\n_(Escribe solo el número)_",
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]
+                    ])
                 ];
 
             case 'STEP_PRICE':
