@@ -98,7 +98,7 @@ class OffersController extends Controller
                 return [
                     "text" => "2️⃣ *Moneda a recibir*\n_¿En qué moneda recibirás el pago?_",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
+                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
                 ];
 
