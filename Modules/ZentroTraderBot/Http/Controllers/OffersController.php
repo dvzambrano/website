@@ -28,19 +28,10 @@ class OffersController extends Controller
         // --- GESTIÓN DE SALIDA EXPLÍCITA ---
         if ($text === '/wizardcancel') {
             Cache::forget($cacheKey);
-            TelegramController::editMessageText(
-                [
-                    "message" => [
-                        "text" => "❌ *Operación cancelada.*\nEl borrador de tu oferta ha sido eliminado.",
-                        "chat" => ["id" => $userId],
-                        "reply_markup" => json_encode(["remove_keyboard" => true])
-                    ]
-                ],
-                $bot->tenant->token
-            );
-            // haciendo q no haya respuesta
             return [
-                "text" => "",
+                "text" => "❌ *Operación cancelada.*\nEl borrador de tu oferta ha sido eliminado.",
+                "chat" => ["id" => $userId],
+                "reply_markup" => json_encode(["remove_keyboard" => true])
             ];
         }
 
@@ -106,19 +97,6 @@ class OffersController extends Controller
                 $state['message_id'] = $message_id;
                 Cache::forever($cacheKey, $state);
 
-                /*
-                //$this->message["message_id"]
-                $array = array(
-                    "message" => array(
-                        "id" => $bot->message["message_id"],
-                        "chat" => array(
-                            "id" => $bot->message["chat"]["id"],
-                        ),
-                    ),
-                );
-                TelegramController::deleteMessage($array, $bot->tenant->token);
-                */
-
                 // haciendo q no haya respuesta
                 return [
                     "text" => "",
@@ -127,20 +105,7 @@ class OffersController extends Controller
             case 'STEP_PRICE':
                 if ($text !== null) {
                     if (!is_numeric($text) || $text <= 0) {
-                        TelegramController::editMessageText(
-                            [
-                                "message" => [
-                                    "text" => "❌ Precio inválido. Debe ser un número (ej: 0.85).",
-                                    "chat" => ["id" => $userId],
-                                    "reply_markup" => json_encode(["remove_keyboard" => true])
-                                ]
-                            ],
-                            $bot->tenant->token
-                        );
-                        // haciendo q no haya respuesta
-                        return [
-                            "text" => "",
-                        ];
+                        return ["text" => "❌ Precio inválido. Debe ser un número (ej: 0.85).", "chat" => ["id" => $userId]];
                     }
                     $state['history'][] = ['step' => 'STEP_PRICE', 'data' => $state['data']];
                     $state['data']['price'] = $text;
@@ -150,26 +115,17 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
-                TelegramController::editMessageText(
-                    [
-                        "message" => [
-                            "text" => "💵 *Paso 2:* ¿A qué precio por cada USD?\n_(Ejemplo: 0.85)_",
-                            "chat" => ["id" => $userId],
-                            "reply_markup" => json_encode([
-                                "inline_keyboard" => [
-                                    [
-                                        ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
-                                        ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
-                                    ]
-                                ]
-                            ])
-                        ]
-                    ],
-                    $bot->tenant->token
-                );
-                // haciendo q no haya respuesta
                 return [
-                    "text" => "",
+                    "text" => "💵 *Paso 2:* ¿A qué precio por cada USD?\n_(Ejemplo: 0.85)_",
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [
+                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
+                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
+                            ]
+                        ]
+                    ])
                 ];
 
             case 'STEP_CURRENCY': // NUEVO PASO
@@ -182,26 +138,16 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
-
-                TelegramController::editMessageText(
-                    [
-                        "message" => [
-                            "text" => "💱 *Paso 3:* ¿En qué moneda quieres recibir el pago?",
-                            "chat" => ["id" => $userId],
-                            "reply_markup" => json_encode([
-                                "inline_keyboard" => [
-                                    [["text" => "EUR", "callback_data" => "EUR"], ["text" => "USD", "callback_data" => "USD"]],
-                                    [["text" => "CUP", "callback_data" => "CUP"], ["text" => "MLC", "callback_data" => "MLC"]],
-                                    [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
-                                ]
-                            ])
-                        ]
-                    ],
-                    $bot->tenant->token
-                );
-                // haciendo q no haya respuesta
                 return [
-                    "text" => "",
+                    "text" => "💱 *Paso 3:* ¿En qué moneda quieres recibir el pago?",
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "EUR", "callback_data" => "EUR"], ["text" => "USD", "callback_data" => "USD"]],
+                            [["text" => "CUP", "callback_data" => "CUP"], ["text" => "MLC", "callback_data" => "MLC"]],
+                            [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
+                        ]
+                    ])
                 ];
 
             case 'STEP_METHOD':
@@ -220,20 +166,10 @@ class OffersController extends Controller
                     [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
                 ];
 
-
-                TelegramController::editMessageText(
-                    [
-                        "message" => [
-                            "text" => "🏦 *Paso 4:* Selecciona el método de pago:",
-                            "chat" => ["id" => $userId],
-                            "reply_markup" => json_encode(["inline_keyboard" => $menu])
-                        ]
-                    ],
-                    $bot->tenant->token
-                );
-                // haciendo q no haya respuesta
                 return [
-                    "text" => "",
+                    "text" => "🏦 *Paso 4:* Selecciona el método de pago:",
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode(["inline_keyboard" => $menu])
                 ];
 
             case 'STEP_DETAILS':
@@ -247,27 +183,17 @@ class OffersController extends Controller
                 }
 
                 $method = $state['data']['method'] ?? 'pago';
-
-                TelegramController::editMessageText(
-                    [
-                        "message" => [
-                            "text" => "📝 *Paso 5:* Introduce los detalles de tu cuenta para *{$method}*:",
-                            "chat" => ["id" => $userId],
-                            "reply_markup" => json_encode([
-                                "inline_keyboard" => [
-                                    [
-                                        ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
-                                        ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
-                                    ]
-                                ]
-                            ])
-                        ]
-                    ],
-                    $bot->tenant->token
-                );
-                // haciendo q no haya respuesta
                 return [
-                    "text" => "",
+                    "text" => "📝 *Paso 5:* Introduce los detalles de tu cuenta para *{$method}*:",
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [
+                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
+                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
+                            ]
+                        ]
+                    ])
                 ];
 
             case 'CONFIRM':
@@ -293,20 +219,10 @@ class OffersController extends Controller
                     [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
                 ];
 
-
-                TelegramController::editMessageText(
-                    [
-                        "message" => [
-                            "text" => $text,
-                            "chat" => ["id" => $userId],
-                            "reply_markup" => json_encode(["inline_keyboard" => $menu]),
-                        ]
-                    ],
-                    $bot->tenant->token
-                );
-                // haciendo q no haya respuesta
                 return [
-                    "text" => "",
+                    "text" => $text,
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode(["inline_keyboard" => $menu]),
                 ];
         }
     }
