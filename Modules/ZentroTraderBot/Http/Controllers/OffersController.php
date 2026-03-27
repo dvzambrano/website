@@ -9,6 +9,7 @@ use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Entities\Currencies;
 use Modules\ZentroTraderBot\Entities\Paymentmethods;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Illuminate\Support\Facades\Lang;
 
 class OffersController extends Controller
 {
@@ -31,9 +32,16 @@ class OffersController extends Controller
             Cache::forget($cacheKey);
             $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
             return [
-                "text" => "❌ *Operación cancelada.*",
+                "text" =>
+                    "❌ *Operación cancelada.*\n" .
+                    "_Ud ha cancelado la publicación de su Oferta satisfactoriamente._\n\n" .
+                    "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
                 "chat" => ["id" => $userId],
-                "reply_markup" => json_encode(["remove_keyboard" => true]),
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    ],
+                ]),
                 "editprevious" => $isCallback ? 1 : 0
             ];
         }
