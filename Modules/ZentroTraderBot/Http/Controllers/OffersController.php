@@ -30,7 +30,8 @@ class OffersController extends Controller
             return [
                 "text" => "❌ *Operación cancelada.*\nEl borrador de tu oferta ha sido eliminado.",
                 "chat" => ["id" => $userId],
-                "reply_markup" => json_encode(["remove_keyboard" => true])
+                "reply_markup" => json_encode(["remove_keyboard" => true]),
+                "editprevious" => 1
             ];
         }
 
@@ -56,7 +57,11 @@ class OffersController extends Controller
                 // Si hay texto y no es el comando inicial, procesamos el dato
                 if ($text !== null && $text !== '/p2psell') {
                     if (!is_numeric($text) || $text <= 0) {
-                        return ["text" => "❌ Por favor, envía un monto válido.", "chat" => ["id" => $userId]];
+                        return [
+                            "text" => "❌ Por favor, envía un monto válido.",
+                            "chat" => ["id" => $userId],
+                            "editprevious" => 1
+                        ];
                     }
                     $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
                     $state['data']['amount'] = $text;
@@ -73,13 +78,18 @@ class OffersController extends Controller
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]
-                    ])
+                    ]),
+                    "editprevious" => 1
                 ];
 
             case 'STEP_PRICE':
                 if ($text !== null) {
                     if (!is_numeric($text) || $text <= 0) {
-                        return ["text" => "❌ Precio inválido. Debe ser un número (ej: 0.85).", "chat" => ["id" => $userId]];
+                        return [
+                            "text" => "❌ Precio inválido. Debe ser un número (ej: 0.85).",
+                            "chat" => ["id" => $userId],
+                            "editprevious" => 1
+                        ];
                     }
                     $state['history'][] = ['step' => 'STEP_PRICE', 'data' => $state['data']];
                     $state['data']['price'] = $text;
@@ -99,7 +109,8 @@ class OffersController extends Controller
                                 ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
                             ]
                         ]
-                    ])
+                    ]),
+                    "editprevious" => 1
                 ];
 
             case 'STEP_CURRENCY': // NUEVO PASO
@@ -121,7 +132,8 @@ class OffersController extends Controller
                             [["text" => "CUP", "callback_data" => "CUP"], ["text" => "MLC", "callback_data" => "MLC"]],
                             [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
                         ]
-                    ])
+                    ]),
+                    "editprevious" => 1
                 ];
 
             case 'STEP_METHOD':
@@ -143,7 +155,8 @@ class OffersController extends Controller
                 return [
                     "text" => "🏦 *Paso 4:* Selecciona el método de pago:",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => $menu])
+                    "reply_markup" => json_encode(["inline_keyboard" => $menu]),
+                    "editprevious" => 1
                 ];
 
             case 'STEP_DETAILS':
@@ -167,7 +180,8 @@ class OffersController extends Controller
                                 ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
                             ]
                         ]
-                    ])
+                    ]),
+                    "editprevious" => 1
                 ];
 
             case 'CONFIRM':
@@ -197,6 +211,7 @@ class OffersController extends Controller
                     "text" => $text,
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $menu]),
+                    "editprevious" => 1
                 ];
         }
     }
