@@ -106,6 +106,7 @@ class OffersController extends Controller
                 $state['message_id'] = $message_id;
                 Cache::forever($cacheKey, $state);
 
+                /*
                 //$this->message["message_id"]
                 $array = array(
                     "message" => array(
@@ -116,6 +117,7 @@ class OffersController extends Controller
                     ),
                 );
                 TelegramController::deleteMessage($array, $bot->tenant->token);
+                */
 
                 // haciendo q no haya respuesta
                 return [
