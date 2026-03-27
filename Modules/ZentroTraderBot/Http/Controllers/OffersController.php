@@ -28,11 +28,14 @@ class OffersController extends Controller
         // --- GESTIÓN DE SALIDA EXPLÍCITA ---
         if ($text === '/wizardcancel') {
             Cache::forget($cacheKey);
+            // Si viene de un botón (callback), editamos el mensaje actual
+            // Si escribió el comando manualmente, enviamos uno nuevo
+            $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
             return [
                 "text" => "❌ *Operación cancelada.*\nEl borrador de tu oferta ha sido eliminado.",
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["remove_keyboard" => true]),
-                "editprevious" => 1
+                "editprevious" => $isCallback ? 1 : 0 // Solo editamos si ya existía el mensaje del Wizard
             ];
         }
 
