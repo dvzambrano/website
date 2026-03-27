@@ -403,10 +403,10 @@ class ZentroTraderBotController extends JsonsController
             ["text" => "💵 " . Lang::get("zentrotraderbot::bot.options.balance"), "callback_data" => "/balance"],
         ]);
 
-        if (env("P2P_ENABLED", false))
+        if (env("P2P_ENABLED", true))
             array_push($menu, [
                 ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "notimplemented"],
-                ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "notimplemented"],
+                ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
             ]);
 
         array_push($menu, [
