@@ -143,15 +143,18 @@ trait UsesTelegramBot
 
         // eliminar el mensaje q origino esta interaccion del bot
         if ($this->message["message_id"] != "" && isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])) {
-            $array = array(
-                "message" => array(
-                    "id" => $this->message["message_id"],
-                    "chat" => array(
-                        "id" => $this->message["chat"]["id"],
+            try {
+                $array = array(
+                    "message" => array(
+                        "id" => $this->message["message_id"],
+                        "chat" => array(
+                            "id" => $this->message["chat"]["id"],
+                        ),
                     ),
-                ),
-            );
-            TelegramController::deleteMessage($array, $this->tenant->token);
+                );
+                TelegramController::deleteMessage($array, $this->tenant->token);
+            } catch (\Throwable $th) {
+            }
         }
 
         // Envía una respuesta al servidor de Telegram para confirmar la recepción

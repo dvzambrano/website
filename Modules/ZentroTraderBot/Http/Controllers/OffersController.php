@@ -6,6 +6,7 @@ use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Modules\ZentroTraderBot\Entities\Offers;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 class OffersController extends Controller
 {
@@ -82,6 +83,7 @@ class OffersController extends Controller
                 ];
 
             case 'STEP_PRICE':
+                $this->deleteUserText($bot);
                 if ($text !== null) {
                     if (!is_numeric($text) || $text <= 0) {
                         return [
@@ -112,7 +114,8 @@ class OffersController extends Controller
                     "editprevious" => 1
                 ];
 
-            case 'STEP_CURRENCY': // NUEVO PASO
+            case 'STEP_CURRENCY':
+                $this->deleteUserText($bot);
                 if ($text !== null) {
                     $state['history'][] = ['step' => 'STEP_CURRENCY', 'data' => $state['data']];
                     $state['data']['currency'] = $text;
@@ -184,6 +187,7 @@ class OffersController extends Controller
                 ];
 
             case 'CONFIRM':
+                $this->deleteUserText($bot);
                 if ($text === '/offerconfirm') {
                     return $this->publishOffer($bot, $state);
                 }
@@ -212,6 +216,25 @@ class OffersController extends Controller
                     "reply_markup" => json_encode(["inline_keyboard" => $menu]),
                     "editprevious" => 1
                 ];
+        }
+    }
+
+    private function deleteUserText($bot)
+    {
+        // eliminar el mensaje q origino esta interaccion del bot
+        if ($bot->message["message_id"] != "") {
+            try {
+                $array = array(
+                    "message" => array(
+                        "id" => $bot->message["message_id"],
+                        "chat" => array(
+                            "id" => $bot->message["chat"]["id"],
+                        ),
+                    ),
+                );
+                TelegramController::deleteMessage($array, $bot->tenant->token);
+            } catch (\Throwable $th) {
+            }
         }
     }
 
