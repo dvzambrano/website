@@ -6,6 +6,7 @@ use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Modules\ZentroTraderBot\Entities\Offers;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 class OffersController extends Controller
 {
@@ -56,7 +57,16 @@ class OffersController extends Controller
                 // Si hay texto y no es el comando inicial, procesamos el dato
                 if ($text !== null && $text !== '/p2psell') {
                     if (!is_numeric($text) || $text <= 0) {
-                        return ["text" => "❌ Por favor, envía un monto válido.", "chat" => ["id" => $userId]];
+                        TelegramController::editMessageText(
+                            [
+                                "message" => [
+                                    "chat" => ["id" => $userId],
+                                    "message_id" => $state['message_id'],
+                                    "text" => "❌ Por favor, envía un monto válido.",
+                                ]
+                            ],
+                            $bot->tenant->token
+                        );
                     }
                     $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
                     $state['data']['amount'] = $text;
@@ -69,30 +79,44 @@ class OffersController extends Controller
                 }
 
                 // Si text es null, mostramos la pregunta
+                $response = json_decode(TelegramController::sendMessage(
+                    array(
+                        "message" => array(
+                            "text" => "💰 *Paso 1:* ¿Cuánto USD deseas vender?\n_(Escribe solo el número)_",
+                            "chat" => ["id" => $userId],
+                            "reply_markup" => json_encode([
+                                "inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]
+                            ])
+                        ),
+                    ),
+                    $bot->tenant->token
+                ), true);
+                $message_id = false;
+                if (isset($response["result"]["message_id"]) && $response["result"]["message_id"] > -1)
+                    $message_id = $response["result"]["message_id"];
+                $state['message_id'] = $message_id;
+                Cache::forever($cacheKey, $state);
+
+                // haciendo q no haya respuesta
                 return [
-                    "text" => "💰 *Paso 1:* ¿Cuánto USD deseas vender?\n_(Escribe solo el número)_",
-                    "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]
-                    ])
+                    "text" => "",
                 ];
 
             case 'STEP_PRICE':
                 if ($text !== null) {
                     if (!is_numeric($text) || $text <= 0) {
-                        return ["text" => "❌ Precio inválido. Debe ser un número (ej: 1.05).", "chat" => ["id" => $userId]];
+                        return ["text" => "❌ Precio inválido. Debe ser un número (ej: 0.85).", "chat" => ["id" => $userId]];
                     }
                     $state['history'][] = ['step' => 'STEP_PRICE', 'data' => $state['data']];
                     $state['data']['price'] = $text;
-                    $state['step'] = 'STEP_METHOD';
+                    $state['step'] = 'STEP_CURRENCY'; // Nuevo salto
                     Cache::forever($cacheKey, $state);
-
                     $bot->message["text"] = null;
                     return $this->sell($bot);
                 }
 
                 return [
-                    "text" => "💵 *Paso 2:* ¿A qué precio por cada USD?\n_(Ejemplo: 1.05)_",
+                    "text" => "💵 *Paso 2:* ¿A qué precio por cada USD?\n_(Ejemplo: 0.85)_",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -104,13 +128,34 @@ class OffersController extends Controller
                     ])
                 ];
 
+            case 'STEP_CURRENCY': // NUEVO PASO
+                if ($text !== null) {
+                    $state['history'][] = ['step' => 'STEP_CURRENCY', 'data' => $state['data']];
+                    $state['data']['currency'] = $text;
+                    $state['step'] = 'STEP_METHOD';
+                    Cache::forever($cacheKey, $state);
+                    $bot->message["text"] = null;
+                    return $this->sell($bot);
+                }
+
+                return [
+                    "text" => "💱 *Paso 3:* ¿En qué moneda quieres recibir el pago?",
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "EUR", "callback_data" => "EUR"], ["text" => "USD", "callback_data" => "USD"]],
+                            [["text" => "CUP", "callback_data" => "CUP"], ["text" => "MLC", "callback_data" => "MLC"]],
+                            [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
+                        ]
+                    ])
+                ];
+
             case 'STEP_METHOD':
                 if ($text !== null) {
                     $state['history'][] = ['step' => 'STEP_METHOD', 'data' => $state['data']];
                     $state['data']['method'] = $text;
                     $state['step'] = 'STEP_DETAILS';
                     Cache::forever($cacheKey, $state);
-
                     $bot->message["text"] = null;
                     return $this->sell($bot);
                 }
@@ -122,7 +167,7 @@ class OffersController extends Controller
                 ];
 
                 return [
-                    "text" => "🏦 *Paso 3:* Selecciona el método donde recibirás el pago:",
+                    "text" => "🏦 *Paso 4:* Selecciona el método de pago:",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $menu])
                 ];
@@ -133,14 +178,13 @@ class OffersController extends Controller
                     $state['data']['details'] = $text;
                     $state['step'] = 'CONFIRM';
                     Cache::forever($cacheKey, $state);
-
                     $bot->message["text"] = null;
                     return $this->sell($bot);
                 }
 
                 $method = $state['data']['method'] ?? 'pago';
                 return [
-                    "text" => "📝 *Paso 4:* Introduce los detalles de tu cuenta para *{$method}*:\n_(Email, IBAN, Nombre, etc.)_",
+                    "text" => "📝 *Paso 5:* Introduce los detalles de tu cuenta para *{$method}*:",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -156,33 +200,31 @@ class OffersController extends Controller
                 if ($text === '/offerconfirm') {
                     return $this->publishOffer($bot, $state);
                 }
-                return $this->showSummary($bot->actor, $state['data']);
+
+                $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
+                $currency = $state['data']['currency'] ?? 'USD';
+
+                $text = "🚀 *Resumen de tu Oferta*\n"
+                    . "──────────────────\n"
+                    . "📦 Vendes: *{$state['data']['amount']} USD*\n"
+                    . "🏷 Precio: *{$state['data']['price']} {$currency}/USD*\n"
+                    . "💰 Recibirás: *{$total} {$currency}*\n"
+                    . "🏦 Método: *{$state['data']['method']}*\n"
+                    . "📍 Datos: `{$state['data']['details']}`\n"
+                    . "──────────────────\n"
+                    . "¿Deseas publicar esta oferta en Kashio?";
+
+                $menu = [
+                    [["text" => "🚀 Publicar Oferta", "callback_data" => "/offerconfirm"]],
+                    [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
+                ];
+
+                return [
+                    "text" => $text,
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode(["inline_keyboard" => $menu]),
+                ];
         }
-    }
-
-    private function showSummary($actor, $data)
-    {
-        $total = number_format($data['amount'] * $data['price'], 2);
-        $text = "🚀 *Resumen de tu Oferta*\n"
-            . "──────────────────\n"
-            . "📦 Vendes: *{$data['amount']} USD*\n"
-            . "🏷 Precio: *{$data['price']}*\n"
-            . "💰 Recibirás: *{$total} USD*\n"
-            . "🏦 Método: *{$data['method']}*\n"
-            . "📍 Datos: `{$data['details']}`\n"
-            . "──────────────────\n"
-            . "¿Deseas publicar esta oferta en Kashio?";
-
-        $menu = [
-            [["text" => "🚀 Publicar Oferta", "callback_data" => "/offerconfirm"]],
-            [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
-        ];
-
-        return [
-            "text" => $text,
-            "chat" => ["id" => $actor->user_id],
-            "reply_markup" => json_encode(["inline_keyboard" => $menu]),
-        ];
     }
 
     private function publishOffer($bot, $state)
