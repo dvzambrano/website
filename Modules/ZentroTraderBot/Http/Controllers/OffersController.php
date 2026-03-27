@@ -149,7 +149,7 @@ class OffersController extends Controller
                 }
 
                 $menu = [
-                    [["text" => "Zelle", "callback_data" => "Zelle"], ["text" => "Bizum", "callback_data" => "Bizum"]],
+                    [["text" => "Zelle"], ["text" => "Bizum", "callback_data" => "Bizum"]],
                     [["text" => "Transferencia Bancaria", "callback_data" => "Transferencia Bancaria"]],
                     [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
                 ];
