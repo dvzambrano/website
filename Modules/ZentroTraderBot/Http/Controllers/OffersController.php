@@ -74,7 +74,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "💵 *Paso 1️⃣: Definir el monto\n\n¿Cuánto USD desea vender?\n_Escriba solo el número. Por ejemplo:_`100`",
+                    "text" => "💵 *Paso 1️⃣: Definir el monto*\n\n¿Cuánto USD desea vender?\n_Escriba solo el número. Por ejemplo:_`100`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]])
                 ];
