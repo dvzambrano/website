@@ -58,11 +58,7 @@ class OffersController extends Controller
                 // Si hay texto y no es el comando inicial, procesamos el dato
                 if ($text !== null && $text !== '/p2psell') {
                     if (!is_numeric($text) || $text <= 0) {
-                        return [
-                            "text" => "❌ Por favor, envía un monto válido.",
-                            "chat" => ["id" => $userId],
-                            "editprevious" => 1
-                        ];
+                        return ["text" => "❌ Monto inválido.", "chat" => ["id" => $userId], "editprevious" => 1];
                     }
                     $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
                     $state['data']['amount'] = $text;
@@ -75,33 +71,27 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "💰 *Paso 1:* ¿Cuánto USD deseas vender?\n_(Escribe solo el número)_",
+                    "text" => "💰 *Paso 1:* ¿Cuánto USD deseas vender?",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]
-                    ])
+                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]])
                 ];
 
             case 'STEP_PRICE':
-                $this->deleteUserText($bot);
+                $this->deleteUserText($bot); // Limpia el "100" del usuario
                 if ($text !== null) {
                     if (!is_numeric($text) || $text <= 0) {
-                        return [
-                            "text" => "❌ Precio inválido. Debe ser un número (ej: 0.85).",
-                            "chat" => ["id" => $userId],
-                            "editprevious" => 1
-                        ];
+                        return ["text" => "❌ Precio inválido.", "chat" => ["id" => $userId], "editprevious" => 1];
                     }
                     $state['history'][] = ['step' => 'STEP_PRICE', 'data' => $state['data']];
                     $state['data']['price'] = $text;
-                    $state['step'] = 'STEP_CURRENCY'; // Nuevo salto
+                    $state['step'] = 'STEP_CURRENCY';
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
                     return $this->sell($bot);
                 }
 
                 return [
-                    "text" => "💵 *Paso 2:* ¿A qué precio por cada USD?\n_(Ejemplo: 0.85)_",
+                    "text" => "💵 *Paso 2:* ¿A qué precio por cada USD?",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -126,19 +116,20 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "💱 *Paso 3:* ¿En qué moneda quieres recibir el pago?",
+                    "text" => "💱 *Paso 3:* ¿En qué moneda recibirás el pago?",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [["text" => "EUR", "callback_data" => "EUR"], ["text" => "USD", "callback_data" => "USD"]],
                             [["text" => "CUP", "callback_data" => "CUP"], ["text" => "MLC", "callback_data" => "MLC"]],
-                            [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
+                            [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"]]
                         ]
                     ]),
                     "editprevious" => 1
                 ];
 
             case 'STEP_METHOD':
+                $this->deleteUserText($bot);
                 if ($text !== null) {
                     $state['history'][] = ['step' => 'STEP_METHOD', 'data' => $state['data']];
                     $state['data']['method'] = $text;
@@ -148,20 +139,21 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
-                $menu = [
-                    [["text" => "Zelle"], ["text" => "Bizum", "callback_data" => "Bizum"]],
-                    [["text" => "Transferencia Bancaria", "callback_data" => "Transferencia Bancaria"]],
-                    [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
-                ];
-
                 return [
-                    "text" => "🏦 *Paso 4:* Selecciona el método de pago:",
+                    "text" => "🏦 *Paso 4:* Método de pago para recibir **{$state['data']['currency']}**:",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => $menu]),
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "Zelle", "callback_data" => "Zelle"], ["text" => "Bizum", "callback_data" => "Bizum"]],
+                            [["text" => "Transferencia", "callback_data" => "Transferencia"]],
+                            [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"]]
+                        ]
+                    ]),
                     "editprevious" => 1
                 ];
 
             case 'STEP_DETAILS':
+                $this->deleteUserText($bot);
                 if ($text !== null) {
                     $state['history'][] = ['step' => 'STEP_DETAILS', 'data' => $state['data']];
                     $state['data']['details'] = $text;
@@ -171,18 +163,10 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
-                $method = $state['data']['method'] ?? 'pago';
                 return [
-                    "text" => "📝 *Paso 5:* Introduce los detalles de tu cuenta para *{$method}*:",
+                    "text" => "📝 *Paso 5:* Detalles de tu cuenta (*{$state['data']['method']}*):",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [
-                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
-                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
-                            ]
-                        ]
-                    ]),
+                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"]]]]),
                     "editprevious" => 1
                 ];
 
@@ -195,23 +179,20 @@ class OffersController extends Controller
                 $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
                 $currency = $state['data']['currency'] ?? 'USD';
 
-                $text = "🚀 *Resumen de tu Oferta*\n"
-                    . "📦 Vendes: *{$state['data']['amount']} USD*\n"
-                    . "🏷 Precio: *{$state['data']['price']} {$currency}/USD*\n"
-                    . "💰 Recibirás: *{$total} {$currency}*\n"
-                    . "🏦 Método: *{$state['data']['method']}*\n"
-                    . "📍 Datos: `{$state['data']['details']}`\n"
-                    . "¿Deseas publicar esta oferta en Kashio?";
-
-                $menu = [
-                    [["text" => "🚀 Publicar Oferta", "callback_data" => "/offerconfirm"]],
-                    [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]
-                ];
-
                 return [
-                    "text" => $text,
+                    "text" => "🚀 *Resumen de tu Oferta*\n"
+                        . "Vendes: *{$state['data']['amount']} USD*\n"
+                        . "Precio: *{$state['data']['price']} {$currency}*\n"
+                        . "Recibes: *{$total} {$currency}*\n"
+                        . "Método: *{$state['data']['method']}*\n"
+                        . "Datos: `{$state['data']['details']}`",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => $menu]),
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "🚀 Publicar", "callback_data" => "/offerconfirm"]],
+                            [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"]]
+                        ]
+                    ]),
                     "editprevious" => 1
                 ];
         }
@@ -219,17 +200,14 @@ class OffersController extends Controller
 
     private function deleteUserText($bot)
     {
-        // eliminar el mensaje q origino esta interaccion del bot
-        if ($bot->message["message_id"] != "") {
+        if (!empty($bot->message["message_id"])) {
             try {
-                $array = array(
-                    "message" => array(
+                $array = [
+                    "message" => [
                         "id" => $bot->message["message_id"],
-                        "chat" => array(
-                            "id" => $bot->message["chat"]["id"],
-                        ),
-                    ),
-                );
+                        "chat" => ["id" => $bot->message["chat"]["id"]]
+                    ]
+                ];
                 TelegramController::deleteMessage($array, $bot->tenant->token);
             } catch (\Throwable $th) {
             }
@@ -238,7 +216,7 @@ class OffersController extends Controller
 
     private function publishOffer($bot, $state)
     {
-        $data = $state['data'];
+        // Lógica de base de datos aquí...
 
         /*
         Offers::create([
@@ -254,13 +232,13 @@ class OffersController extends Controller
             'data' => ['source' => 'telegram_wizard']
         ]);
         */
-
         Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
 
         return [
-            "text" => "✅ *¡Oferta publicada con éxito!*\n\nTu anuncio ya está registrado.",
+            "text" => "✅ *¡Oferta publicada!*",
             "chat" => ["id" => $bot->actor->user_id],
             "reply_markup" => json_encode(["remove_keyboard" => true])
+            // Nota: Aquí NO usamos editprevious para que el check verde sea un mensaje nuevo
         ];
     }
 }
