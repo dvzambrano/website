@@ -69,7 +69,7 @@ class OffersController extends Controller
                     "text" => "1️⃣ *Definir el monto*\n_¿Cuánto USD desea vender?_",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
-                    "editprevious" => 1
+                    "editprevious" => $text == null ? 1 : 0
                 ];
 
             case 'STEP_CURRENCY':
