@@ -24,7 +24,7 @@ class OffersController extends Controller
             'history' => []
         ]);
 
-        // --- GESTIÓN DE SALIDA Y RETROCESO ---
+        // --- SALIDA Y RETROCESO ---
         if ($text === '/wizardcancel') {
             Cache::forget($cacheKey);
             return [
@@ -39,67 +39,64 @@ class OffersController extends Controller
             $state['step'] = $lastState['step'];
             $state['data'] = $lastState['data'];
             Cache::forever($cacheKey, $state);
-            $text = null; // Forzamos mostrar la pregunta del paso al que volvimos
+            $text = null; // Forzamos renderizado del paso anterior
         }
 
-        // --- LÓGICA DE PROCESAMIENTO (Guardar dato del paso actual) ---
+        // --- 1. MOTOR DE PROCESAMIENTO (Lógica de guardado) ---
+        // Solo procesamos si hay texto y no es el comando inicial
         if ($text !== null && $text !== '/p2psell') {
-            switch ($state['step']) {
-                case 'STEP_AMOUNT':
-                    if (!is_numeric($text) || $text <= 0) {
-                        return ["text" => "❌ Monto inválido. Escriba un número:", "chat" => ["id" => $userId], "editprevious" => 1];
-                    }
-                    $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
-                    $state['data']['amount'] = $text;
-                    $state['step'] = 'STEP_CURRENCY';
-                    break;
 
-                case 'STEP_CURRENCY':
-                    $state['history'][] = ['step' => 'STEP_CURRENCY', 'data' => $state['data']];
-                    $state['data']['currency'] = $text;
-                    $state['step'] = 'STEP_PRICE';
-                    break;
-
-                case 'STEP_PRICE':
-                    if (!is_numeric($text) || $text <= 0) {
-                        return ["text" => "❌ Precio inválido. Escriba un número:", "chat" => ["id" => $userId], "editprevious" => 1];
-                    }
-                    $state['history'][] = ['step' => 'STEP_PRICE', 'data' => $state['data']];
-                    $state['data']['price'] = $text;
-                    $state['step'] = 'STEP_METHOD';
-                    break;
-
-                case 'STEP_METHOD':
-                    $currency = Currencies::where('code', $state['data']['currency'])->first();
-                    $methodInfo = $currency->paymentmethods()->where('identifier', $text)->first();
-                    $state['history'][] = ['step' => 'STEP_METHOD', 'data' => $state['data']];
-                    $state['data']['method'] = $text;
-                    $state['data']['method_name'] = $methodInfo->name ?? $text;
-                    $state['step'] = 'STEP_DETAILS';
-                    break;
-
-                case 'STEP_DETAILS':
-                    $state['history'][] = ['step' => 'STEP_DETAILS', 'data' => $state['data']];
-                    $state['data']['details'] = $text;
-                    $state['step'] = 'CONFIRM';
-                    break;
-
-                case 'CONFIRM':
-                    if ($text === '/offerconfirm')
-                        return $this->publishOffer($bot, $state);
-                    break;
+            if ($state['step'] === 'STEP_AMOUNT') {
+                if (!is_numeric($text) || $text <= 0) {
+                    return ["text" => "❌ Monto inválido.", "chat" => ["id" => $userId], "editprevious" => 1];
+                }
+                $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
+                $state['data']['amount'] = $text;
+                $state['step'] = 'STEP_PRICE';
+            } elseif ($state['step'] === 'STEP_PRICE') {
+                if (!is_numeric($text) || $text <= 0) {
+                    return ["text" => "❌ Precio inválido.", "chat" => ["id" => $userId], "editprevious" => 1];
+                }
+                $state['history'][] = ['step' => 'STEP_PRICE', 'data' => $state['data']];
+                $state['data']['price'] = $text;
+                $state['step'] = 'STEP_CURRENCY';
+            } elseif ($state['step'] === 'STEP_CURRENCY') {
+                $state['history'][] = ['step' => 'STEP_CURRENCY', 'data' => $state['data']];
+                $state['data']['currency'] = $text;
+                $state['step'] = 'STEP_METHOD';
+            } elseif ($state['step'] === 'STEP_METHOD') {
+                $currency = Currencies::where('code', $state['data']['currency'])->first();
+                $methodInfo = $currency->paymentmethods()->where('identifier', $text)->first();
+                $state['history'][] = ['step' => 'STEP_METHOD', 'data' => $state['data']];
+                $state['data']['method'] = $text;
+                $state['data']['method_name'] = $methodInfo->name ?? $text;
+                $state['step'] = 'STEP_DETAILS';
+            } elseif ($state['step'] === 'STEP_DETAILS') {
+                $state['history'][] = ['step' => 'STEP_DETAILS', 'data' => $state['data']];
+                $state['data']['details'] = $text;
+                $state['step'] = 'CONFIRM';
             }
+
             Cache::forever($cacheKey, $state);
             $this->deleteUserText($bot);
         }
 
-        // --- LÓGICA DE RENDER (Mostrar pregunta según el paso actual) ---
+        // --- 2. MOTOR DE RENDER (Lógica de visualización) ---
+        // Este switch siempre se ejecuta y pinta el paso actual (que puede haber cambiado arriba)
         switch ($state['step']) {
             case 'STEP_AMOUNT':
                 return [
                     "text" => "1️⃣ *Definir el monto*\n_¿Cuánto USD desea vender?_",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]])
+                ];
+
+            case 'STEP_PRICE':
+                return [
+                    "text" => "2️⃣ *Precio de venta*\n_¿A qué precio por cada USD?_",
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
+                    "editprevious" => 1
                 ];
 
             case 'STEP_CURRENCY':
@@ -114,18 +111,9 @@ class OffersController extends Controller
                 }
                 $buttons[] = [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]];
                 return [
-                    "text" => "2️⃣ *Moneda a recibir*\n_¿En qué moneda recibirás el pago?_",
+                    "text" => "3️⃣ *Moneda a recibir*\n_¿En qué moneda recibirás el pago?_",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
-                    "editprevious" => 1
-                ];
-
-            case 'STEP_PRICE':
-                $curr = $state['data']['currency'];
-                return [
-                    "text" => "3️⃣ *Precio de venta*\n_¿A qué precio venderás cada USD en *{$curr}*?_",
-                    "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
                 ];
 
@@ -142,25 +130,27 @@ class OffersController extends Controller
                 }
                 $buttons[] = [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]];
                 return [
-                    "text" => "4️⃣ *Método de pago*\n_¿Cómo recibirás tus {$state['data']['currency']}?_",
+                    "text" => "4️⃣ *Método de pago*\n_¿Por qué vía desea recibir {$state['data']['currency']}?_",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
                     "editprevious" => 1
                 ];
 
             case 'STEP_DETAILS':
-                $method = $state['data']['method_name'];
+                $methodName = $state['data']['method_name'] ?? $state['data']['method'];
                 return [
-                    "text" => "5️⃣ *Datos de la cuenta*\n_Detalles para recibir vía *{$method}*:_",
+                    "text" => "5️⃣ *Datos de la cuenta*\n_Detalles de su cuenta *{$methodName}*:_",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
                 ];
 
             case 'CONFIRM':
+                if ($text === '/offerconfirm')
+                    return $this->publishOffer($bot, $state);
                 $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
                 return [
-                    "text" => "🌟 *Resumen de Oferta*\n\n💵 Vendes: *{$state['data']['amount']} USD*\n💰 Precio: *{$state['data']['price']} {$state['data']['currency']}*\n💱 Recibes: *{$total} {$state['data']['currency']}*\n🏦 Método: *{$state['data']['method_name']}*\n📝 Datos: `{$state['data']['details']}`",
+                    "text" => "🌟 *Resumen de su Oferta*\n\n💵 Vendes: *{$state['data']['amount']} USD*\n💰 Precio: *{$state['data']['price']} {$state['data']['currency']}*\n💱 Recibes: *{$total} {$state['data']['currency']}*\n🏦 Método: *{$state['data']['method_name']}*\n📝 Datos: `{$state['data']['details']}`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "✅ Publicar", "callback_data" => "/offerconfirm"]], [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
@@ -170,11 +160,12 @@ class OffersController extends Controller
 
     private function deleteUserText($bot)
     {
-        if (!isset($bot->callback_query) && !empty($bot->message["message_id"])) {
+        $isCallback = isset($bot->callback_query);
+        if (!$isCallback && !empty($bot->message["message_id"])) {
             try {
                 $array = ["message" => ["id" => $bot->message["message_id"], "chat" => ["id" => $bot->message["chat"]["id"]]]];
                 TelegramController::deleteMessage($array, $bot->tenant->token);
-            } catch (\Throwable $e) {
+            } catch (\Throwable $th) {
             }
         }
     }
