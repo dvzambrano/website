@@ -74,7 +74,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "💰 *Paso 1:* ¿Cuánto USD deseas vender?",
+                    "text" => "💵 *Paso 1️⃣: Definir el monto\n\n¿Cuánto USD desea vender?\n_Escriba solo el número. Por ejemplo:_`100`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]])
                 ];
@@ -94,7 +94,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "💵 *Paso 2:* ¿A qué precio por cada USD?",
+                    "text" => "💰 *Paso 2️⃣: Precio de venta*\n\n¿A qué precio por cada USD?\n_Escriba solo el número. Por ejemplo:_`1.02`\n_En el ejemplo estaría cobrando 2% de recargo._",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -119,7 +119,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "💱 *Paso 3:* ¿En qué moneda recibirás el pago?",
+                    "text" => "💱 *Paso 3️⃣: Moneda a recibir*\n\n¿En qué moneda recibirás el pago?\n\n👇 _Seleccione una desde las disponibles_",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -146,7 +146,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "🏦 *Paso 4:* Método de pago para recibir **{$state['data']['currency']}**:",
+                    "text" => "🏦 *Paso 4️⃣: Método de pago*\n\n¿Por qué vía desea recibir *{$state['data']['currency']}*?\n\n👇 _Seleccione una desde las disponibles_",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -173,7 +173,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "📝 *Paso 5:* Detalles de tu cuenta (*{$state['data']['method']}*):",
+                    "text" => "📝 *Paso 5️⃣: Datos de la cuenta*\n\nEscriba los detalles de su cuenta *{$state['data']['method']}*:\n\n_Recuerde ser explícito, cualquier dato faltante podría afectar el tiempo de recepción de su dinero._",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -196,7 +196,7 @@ class OffersController extends Controller
                 $currency = $state['data']['currency'] ?? 'USD';
 
                 return [
-                    "text" => "🚀 *Resumen de tu Oferta*\n"
+                    "text" => "🌟 *Resumen de su Oferta*\n"
                         . "Vendes: *{$state['data']['amount']} USD*\n"
                         . "Precio: *{$state['data']['price']} {$currency}*\n"
                         . "Recibes: *{$total} {$currency}*\n"
@@ -205,7 +205,7 @@ class OffersController extends Controller
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
-                            [["text" => "🚀 Publicar", "callback_data" => "/offerconfirm"]],
+                            [["text" => "✅ Publicar", "callback_data" => "/offerconfirm"]],
                             [
                                 ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
                                 ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
