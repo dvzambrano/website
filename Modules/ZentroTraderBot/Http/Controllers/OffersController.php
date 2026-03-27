@@ -222,6 +222,7 @@ class OffersController extends Controller
         // IMPORTANTE: Solo borrar si es un mensaje de texto real del usuario
         // Si es un callback_query, no hay "mensaje de usuario" que borrar, 
         // y el message_id que trae es el del propio Bot.
+        /*
         $isCallback = isset($bot->callback_query) || isset($bot->message['reply_markup']);
         if (!$isCallback && !empty($bot->message["message_id"])) {
             try {
@@ -236,6 +237,7 @@ class OffersController extends Controller
                 // Log::error("Error borrando: " . $th->getMessage());
             }
         }
+        */
     }
 
     private function publishOffer($bot, $state)
