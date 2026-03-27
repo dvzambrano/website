@@ -196,13 +196,11 @@ class OffersController extends Controller
                 $currency = $state['data']['currency'] ?? 'USD';
 
                 $text = "🚀 *Resumen de tu Oferta*\n"
-                    . "──────────────────\n"
                     . "📦 Vendes: *{$state['data']['amount']} USD*\n"
                     . "🏷 Precio: *{$state['data']['price']} {$currency}/USD*\n"
                     . "💰 Recibirás: *{$total} {$currency}*\n"
                     . "🏦 Método: *{$state['data']['method']}*\n"
                     . "📍 Datos: `{$state['data']['details']}`\n"
-                    . "──────────────────\n"
                     . "¿Deseas publicar esta oferta en Kashio?";
 
                 $menu = [
