@@ -74,7 +74,7 @@ class OffersController extends Controller
                 }
 
                 return [
-                    "text" => "1️⃣ *Definir el monto*\n_¿Cuánto USD desea vender?_",
+                    "text" => "1️⃣ *Definir el monto*\n_¿Cuánto USD desea vender?_\n\nEscriba solo el número. _Por ejemplo:_  `100`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => $text == null ? 1 : 0
@@ -105,7 +105,7 @@ class OffersController extends Controller
                 $buttons[] = [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]];
 
                 return [
-                    "text" => "2️⃣ *Moneda a recibir*\n_¿En qué moneda recibirás el pago?_",
+                    "text" => "2️⃣ *Moneda a recibir*\n_¿En qué moneda recibirás el pago?_\n\n👇 Seleccione una desde las disponibles",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
                     "editprevious" => 1
@@ -127,7 +127,7 @@ class OffersController extends Controller
 
                 $curr = $state['data']['currency'] ?? 'moneda seleccionada';
                 return [
-                    "text" => "3️⃣ *Precio de venta*\n_¿A qué precio por cada USD en *{$curr}*?_\n\n_Ejemplo:_ `1.02` o `1150`",
+                    "text" => "3️⃣ *Precio de venta*\n_¿A qué precio por cada USD en {$curr}?_\n\nEscriba solo el número. _Por ejemplo:_`1.02`\n_En el ejemplo estaría cobrando 2% de recargo._",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
@@ -161,7 +161,7 @@ class OffersController extends Controller
                 $buttons[] = [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]];
 
                 return [
-                    "text" => "4️⃣ *Método de pago*\n_¿Cómo recibirás tus {$state['data']['currency']}?_",
+                    "text" => "4️⃣ *Método de pago*\n_¿Por qué vía desea recibir {$state['data']['currency']}?_\n\n👇 Seleccione una desde las disponibles",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
                     "editprevious" => 1
@@ -180,7 +180,7 @@ class OffersController extends Controller
 
                 $methodName = $state['data']['method_name'] ?? $state['data']['method'];
                 return [
-                    "text" => "5️⃣ *Datos de la cuenta*\n_Escribe los detalles para {$methodName}:_",
+                    "text" => "5️⃣ *Datos de la cuenta*\n_Escriba los detalles de su cuenta *{$methodName}*:_\n\n*Recuerde ser explícito*, cualquier dato faltante podría afectar el tiempo de recepción de su dinero.",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
