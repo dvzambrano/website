@@ -97,6 +97,17 @@ class OffersController extends Controller
                 $state['message_id'] = $message_id;
                 Cache::forever($cacheKey, $state);
 
+                //$this->message["message_id"]
+                $array = array(
+                    "message" => array(
+                        "id" => $bot->message["message_id"],
+                        "chat" => array(
+                            "id" => $bot->message["chat"]["id"],
+                        ),
+                    ),
+                );
+                TelegramController::deleteMessage($array, $bot->tenant->token);
+
                 // haciendo q no haya respuesta
                 return [
                     "text" => "",
