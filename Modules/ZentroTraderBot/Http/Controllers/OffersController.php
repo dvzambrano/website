@@ -78,8 +78,7 @@ class OffersController extends Controller
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]
-                    ]),
-                    "editprevious" => 1
+                    ])
                 ];
 
             case 'STEP_PRICE':
