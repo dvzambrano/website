@@ -6,6 +6,8 @@ use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Modules\ZentroTraderBot\Entities\Offers;
+use Modules\ZentroTraderBot\Entities\Currencies;
+use Modules\ZentroTraderBot\Entities\Paymentmethods;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 class OffersController extends Controller
@@ -118,46 +120,59 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
+                // CARGA DINÁMICA DE MONEDAS DESDE LA BASE DE DATOS
+                $currencies = Currencies::where('is_active', true)->get();
+                $buttons = [];
+                foreach ($currencies->chunk(2) as $chunk) {
+                    $row = [];
+                    foreach ($chunk as $c) {
+                        $row[] = ["text" => "{$c->symbol} {$c->code}", "callback_data" => $c->code];
+                    }
+                    $buttons[] = $row;
+                }
+                $buttons[] = [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]];
+
                 return [
                     "text" => "3️⃣ *Moneda a recibir*\n_¿En qué moneda recibirás el pago?_\n\n👇 Seleccione una desde las disponibles",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [["text" => "EUR", "callback_data" => "EUR"], ["text" => "USD", "callback_data" => "USD"]],
-                            [["text" => "CUP", "callback_data" => "CUP"], ["text" => "MLC", "callback_data" => "MLC"]],
-                            [
-                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
-                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
-                            ]
-                        ]
-                    ]),
+                    "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
                     "editprevious" => 1
                 ];
 
             case 'STEP_METHOD':
                 $this->deleteUserText($bot);
                 if ($text !== null) {
+                    // Obtener info del método para validar límites o mostrar instrucciones
+                    $currency = Currencies::where('code', $state['data']['currency'])->first();
+                    $methodInfo = $currency->paymentmethods()->where('identifier', $text)->first();
+
                     $state['history'][] = ['step' => 'STEP_METHOD', 'data' => $state['data']];
                     $state['data']['method'] = $text;
+                    $state['data']['method_name'] = $methodInfo->name ?? $text;
                     $state['step'] = 'STEP_DETAILS';
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
                     return $this->sell($bot);
                 }
 
+                // CARGA DINÁMICA DE MÉTODOS FILTRADOS POR MONEDA
+                $currency = Currencies::where('code', $state['data']['currency'])->first();
+                $methods = $currency ? $currency->activePaymentmethods()->get() : [];
+
+                $buttons = [];
+                foreach ($methods->chunk(2) as $chunk) {
+                    $row = [];
+                    foreach ($chunk as $m) {
+                        $row[] = ["text" => "{$m->icon} {$m->name}", "callback_data" => $m->identifier];
+                    }
+                    $buttons[] = $row;
+                }
+                $buttons[] = [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]];
+
                 return [
                     "text" => "4️⃣ *Método de pago*\n_¿Por qué vía desea recibir {$state['data']['currency']}?_\n\n👇 Seleccione una desde las disponibles",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [["text" => "Zelle", "callback_data" => "Zelle"], ["text" => "Bizum", "callback_data" => "Bizum"]],
-                            [["text" => "Transferencia", "callback_data" => "Transferencia"]],
-                            [
-                                ["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"],
-                                ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]
-                            ]
-                        ]
-                    ]),
+                    "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
                     "editprevious" => 1
                 ];
 
@@ -172,8 +187,9 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
+                $methodName = $state['data']['method_name'] ?? $state['data']['method'];
                 return [
-                    "text" => "5️⃣ *Datos de la cuenta*\n_Escriba los detalles de su cuenta {$state['data']['method']}:_\n\n*Recuerde ser explícito*, cualquier dato faltante podría afectar el tiempo de recepción de su dinero.",
+                    "text" => "5️⃣ *Datos de la cuenta*\n_Escriba los detalles de su cuenta *{$methodName}*:_\n\n*Recuerde ser explícito*, cualquier dato faltante podría afectar el tiempo de recepción de su dinero.",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
@@ -194,13 +210,14 @@ class OffersController extends Controller
 
                 $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
                 $currency = $state['data']['currency'] ?? 'USD';
+                $methodName = $state['data']['method_name'] ?? $state['data']['method'];
 
                 return [
-                    "text" => "🌟 *Resumen de su Oferta*\n"
+                    "text" => "🌟 *Resumen de su Oferta*\n\n"
                         . "💵 Vendes: *{$state['data']['amount']} USD*\n"
                         . "💰 Precio: *{$state['data']['price']} {$currency}*\n"
                         . "💱 Recibes: *{$total} {$currency}*\n"
-                        . "🏦 Método: *{$state['data']['method']}*\n"
+                        . "🏦 Método: *{$methodName}*\n"
                         . "📝 Datos: `{$state['data']['details']}`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
@@ -262,7 +279,6 @@ class OffersController extends Controller
             "text" => "✅ *¡Oferta publicada!*",
             "chat" => ["id" => $bot->actor->user_id],
             "reply_markup" => json_encode(["remove_keyboard" => true])
-            // Nota: Aquí NO usamos editprevious para que el check verde sea un mensaje nuevo
         ];
     }
 }
