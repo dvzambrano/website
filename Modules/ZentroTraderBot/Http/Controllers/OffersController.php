@@ -200,7 +200,11 @@ class OffersController extends Controller
 
     private function deleteUserText($bot)
     {
-        if (!empty($bot->message["message_id"])) {
+        // IMPORTANTE: Solo borrar si es un mensaje de texto real del usuario
+        // Si es un callback_query, no hay "mensaje de usuario" que borrar, 
+        // y el message_id que trae es el del propio Bot.
+        $isCallback = isset($bot->callback_query) || isset($bot->message['reply_markup']);
+        if (!$isCallback && !empty($bot->message["message_id"])) {
             try {
                 $array = [
                     "message" => [
@@ -210,6 +214,7 @@ class OffersController extends Controller
                 ];
                 TelegramController::deleteMessage($array, $bot->tenant->token);
             } catch (\Throwable $th) {
+                // Log::error("Error borrando: " . $th->getMessage());
             }
         }
     }
