@@ -9,7 +9,7 @@ use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
-use Modules\Laravel\Http\Controllers\MathController;
+use Modules\Laravel\Services\NumberService;
 
 class ProcessWalletActivity
 {
@@ -168,7 +168,7 @@ class ProcessWalletActivity
             $botController = app(ZentroTraderBotController::class);
             $botController->notifyDepositConfirmed(
                 $suscriptor->user_id,
-                MathController::round($data['value'], 4, false),
+                NumberService::round($data['value'], 4, false),
                 $data['token_address']
             );
 

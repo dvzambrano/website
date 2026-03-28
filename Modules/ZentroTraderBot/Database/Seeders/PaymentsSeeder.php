@@ -4,18 +4,29 @@ namespace Modules\ZentroTraderBot\Database\Seeders;
 use Illuminate\Database\Seeder;
 use Modules\ZentroTraderBot\Entities\Paymentmethods;
 use Modules\ZentroTraderBot\Entities\Currencies;
+use Modules\ZentroTraderBot\Entities\Currencypaymentmethods;
 
 class PaymentsSeeder extends Seeder
 {
     public function run()
     {
+        // 0. LIMPIEZA TOTAL
+        // Desactivar restricciones de llaves foráneas para evitar errores al truncar
+        \Schema::disableForeignKeyConstraints();
+
+        Currencypaymentmethods::query()->delete();
+        Paymentmethods::query()->delete();
+        Currencies::query()->delete();
+
+        \Schema::enableForeignKeyConstraints();
+
         // 1. DEFINICIÓN DE MONEDAS
         $currencies = [
             ['code' => 'USD', 'name' => 'Dólar Estadounidense', 'symbol' => '$'],
             ['code' => 'EUR', 'name' => 'Euro', 'symbol' => '€'],
             ['code' => 'CAD', 'name' => 'Dólar Canadiense', 'symbol' => '$'],
             ['code' => 'CUP', 'name' => 'Peso Cubano', 'symbol' => '₱'],
-            ['code' => 'MLC', 'name' => 'MLC (Cuba)', 'symbol' => '$'],
+            ['code' => 'MLC', 'name' => 'Moneda Libremente Convertible', 'symbol' => '$'],
             ['code' => 'MXN', 'name' => 'Peso Mexicano', 'symbol' => '$'],
             ['code' => 'COP', 'name' => 'Peso Colombiano', 'symbol' => '$'],
             ['code' => 'ARS', 'name' => 'Peso Argentino', 'symbol' => '$'],
@@ -44,14 +55,20 @@ class PaymentsSeeder extends Seeder
             ['name' => 'Binance Pay (USDT)', 'identifier' => 'binance_pay', 'icon' => '🔶'],
 
             // Regionales Específicos
-            ['name' => 'Enzona', 'identifier' => 'enzona', 'icon' => '🇨🇺'],
-            ['name' => 'Transfermóvil', 'identifier' => 'transfermovil', 'icon' => '📱'],
             ['name' => 'SPEI', 'identifier' => 'spei', 'icon' => '🇲🇽'],
             ['name' => 'NEQUI', 'identifier' => 'nequi', 'icon' => '🇨🇴'],
             ['name' => 'Daviplata', 'identifier' => 'daviplata', 'icon' => '🔴'],
             ['name' => 'PIX', 'identifier' => 'pix', 'icon' => '🇧🇷'],
             ['name' => 'Pago Móvil', 'identifier' => 'pago_movil', 'icon' => '🇻🇪'],
             ['name' => 'Mercado Pago', 'identifier' => 'mercadopago', 'icon' => '🤝'],
+
+            // Cuba
+            ['name' => 'Tarjeta CUP', 'identifier' => 'cup', 'icon' => '💳'],
+            ['name' => 'Tarjeta MLC', 'identifier' => 'mlc', 'icon' => '💳'],
+            ['name' => 'Bolsa MiTransfer', 'identifier' => 'mitransfer', 'icon' => '💰'],
+            ['name' => 'Saldo Movil', 'identifier' => 'etecsa', 'icon' => '📲'],
+            ['name' => 'Tarjeta Clásica', 'identifier' => 'clasica', 'icon' => '🟦'],
+            ['name' => 'BANDEC Prepago', 'identifier' => 'bandecprepago', 'icon' => '🏦'],
         ];
 
         foreach ($methods as $m) {
@@ -84,9 +101,12 @@ class PaymentsSeeder extends Seeder
             ['c' => 'EUR', 'm' => 'bank_transfer', 'min' => 50, 'max' => 20000],
 
             // CUBA (CUP / MLC)
-            ['c' => 'CUP', 'm' => 'transfermovil', 'min' => 500, 'max' => 500000],
-            ['c' => 'CUP', 'm' => 'enzona', 'min' => 100, 'max' => 100000],
-            ['c' => 'MLC', 'm' => 'bank_transfer', 'min' => 10, 'max' => 5000],
+            ['c' => 'CUP', 'm' => 'cup', 'min' => 500, 'max' => 500000],
+            ['c' => 'CUP', 'm' => 'etecsa', 'min' => 100, 'max' => 50000],
+            ['c' => 'CUP', 'm' => 'mitransfer', 'min' => 100, 'max' => 50000],
+            ['c' => 'MLC', 'm' => 'mlc', 'min' => 10, 'max' => 5000],
+            ['c' => 'USD', 'm' => 'clasica', 'min' => 5, 'max' => 2000],
+            ['c' => 'USD', 'm' => 'bandecprepago', 'min' => 10, 'max' => 2000],
 
             // MÉXICO (MXN)
             ['c' => 'MXN', 'm' => 'spei', 'min' => 100, 'max' => 50000],

@@ -12,7 +12,6 @@ use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\Web3\Http\Controllers\InchController;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
-use Modules\Laravel\Http\Controllers\MathController;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Crypt;
 use Modules\Laravel\Http\Controllers\TextController;
@@ -88,13 +87,14 @@ class CustomTestController extends BaseController
 
     public function testPrice()
     {
-        $coin = "BRL";
+        dd(\Modules\Laravel\Services\NumberService::parse("1,500.5"));
+        $coin = "cup";
         $val = CoingeckoController::getLivePrice("tether", $coin);
         if (empty($val))
             $val = CambiocupService::getRate($coin);
         if (empty($val))
             $val = 1.02;
-        dd(number_format($val, 2));
+        dd($val, CambiocupService::getAvailableBanks());
     }
 
 

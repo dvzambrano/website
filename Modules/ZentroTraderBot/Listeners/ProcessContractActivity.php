@@ -8,7 +8,7 @@ use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
-use Modules\Laravel\Http\Controllers\MathController;
+use Modules\Laravel\Services\NumberService;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Illuminate\Support\Str;
 
@@ -181,7 +181,7 @@ class ProcessContractActivity
 
         // 2. Conversión a humano usando el amount
         $amount = $params['amount'] / pow(10, $token['decimals'] ?? 18);
-        $amount = MathController::round($amount, 4, false);
+        $amount = NumberService::round($amount, 4, false);
 
         // 3. Buscar suscriptor (Vendedor)
         $suscriptor = Suscriptions::on('tenant')
