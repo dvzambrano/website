@@ -62,6 +62,7 @@ class OffersController extends Controller
 
             case 'STEP_AMOUNT':
                 if ($text !== null && $text !== '/p2psell') {
+                    $this->deleteUserText($bot);
                     if (!is_numeric($text) || $text <= 0) {
                         return [
                             "text" =>
