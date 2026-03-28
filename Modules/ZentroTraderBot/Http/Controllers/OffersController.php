@@ -12,6 +12,7 @@ use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Lang;
 use Modules\Web3\Http\Controllers\CoingeckoController;
 use Modules\Laravel\Services\Exchange\CambiocupService;
+use Illuminate\Support\Facades\Log;
 
 class OffersController extends Controller
 {
@@ -151,7 +152,11 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
-                $coin = $state['data']['currency'] ?? 'CUP';
+                $coin = $state['data']['currency'];
+                Log::debug("🐞 OffersController currency:", [
+                    "coin" => $coin,
+                    "state" => $state,
+                ]);
                 $val = CoingeckoController::getLivePrice("tether", $coin);
                 if (empty($val))
                     $val = CambiocupService::getRate($coin);

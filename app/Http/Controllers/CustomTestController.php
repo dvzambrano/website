@@ -88,7 +88,7 @@ class CustomTestController extends BaseController
 
     public function testPrice()
     {
-        $coin = "EUR";
+        $coin = "BRL";
         $val = CoingeckoController::getLivePrice("tether", $coin);
         if (empty($val))
             $val = CambiocupService::getRate($coin);
