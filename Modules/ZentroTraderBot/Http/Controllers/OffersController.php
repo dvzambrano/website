@@ -153,15 +153,18 @@ class OffersController extends Controller
                 }
 
                 $coin = $state['data']['currency'];
-                Log::debug("🐞 OffersController currency:", [
-                    "coin" => $coin,
-                    "state" => $state,
-                ]);
-                $val = CoingeckoController::getLivePrice("tether", $coin);
+                $val = $ccval = $cgval = CoingeckoController::getLivePrice("tether", $coin);
                 if (empty($val))
-                    $val = CambiocupService::getRate($coin);
+                    $val = $ccval = CambiocupService::getRate($coin);
                 if (empty($val))
                     $val = 1.02;
+
+                Log::debug("🐞 OffersController currency:", [
+                    "coin" => $coin,
+                    "CoingeckoController" => $cgval,
+                    "CambiocupService" => $ccval,
+                    "state" => $state,
+                ]);
 
                 return [
                     "text" =>
