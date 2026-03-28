@@ -115,7 +115,7 @@ class OffersController extends Controller
                         "▫️ _Paso 2️⃣ de 5️⃣_\n" .
                         "◾️ *Moneda a recibir*\n" .
                         "▫️ _¿En qué moneda recibirá el pago?_\n" .
-                        "▫️ Seleccione una desde las disponibles 👇",
+                        "▫️ Seleccione una de las disponibles 👇",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
                     "editprevious" => 1
@@ -142,7 +142,7 @@ class OffersController extends Controller
                         "▫️ _Paso 3️⃣ de 5️⃣_\n" .
                         "▫️ *Precio de venta*\n" .
                         "◾️ _¿A qué precio por cada USD en {$curr}?_\n" .
-                        "▫️ _Por ejemplo:_`1.02`: _Estaría cobrando 2% de recargo._",
+                        "▫️ _Por ejemplo:_ `1.02`: _Estaría cobrando 2% de recargo._",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
@@ -178,10 +178,10 @@ class OffersController extends Controller
                 return [
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
-                        "▫️ Paso 4️⃣ de 5️⃣\n" .
-                        "▫️ Método de pago\n" .
+                        "▫️ _Paso 4️⃣ de 5️⃣_\n" .
+                        "▫️ *Método de pago*\n" .
                         "▫️ _¿Por qué vía desea recibir {$state['data']['currency']}?_\n" .
-                        "◾️ Seleccione una desde las disponibles 👇",
+                        "◾️ Seleccione una de las disponibles 👇",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
                     "editprevious" => 1
@@ -202,8 +202,8 @@ class OffersController extends Controller
                 return [
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
-                        "▫️ Paso 5️⃣ de 5️⃣\n" .
-                        "▫️ Datos de la cuenta\n" .
+                        "▫️ _Paso 5️⃣ de 5️⃣_\n" .
+                        "▫️ *Datos de la cuenta*\n" .
                         "▫️ _Escriba los detalles de su cuenta {$methodName}:_\n" .
                         "▫️ *Recuerde ser explícito*, cualquier dato faltante\n" .
                         "◾️ podría afectar el tiempo de recepción de su dinero.",
