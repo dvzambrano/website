@@ -63,7 +63,18 @@ class OffersController extends Controller
             case 'STEP_AMOUNT':
                 if ($text !== null && $text !== '/p2psell') {
                     if (!is_numeric($text) || $text <= 0) {
-                        return ["text" => "❌ Monto inválido.", "chat" => ["id" => $userId], "editprevious" => 1];
+                        return [
+                            "text" =>
+                                "✨ *Asistente de creación de ofertas*\n" .
+                                "◾️ _Paso 1️⃣ de 5️⃣_\n" .
+                                "▫️ *Definir el monto de la transacción*\n" .
+                                "▫️ ❌ '{$text}' no es un monto válido\n" .
+                                "▫️ _¿Cuántos USD desea vender?_\n" .
+                                "▫️ _Escriba solo el número. Ejemplo:_ `100`",
+                            "chat" => ["id" => $userId],
+                            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
+                            "editprevious" => 1
+                        ];
                     }
                     $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
                     $state['data']['amount'] = $text;
