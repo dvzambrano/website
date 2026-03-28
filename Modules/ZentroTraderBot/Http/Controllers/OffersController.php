@@ -77,9 +77,10 @@ class OffersController extends Controller
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
                         "◾️ _Paso 1️⃣ de 5️⃣_\n" .
-                        "▫️ *Definir el monto*\n" .
-                        "▫️ _¿Cuánto USD desea vender?_\n" .
-                        "▫️ Escriba solo el número. _Ejemplo:_ `100`",
+                        "▫️ *Definir el monto de la transacción*\n" .
+                        "▫️ \n" .
+                        "▫️ _¿Cuántos USD desea vender?_\n" .
+                        "▫️ _Escriba solo el número. Ejemplo:_ `100`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => $text == null ? 1 : 0
@@ -113,7 +114,8 @@ class OffersController extends Controller
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
                         "▫️ _Paso 2️⃣ de 5️⃣_\n" .
-                        "◾️ *Moneda a recibir*\n" .
+                        "◾️ *Moneda a recibir en este intercambio*\n" .
+                        "▫️ \n" .
                         "▫️ _¿En qué moneda recibirá el pago?_\n" .
                         "▫️ Seleccione una de las disponibles 👇",
                     "chat" => ["id" => $userId],
@@ -140,8 +142,9 @@ class OffersController extends Controller
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
                         "▫️ _Paso 3️⃣ de 5️⃣_\n" .
-                        "▫️ *Precio de venta*\n" .
-                        "◾️ _¿A qué precio por cada USD en {$curr}?_\n" .
+                        "▫️ *Precio de venta USD/{$curr}?*\n" .
+                        "◾️ \n" .
+                        "▫️ _¿Cuántos {$curr} desea recibir por cada USD que vende?_\n" .
                         "▫️ _Por ejemplo:_ `1.02`: _Estaría cobrando 2% de recargo._",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
@@ -179,8 +182,9 @@ class OffersController extends Controller
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
                         "▫️ _Paso 4️⃣ de 5️⃣_\n" .
-                        "▫️ *Método de pago*\n" .
-                        "▫️ _¿Por qué vía desea recibir {$state['data']['currency']}?_\n" .
+                        "▫️ *Método de pago deseado*\n" .
+                        "▫️ \n" .
+                        "▫️ _¿Por qué vía deben enviarle sus {$state['data']['currency']}?_\n" .
                         "◾️ Seleccione una de las disponibles 👇",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
@@ -204,9 +208,9 @@ class OffersController extends Controller
                         "✨ *Asistente de creación de ofertas*\n" .
                         "▫️ _Paso 5️⃣ de 5️⃣_\n" .
                         "▫️ *Datos de la cuenta*\n" .
+                        "▫️ \n" .
                         "▫️ _Escriba los detalles de su cuenta {$methodName}:_\n" .
-                        "▫️ *Recuerde ser explícito*, cualquier dato faltante\n" .
-                        "◾️ podría afectar el tiempo de recepción de su dinero.",
+                        "◾️ *Recuerde ser explícito*, cualquier dato faltante podría afectar el tiempo de recepción de su dinero.",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
