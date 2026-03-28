@@ -76,9 +76,9 @@ class OffersController extends Controller
                 return [
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
-                        "◾️ Paso 1️⃣ de 5️⃣\n" .
+                        "◾️ _Paso 1️⃣ de 5️⃣_\n" .
+                        "▫️ *Definir el monto*\n" .
                         "▫️ \n" .
-                        "▫️ Definir el monto\n" .
                         "▫️ _¿Cuánto USD desea vender?_\n" .
                         "▫️ Escriba solo el número. _Ejemplo:_ `100`",
                     "chat" => ["id" => $userId],
@@ -113,9 +113,8 @@ class OffersController extends Controller
                 return [
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
-                        "▫️ Paso 2️⃣ de 5️⃣\n" .
-                        "◾️ \n" .
-                        "▫️ Moneda a recibir\n" .
+                        "▫️ _Paso 2️⃣ de 5️⃣_\n" .
+                        "◾️ *Moneda a recibir*\n" .
                         "▫️ _¿En qué moneda recibirá el pago?_\n" .
                         "▫️ \n" .
                         "👇 Seleccione una desde las disponibles",
