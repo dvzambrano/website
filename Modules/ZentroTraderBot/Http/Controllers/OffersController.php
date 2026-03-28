@@ -12,6 +12,7 @@ use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Lang;
 use Modules\Web3\Http\Controllers\CoingeckoController;
 use Modules\Laravel\Services\Exchange\CambiocupService;
+use Modules\Laravel\Services\NumberService;
 use Illuminate\Support\Facades\Log;
 
 class OffersController extends Controller
@@ -66,6 +67,10 @@ class OffersController extends Controller
             case 'STEP_AMOUNT':
                 if ($text !== null && $text !== '/p2psell') {
                     $this->deleteUserText($bot);
+                    try {
+                        $text = NumberService::parse($text);
+                    } catch (\Throwable $th) {
+                    }
                     if (!is_numeric($text) || $text <= 0) {
                         return [
                             "text" =>
@@ -140,9 +145,33 @@ class OffersController extends Controller
 
             case 'STEP_PRICE':
                 $this->deleteUserText($bot);
+
+                $coin = $state['data']['currency'];
+                // 1. Intentamos CoinGecko
+                $cgval = CoingeckoController::getLivePrice("tether", $coin);
+                // 2. Intentamos CambioCUP solo si CG no dio un resultado válido (mayor que 0)
+                $ccval = ($cgval <= 0) ? CambiocupService::getRate($coin) : null;
+                // 3. Asignación final con prioridad
+                $val = $cgval > 0 ? $cgval : ($ccval > 0 ? $ccval : 1.02);
+
                 if ($text !== null) {
+                    try {
+                        $text = NumberService::parse($text);
+                    } catch (\Throwable $th) {
+                    }
                     if (!is_numeric($text) || $text <= 0) {
-                        return ["text" => "❌ Precio inválido.", "chat" => ["id" => $userId], "editprevious" => 1];
+                        return [
+                            "text" =>
+                                "✨ *Asistente de creación de ofertas*\n" .
+                                "▫️ _Paso 3️⃣ de 5️⃣_\n" .
+                                "▫️ *Precio de venta USD/{$coin}?*\n" .
+                                "▫️ ❌ '{$text}' no es un precio válido\n" .
+                                "▫️ _¿Cuántos {$coin} desea recibir por cada USD que vende?_\n" .
+                                "▫️ _Por ejemplo:_ `" . number_format($val, 2) . "`",
+                            "chat" => ["id" => $userId],
+                            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
+                            "editprevious" => 1
+                        ];
                     }
                     $state['history'][] = ['step' => 'STEP_PRICE', 'data' => $state['data']];
                     $state['data']['price'] = $text;
@@ -151,24 +180,6 @@ class OffersController extends Controller
                     $bot->message["text"] = null;
                     return $this->sell($bot);
                 }
-
-                $coin = $state['data']['currency'];
-
-                // 1. Intentamos CoinGecko
-                $cgval = CoingeckoController::getLivePrice("tether", $coin);
-
-                // 2. Intentamos CambioCUP solo si CG no dio un resultado válido (mayor que 0)
-                $ccval = ($cgval <= 0) ? CambiocupService::getRate($coin) : null;
-
-                // 3. Asignación final con prioridad
-                $val = $cgval > 0 ? $cgval : ($ccval > 0 ? $ccval : 1.02);
-
-                Log::debug("🐞 OffersController currency:", [
-                    "coin" => $coin,
-                    "CoingeckoController" => $cgval,
-                    "CambiocupService" => $ccval,
-                    "final_val" => $val
-                ]);
 
                 return [
                     "text" =>
