@@ -8,7 +8,7 @@ use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
-use Modules\Laravel\Http\Controllers\MathController;
+use Modules\Laravel\Services\NumberService;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Illuminate\Support\Str;
 
@@ -96,7 +96,7 @@ class ProcessContractActivity
             $eventName = strtoupper($data['decoded']['name']);
             $params = $data['decoded']['params'];
             $tradeId = $params['tradeId'];
-            $offer = Offers::on('tenant')->where('blockchain_trade_id', $tradeId)->first();
+            $offer = Offers::on('tenant')->where('id', $tradeId)->first();
 
             switch ($eventName) {
                 case 'TRADECREATED':
@@ -173,8 +173,7 @@ class ProcessContractActivity
         // 1. Identificar el token directamente desde el evento
         // Usamos el ConfigService con la dirección que el evento nos da ahora
         $tokenAddress = strtolower($params['token']);
-        //$token = ConfigService::getToken($tokenAddress, $rawData['network_id']);
-        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+        $token = ConfigService::getToken($tokenAddress, $rawData['network_id']);
 
 
         $seller = strtolower($params['seller']);
@@ -182,7 +181,7 @@ class ProcessContractActivity
 
         // 2. Conversión a humano usando el amount
         $amount = $params['amount'] / pow(10, $token['decimals'] ?? 18);
-        $amount = MathController::round($amount, 4, false);
+        $amount = NumberService::round($amount, 4, false);
 
         // 3. Buscar suscriptor (Vendedor)
         $suscriptor = Suscriptions::on('tenant')
@@ -206,7 +205,6 @@ class ProcessContractActivity
             'type' => 'sell',
             'amount' => $amount,
             'status' => 'LOCKED',
-            'blockchain_trade_id' => $blockchainId,
             'seller_address' => $seller,
             'buyer_address' => $buyer,
             'tx_hash_deposit' => $rawData['tx_hash'],

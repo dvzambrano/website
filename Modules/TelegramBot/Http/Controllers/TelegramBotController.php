@@ -117,6 +117,7 @@ class TelegramBotController extends Controller
                 return call_user_func_array([$controller, $method], $params);
             } catch (\Throwable $e) {
                 Log::error("🆘 TelegramBotController callControllerMethod: Error executing $method", array_merge($logContext, [
+                    'controller' => $controller,
                     'exception' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]));

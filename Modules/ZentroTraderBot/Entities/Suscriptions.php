@@ -5,7 +5,6 @@ namespace Modules\ZentroTraderBot\Entities;
 use Modules\TelegramBot\Entities\Actors;
 use Modules\Laravel\Traits\TenantTrait;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 
 
@@ -42,8 +41,8 @@ class Suscriptions extends Actors
                 "wallet" => [
                     'status' => $wallet["status"],
                     'address' => $wallet["address"],
-                    'private_key' => Crypt::encryptString($wallet["private_key"]), // 🔒 ENCRIPTADO
-                    'seed_phrase' => Crypt::encryptString($wallet["seed_phrase"]), // 🔒 ENCRIPTADO
+                    'private_key' => encryptValue($wallet["private_key"]), // 🔒 ENCRIPTADO
+                    'seed_phrase' => encryptValue($wallet["seed_phrase"]), // 🔒 ENCRIPTADO
                     'created_at' => now()->toIso8601String()
                 ]
             );

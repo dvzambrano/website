@@ -2,7 +2,6 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Http\Controllers\WalletController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
@@ -91,7 +90,7 @@ class TraderWalletController extends WalletController
         $encryptedKey = $suscriptor->data['wallet']['private_key'];
 
         // 🔓 Desencriptamos manualmente
-        return Crypt::decryptString($encryptedKey);
+        return decryptValue($encryptedKey);
     }
 
     /**

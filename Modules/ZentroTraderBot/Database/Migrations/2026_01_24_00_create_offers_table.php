@@ -30,6 +30,7 @@ class CreateOffersTable extends Migration
             // --- Estados Sincronizados con Solidity ---
             // Añadimos: LOCKED (en curso), DISPUTED (litigio)
             $table->enum('status', [
+                'open',     // Solo local (oculto en el bot)
                 'locked',    // LOCKED en contrato
                 'disputed',  // DISPUTED en contrato
                 'completed', // COMPLETED (fondos liberados)
@@ -37,11 +38,10 @@ class CreateOffersTable extends Migration
                 'signed',     // Solo local (oculto en el bot)
                 'solved',     // Solo local (oculto en el bot)
                 'expired',     // Solo local (oculto en el bot)
-            ])->default('locked');
+            ])->default('open');
 
             // --- Identificación en Blockchain ---
             // Importante: Para 'buy', esto puede ser NULL inicialmente si no hay depósito en Escrow previo
-            $table->unsignedBigInteger('blockchain_trade_id')->nullable()->index();
             $table->integer('network_id')->default(137); // Polygon por defecto
             $table->string('token_address')->nullable(); // Contrato del token (USDC, MATIC, etc.)
 
@@ -59,8 +59,23 @@ class CreateOffersTable extends Migration
 
             $table->timestamps();
 
-            $table->index(['type', 'status', 'blockchain_trade_id', 'payment_method']);
+            $table->index(['type', 'status', 'payment_method']);
         });
+
+        // --- DEFINIR EL INICIO DEL ID EN 1001 ---
+        // Obtenemos el nombre de la tabla con el prefijo si existiera
+        $tableName = config('database.connections.tenant.prefix', '') . 'offers';
+
+        // Ejecutamos la sentencia según el motor de base de datos
+        $driver = DB::connection('tenant')->getDriverName();
+        if ($driver === 'pgsql') {
+            // Para PostgreSQL
+            DB::connection('tenant')->statement("ALTER SEQUENCE {$tableName}_id_seq RESTART WITH 1001;");
+        } else {
+            // Para MySQL / MariaDB
+            DB::connection('tenant')->statement("ALTER TABLE {$tableName} AUTO_INCREMENT = 1001;");
+        }
+
     }
 
     /**

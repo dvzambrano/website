@@ -6,7 +6,7 @@ use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
-use Modules\Laravel\Http\Controllers\MathController;
+use Modules\Laravel\Services\DateService;
 use Carbon\Carbon;
 
 class OfferObserver
@@ -20,7 +20,7 @@ class OfferObserver
 
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
-        $diff = MathController::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
 
         $amount = number_format($offer->amount, 2);
         $price = number_format($offer->amount * $offer->price_per_usd, 2);
@@ -70,7 +70,7 @@ class OfferObserver
 
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
-        $diff = MathController::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
 
         switch (strtoupper($newStatus)) {
             case 'COMPLETED':

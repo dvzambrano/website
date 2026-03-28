@@ -14,7 +14,7 @@ use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Web3\Services\Web3MathService;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\ZentroTraderBot\Jobs\ManageScrow;
-use Modules\Laravel\Http\Controllers\MathController;
+use Modules\Laravel\Services\NumberService;
 
 class CheckGas implements ShouldQueue
 {
@@ -85,7 +85,7 @@ class CheckGas implements ShouldQueue
                 // Ajustar el valor automaticamente
                 ManageScrow::dispatch(
                     $this->userId,
-                    "/tokenfee " . MathController::round($idealMinFeeUsd, 2, true)
+                    "/tokenfee " . NumberService::round($idealMinFeeUsd, 2, true)
                 )->delay(now()->addSeconds(50));
             } elseif ($costInUsd >= $currentMinFeeUsd) {
                 $alertType = 'critical';
@@ -97,7 +97,7 @@ class CheckGas implements ShouldQueue
                 // Ajustar el valor automaticamente
                 ManageScrow::dispatch(
                     $this->userId,
-                    "/tokenfee " . MathController::round($idealMinFeeUsd, 2, true)
+                    "/tokenfee " . NumberService::round($idealMinFeeUsd, 2, true)
                 )->delay(now()->addSeconds(50));
             } elseif ($currentMinFeeUsd < $idealMinFeeUsd) {
                 $alertType = 'warning';
@@ -133,6 +133,16 @@ class CheckGas implements ShouldQueue
 
         } catch (\Exception $e) {
             Log::error("❌ CheckGas Error [{$network['chain']}]: " . $e->getMessage());
+        }
+
+        // Identificamos el nombre corto de este Job (ej: "CheckGas")
+        $jobName = strtolower(class_basename($this));
+        $stopKey = "stop_job_{$jobName}_{$this->tenant}";
+        // ¿Hay orden de parada?
+        if (Cache::has($stopKey)) {
+            Log::info("🛑 Cadena interrumpida para {$jobName} en Tenant {$this->tenant}");
+            Cache::forget($stopKey); // Limpiamos para futuros reinicios
+            return; // SE DETIENE LA RECURSIVIDAD
         }
 
         // Re-despacho automático cada 5 min

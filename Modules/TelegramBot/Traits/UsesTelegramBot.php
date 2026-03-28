@@ -116,30 +116,49 @@ trait UsesTelegramBot
             "demo" => $update['demo'] ?? false,
         );
         $autodestroy = 0;
+        $response = false;
+        $cacheKey = "lastmessage_{$this->tenant->key}_{$this->actor->user_id}";
         if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
             $autodestroy = $this->reply["autodestroy"];
         if (isset($this->reply["photo"])) {
-            TelegramController::sendPhoto($array, $this->tenant->token, $autodestroy);
+            $response = TelegramController::sendPhoto($array, $this->tenant->token, $autodestroy);
         } else {
             // solo se envia un mensaje si tiene text
             // antes estaba $this->message["text"] pero lo cambie para q mandara el error cuando mandan la captura de un pago sin nombre y cantidad
             if (isset($this->reply["text"]) && $this->reply["text"] != "") {
-
-                TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
+                if (isset($this->reply["editprevious"]) && $this->reply["editprevious"] > 0) {
+                    $lastmessage = Cache::get($cacheKey);
+                    $array["message"]["message_id"] = $lastmessage["message_id"];
+                    $response = TelegramController::editMessageText($array, $this->tenant->token);
+                } else
+                    $response = TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
+            }
+        }
+        if ($response) {
+            $array = json_decode($response, true);
+            if (isset($array["result"]["message_id"]) && $array["result"]["message_id"] > -1) {
+                Cache::forever($cacheKey, $array["result"]);
             }
         }
 
         // eliminar el mensaje q origino esta interaccion del bot
-        if ($this->message["message_id"] != "" && isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])) {
-            $array = array(
-                "message" => array(
-                    "id" => $this->message["message_id"],
-                    "chat" => array(
-                        "id" => $this->message["chat"]["id"],
+        if (
+            $this->message["message_id"] != "" &&
+            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) &&
+            empty($this->reply["editprevious"])
+        ) {
+            try {
+                $array = array(
+                    "message" => array(
+                        "id" => $this->message["message_id"],
+                        "chat" => array(
+                            "id" => $this->message["chat"]["id"],
+                        ),
                     ),
-                ),
-            );
-            TelegramController::deleteMessage($array, $this->tenant->token);
+                );
+                TelegramController::deleteMessage($array, $this->tenant->token);
+            } catch (\Throwable $th) {
+            }
         }
 
         // Envía una respuesta al servidor de Telegram para confirmar la recepción
@@ -157,6 +176,14 @@ trait UsesTelegramBot
             trim($this->actor->data["telegram"]["username"]) == ""
         ) {
             return $this->notifyUsernameRequired($this->actor->user_id);
+        }
+
+        // Esta en medio de un asistente?
+        $cacheKey = "wizard_{$this->tenant->key}_{$this->actor->user_id}";
+        if (Cache::has($cacheKey)) {
+            $wizard = Cache::get($cacheKey);
+            return app()->make($wizard['controller'])
+                ->{$wizard['method']}($this);
         }
 
         // preparando respuesta generica para un texto no reconocido en el bot

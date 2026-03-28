@@ -16,7 +16,6 @@ use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\ZentroTraderBot\Jobs\AlchemyUpdateWebhookAddresses;
 use Modules\ZentroTraderBot\Jobs\MoralisAddAddressToStream;
 use Modules\Web3\Services\ConfigService;
-use Illuminate\Support\Facades\Crypt;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 
 class ZentroTraderBotController extends JsonsController
@@ -325,7 +324,7 @@ class ZentroTraderBotController extends JsonsController
             function () use ($suscriptor) {
                 $key = $suscriptor->data['wallet']['seed_phrase'];
                 // 🔓 Desencriptamos manualmente
-                $data = Crypt::decryptString($key);
+                $data = decryptValue($key);
                 $words = explode(' ', $data);
                 $message = "```\n";
                 for ($i = 0; $i < count($words); $i += 2) {
@@ -373,6 +372,13 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+        $this->strategies["/p2psell"] =
+            function () {
+                $controller = new OffersController();
+                $reply = $controller->sell($this);
+                return $reply;
+            };
+
 
         return $this->getProcessedMessage();
     }
@@ -397,10 +403,10 @@ class ZentroTraderBotController extends JsonsController
             ["text" => "💵 " . Lang::get("zentrotraderbot::bot.options.balance"), "callback_data" => "/balance"],
         ]);
 
-        if (env("P2P_ENABLED", false))
+        if (env("P2P_ENABLED", true))
             array_push($menu, [
                 ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "notimplemented"],
-                ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "notimplemented"],
+                ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
             ]);
 
         array_push($menu, [
