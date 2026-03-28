@@ -151,7 +151,7 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
-                $coin = $state['data']['currency'] ?? 'moneda seleccionada';
+                $coin = $state['data']['currency'] ?? 'CUP';
                 $val = CoingeckoController::getLivePrice("tether", $coin);
                 if (empty($val))
                     $val = CambiocupService::getRate($coin);
