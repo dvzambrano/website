@@ -10,6 +10,8 @@ use Modules\ZentroTraderBot\Entities\Currencies;
 use Modules\ZentroTraderBot\Entities\Paymentmethods;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Lang;
+use Modules\Web3\Http\Controllers\CoingeckoController;
+use Modules\Laravel\Services\Exchange\CambiocupService;
 
 class OffersController extends Controller
 {
@@ -149,15 +151,21 @@ class OffersController extends Controller
                     return $this->sell($bot);
                 }
 
-                $curr = $state['data']['currency'] ?? 'moneda seleccionada';
+                $coin = $state['data']['currency'] ?? 'moneda seleccionada';
+                $val = CoingeckoController::getLivePrice("tether", $coin);
+                if (empty($val))
+                    $val = CambiocupService::getRate($coin);
+                if (empty($val))
+                    $val = 1.02;
+
                 return [
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
                         "▫️ _Paso 3️⃣ de 5️⃣_\n" .
-                        "▫️ *Precio de venta USD/{$curr}?*\n" .
+                        "▫️ *Precio de venta USD/{$coin}?*\n" .
                         "◾️ \n" .
-                        "▫️ _¿Cuántos {$curr} desea recibir por cada USD que vende?_\n" .
-                        "▫️ _Por ejemplo:_ `1.02`: _Estaría cobrando 2% de recargo._",
+                        "▫️ _¿Cuántos {$coin} desea recibir por cada USD que vende?_\n" .
+                        "▫️ _Por ejemplo:_ `" . number_format($val, 2) . "`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
@@ -272,9 +280,21 @@ class OffersController extends Controller
             'price_per_usd' => $data['price'],
             'payment_method' => $data['method'],
             'payment_details' => $data['details'],
-            'status' => 'signed',
+            'status' => 'open',
             'network_id' => 137,
             'data' => ['source' => 'telegram_wizard']
+
+            'uuid'             => (string) Str::uuid(),
+        'user_id'          => $bot->actor->user_id,
+        'type'             => 'sell',
+        'amount'           => $data['amount'],
+        'price_per_usd'    => $data['price'],
+        'currency_code'    => $data['currency'],
+        'payment_method'   => $data['method'],
+        'payment_details'  => $data['details'],
+        'status'           => 'active', // o 'signed' según tu lógica de contratos
+        'network_id'       => 137,     // Polygon
+        'data'             => json_encode(['source' => 'telegram_wizard'])
         ]);
         */
 

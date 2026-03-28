@@ -749,7 +749,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/laravel.git",
-                "reference": "02aa733cb3fa680c6bacba51ada4bfca88ec58e1"
+                "reference": "bb6e3eedad0641ae540c1e2d8ec1927fb34da755"
             },
             "require": {
                 "amenadiel/jpgraph": "*",
@@ -790,7 +790,7 @@
                 }
             ],
             "description": "Modulo base para funcionalidades de Laravel",
-            "time": "2026-03-25T19:42:13+00:00"
+            "time": "2026-03-28T13:16:23+00:00"
         },
         {
             "name": "dvzambrano/web3",
@@ -798,7 +798,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/web3.git",
-                "reference": "8404de6fa900ed529189500caa3321994b865ae5"
+                "reference": "a3733a50915baa25fd8f804a06bb007aca862680"
             },
             "require": {
                 "dvzambrano/laravel": "dev-main as 1.0.0",
@@ -846,7 +846,7 @@
                 }
             ],
             "description": "Modulo base para funcionalidades Web3",
-            "time": "2026-03-24T15:13:17+00:00"
+            "time": "2026-03-28T13:45:41+00:00"
         },
         {
             "name": "egulias/email-validator",

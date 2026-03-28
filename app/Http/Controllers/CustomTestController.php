@@ -19,6 +19,8 @@ use Modules\Laravel\Http\Controllers\TextController;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Illuminate\Support\Facades\Http;
+use Modules\Web3\Http\Controllers\CoingeckoController;
+use Modules\Laravel\Services\Exchange\CambiocupService;
 
 class CustomTestController extends BaseController
 {
@@ -81,6 +83,18 @@ class CustomTestController extends BaseController
         } catch (\Throwable $th) {
             die("🆘 TelegramController getFileUrl: " . $th->getTraceAsString());
         }
+    }
+
+
+    public function testPrice()
+    {
+        $coin = "EUR";
+        $val = CoingeckoController::getLivePrice("tether", $coin);
+        if (empty($val))
+            $val = CambiocupService::getRate($coin);
+        if (empty($val))
+            $val = 1.02;
+        dd(number_format($val, 2));
     }
 
 

@@ -30,6 +30,7 @@ class CreateOffersTable extends Migration
             // --- Estados Sincronizados con Solidity ---
             // Añadimos: LOCKED (en curso), DISPUTED (litigio)
             $table->enum('status', [
+                'open',     // Solo local (oculto en el bot)
                 'locked',    // LOCKED en contrato
                 'disputed',  // DISPUTED en contrato
                 'completed', // COMPLETED (fondos liberados)
@@ -37,7 +38,7 @@ class CreateOffersTable extends Migration
                 'signed',     // Solo local (oculto en el bot)
                 'solved',     // Solo local (oculto en el bot)
                 'expired',     // Solo local (oculto en el bot)
-            ])->default('locked');
+            ])->default('open');
 
             // --- Identificación en Blockchain ---
             // Importante: Para 'buy', esto puede ser NULL inicialmente si no hay depósito en Escrow previo
