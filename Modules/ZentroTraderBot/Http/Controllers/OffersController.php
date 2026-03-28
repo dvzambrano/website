@@ -153,17 +153,21 @@ class OffersController extends Controller
                 }
 
                 $coin = $state['data']['currency'];
-                $val = $ccval = $cgval = CoingeckoController::getLivePrice("tether", $coin);
-                if (empty($val))
-                    $val = $ccval = CambiocupService::getRate($coin);
-                if (empty($val))
-                    $val = 1.02;
+
+                // 1. Intentamos CoinGecko
+                $cgval = CoingeckoController::getLivePrice("tether", $coin);
+
+                // 2. Intentamos CambioCUP solo si CG no dio un resultado válido (mayor que 0)
+                $ccval = ($cgval <= 0) ? CambiocupService::getRate($coin) : null;
+
+                // 3. Asignación final con prioridad
+                $val = $cgval > 0 ? $cgval : ($ccval > 0 ? $ccval : 1.02);
 
                 Log::debug("🐞 OffersController currency:", [
                     "coin" => $coin,
                     "CoingeckoController" => $cgval,
                     "CambiocupService" => $ccval,
-                    "state" => $state,
+                    "final_val" => $val
                 ]);
 
                 return [
