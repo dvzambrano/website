@@ -39,6 +39,8 @@ use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 use Modules\Web3\Http\Controllers\WalletController;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
 use Modules\ZentroOwnerBot\Http\Controllers\ZentroOwnerBotController;
+use Modules\Laravel\Services\DateService;
+use Modules\Laravel\Services\NumberService;
 
 use FurqanSiddiqui\BIP39\BIP39;
 use FurqanSiddiqui\BIP39\Wordlist;
@@ -545,7 +547,7 @@ class CustomTestController extends BaseController
         $now = Carbon::now();
         $future = Carbon::now()->addYears(2)->addMonths(3)->addMinutes(5)->addSeconds(6);
 
-        dd(MathController::getTimeDifference($now->getTimestamp(), $future->getTimestamp()));
+        dd(DateService::getTimeDifference($now->getTimestamp(), $future->getTimestamp()));
 
         dd(env("TELEGRAM_GROUP_GUTO_TRADE_BOT"));
 
@@ -875,7 +877,7 @@ class CustomTestController extends BaseController
         dd($rate);
         $rate = $bot->ProfitsController->getEURtoSendWithActiveRate($amount);
         dd($rate);
-        $liquidate_amount = Moneys::format(MathController::round($rate, 2, true));
+        $liquidate_amount = Moneys::format(NumberService::round($rate, 2, true));
 
         die(date("Y-m-d H:i:s") . ": DONE!");
 
@@ -1175,7 +1177,7 @@ class CustomTestController extends BaseController
 
         $results = $cc->get(Capitals::class, "created_at", ">=", "2025-01-01 00:00:00");
         foreach ($results as $capital) {
-        $newamount = MathController::round(Capitals::getEURtoSendWithActiveRate($capital->comment), 2, false);
+        $newamount = NumberService::round(Capitals::getEURtoSendWithActiveRate($capital->comment), 2, false);
         echo "Recibido: {$capital->comment}, Antes: {$capital->amount}, Ahora: {$newamount}<br/>";
         //$capital->amount = $newamount;
         //$capital->save();

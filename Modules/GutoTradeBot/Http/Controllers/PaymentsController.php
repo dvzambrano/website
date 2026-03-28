@@ -3,7 +3,6 @@
 namespace Modules\GutoTradeBot\Http\Controllers;
 
 use Modules\Laravel\Http\Controllers\FileController;
-use Modules\Laravel\Http\Controllers\MathController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Modules\GutoTradeBot\Entities\Agents;
@@ -20,6 +19,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Support\Facades\DB;
+use Modules\Laravel\Services\NumberService;
 
 class PaymentsController extends MoneysController
 {
@@ -818,7 +818,7 @@ class PaymentsController extends MoneysController
                     $text .= "\n\n😳 Deben ser revisados por penalización:";
                 }
                 foreach ($penalized as $penalty) {
-                    $penalized_amount = Moneys::format(MathController::round($penalty["payment"]->amount - ($penalty["payment"]->amount * $penalty["amount"] / 100)));
+                    $penalized_amount = Moneys::format(NumberService::round($penalty["payment"]->amount - ($penalty["payment"]->amount * $penalty["amount"] / 100)));
                     $text .= "\n🆔 `" . $penalty["payment"]->id . "`:     ▪️ *{$penalized_amount}* 💶   /   ▫️ _" . Moneys::format($penalty["payment"]->amount) . "_ 💶";
                 }
 

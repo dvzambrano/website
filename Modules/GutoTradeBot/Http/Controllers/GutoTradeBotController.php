@@ -5,7 +5,7 @@ use Modules\Laravel\Http\Controllers\FileController;
 use Modules\Laravel\Http\Controllers\GraphsController;
 use Modules\Laravel\Http\Controllers\TextController;
 use Modules\Laravel\Http\Controllers\JsonsController;
-use Modules\Laravel\Http\Controllers\MathController;
+use Modules\Laravel\Services\DateService;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -1871,7 +1871,7 @@ class GutoTradeBotController extends JsonsController
     public function getReportFileText($path)
     {
         $pieces = explode("/", $path);
-        $diff = MathController::getTimeDifference(Carbon::now()->getTimestamp(), $pieces[count($pieces) - 1]);
+        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), $pieces[count($pieces) - 1]);
         $text = "📎 Se ha generado un excel con los datos aquí:\n" .
             $path . "\n" .
             "_Este archivo estará disponible por " . $diff["legible"] . "._";
