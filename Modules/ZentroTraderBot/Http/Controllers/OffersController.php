@@ -399,11 +399,11 @@ class OffersController extends Controller
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
                         [
-                            [
-                                "text" => "👀 Ver mi Oferta",
-                                'url' => "https://t.me/KashioChannel/{$messageId}"
-                            ]
+                            ["text" => "👀 Ver mi Oferta", "url" => "https://t.me/KashioChannel/{$messageId}"]
                         ],
+                        [
+                            ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]
+                        ]
                     ],
                 ]),
             ];
