@@ -76,7 +76,9 @@ class OffersController extends Controller
                     $balance = $walletCtrl->getBalance($suscriptor);
 
                     try {
-                        $text = NumberService::parse($text);
+                        $parsedtext = NumberService::parse($text);
+                        if (is_numeric($parsedtext))
+                            $text = $parsedtext;
                     } catch (\Throwable $th) {
                     }
                     if (!is_numeric($text) || $text <= 0) {
