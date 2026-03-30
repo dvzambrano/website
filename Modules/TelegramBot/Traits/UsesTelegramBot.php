@@ -196,7 +196,7 @@ trait UsesTelegramBot
         //echo strtolower($array["command"]);
         if (env("DEBUG_MODE", false))
             Log::debug("🐞 UsesTelegramBot getProcessedMessage bot:", [
-                "array" => $array,
+                "command" => $array,
                 "actor" => $this->actor,
             ]);
 

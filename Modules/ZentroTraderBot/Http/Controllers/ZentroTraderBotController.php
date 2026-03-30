@@ -44,8 +44,9 @@ class ZentroTraderBotController extends JsonsController
         }
 
 
+
         $this->strategies["/start"] = $this->strategies["start"] =
-            function () use ($suscriptor) {
+            function () use ($suscriptor, $array) {
                 $wallet = $suscriptor->getWallet();
                 if (strtolower($wallet["status"]) == "created") {
                     // Es necesario recargarlo porq en el getWallet se actualizaron datos!!
@@ -57,9 +58,9 @@ class ZentroTraderBotController extends JsonsController
                     $suscriptor->save();
 
                     // notificando a aministradores de nuevo usuario sin rol
-                    $array = $this->AgentsController->getRoleMenu($this->actor->user_id, 0);
-                    array_push($array["menu"], [["text" => "❌ " . Lang::get("telegrambot::bot.options.delete"), "callback_data" => "confirmation|deleteuser-{$this->actor->user_id}|menu"]]);
-                    $this->notifyUserWithNoRole($this->actor->user_id, $array);
+                    $menu = $this->AgentsController->getRoleMenu($this->actor->user_id, 0);
+                    array_push($menu["menu"], [["text" => "❌ " . Lang::get("telegrambot::bot.options.delete"), "callback_data" => "confirmation|deleteuser-{$this->actor->user_id}|menu"]]);
+                    $this->notifyUserWithNoRole($this->actor->user_id, $menu);
 
                     // Registrar la wallet en el webhook de Moralis
                     MoralisAddAddressToStream::dispatch(
@@ -81,9 +82,17 @@ class ZentroTraderBotController extends JsonsController
                         ]);
                 }
 
+                if (empty($array["message"]))
+                    $reply = $this->mainMenu($this->actor);
+                else {
+                    if (str_starts_with($array["message"], 'offer-')) {
+                        $id = str_replace('offer-', '', $array["message"]);
+                        $reply = [
+                            "text" => "prueba: {$id}",
+                        ];
 
-
-                $reply = $this->mainMenu($this->actor);
+                    }
+                }
                 return $reply;
             };
 
