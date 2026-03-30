@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Http;
 use Modules\Web3\Http\Controllers\CoingeckoController;
 use Modules\Laravel\Services\Exchange\CambiocupService;
 use Modules\Web3\Http\Controllers\ZeroExController;
+use Illuminate\Support\Str;
 
 class CustomTestController extends BaseController
 {
@@ -48,6 +49,61 @@ class CustomTestController extends BaseController
 
         // 2. Si no hay nombre o el método no existe, ejecutamos la lógica base del paquete
         return parent::test($request);
+    }
+
+
+    public function testPublic()
+    {
+        $this->KashioBot->connectToThisTenant();
+
+
+        // Datos de la oferta (estos vendrían de tu base de datos o estado)
+        $usdAVender = rand(10, 100);
+        $tasaCambio = 581;
+        $usdARecibir = $usdAVender * $tasaCambio;
+        $currency = "CUP";
+        $banco = "BANDEC Prepago";
+        $numeroTarjeta = rand(1000, 9999) . " 2134 1123 1212";
+
+        $id = Str::uuid();
+
+        // Construcción del texto profesional con HTML
+        $text = "🟥 *¡NUEVA OFERTA!*\n";
+        $text .= "🆔 `" . $id . "`\n";
+
+        $text .= "💸 En venta: *{$usdAVender} USD*\n";
+        $text .= "💱 Tasa: *{$tasaCambio} {$currency}/USD*\n";
+        $text .= "💰 Recibe: *{$usdARecibir} {$currency}*\n";
+        //$text .= "------------------------------------------\n";
+        $text .= "🏦 Medio de Pago: *{$banco}*\n\n";
+
+        $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._\n\n";
+
+        $response = TelegramController::sendMessage(
+            array(
+                "message" => array(
+                    "text" => $text,
+                    "chat" => array(
+                        "id" => env("TRADER_BOT_CHANNEL"),
+                    ),
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [
+                                [
+                                    "text" => "👉 Aplicar a esta oferta",
+                                    'url' => "https://t.me/" . $this->KashioBot->code . "?offer={$id}"
+                                ]
+                            ],
+                        ],
+                    ]),
+                ),
+            ),
+            $this->KashioBot->token
+        );
+        if ($response) {
+            $array = json_decode($response, true);
+            dd($array["result"]["message_id"]);
+        }
     }
 
 

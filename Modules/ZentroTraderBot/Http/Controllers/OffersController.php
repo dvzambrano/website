@@ -321,34 +321,92 @@ class OffersController extends Controller
 
     private function publishOffer($bot, $state)
     {
-        /*
-        Offers::create([
-            'uuid' => (string) Str::uuid(),
-            'user_id' => $bot->actor->user_id,
-            'type' => 'sell',
-            'amount' => $data['amount'],
-            'price_per_usd' => $data['price'],
-            'payment_method' => $data['method'],
-            'payment_details' => $data['details'],
-            'status' => 'open',
-            'network_id' => 137,
-            'data' => ['source' => 'telegram_wizard']
 
-            'uuid'             => (string) Str::uuid(),
-        'user_id'          => $bot->actor->user_id,
-        'type'             => 'sell',
-        'amount'           => $data['amount'],
-        'price_per_usd'    => $data['price'],
-        'currency_code'    => $data['currency'],
-        'payment_method'   => $data['method'],
-        'payment_details'  => $data['details'],
-        'status'           => 'active', // o 'signed' según tu lógica de contratos
-        'network_id'       => 137,     // Polygon
-        'data'             => json_encode(['source' => 'telegram_wizard'])
-        ]);
-        */
+        $id = Str::uuid();
+        $amount = $state['data']['amount'];
+        $price = $state['data']['price'];
+        $total = $amount * $price;
+        $currency = $state['data']['currency'];
+        $method = $state['data']['method_name'];
 
-        Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
-        return ["text" => "✅ *¡Oferta publicada!*", "chat" => ["id" => $bot->actor->user_id], "reply_markup" => json_encode(["remove_keyboard" => true])];
+
+        // Construcción del texto profesional con HTML
+        $text = "🟥 *¡NUEVA OFERTA!*\n";
+        $text .= "🆔 `" . $id . "`\n";
+        $text .= "💸 En venta: *{$amount} USD*\n";
+        $text .= "💱 Tasa: *{$price} {$currency}/USD*\n";
+        $text .= "💰 Recibe: *{$total} {$currency}*\n";
+        $text .= "🏦 Medio de Pago: *{$method}*\n\n";
+        $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._\n\n";
+
+        $response = TelegramController::sendMessage(
+            array(
+                "message" => array(
+                    "text" => $text,
+                    "chat" => array(
+                        "id" => env("TRADER_BOT_CHANNEL"),
+                    ),
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [
+                                [
+                                    "text" => "👉 Aplicar a esta oferta",
+                                    'url' => "https://t.me/" . $bot->tenant->code . "?offer={$id}"
+                                ]
+                            ],
+                        ],
+                    ]),
+                ),
+            ),
+            $bot->tenant->token
+        );
+        if ($response) {
+            $array = json_decode($response, true);
+            $messageId = $array["result"]["message_id"];
+
+            Offers::create([
+                'uuid' => (string) Str::uuid(),
+                'user_id' => $bot->actor->user_id,
+                'type' => 'sell',
+                'amount' => $state['data']['amount'],
+                'price_per_usd' => $state['data']['price'],
+                'currency' => $state['data']['currency'],
+                'payment_method' => $state['data']['method_name'],
+                'payment_details' => $state['data']['details'],
+                'status' => 'open',
+                'network_id' => env("BASE_NETWORK"),
+                'token_address' => env("BASE_TOKEN"),
+                'data' => json_encode([
+                    "channel" => [
+                        "message_id" => $messageId
+                    ]
+                ])
+            ]);
+
+            Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
+
+            $text = "✅ *¡SU OFERTA YA ESTÁ ACTIVA!*\n";
+            $text .= "📢 Su anuncio ha sido publicado en nuestro canal.\n\n";
+            $text .= "⚠️ *NOTAS IMPORTANTES DE SEGURIDAD:*\n";
+            $text .= "🔒 *Bloqueo de Garantía:* Tan pronto como un interesado aplique a su oferta, los fondos serán *bloqueados automáticamente*. _Esto garantiza al comprador que existen y estarán disponibles para su compra._\n";
+            $text .= "🚫 *Regla de Oro*: *NUNCA libere los fondos* hasta que haya verificado manualmente la recepción del pago en su cuenta.\n";
+            $text .= "⚖️ *Sistema de arbitraje:* Nuestro equipo de soporte está listo para intervenir en caso de cualquier disputa durante el proceso.\n\n";
+            $text .= "👍 *¡Suerte con tu venta!* _Le notificaremos en cuanto alguien aplique._";
+
+            return [
+                "text" => $text,
+                "chat" => ["id" => $bot->actor->user_id],
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [
+                            [
+                                "text" => "👀 Ver mi Oferta",
+                                'url' => "https://t.me/KashioChannel/{$messageId}"
+                            ]
+                        ],
+                    ],
+                ]),
+            ];
+        }
     }
 }
