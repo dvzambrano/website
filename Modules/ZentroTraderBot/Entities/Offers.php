@@ -27,4 +27,24 @@ class Offers extends Model
     {
         $this->update(array_merge(['status' => $status], $extra));
     }
+
+    public function renderAsTelegramMessage($title = "")
+    {
+        $total = $this->amount * $this->price_per_usd;
+
+        $text = "{$title}\n";
+        $text .= "🆔 `" . $this->uuid . "`\n";
+        if (strtolower($this->type) == "sell")
+            $text .= "💸 En venta: *{$this->amount} USD*\n";
+        else
+            $text .= "💰 Compra: *{$this->amount} USD*\n";
+        $text .= "💱 Tasa: *{$this->price_per_usd} {$this->currency}/USD*\n";
+        if (strtolower($this->type) == "sell")
+            $text .= "💰 Recibe: *{$total} {$this->currency}*\n";
+        else
+            $text .= "💸 Entrega: *{$total} {$this->currency}*\n";
+        $text .= "🏦 Medio de Pago: *{$this->payment_method}*\n\n";
+
+        return $text;
+    }
 }

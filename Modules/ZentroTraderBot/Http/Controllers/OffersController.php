@@ -321,24 +321,22 @@ class OffersController extends Controller
 
     private function publishOffer($bot, $state)
     {
-
-        $id = Str::uuid();
-        $amount = $state['data']['amount'];
-        $price = $state['data']['price'];
-        $total = $amount * $price;
-        $currency = $state['data']['currency'];
-        $method = $state['data']['method_name'];
-
-
-        // Construcción del texto profesional con HTML
-        $text = "🟥 *¡NUEVA OFERTA!*\n";
-        $text .= "🆔 `" . $id . "`\n";
-        $text .= "💸 En venta: *{$amount} USD*\n";
-        $text .= "💱 Tasa: *{$price} {$currency}/USD*\n";
-        $text .= "💰 Recibe: *{$total} {$currency}*\n";
-        $text .= "🏦 Medio de Pago: *{$method}*\n\n";
+        // Creamos la instancia. NO toca la base de datos.
+        $offer = new Offers([
+            'uuid' => (string) Str::uuid(),
+            'user_id' => $bot->actor->user_id,
+            'type' => 'sell',
+            'amount' => $state['data']['amount'],
+            'price_per_usd' => $state['data']['price'],
+            'currency' => $state['data']['currency'],
+            'payment_method' => $state['data']['method_name'],
+            'payment_details' => $state['data']['details'],
+            'status' => 'open',
+            'network_id' => env("BASE_NETWORK"),
+            'token_address' => env("BASE_TOKEN"),
+        ]);
+        $text = $offer->renderAsTelegramMessage("🟥 *¡NUEVA OFERTA!*");
         $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._\n\n";
-
         $response = TelegramController::sendMessage(
             array(
                 "message" => array(
@@ -351,7 +349,7 @@ class OffersController extends Controller
                             [
                                 [
                                     "text" => "👉 Aplicar a esta oferta",
-                                    'url' => "https://t.me/" . $bot->tenant->code . "?start=offer-{$id}"
+                                    'url' => "https://t.me/" . $bot->tenant->code . "?start=offer-{$offer->uuid}"
                                 ]
                             ],
                         ],
@@ -364,24 +362,12 @@ class OffersController extends Controller
             $array = json_decode($response, true);
             $messageId = $array["result"]["message_id"];
 
-            Offers::create([
-                'uuid' => (string) Str::uuid(),
-                'user_id' => $bot->actor->user_id,
-                'type' => 'sell',
-                'amount' => $state['data']['amount'],
-                'price_per_usd' => $state['data']['price'],
-                'currency' => $state['data']['currency'],
-                'payment_method' => $state['data']['method_name'],
-                'payment_details' => $state['data']['details'],
-                'status' => 'open',
-                'network_id' => env("BASE_NETWORK"),
-                'token_address' => env("BASE_TOKEN"),
-                'data' => json_encode([
-                    "channel" => [
-                        "message_id" => $messageId
-                    ]
-                ])
-            ]);
+            $offer->data = [
+                "channel" => [
+                    "message_id" => $messageId
+                ]
+            ];
+            $offer->save();
 
             Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
 
@@ -408,5 +394,41 @@ class OffersController extends Controller
                 ]),
             ];
         }
+    }
+
+    private function showOffer($bot, $uuid, $menu = false)
+    {
+        $offer = Offers::on('tenant')->where('uuid', $uuid)->first();
+        $title = "🟩";
+        if (strtolower($offer->type) == "sell")
+            $title = "🟥";
+        $text = $offer->renderAsTelegramMessage("{$title} *OFERTA*");
+        $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
+
+        if (!$menu)
+            $menu = [];
+
+        if ($bot->actor->user_id == $offer->user_id)
+            array_push($menu, [
+                ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->id}|menu"]
+            ]);
+        else {
+            $total = number_format($offer->amount * $offer->price, 2);
+            array_push($menu, [
+                ["text" => "✅ Pagar {$total} {$offer->currency}", "callback_data" => "payoffer-{$offer->id}"]
+            ]);
+        }
+
+        array_push($menu, [
+            ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
+        ]);
+
+        return [
+            "text" => $text,
+            "chat" => ["id" => $bot->actor->user_id],
+            "reply_markup" => json_encode([
+                "inline_keyboard" => $menu,
+            ]),
+        ];
     }
 }

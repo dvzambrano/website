@@ -86,11 +86,9 @@ class ZentroTraderBotController extends JsonsController
                     $reply = $this->mainMenu($this->actor);
                 else {
                     if (str_starts_with($array["message"], 'offer-')) {
-                        $id = str_replace('offer-', '', $array["message"]);
-                        $reply = [
-                            "text" => "prueba: {$id}",
-                        ];
-
+                        $uuid = str_replace('offer-', '', $array["message"]);
+                        $controller = new OffersController();
+                        $reply = $controller->showOffer($this, $uuid);
                     }
                 }
                 return $reply;
