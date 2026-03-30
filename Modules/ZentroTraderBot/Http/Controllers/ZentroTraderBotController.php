@@ -76,8 +76,13 @@ class ZentroTraderBotController extends JsonsController
                         [$wallet["address"]]
                     )->delay(now()->addSeconds(10));
                     if (env("DEBUG_MODE", false))
-                        Log::debug("🐞 ZentroTraderBotController processMessage /start:" . json_encode($wallet));
+                        Log::debug("🐞 ZentroTraderBotController processMessage /start:", [
+                            "wallet" => $wallet,
+                            "array" => $this->getCommand($this->message["text"])
+                        ]);
                 }
+
+
 
                 $reply = $this->mainMenu($this->actor);
                 return $reply;
@@ -376,19 +381,6 @@ class ZentroTraderBotController extends JsonsController
             function () {
                 $controller = new OffersController();
                 $reply = $controller->sell($this);
-                return $reply;
-            };
-
-        $this->strategies["offer"] =
-            function () use ($suscriptor) {
-                $reply = [
-                    "text" =>
-                        "prueba",
-                    "chat" => array(
-                        "id" => $suscriptor->user_id,
-                    ),
-                ];
-
                 return $reply;
             };
 
