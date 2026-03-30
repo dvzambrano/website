@@ -208,8 +208,8 @@ class ZentroTraderBotController extends JsonsController
                 $message .= "⏱️ *" . Lang::get("zentrotraderbot::bot.prompts.balance.lastoperations") . "*:\n";
                 foreach ($transactions as $tx) {
                     // 1. Formateamos la fecha y el monto
-                    $date = $suscriptor->actor->getLocalDateTime($tx['human']['date'], $this->tenant->code, "Y-m-d h:i a");
-                    $amount = ($tx['human']['value'] > 0 ? '+' : '') . number_format($tx['human']['value'], 2) . " USD";
+                    $date = $suscriptor->actor->getLocalDateTime($tx['timestamp'], $this->tenant->code, "Y-m-d h:i a");
+                    $amount = ($tx['amount'] > 0 ? '+' : '') . number_format($tx['amount'], 2) . " USD";
 
                     $message .= $textController->getDots($totalWidth, $date, $amount) . "\n";
                 }

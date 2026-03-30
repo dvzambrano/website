@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
-use Modules\Web3\Http\Controllers\AlchemyController;
+use Modules\Web3\Http\Controllers\BlockchainProviderController;
 use Modules\Web3\Services\Web3MathService;
 use Modules\Web3\Services\ConfigService;
 use Modules\Laravel\Http\Controllers\TestController as BaseController;
@@ -20,6 +20,7 @@ use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Illuminate\Support\Facades\Http;
 use Modules\Web3\Http\Controllers\CoingeckoController;
 use Modules\Laravel\Services\Exchange\CambiocupService;
+use Modules\Web3\Http\Controllers\ZeroExController;
 
 class CustomTestController extends BaseController
 {
@@ -48,6 +49,51 @@ class CustomTestController extends BaseController
         // 2. Si no hay nombre o el método no existe, ejecutamos la lógica base del paquete
         return parent::test($request);
     }
+
+
+    public function testSwap()
+    {
+        $user_id = 816767995;
+        $this->KashioBot->connectToThisTenant();
+        $suscriptor = Suscriptions::where("user_id", $user_id)->first();
+        $encryptedKey = $suscriptor->data['wallet']['private_key'];
+        $privateKey = decryptValue($encryptedKey);
+
+        $from = ConfigService::getToken("POL", 137);
+        $to = ConfigService::getToken("USDC", 137);
+        //dd($to["address"]);
+
+        // 🔓 Desencriptamos manualmente
+        //dd($privateKey);
+
+        $engine = new ZeroExController();
+        $engine->swap(
+            137,
+            $from["address"],
+            $to["address"],
+            4,
+            $privateKey,
+            env("ZERO_EX_API_KEY"),
+            env("TREASURY_WALLET"),
+            env("SWAP_FEE_PERCENTAGE"),
+            function ($text, $autodestroy) use ($user_id) {
+                TelegramController::sendMessage(
+                    array(
+                        "message" => array(
+                            "text" => $text,
+                            "chat" => array(
+                                "id" => $user_id,
+                            )
+                        ),
+                    ),
+                    $this->KashioBot->token,
+                    $autodestroy
+                );
+            },
+        );
+
+    }
+
     public function testCall()
     {
         $bot = TelegramBots::where('name', "@ZentroOwnerBot")->first();
@@ -257,25 +303,25 @@ class CustomTestController extends BaseController
     public function testWalletController()
     {
         $address = env("TEST_WALLET");
-        $apiKey = config('zentrotraderbot.alchemy_api_key');
-        $token = ConfigService::getToken(env('BASE_TOKEN'), strtoupper(ConfigService::getActiveNetwork()["shortName"]));
-        $balances = AlchemyController::getTokenBalances($apiKey, $address, [$token["address"]]);
+
+        $chain = ConfigService::getActiveNetwork();
+        $token = ConfigService::getToken(env('BASE_TOKEN'), strtoupper($chain["shortName"]));
+        $balances = BlockchainProviderController::getTokenBalance($address, $chain, [$token]);
+        $txs = BlockchainProviderController::getRecentTransactions($address, $chain, [$token]);
+        //dd($balances);
+
         $humanBal = "0.0";
         if (is_array($balances) && count($balances)) {
             foreach ($balances as $i => $bal) {
                 $hexBal = $bal['tokenBalance'] ?? '0x0';
-                // Conversión humana
-                $humanBal = Web3MathService::hexToDecimal($hexBal, $token["decimals"]);
+                // Convertimos el Hex del nodo a Wei String
+                $rawBalanceStr = Web3MathService::hexToDecimal($hexBal);
+                // Dividimos por la potencia de 10 según los decimales del token (6 para USDC, 18 para DAI)
+                $humanBal = (float) bcdiv($rawBalanceStr, bcpow('10', (string) $token["decimals"]), $token["decimals"]);
             }
         }
 
-
-        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
-        $symbol = strtoupper($network["shortName"]);
-        //dd($symbol);
-        $txs = AlchemyController::getRecentTransactions($apiKey, $address, $symbol, ["erc20"], [$token["address"]]);
-
-        dd($apiKey, $address, $token["address"], $balances, $humanBal, $txs);
+        dd($balances, $humanBal, $txs);
     }
 
     /**

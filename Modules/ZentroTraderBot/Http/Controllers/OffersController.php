@@ -14,6 +14,7 @@ use Modules\Web3\Http\Controllers\CoingeckoController;
 use Modules\Laravel\Services\Exchange\CambiocupService;
 use Modules\Laravel\Services\NumberService;
 use Illuminate\Support\Facades\Log;
+use Modules\ZentroTraderBot\Entities\Suscriptions;
 
 class OffersController extends Controller
 {
@@ -85,6 +86,25 @@ class OffersController extends Controller
                             "editprevious" => 1
                         ];
                     }
+
+                    // --- VALIDACIÓN DE BALANCE ---
+                    $walletCtrl = new TraderWalletController();
+                    $suscriptor = Suscriptions::where('user_id', $userId)->first();
+
+                    $balance = $walletCtrl->getBalance($suscriptor);
+                    if ($text > $balance) {
+                        return [
+                            "text" => "⚠️ *Saldo insuficiente*\n\n"
+                                . "Intentas vender: *{$text} USD*\n"
+                                . "Disponible en tu wallet: *{$balance} USD*\n\n"
+                                . "Por favor, ingresa un monto menor o igual a `{$balance}`.",
+                            "chat" => ["id" => $userId],
+                            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
+                            "editprevious" => 1
+                        ];
+                    }
+
+
                     $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
                     $state['data']['amount'] = $text;
                     $state['step'] = 'STEP_CURRENCY'; // SALTO A MONEDA
