@@ -76,11 +76,15 @@ class ZentroTraderBotController extends JsonsController
                         $authToken,
                         [$wallet["address"]]
                     )->delay(now()->addSeconds(10));
-                    if (env("DEBUG_MODE", false))
-                        Log::debug("🐞 ZentroTraderBotController processMessage /start:", [
-                            "wallet" => $wallet,
-                        ]);
                 }
+
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 ZentroTraderBotController processMessage /start:", [
+                        "array" => $array,
+                        "wallet" => $wallet,
+                    ]);
+
+
 
                 if (empty($array["message"]))
                     $reply = $this->mainMenu($this->actor);
