@@ -102,12 +102,7 @@ class OffersController extends Controller
                                 "▫️ *Definir el monto de la transacción*\n" .
                                 "▫️ ❌ Intentas vender {$text} USD\n" .
                                 "▫️ _¿Cuántos de sus {$balance} USD disponibles desea vender?_\n" .
-                                "▫️ _Escriba solo el número. Ejemplo:_ `{$balance}`" .
-
-                                "⚠️ *Saldo insuficiente*\n\n"
-                                . "Intentas vender: *{$text} USD*\n"
-                                . "Disponible en tu wallet: *{$balance} USD*\n\n"
-                                . "Por favor, ingresa un monto menor o igual a `{$balance}`.",
+                                "▫️ _Escriba solo el número. Ejemplo:_ `{$balance}`",
                             "chat" => ["id" => $userId],
                             "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                             "editprevious" => 1
