@@ -351,7 +351,7 @@ class OffersController extends Controller
                             [
                                 [
                                     "text" => "👉 Aplicar a esta oferta",
-                                    'url' => "https://t.me/" . $bot->tenant->code . "?offer={$id}"
+                                    'url' => "https://t.me/" . $bot->tenant->code . "?start=offer-{$id}"
                                 ]
                             ],
                         ],

@@ -379,6 +379,19 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+        $this->strategies["offer"] =
+            function () use ($suscriptor) {
+                $reply = [
+                    "text" =>
+                        "prueba",
+                    "chat" => array(
+                        "id" => $suscriptor->user_id,
+                    ),
+                ];
+
+                return $reply;
+            };
+
 
         return $this->getProcessedMessage();
     }
