@@ -166,9 +166,6 @@ trait UsesTelegramBot
     }
     public function getProcessedMessage($array = false)
     {
-        if (env("DEBUG_MODE", false))
-            Log::debug("🐞 UsesTelegramBot getProcessedMessage bot:" . json_encode($this->actor));
-
         // validando q el usuario tenga un @username
         if (
             !isset($this->actor->data["telegram"]) ||
@@ -197,6 +194,11 @@ trait UsesTelegramBot
         //var_dump($array);
         //die("\n");
         //echo strtolower($array["command"]);
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 UsesTelegramBot getProcessedMessage bot:", [
+                "array" => $array,
+                "actor" => $this->actor,
+            ]);
 
 
         if (isset($this->strategies[strtolower($array["command"])])) {

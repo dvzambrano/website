@@ -78,7 +78,6 @@ class ZentroTraderBotController extends JsonsController
                     if (env("DEBUG_MODE", false))
                         Log::debug("🐞 ZentroTraderBotController processMessage /start:", [
                             "wallet" => $wallet,
-                            "array" => $this->getCommand($this->message["text"])
                         ]);
                 }
 
