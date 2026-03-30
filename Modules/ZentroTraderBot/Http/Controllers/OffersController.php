@@ -66,8 +66,15 @@ class OffersController extends Controller
                 Cache::forever($cacheKey, $state);
 
             case 'STEP_AMOUNT':
+                $balance = 100;
                 if ($text !== null && $text !== '/p2psell') {
                     $this->deleteUserText($bot);
+
+                    // --- VALIDACIÓN DE BALANCE ---
+                    $walletCtrl = new TraderWalletController();
+                    $suscriptor = Suscriptions::where('user_id', $userId)->first();
+                    $balance = $walletCtrl->getBalance($suscriptor);
+
                     try {
                         $text = NumberService::parse($text);
                     } catch (\Throwable $th) {
@@ -80,21 +87,24 @@ class OffersController extends Controller
                                 "▫️ *Definir el monto de la transacción*\n" .
                                 "▫️ ❌ '{$text}' no es un monto válido\n" .
                                 "▫️ _¿Cuántos USD desea vender?_\n" .
-                                "▫️ _Escriba solo el número. Ejemplo:_ `100`",
+                                "▫️ _Escriba solo el número. Ejemplo:_ `{$balance}`",
                             "chat" => ["id" => $userId],
                             "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                             "editprevious" => 1
                         ];
                     }
 
-                    // --- VALIDACIÓN DE BALANCE ---
-                    $walletCtrl = new TraderWalletController();
-                    $suscriptor = Suscriptions::where('user_id', $userId)->first();
-
-                    $balance = $walletCtrl->getBalance($suscriptor);
                     if ($text > $balance) {
                         return [
-                            "text" => "⚠️ *Saldo insuficiente*\n\n"
+                            "text" =>
+                                "✨ *Asistente de creación de ofertas*\n" .
+                                "◾️ _Paso 1️⃣ de 5️⃣_\n" .
+                                "▫️ *Definir el monto de la transacción*\n" .
+                                "▫️ ❌ Intentas vender {$text} USD\n" .
+                                "▫️ _¿Cuántos de sus {$balance} USD disponibles desea vender?_\n" .
+                                "▫️ _Escriba solo el número. Ejemplo:_ `{$balance}`" .
+
+                                "⚠️ *Saldo insuficiente*\n\n"
                                 . "Intentas vender: *{$text} USD*\n"
                                 . "Disponible en tu wallet: *{$balance} USD*\n\n"
                                 . "Por favor, ingresa un monto menor o igual a `{$balance}`.",
@@ -120,7 +130,7 @@ class OffersController extends Controller
                         "▫️ *Definir el monto de la transacción*\n" .
                         "▫️ \n" .
                         "▫️ _¿Cuántos USD desea vender?_\n" .
-                        "▫️ _Escriba solo el número. Ejemplo:_ `100`",
+                        "▫️ _Escriba solo el número. Ejemplo:_ `{$balance}`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => $text == null ? 1 : 0
