@@ -66,14 +66,13 @@ class OffersController extends Controller
                 Cache::forever($cacheKey, $state);
 
             case 'STEP_AMOUNT':
-                $balance = 100;
+                // --- VALIDACIÓN DE BALANCE ---
+                $walletCtrl = new TraderWalletController();
+                $suscriptor = Suscriptions::where('user_id', $userId)->first();
+                $balance = $walletCtrl->getBalance($suscriptor);
+
                 if ($text !== null && $text !== '/p2psell') {
                     $this->deleteUserText($bot);
-
-                    // --- VALIDACIÓN DE BALANCE ---
-                    $walletCtrl = new TraderWalletController();
-                    $suscriptor = Suscriptions::where('user_id', $userId)->first();
-                    $balance = $walletCtrl->getBalance($suscriptor);
 
                     try {
                         $parsedtext = NumberService::parse($text);
