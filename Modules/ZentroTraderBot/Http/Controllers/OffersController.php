@@ -296,7 +296,7 @@ class OffersController extends Controller
 
                 $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
                 return [
-                    "text" => "🌟 *Resumen de su Oferta*\n\n"
+                    "text" => "✨ *Resumen de su Oferta*\n"
                         . "💵 Vendes: *{$state['data']['amount']} USD*\n"
                         . "💰 Precio: *{$state['data']['price']} {$state['data']['currency']}*\n"
                         . "💱 Recibes: *{$total} {$state['data']['currency']}*\n"
