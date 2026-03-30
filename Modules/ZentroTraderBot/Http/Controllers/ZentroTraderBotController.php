@@ -85,6 +85,11 @@ class ZentroTraderBotController extends JsonsController
                     ]);
 
 
+                return [
+                    "text" => "test: " . $array["message"],
+                ];
+
+
 
                 if (empty($array["message"]))
                     $reply = $this->mainMenu($this->actor);
