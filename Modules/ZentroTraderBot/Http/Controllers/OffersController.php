@@ -297,11 +297,12 @@ class OffersController extends Controller
                 $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
                 return [
                     "text" => "✨ *Resumen de su Oferta*\n"
-                        . "💵 Vendes: *{$state['data']['amount']} USD*\n"
-                        . "💰 Precio: *{$state['data']['price']} {$state['data']['currency']}*\n"
+                        . "💵 Vendes: *{$state['data']['amount']} USD* a *{$state['data']['price']} {$state['data']['currency']}/USD*\n"
                         . "💱 Recibes: *{$total} {$state['data']['currency']}*\n"
                         . "🏦 Método: *{$state['data']['method_name']}*\n"
-                        . "📝 Datos: `{$state['data']['details']}`",
+                        . "📝 Datos: `{$state['data']['details']}`" .
+                        "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
+
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "✅ Publicar", "callback_data" => "/offerconfirm"]], [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
