@@ -15,6 +15,7 @@ use Modules\ZentroTraderBot\Services\ScrowMockService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 
 class SimulateScrowAction implements ShouldQueue
 {
@@ -55,7 +56,7 @@ class SimulateScrowAction implements ShouldQueue
         $type = rand(1, 2) == 1 ? 'sell' : 'buy';
         $amountHuman = rand(10, 100);
 
-        $offer = Offers::on('tenant')->create([
+        $offer = new Offers([
             'uuid' => (string) Str::uuid(),
             'user_id' => $this->seller->user_id,
             'type' => $type,
@@ -67,15 +68,33 @@ class SimulateScrowAction implements ShouldQueue
             'status' => 'open',
             'network_id' => env('BASE_NETWORK'),
             'token_address' => env('BASE_TOKEN'),
-            'data' => [
-                "code" => [
-                    "prefix" => collect(range('A', 'Z'))->random(),
-                    "suffix" => Str::upper(Str::random(1))
-                ]
-            ]
         ]);
+        // Asignamos los componentes aleatorios del código de soporte
+        $offer->data = [
+            "code" => [
+                "prefix" => collect(range('A', 'Z'))->random(),
+                "suffix" => Str::upper(Str::random(1))
+            ]
+        ];
+        // Guardamos para disparar el ID autoincremental
+        $offer->save();
 
-        Log::info("✨ Simulación: Oferta {$offer->uuid} creada por el usuario {$this->seller->user_id}");
+        // 3. ENVÍO A TELEGRAM
+        $response = TelegramController::sendMessage(
+            $offer->getAsChannelMessage($this->bot->code),
+            $this->bot->token
+        );
+        if ($response) {
+            $array = json_decode($response, true);
+            $messageId = $array["result"]["message_id"] ?? null;
+
+            // 4. SEGUNDO GUARDADO (Actualización): Guardamos el ID del mensaje y activamos la oferta
+            $currentData = $offer->data;
+            $currentData["channel"] = ["message_id" => $messageId];
+            $offer->update([
+                'data' => $currentData
+            ]);
+        }
 
         // 2. Simulamos el Payload de TradeCreated (Como si el contrato detectara el bloqueo)
         $payload = ScrowMockService::getTradeCreatedPayload(
