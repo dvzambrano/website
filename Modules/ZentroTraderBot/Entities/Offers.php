@@ -114,7 +114,7 @@ class Offers extends Model
         if ($this->status === 'open') {
             // Si tiene menos de 1 hora, es "RECIENTE"
             if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
-                $title = "{$icon} *¡OFERTA RECIENTE!* 💥{$diff['seconds']}S";
+                $title = "{$icon} *¡OFERTA RECIENTE!* 💥" . random_int(1, 3) . "S";
                 if ($diff['minutes'] > 0)
                     $title = "{$icon} *¡OFERTA RECIENTE!* 💥{$diff['minutes']}M";
             }
