@@ -321,9 +321,7 @@ class OffersController extends Controller
 
     private function publishOffer($bot, $state)
     {
-        $test = Str::uuid7();
-
-        // Creamos la instancia. NO toca la base de datos.
+        // 1. PRIMER GUARDADO: Creamos la instancia y la persistimos para obtener el ID real de la DB
         $offer = new Offers([
             'uuid' => (string) Str::uuid(),
             'user_id' => $bot->actor->user_id,
@@ -337,15 +335,21 @@ class OffersController extends Controller
             'network_id' => env("BASE_NETWORK"),
             'token_address' => env("BASE_TOKEN"),
         ]);
-        // ASIGNAR ESTO ANTES DE RENDERIZAR
+        // Asignamos los componentes aleatorios del código de soporte
         $offer->data = [
             "code" => [
                 "prefix" => Str::upper(Str::random(1)),
                 "suffix" => random_int(1, 9),
             ]
         ];
+        // Guardamos para disparar el ID autoincremental
+        $offer->save();
+
+        // 2. RENDERIZACIÓN: 
         $text = $offer->renderAsTelegramMessage("🟥 *¡NUEVA OFERTA!*");
         $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._\n\n";
+
+        // 3. ENVÍO A TELEGRAM
         $response = TelegramController::sendMessage(
             array(
                 "message" => array(
@@ -358,7 +362,7 @@ class OffersController extends Controller
                             [
                                 [
                                     "text" => "👉 Aplicar a esta oferta",
-                                    'url' => "https://t.me/" . $bot->tenant->code . "?start=offer_{$offer->uuid}"
+                                    'url' => "https://t.me/" . $bot->tenant->code . "?start=offer_{$offer->code}"
                                 ]
                             ],
                         ],
@@ -369,14 +373,16 @@ class OffersController extends Controller
         );
         if ($response) {
             $array = json_decode($response, true);
-            $messageId = $array["result"]["message_id"];
+            $messageId = $array["result"]["message_id"] ?? null;
 
-            // Recuperamos lo que ya tiene y añadimos lo nuevo
+            // 4. SEGUNDO GUARDADO (Actualización): Guardamos el ID del mensaje y activamos la oferta
             $currentData = $offer->data;
             $currentData["channel"] = ["message_id" => $messageId];
-            $offer->data = $currentData;
-            $offer->save();
+            $offer->update([
+                'data' => $currentData
+            ]);
 
+            // Limpiamos el wizard de la caché
             Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
 
             $text = "✅ *¡SU OFERTA YA ESTÁ ACTIVA!*\n";
@@ -402,6 +408,12 @@ class OffersController extends Controller
                 ]),
             ];
         }
+
+        // Opcional: Manejo de error si Telegram falla
+        return [
+            "text" => "❌ *Error al publicar en el canal.*\n_Por favor, intente nuevamente o contacte a soporte._",
+            "chat" => ["id" => $bot->actor->user_id]
+        ];
     }
 
     public function showOffer($bot, $code, $menu = false)
