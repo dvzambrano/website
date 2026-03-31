@@ -66,22 +66,30 @@ class Offers extends Model
     {
         $total = number_format(($this->amount * $this->price_per_usd), 2);
         $amount = number_format($this->amount, 2);
+        $isSell = strtolower($this->type) == "sell";
 
         $text = "{$title}\n";
-        $text .= "🆔 `" . $this->code . "`\n";
-        if (strtolower($this->type) == "sell")
-            $text .= "💸 En venta: *{$amount} USD*\n";
-        else
-            $text .= "💰 Compra: *{$amount} USD*\n";
-        $text .= "💱 Tasa: *{$this->price_per_usd} {$this->currency}/USD*\n";
-        if (strtolower($this->type) == "sell")
-            if ($owner)
-                $text .= "💰 Recibe: *{$total} {$this->currency}*\n";
-            else
-                $text .= "💰 Ud paga: *{$total} {$this->currency}*\n";
-        else
-            $text .= "💸 Entrega: *{$total} {$this->currency}*\n";
-        $text .= "🏦 Medio de Pago: *{$this->payment_method}*\n\n";
+        $text .= "🔖 Ticket: `{$this->code}`\n";
+
+        if ($isSell) {
+            $text .= "💎 Vendes: *{$amount} USD*\n";
+        } else {
+            $text .= "💎 Compras: *{$amount} USD*\n";
+        }
+
+        $text .= "🏷️ Tasa: *{$this->price_per_usd} {$this->currency}/USD*\n";
+
+        if ($isSell) {
+            if ($owner) {
+                $text .= "📥 Recibe: *{$total} {$this->currency}*\n";
+            } else {
+                $text .= "📤 Paga: *{$total} {$this->currency}*\n";
+            }
+        } else {
+            $text .= "📤 Entrega: *{$total} {$this->currency}*\n";
+        }
+
+        $text .= "💳 Pago: *{$this->payment_method}*\n\n";
 
         return $text;
     }
