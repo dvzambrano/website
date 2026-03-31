@@ -74,9 +74,9 @@ class Offers extends Model
         $text .= "🆔 `{$this->code}`\n";
 
         if ($isSell) {
-            $text .= "💵 Vendes: *{$amount} USD*\n";
+            $text .= "💵 En venta: *{$amount} USD*\n";
         } else {
-            $text .= "💵 Compras: *{$amount} USD*\n";
+            $text .= "💵 Se compra: *{$amount} USD*\n";
         }
 
         $text .= "🔖 Tasa: *{$this->price_per_usd} {$this->currency}/USD*\n";
