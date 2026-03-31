@@ -8,6 +8,7 @@ use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\Laravel\Services\DateService;
 use Carbon\Carbon;
+use Modules\ZentroTraderBot\Jobs\UpdateOfferInChannel;
 
 class OfferObserver
 {
@@ -17,6 +18,10 @@ class OfferObserver
     public function created(Offers $offer): void
     {
         $bot = app('active_bot');
+
+        dispatch(new UpdateOfferInChannel($bot->key, $offer->code))->delay(now()->addMinutes(5));
+
+        /*
 
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
@@ -51,6 +56,7 @@ class OfferObserver
             $text,
             $bot->token
         );
+        */
     }
 
     /**
@@ -64,6 +70,9 @@ class OfferObserver
         }
 
         $bot = app('active_bot');
+
+        dispatch(new UpdateOfferInChannel($bot->key, $offer->code));
+
 
         $newStatus = $offer->status;
         $amount = number_format($offer->amount, 2);
