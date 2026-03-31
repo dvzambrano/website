@@ -19,7 +19,7 @@ class OfferObserver
     {
         $bot = app('active_bot');
 
-        dispatch(new UpdateOfferInChannel($bot->key, $offer->code))->delay(now()->addMinutes(5));
+        dispatch(new UpdateOfferInChannel($bot->key, $offer->code));
 
         /*
 
