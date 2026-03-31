@@ -398,25 +398,32 @@ class OffersController extends Controller
 
     public function showOffer($bot, $uuid, $menu = false)
     {
-        $offer = Offers::on('tenant')->where('uuid', $uuid)->first();
-        $title = "🟩";
-        if (strtolower($offer->type) == "sell")
-            $title = "🟥";
-        $text = $offer->renderAsTelegramMessage("{$title} *OFERTA*");
-        $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
-
+        $text = "";
         if (!$menu)
             $menu = [];
 
-        if ($bot->actor->user_id == $offer->user_id)
-            array_push($menu, [
-                ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->id}|menu"]
-            ]);
-        else {
-            $total = number_format($offer->amount * $offer->price, 2);
-            array_push($menu, [
-                ["text" => "✅ Pagar {$total} {$offer->currency}", "callback_data" => "payoffer-{$offer->id}"]
-            ]);
+        $offer = Offers::on('tenant')->where('uuid', $uuid)->first();
+        if ($offer && $offer->id > 0) {
+            $title = "🟩";
+            if (strtolower($offer->type) == "sell")
+                $title = "🟥";
+            $text = $offer->renderAsTelegramMessage("{$title} *OFERTA*");
+            $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
+
+            if ($bot->actor->user_id == $offer->user_id)
+                array_push($menu, [
+                    ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->id}|menu"]
+                ]);
+            else {
+                $total = number_format($offer->amount * $offer->price, 2);
+                array_push($menu, [
+                    ["text" => "✅ Pagar {$total} {$offer->currency}", "callback_data" => "payoffer-{$offer->id}"]
+                ]);
+            }
+        } else {
+            $text = "🤔 *¡Que raro!*\n";
+            $text .= "_No he encontrado la oferta_\n\n";
+            $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
         }
 
         array_push($menu, [
