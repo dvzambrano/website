@@ -4,7 +4,6 @@ namespace Modules\ZentroTraderBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 use Modules\Laravel\Services\DateService;
-use Modules\Laravel\Services\NumberService;
 use Modules\Laravel\Traits\TenantTrait;
 use Carbon\Carbon;
 
@@ -115,17 +114,17 @@ class Offers extends Model
         if ($this->status === 'open') {
             // Si tiene menos de 1 hora, es "RECIENTE"
             if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
-                $title = "{$icon} *¡OFERTA RECIENTE!* 💥 _(justo ahora)_";
+                $title = "{$icon} *¡OFERTA RECIENTE!* 💥 _{$diff['seconds']}S_";
                 if ($diff['minutes'] > 0)
-                    $title = "{$icon} *¡OFERTA RECIENTE!* 💥 _({$diff['minutes']}m)_";
+                    $title = "{$icon} *¡OFERTA RECIENTE!* 💥 _{$diff['minutes']}M_";
             }
             // Si tiene entre 1 y 24 horas, es "NUEVA"
             elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
-                $title = "{$icon} *¡NUEVA OFERTA!* 🔥 _({$diff['hours']}h)_";
+                $title = "{$icon} *¡NUEVA OFERTA!* 🔥 _{$diff['hours']}H_";
             }
             // Si tiene más de un día, es "DISPONIBLE"
             else {
-                $title = "{$icon} *OFERTA DISPONIBLE* ✨ _({$diff['days']}d {$diff['hours']}h)_";
+                $title = "{$icon} *OFERTA DISPONIBLE* ✨ _{$diff['days']}D{$diff['hours']}H_";
             }
         } elseif ($this->status === 'in_progress') {
             $title = "🟡 *OFERTA EN CURSO*";
