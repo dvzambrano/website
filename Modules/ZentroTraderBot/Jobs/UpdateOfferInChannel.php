@@ -37,6 +37,12 @@ class UpdateOfferInChannel implements ShouldQueue
 
             $offer = Offers::findByCode($this->code);
 
+            // 2. VALIDACIÓN CRÍTICA: Si no existe, abortamos el Job
+            if (!$offer) {
+                Log::warning("⚠️ Oferta no encontrada en el Job", ['code' => $this->code]);
+                return;
+            }
+
             // 1. Si la oferta ya no existe o está cerrada, no hacemos nada
             if (!$offer || in_array($offer->status, ['completed', 'cancelled'])) {
                 return;
