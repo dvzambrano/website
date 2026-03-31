@@ -326,7 +326,7 @@ class ZentroTraderBotController extends JsonsController
                                 ]
                             ],
                             [
-                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "confirmation|showseedphrase|wallet"]
+                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "showseedphraseconfirmation|showseedphrase|wallet"]
                             ],
                             [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                         ],
@@ -370,7 +370,7 @@ class ZentroTraderBotController extends JsonsController
             };
 
 
-        $this->strategies["confirmation"] =
+        $this->strategies["showseedphraseconfirmation"] =
             function () use ($array) {
                 $reply = $this->getAreYouSurePrompt(
                     $array["pieces"][1],
@@ -526,7 +526,7 @@ class ZentroTraderBotController extends JsonsController
     public function configMenu($actor)
     {
         $menu = [];
-        array_push($menu, [["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "confirmation|showseedphrase|wallet"]]);
+        array_push($menu, [["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "showseedphraseconfirmation|showseedphrase|wallet"]]);
 
         return $this->getConfigMenu(
             $actor,
