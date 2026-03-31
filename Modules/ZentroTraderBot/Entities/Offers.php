@@ -115,15 +115,17 @@ class Offers extends Model
         if ($this->status === 'open') {
             // Si tiene menos de 1 hora, es "RECIENTE"
             if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
-                $title = "{$icon} *¡OFERTA RECIENTE!* 💥 (Hace {$diff['minutes']} min)";
+                $title = "{$icon} *¡OFERTA RECIENTE!* 💥 _(justo ahora)_";
+                if ($diff['minutes'] > 0)
+                    $title = "{$icon} *¡OFERTA RECIENTE!* 💥 _(Hace {$diff['minutes']} min)_";
             }
             // Si tiene entre 1 y 24 horas, es "NUEVA"
             elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
-                $title = "{$icon} *¡NUEVA OFERTA!* 🔥 (Hace {$diff['hours']} hrs)";
+                $title = "{$icon} *¡NUEVA OFERTA!* 🔥 _(Hace {$diff['hours']} hrs)_";
             }
             // Si tiene más de un día, es "DISPONIBLE"
             else {
-                $title = "{$icon} *OFERTA DISPONIBLE* ✨ ({$diff['days']}d {$diff['hours']}h activa)";
+                $title = "{$icon} *OFERTA DISPONIBLE* ✨ _({$diff['days']}d {$diff['hours']}h activa)_";
             }
         } elseif ($this->status === 'in_progress') {
             $title = "🟡 *OFERTA EN CURSO*";
