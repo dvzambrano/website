@@ -338,8 +338,8 @@ class OffersController extends Controller
         // Asignamos los componentes aleatorios del código de soporte
         $offer->data = [
             "code" => [
-                "prefix" => Str::upper(Str::random(1)),
-                "suffix" => random_int(1, 9),
+                "prefix" => collect(range('A', 'Z'))->random(),
+                "suffix" => Str::upper(Str::random(1))
             ]
         ];
         // Guardamos para disparar el ID autoincremental
