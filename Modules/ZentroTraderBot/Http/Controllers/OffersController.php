@@ -407,15 +407,16 @@ class OffersController extends Controller
             $title = "🟩";
             if (strtolower($offer->type) == "sell")
                 $title = "🟥";
-            $text = $offer->renderAsTelegramMessage("{$title} *OFERTA*");
+            $isOwner = $bot->actor->user_id == $offer->user_id;
+            $text = $offer->renderAsTelegramMessage("{$title} *OFERTA*", $isOwner);
             $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
 
-            if ($bot->actor->user_id == $offer->user_id)
+            if ($isOwner)
                 array_push($menu, [
                     ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->id}|menu"]
                 ]);
             else {
-                $total = number_format($offer->amount * $offer->price, 2);
+                $total = number_format(($offer->amount * $offer->price_per_usd), 2);
                 array_push($menu, [
                     ["text" => "✅ Pagar {$total} {$offer->currency}", "callback_data" => "payoffer-{$offer->id}"]
                 ]);

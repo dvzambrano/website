@@ -3,6 +3,7 @@
 namespace Modules\ZentroTraderBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Laravel\Services\NumberService;
 use Modules\Laravel\Traits\TenantTrait;
 
 class Offers extends Model
@@ -28,19 +29,23 @@ class Offers extends Model
         $this->update(array_merge(['status' => $status], $extra));
     }
 
-    public function renderAsTelegramMessage($title = "")
+    public function renderAsTelegramMessage($title = "", $owner = false)
     {
-        $total = $this->amount * $this->price_per_usd;
+        $total = number_format(($this->amount * $this->price_per_usd), 2);
+        $amount = number_format($this->amount, 2);
 
         $text = "{$title}\n";
         $text .= "🆔 `" . $this->uuid . "`\n";
         if (strtolower($this->type) == "sell")
-            $text .= "💸 En venta: *{$this->amount} USD*\n";
+            $text .= "💸 En venta: *{$amount} USD*\n";
         else
-            $text .= "💰 Compra: *{$this->amount} USD*\n";
+            $text .= "💰 Compra: *{$amount} USD*\n";
         $text .= "💱 Tasa: *{$this->price_per_usd} {$this->currency}/USD*\n";
         if (strtolower($this->type) == "sell")
-            $text .= "💰 Recibe: *{$total} {$this->currency}*\n";
+            if ($owner)
+                $text .= "💰 Recibe: *{$total} {$this->currency}*\n";
+            else
+                $text .= "💰 Ud paga: *{$total} {$this->currency}*\n";
         else
             $text .= "💸 Entrega: *{$total} {$this->currency}*\n";
         $text .= "🏦 Medio de Pago: *{$this->payment_method}*\n\n";
