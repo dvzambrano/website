@@ -9,10 +9,12 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
+use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Services\ScrowMockService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class SimulateScrowAction implements ShouldQueue
 {
@@ -38,28 +40,59 @@ class SimulateScrowAction implements ShouldQueue
         //{"token":{"chainId":137,"address":"0x8f3cf7ad23cd3cadbd9735aff958023239c6a063","decimals":18,"symbol":"DAI","name":"(PoS) Dai Stablecoin","logoURI":"https://tokens.1inch.io/0x6b175474e89094c44da98b954eedeac495271d0f.png","eip2612":true,"tags":[]}} 
         $this->token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
 
-        // Asumimos que los IDs 1 y 2 existen en la DB de pruebas del tenant
-        $seller = rand(1, 2);
-        $buyer = 1;
-        if ($seller == 1)
-            $buyer = 2;
-        $this->seller = Suscriptions::on('tenant')->find($seller);
-        $this->buyer = Suscriptions::on('tenant')->find($buyer);
+        // Seleccionamos dos usuarios al azar de las suscripciones del tenant
+        $users = Suscriptions::on('tenant')->inRandomOrder()->limit(2)->get();
+        if ($users->count() < 2) {
+            Log::error("❌ Simulación abortada: Se necesitan al menos 2 suscriptores en el tenant.");
+            return;
+        }
 
-        // creamos el trade
+        $this->seller = $users[0];
+        $this->buyer = $users[1];
+
+        // --- NUEVO PASO: SIMULAR CREACIÓN DE OFERTA EN DB ---
+        // Esto es lo que antes hacía el Wizard y ahora el Job inicia aquí.
+        $type = rand(1, 2) == 1 ? 'sell' : 'buy';
+        $amountHuman = rand(10, 100);
+
+        $offer = Offers::on('tenant')->create([
+            'uuid' => (string) Str::uuid(),
+            'user_id' => $this->seller->user_id,
+            'type' => $type,
+            'amount' => $amountHuman,
+            'price_per_usd' => rand(150, 200), // Ejemplo para CUP/MLC o similar
+            'currency' => 'CUP',
+            'payment_method' => 'Transferencia Bancaria',
+            'payment_details' => 'Cuenta: 9223 XXXX XXXX',
+            'status' => 'open',
+            'network_id' => env('BASE_NETWORK'),
+            'token_address' => env('BASE_TOKEN'),
+            'data' => [
+                "code" => [
+                    "prefix" => collect(range('A', 'Z'))->random(),
+                    "suffix" => Str::upper(Str::random(1))
+                ]
+            ]
+        ]);
+
+        Log::info("✨ Simulación: Oferta {$offer->uuid} creada por el usuario {$this->seller->user_id}");
+
+        // 2. Simulamos el Payload de TradeCreated (Como si el contrato detectara el bloqueo)
         $payload = ScrowMockService::getTradeCreatedPayload(
             $this->tenant,
             $this->seller->getWallet()["address"],
             $this->buyer->getWallet()["address"],
-            $this->token['decimals']
+            $this->token['decimals'],
+            false,
+            $offer->id
         );
+
         $tradeId = $payload['decoded']['params']['tradeId'];
-        $amountWei = $payload['decoded']['params']['amount'];
-        $amountHuman = $amountWei / pow(10, $this->token['decimals']);
 
+        // Ejecutamos el procesamiento del Scrow (esto activará notificaciones en el bot)
+        ProcessScrowAction::dispatch($payload)->delay(now()->addSeconds(30));
 
-        ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(1));
-
+        // 3. FLUJO DE ACCIONES ALEATORIAS (Igual que antes pero usando el tradeId generado)
         $action = rand(1, 10);
         switch ($action) {
             // 10% de probabilidad: El Comprador se arrepiente y cancela
@@ -71,7 +104,7 @@ class SimulateScrowAction implements ShouldQueue
                 ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(2));
                 break;
 
-            // 10% de probabilidad: El trade expira (Vendedor reclama por falta de pago)
+            // 10% de probabilidad: El trade expira
             case 2:
                 $payload = ScrowMockService::getTradeExpiredPayload(
                     $this->tenant,
@@ -80,66 +113,34 @@ class SimulateScrowAction implements ShouldQueue
                 ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(65));
                 break;
 
-            // 10% de probabilidad: Alguien abre una disputa
+            // 10% de probabilidad: Disputa
             case 8:
-                $address = $this->seller->getWallet()["address"];
-                $rand = rand(1, 2);
-                if ($rand == 1)
-                    $address = $this->buyer->getWallet()["address"];
-                // abrir la disputa
-                $payload = ScrowMockService::getDisputeOpenedPayload(
-                    $this->tenant,
-                    $address,
-                    $tradeId
-                );
+                $address = rand(1, 2) == 1 ? $this->seller->getWallet()["address"] : $this->buyer->getWallet()["address"];
+
+                // Abrir la disputa
+                $payload = ScrowMockService::getDisputeOpenedPayload($this->tenant, $address, $tradeId);
                 ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(10));
-                // resolverla 
-                $address = $this->seller->getWallet()["address"];
-                $rand = rand(1, 2);
-                if ($rand == 1)
-                    $address = $this->buyer->getWallet()["address"];
-                $payload = ScrowMockService::getDisputeResolvedPayload(
-                    $this->tenant,
-                    $address,
-                    $tradeId
-                );
+
+                // Resolverla a favor de uno al azar
+                $winner = rand(1, 2) == 1 ? $this->seller->getWallet()["address"] : $this->buyer->getWallet()["address"];
+                $payload = ScrowMockService::getDisputeResolvedPayload($this->tenant, $winner, $tradeId);
                 ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(15));
                 break;
 
-            // simulamos un flujo normal de firma y cierre del trade
+            // Flujo normal: Firmas de ambas partes y cierre
             default:
-                $rand = rand(1, 2);
-                if ($rand == 1) {
-                    // firma primero el vendedor (raro pero posible) q recibio el pago
-                    $payload = ScrowMockService::getTradeSignedPayload(
-                        $this->tenant,
-                        $this->seller->getWallet()["address"],
-                        $tradeId
-                    );
-                    ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(2));
-
-                    $payload = ScrowMockService::getTradeSignedPayload(
-                        $this->tenant,
-                        $this->buyer->getWallet()["address"],
-                        $tradeId
-                    );
-                    ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(4));
+                if (rand(1, 2) == 1) {
+                    // Firma vendedor -> Comprador
+                    $p1 = ScrowMockService::getTradeSignedPayload($this->tenant, $this->seller->getWallet()["address"], $tradeId);
+                    $p2 = ScrowMockService::getTradeSignedPayload($this->tenant, $this->buyer->getWallet()["address"], $tradeId);
                 } else {
-                    // firma primero el comprador indicando q ya pago
-                    $payload = ScrowMockService::getTradeSignedPayload(
-                        $this->tenant,
-                        $this->buyer->getWallet()["address"],
-                        $tradeId
-                    );
-                    ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(2));
-
-                    $payload = ScrowMockService::getTradeSignedPayload(
-                        $this->tenant,
-                        $this->seller->getWallet()["address"],
-                        $tradeId
-                    );
-                    ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(4));
+                    // Firma comprador -> Vendedor
+                    $p1 = ScrowMockService::getTradeSignedPayload($this->tenant, $this->buyer->getWallet()["address"], $tradeId);
+                    $p2 = ScrowMockService::getTradeSignedPayload($this->tenant, $this->seller->getWallet()["address"], $tradeId);
                 }
+
+                ProcessScrowAction::dispatch($p1)->delay(now()->addMinutes(2));
+                ProcessScrowAction::dispatch($p2)->delay(now()->addMinutes(4));
 
                 $payload = ScrowMockService::getTradeClosedPayload(
                     $this->tenant,
@@ -153,18 +154,17 @@ class SimulateScrowAction implements ShouldQueue
                 break;
         }
 
-
-
-        // Identificamos el nombre corto de este Job (ej: "SimulateScrowAction")
+        // --- LÓGICA DE RECURSIVIDAD Y PARADA ---
         $jobName = strtolower(class_basename($this));
         $stopKey = "stop_job_{$jobName}_{$this->tenant}";
-        // ¿Hay orden de parada?
+
         if (Cache::has($stopKey)) {
             Log::info("🛑 Cadena interrumpida para {$jobName} en Tenant {$this->tenant}");
-            Cache::forget($stopKey); // Limpiamos para futuros reinicios
-            return; // SE DETIENE LA RECURSIVIDAD
+            Cache::forget($stopKey);
+            return;
         }
 
-        self::dispatch($this->tenant)->delay(now()->addMinutes(rand(2, 12)));
+        // Re-despachamos el Job para mantener la simulación viva
+        self::dispatch($this->tenant)->delay(now()->addMinutes(rand(5, 15)));
     }
 }
