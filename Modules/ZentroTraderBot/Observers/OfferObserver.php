@@ -25,7 +25,7 @@ class OfferObserver
         $amount = number_format($offer->amount, 2);
         $price = number_format($offer->amount * $offer->price_per_usd, 2);
         $text = "🛡 *¡Intercambio asegurado!*\n" .
-            "🆔 `{$offer->uuid}`\n" .
+            "🆔 `{$offer->code}`\n" .
             "🔒 Se han bloquedado *{$amount} USD* para Ud\n" .
             "🟢 *Ahora es seguro proceder:*\n\n" .
             "💳 Realice el pago de {$price} {$offer->currency} a:\n" .
@@ -40,7 +40,7 @@ class OfferObserver
         );
 
         $text = "🛡 *¡Intercambio asegurado!*\n" .
-            "🆔 `{$offer->uuid}`\n" .
+            "🆔 `{$offer->code}`\n" .
             "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n\n" .
             "💳 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
             "🏦 _{$offer->payment_details}_\n" .
@@ -112,7 +112,7 @@ class OfferObserver
             case 'DISPUTED':
                 // Se abrió una disputa (DisputeOpened)
                 $text = "🙇🏻 *¡Transacción en DISPUTA!* \n" .
-                    "🆔 `{$offer->uuid}`\n" .
+                    "🆔 `{$offer->code}`\n" .
                     "👉 _Se ha iniciado una reclamación de esta operación._\n" .
                     "👮‍♀️ *Un administrador revisará el caso pronto*.\n\n" .
                     "⚠️ *Tenga a mano evidencia* de que cumplió con su parte del acuerdo.";
@@ -131,7 +131,7 @@ class OfferObserver
 
             case 'CANCELLED':
                 $text = "❌ *Oferta Cancelada!* \n" .
-                    "🆔 `{$offer->uuid}`\n\n" .
+                    "🆔 `{$offer->code}`\n\n" .
                     "👉 _La Oferta ha sido cancelada por el comprador._\n" .
                     "💵 Se han *devuelto *{$amount} USD* a su cuenta.";
                 $this->notifyByAddress(
@@ -153,7 +153,7 @@ class OfferObserver
                 }
 
                 $text = "⚠️ *¡Firma Pendiente!* \n" .
-                    "🆔 `{$offer->uuid}`\n" .
+                    "🆔 `{$offer->code}`\n" .
                     "☑️ La contraparte ya ha firmado y depositado su confianza en esta transacción.\n\n" .
                     "✍️ *Proceda a firmar*; evite que entre en disputa o haya retrasos.\n" .
                     "⏳ _Estamos esperando por Ud..._";
@@ -165,7 +165,7 @@ class OfferObserver
                 /*
                 // Opcional: Notificar al que YA firmó que estamos avisando al otro
                 $text = "👍 *¡Firma REGISTRADA!* \n" .
-                    "🆔 `{$offer->uuid}`\n" .
+                    "🆔 `{$offer->code}`\n" .
                     "✍️ Su firma ha sido registrada.\n\n" .
                     "🔔 *Estamos notificando a la contraparte* para que confirme.\n" .
                     "⏳ _Le avisaremos en cuanto la transacción avance..._";
@@ -186,7 +186,7 @@ class OfferObserver
                     $looser = $offer->buyer_address;
                 }
                 $text = "👩‍💻 *¡Transacción REVISADA!*\n" .
-                    "🆔 `{$offer->uuid}`\n" .
+                    "🆔 `{$offer->code}`\n" .
                     "⚖️ _Un adminstrador ha revisado las evidencias presentadas._\n";
                 $this->notifyByAddress(
                     $winner,
@@ -213,7 +213,7 @@ class OfferObserver
             case 'EXPIRED':
                 // mandar mensaje al comprador de q se le ha vencido el tiempo y entramos en disputa
                 $text = "⏱️ *¡Transacción en EXPIRADA!* \n" .
-                    "🆔 `{$offer->uuid}`\n" .
+                    "🆔 `{$offer->code}`\n" .
                     "👉 _El vendedor ha informado que esta operación no fue pagada en " . $diff["legible"] . "._\n" .
                     "🚨 *Se abrirá una DISPUTA automáticamente*.\n\n" .
                     "🔒 _Los fondos estarán congelados hasta que la administración revise el caso._";

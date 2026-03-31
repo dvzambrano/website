@@ -52,6 +52,26 @@ class CustomTestController extends BaseController
     }
 
 
+    public function testUuid()
+    {
+        $id = rand(1111, 9999);
+        // 1. Convertir ID a Base36 y rellenar a 6 posiciones
+        $idBase36 = str_pad(strtoupper(base_convert($id, 10, 36)), 6, '0', STR_PAD_LEFT);
+
+        // 2. Aleatoriedad en los extremos
+        $prefix = Str::upper(Str::random(1)); // Una letra (A-Z)
+        $suffix = random_int(1, 9);           // Un número (1-9)
+
+        // Resultado: X00002Y1 (8 caracteres siempre)
+        $code = "{$prefix}{$idBase36}{$suffix}";
+
+        $uuid = Str::uuid();
+        $uuid7 = Str::uuid7();
+        $time = time();
+        dd($code, $time, $uuid7, $uuid);
+    }
+
+
     public function testPublic()
     {
         $this->KashioBot->connectToThisTenant();

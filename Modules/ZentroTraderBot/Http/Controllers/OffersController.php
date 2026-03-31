@@ -321,6 +321,8 @@ class OffersController extends Controller
 
     private function publishOffer($bot, $state)
     {
+        $test = Str::uuid7();
+
         // Creamos la instancia. NO toca la base de datos.
         $offer = new Offers([
             'uuid' => (string) Str::uuid(),
@@ -335,6 +337,13 @@ class OffersController extends Controller
             'network_id' => env("BASE_NETWORK"),
             'token_address' => env("BASE_TOKEN"),
         ]);
+        // ASIGNAR ESTO ANTES DE RENDERIZAR
+        $offer->data = [
+            "code" => [
+                "prefix" => Str::upper(Str::random(1)),
+                "suffix" => random_int(1, 9),
+            ]
+        ];
         $text = $offer->renderAsTelegramMessage("🟥 *¡NUEVA OFERTA!*");
         $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._\n\n";
         $response = TelegramController::sendMessage(
@@ -349,7 +358,7 @@ class OffersController extends Controller
                             [
                                 [
                                     "text" => "👉 Aplicar a esta oferta",
-                                    'url' => "https://t.me/" . $bot->tenant->code . "?start=offer-{$offer->uuid}"
+                                    'url' => "https://t.me/" . $bot->tenant->code . "?start=offer_{$offer->uuid}"
                                 ]
                             ],
                         ],
@@ -362,11 +371,10 @@ class OffersController extends Controller
             $array = json_decode($response, true);
             $messageId = $array["result"]["message_id"];
 
-            $offer->data = [
-                "channel" => [
-                    "message_id" => $messageId
-                ]
-            ];
+            // Recuperamos lo que ya tiene y añadimos lo nuevo
+            $currentData = $offer->data;
+            $currentData["channel"] = ["message_id" => $messageId];
+            $offer->data = $currentData;
             $offer->save();
 
             Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
@@ -396,13 +404,13 @@ class OffersController extends Controller
         }
     }
 
-    public function showOffer($bot, $uuid, $menu = false)
+    public function showOffer($bot, $code, $menu = false)
     {
         $text = "";
         if (!$menu)
             $menu = [];
 
-        $offer = Offers::on('tenant')->where('uuid', $uuid)->first();
+        $offer = Offers::findByCode($code);
         if ($offer && $offer->id > 0) {
             $title = "🟩";
             if (strtolower($offer->type) == "sell")

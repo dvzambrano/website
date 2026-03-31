@@ -91,10 +91,10 @@ class ZentroTraderBotController extends JsonsController
                 if ($array["message"] == "")
                     $reply = $this->mainMenu($this->actor);
                 else {
-                    if (str_starts_with($array["message"], 'offer-')) {
-                        $uuid = str_replace('offer-', '', $array["message"]);
+                    if (str_starts_with($array["message"], 'offer_')) {
+                        $code = str_replace('offer_', '', $array["message"]);
                         $controller = new OffersController();
-                        $reply = $controller->showOffer($this, $uuid);
+                        $reply = $controller->showOffer($this, $code);
                     }
                 }
                 return $reply;
