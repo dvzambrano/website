@@ -112,15 +112,15 @@ class Offers extends Model
         $title = "📋 *OFERTA*"; // Default
 
         if ($this->status === 'open') {
-            // Si tiene menos de 1 hora, es "RECIENTE"
+            // Si tiene menos de 1 hora, es "NUEVA"
             if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
-                $title = "{$icon} *¡OFERTA RECIENTE!* 💥" . random_int(1, 3) . "S";
+                $title = "{$icon} *¡NUEVA OFERTA!* 💥" . random_int(1, 3) . "S";
                 if ($diff['minutes'] > 0)
-                    $title = "{$icon} *¡OFERTA RECIENTE!* 💥{$diff['minutes']}M";
+                    $title = "{$icon} *¡NUEVA OFERTA!* 💥{$diff['minutes']}M";
             }
-            // Si tiene entre 1 y 24 horas, es "NUEVA"
+            // Si tiene entre 1 y 24 horas, es "RECIENTE"
             elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
-                $title = "{$icon} *¡NUEVA OFERTA!* 🔥{$diff['hours']}H";
+                $title = "{$icon} *OFERTA RECIENTE!* 🔥{$diff['hours']}H";
             }
             // Si tiene más de un día, es "DISPONIBLE"
             else {
