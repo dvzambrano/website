@@ -20,17 +20,31 @@ class OffersController extends Controller
 {
     public function sell($bot)
     {
+        return $this->wizard($bot, 'sell');
+    }
+
+    public function buy($bot)
+    {
+        return $this->wizard($bot, 'buy');
+    }
+
+    public function wizard($bot, $type = 'sell')
+    {
         $text = $bot->message["text"] ?? null;
         $userId = $bot->actor->user_id;
         $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
 
         $state = Cache::get($cacheKey, [
             'controller' => self::class,
-            'method' => 'sell',
+            'method' => 'wizard',
             'step' => 'START',
-            'data' => [],
+            'data' => ['type' => $type], // Guardamos el tipo inicial
             'history' => []
         ]);
+
+        // Mantenemos el tipo en el estado
+        $isSell = ($state['data']['type'] ?? $type) === 'sell';
+        $label = $isSell ? "vender" : "comprar";
 
         // --- SALIDA Y RETROCESO ---
         if ($text === '/wizardcancel') {
@@ -57,7 +71,7 @@ class OffersController extends Controller
             $state['data'] = $lastState['data'];
             Cache::forever($cacheKey, $state);
             $bot->message["text"] = null;
-            return $this->sell($bot);
+            return $this->wizard($bot, $state['data']['type']);
         }
 
         switch ($state['step']) {
@@ -66,12 +80,15 @@ class OffersController extends Controller
                 Cache::forever($cacheKey, $state);
 
             case 'STEP_AMOUNT':
-                // --- VALIDACIÓN DE BALANCE ---
-                $walletCtrl = new TraderWalletController();
-                $suscriptor = Suscriptions::where('user_id', $userId)->first();
-                $balance = $walletCtrl->getBalance($suscriptor);
+                // --- VALIDACIÓN DE BALANCE (Solo si es venta) ---
+                $balance = 0;
+                if ($isSell) {
+                    $walletCtrl = new TraderWalletController();
+                    $suscriptor = Suscriptions::where('user_id', $userId)->first();
+                    $balance = $walletCtrl->getBalance($suscriptor);
+                }
 
-                if ($text !== null && $text !== '/p2psell') {
+                if ($text !== null && !in_array($text, ['/p2psell', '/p2pbuy'])) {
                     $this->deleteUserText($bot);
 
                     try {
@@ -87,15 +104,16 @@ class OffersController extends Controller
                                 "◾️ _Paso 1️⃣ de 5️⃣_\n" .
                                 "▫️ *Definir el monto de la transacción*\n" .
                                 "❌ '{$text}' no es un monto válido\n" .
-                                "▫️ _¿Cuántos de sus {$balance} USD disponibles desea vender?_\n" .
-                                "▫️ _Escriba solo el número. Ejemplo:_ `{$balance}`",
+                                "▫️ _¿Cuántos USD desea {$label}?_\n" .
+                                "▫️ _Escriba solo el número._",
                             "chat" => ["id" => $userId],
                             "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                             "editprevious" => 1
                         ];
                     }
 
-                    if ($text > $balance) {
+                    // Validación de balance solo si es venta
+                    if ($isSell && $text > $balance) {
                         return [
                             "text" =>
                                 "✨ *Asistente de creación de ofertas*\n" .
@@ -116,8 +134,12 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_CURRENCY'; // SALTO A MONEDA
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->sell($bot);
+                    return $this->wizard($bot, $state['data']['type']);
                 }
+
+                $amountPrompt = $isSell
+                    ? "▫️ _¿Cuántos de sus {$balance} USD disponibles desea vender?_\n▫️ _Escriba solo el número. Ejemplo:_ `{$balance}`"
+                    : "▫️ _¿Cuántos USD desea comprar?_\n▫️ _Escriba solo el número. Ejemplo:_ `100` ";
 
                 return [
                     "text" =>
@@ -125,8 +147,7 @@ class OffersController extends Controller
                         "◾️ _Paso 1️⃣ de 5️⃣_\n" .
                         "▫️ *Definir el monto de la transacción*\n" .
                         "▫️ \n" .
-                        "▫️ _¿Cuántos de sus {$balance} USD disponibles desea vender?_\n" .
-                        "▫️ _Escriba solo el número. Ejemplo:_ `{$balance}`",
+                        $amountPrompt,
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => $text == null ? 1 : 0
@@ -140,7 +161,7 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_PRICE'; // SALTO A PRECIO
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->sell($bot);
+                    return $this->wizard($bot, $state['data']['type']);
                 }
 
                 $currencies = Currencies::where('is_active', true)
@@ -156,13 +177,15 @@ class OffersController extends Controller
                 }
                 $buttons[] = [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]];
 
+                $currencyPrompt = $isSell ? "¿En qué moneda recibirá el pago?" : "¿En qué moneda enviará el pago?";
+
                 return [
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
                         "▫️ _Paso 2️⃣ de 5️⃣_\n" .
-                        "◾️ *Moneda a recibir en este intercambio*\n" .
+                        "◾️ *Moneda local del intercambio*\n" .
                         "▫️ \n" .
-                        "▫️ _¿En qué moneda recibirá el pago?_\n" .
+                        "▫️ _{$currencyPrompt}_\n" .
                         "▫️ Seleccione una de las disponibles 👇",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
@@ -192,9 +215,9 @@ class OffersController extends Controller
                             "text" =>
                                 "✨ *Asistente de creación de ofertas*\n" .
                                 "▫️ _Paso 3️⃣ de 5️⃣_\n" .
-                                "▫️ *Precio de venta USD/{$coin}?*\n" .
+                                "▫️ *Precio de {$label} USD/{$coin}?*\n" .
                                 "❌ '{$text}' no es un precio válido\n" .
-                                "▫️ _¿Cuántos {$coin} desea recibir por cada USD que vende?_\n" .
+                                "▫️ _¿Cuántos {$coin} desea " . ($isSell ? "recibir" : "pagar") . " por cada USD?_\n" .
                                 "▫️ _Por ejemplo:_ `" . number_format($val, 2) . "`",
                             "chat" => ["id" => $userId],
                             "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
@@ -206,16 +229,16 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_METHOD'; // SALTO A MÉTODO
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->sell($bot);
+                    return $this->wizard($bot, $state['data']['type']);
                 }
 
                 return [
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
                         "▫️ _Paso 3️⃣ de 5️⃣_\n" .
-                        "▫️ *Precio de venta USD/{$coin}?*\n" .
+                        "▫️ *Precio de {$label} USD/{$coin}?*\n" .
                         "◾️ \n" .
-                        "▫️ _¿Cuántos {$coin} desea recibir por cada USD que vende?_\n" .
+                        "▫️ _¿Cuántos {$coin} desea " . ($isSell ? "recibir" : "pagar") . " por cada USD?_\n" .
                         "▫️ _Por ejemplo:_ `" . number_format($val, 2) . "`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
@@ -234,7 +257,7 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_DETAILS';
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->sell($bot);
+                    return $this->wizard($bot, $state['data']['type']);
                 }
 
                 $currency = Currencies::where('code', $state['data']['currency'])->first();
@@ -249,13 +272,15 @@ class OffersController extends Controller
                 }
                 $buttons[] = [["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]];
 
+                $methodPrompt = $isSell ? "¿Por qué vía deben enviarle sus {$state['data']['currency']}?" : "¿Por qué vía enviará usted los {$state['data']['currency']}?";
+
                 return [
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
                         "▫️ _Paso 4️⃣ de 5️⃣_\n" .
                         "▫️ *Método de pago deseado*\n" .
                         "▫️ \n" .
-                        "▫️ _¿Por qué vía deben enviarle sus {$state['data']['currency']}?_\n" .
+                        "▫️ _{$methodPrompt}_\n" .
                         "◾️ Seleccione una de las disponibles 👇",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
@@ -270,18 +295,22 @@ class OffersController extends Controller
                     $state['step'] = 'CONFIRM';
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->sell($bot);
+                    return $this->wizard($bot, $state['data']['type']);
                 }
 
                 $methodName = $state['data']['method_name'] ?? $state['data']['method'];
+                $detailsPrompt = $isSell
+                    ? "▫️ _Escriba los detalles de su cuenta {$methodName}:_"
+                    : "▫️ _Escriba los detalles o bancos desde donde pagará por {$methodName}:_";
+
                 return [
                     "text" =>
                         "✨ *Asistente de creación de ofertas*\n" .
                         "▫️ _Paso 5️⃣ de 5️⃣_\n" .
                         "▫️ *Datos de la cuenta*\n" .
                         "▫️ \n" .
-                        "▫️ _Escriba los detalles de su cuenta {$methodName}:_\n" .
-                        "◾️ *Recuerde ser explícito*, cualquier dato faltante podría afectar el tiempo de recepción de su dinero.",
+                        $detailsPrompt . "\n" .
+                        "◾️ *Recuerde ser explícito*, cualquier dato faltante podría afectar el tiempo de la transacción.",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⬅️ Atrás", "callback_data" => "/wizardprevious"], ["text" => "❌ Cancelar", "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1
@@ -294,10 +323,13 @@ class OffersController extends Controller
                 }
 
                 $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
+                $confirmLabel = $isSell ? "💵 Vendes" : "🟢 Compras";
+                $resultLabel = $isSell ? "💱 Recibes" : "💱 Pagas";
+
                 return [
                     "text" => "✨ *Resumen de su Oferta*\n"
-                        . "💵 Vendes: *{$state['data']['amount']} USD* a *{$state['data']['price']} {$state['data']['currency']}/USD*\n"
-                        . "💱 Recibes: *{$total} {$state['data']['currency']}*\n"
+                        . "{$confirmLabel}: *{$state['data']['amount']} USD* a *{$state['data']['price']} {$state['data']['currency']}/USD*\n"
+                        . "{$resultLabel}: *{$total} {$state['data']['currency']}*\n"
                         . "🏦 {$state['data']['method_name']}: `{$state['data']['details']}`\n" .
                         "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
                     "chat" => ["id" => $userId],
@@ -325,7 +357,7 @@ class OffersController extends Controller
         $offer = new Offers([
             'uuid' => (string) Str::uuid(),
             'user_id' => $bot->actor->user_id,
-            'type' => 'sell',
+            'type' => $state['data']['type'], // Dinámico: sell o buy
             'amount' => $state['data']['amount'],
             'price_per_usd' => $state['data']['price'],
             'currency' => $state['data']['currency'],
@@ -365,13 +397,21 @@ class OffersController extends Controller
             // Limpiamos el wizard de la caché
             Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
 
+            $isSell = $state['data']['type'] === 'sell';
             $text = "✅ *¡SU OFERTA YA ESTÁ ACTIVA!*\n";
             $text .= "📢 Su anuncio ha sido publicado en nuestro canal.\n\n";
             $text .= "⚠️ *NOTAS IMPORTANTES DE SEGURIDAD:*\n";
-            $text .= "🔒 *Bloqueo de Garantía:* Tan pronto como un interesado aplique a su oferta, los fondos serán *bloqueados automáticamente*. _Esto garantiza al comprador que existen y estarán disponibles para su compra._\n";
-            $text .= "🚫 *Regla de Oro*: *NUNCA libere los fondos* hasta que haya verificado manualmente la recepción del pago en su cuenta.\n";
+
+            if ($isSell) {
+                $text .= "🔒 *Bloqueo de Garantía:* Tan pronto como un interesado aplique a su oferta, los fondos serán *bloqueados automáticamente*. _Esto garantiza al comprador que existen y estarán disponibles para su compra._\n";
+                $text .= "🚫 *Regla de Oro*: *NUNCA libere los fondos* hasta que haya verificado manualmente la recepción del pago en su cuenta.\n";
+            } else {
+                $text .= "🔒 *Custodia Segura:* Una vez que el vendedor acepte su compra, sus USD quedarán bloqueados por el sistema hasta que usted confirme el pago fiat.\n";
+                $text .= "🚫 *Regla de Oro*: Realice el pago únicamente por los medios acordados y conserve su comprobante.\n";
+            }
+
             $text .= "⚖️ *Sistema de arbitraje:* Nuestro equipo de soporte está listo para intervenir en caso de cualquier disputa durante el proceso.\n\n";
-            $text .= "👍 *¡Suerte con tu venta!* _Le notificaremos en cuanto alguien aplique._";
+            $text .= "👍 " . ($isSell ? "¡Suerte con tu venta!" : "¡Suerte con tu compra!") . " _Le notificaremos en cuanto alguien aplique._";
 
             return [
                 "text" => $text,
@@ -404,10 +444,10 @@ class OffersController extends Controller
 
         $offer = Offers::findByCode($code);
         if ($offer && $offer->id > 0) {
-            $title = "🟩";
-            if (strtolower($offer->type) == "sell")
-                $title = "🟥";
+            $isSell = strtolower($offer->type) == "sell";
+            $title = $isSell ? "🟥" : "🟩";
             $isOwner = $bot->actor->user_id == $offer->user_id;
+
             $text = $offer->renderAsTelegramMessage("{$title} *OFERTA*", $isOwner);
             $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
 
@@ -417,8 +457,9 @@ class OffersController extends Controller
                 ]);
             else {
                 $total = number_format(($offer->amount * $offer->price_per_usd), 2);
+                $btnAction = $isSell ? "✅ Comprar (Pagar Fiat)" : "💰 Vender (Enviar USD)";
                 array_push($menu, [
-                    ["text" => "✅ Pagar {$total} {$offer->currency}", "callback_data" => "payoffer-{$offer->id}"]
+                    ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "apply-{$offer->id}"]
                 ]);
             }
         } else {

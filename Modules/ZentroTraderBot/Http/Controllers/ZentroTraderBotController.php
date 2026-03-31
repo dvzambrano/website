@@ -389,6 +389,13 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+        $this->strategies["/p2pbuy"] =
+            function () {
+                $controller = new OffersController();
+                $reply = $controller->buy($this);
+                return $reply;
+            };
+
         $this->strategies["/p2psell"] =
             function () {
                 $controller = new OffersController();
@@ -422,7 +429,7 @@ class ZentroTraderBotController extends JsonsController
 
         if (env("P2P_ENABLED", true))
             array_push($menu, [
-                ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "notimplemented"],
+                ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
                 ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
             ]);
 
