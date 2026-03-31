@@ -3,8 +3,10 @@
 namespace Modules\ZentroTraderBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
+use Modules\Laravel\Services\DateService;
 use Modules\Laravel\Services\NumberService;
 use Modules\Laravel\Traits\TenantTrait;
+use Carbon\Carbon;
 
 class Offers extends Model
 {
@@ -92,5 +94,64 @@ class Offers extends Model
         $text .= "💳 Medio de pago: *{$this->payment_method}*\n\n";
 
         return $text;
+    }
+
+    public function getAsChannelMessage($bot)
+    {
+        // 1. Calculamos la antigüedad de la oferta
+        $diff = DateService::getTimeDifference(
+            $this->created_at->getTimestamp(),
+            now()->getTimestamp()
+        );
+
+        $isSell = strtolower($this->type) == "sell";
+        $icon = "🟩";
+        if ($isSell)
+            $icon = "🟥";
+
+        // 2. Lógica de Títulos Dinámicos basada en el tiempo y el status
+        $title = "📋 *OFERTA*"; // Default
+
+        if ($this->status === 'open') {
+            // Si tiene menos de 1 hora, es "RECIENTE"
+            if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
+                $title = "{$icon} *¡OFERTA RECIENTE!* 💥 (Hace {$diff['minutes']} min)";
+            }
+            // Si tiene entre 1 y 24 horas, es "NUEVA"
+            elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
+                $title = "{$icon} *¡NUEVA OFERTA!* 🔥 (Hace {$diff['hours']} hrs)";
+            }
+            // Si tiene más de un día, es "DISPONIBLE"
+            else {
+                $title = "{$icon} *OFERTA DISPONIBLE* ✨ ({$diff['days']}d {$diff['hours']}h activa)";
+            }
+        } elseif ($this->status === 'in_progress') {
+            $title = "🟡 *OFERTA EN CURSO*";
+        } elseif ($this->status === 'completed') {
+            $title = "✅ *OFERTA FINALIZADA*";
+        }
+
+        // 3. Renderizar y Editar
+        $text = $this->renderAsTelegramMessage($title);
+        $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._\n\n";
+
+        return array(
+            "message" => array(
+                "text" => $text,
+                "chat" => array(
+                    "id" => env("TRADER_BOT_CHANNEL"),
+                ),
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [
+                            [
+                                "text" => "👉 Aplicar a esta oferta",
+                                'url' => "https://t.me/" . $bot->tenant->code . "?start=offer_{$this->code}"
+                            ]
+                        ],
+                    ],
+                ]),
+            ),
+        );
     }
 }

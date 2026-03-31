@@ -345,30 +345,10 @@ class OffersController extends Controller
         // Guardamos para disparar el ID autoincremental
         $offer->save();
 
-        // 2. RENDERIZACIÓN: 
-        $text = $offer->renderAsTelegramMessage("🟥 *¡NUEVA OFERTA!*");
-        $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._\n\n";
 
         // 3. ENVÍO A TELEGRAM
         $response = TelegramController::sendMessage(
-            array(
-                "message" => array(
-                    "text" => $text,
-                    "chat" => array(
-                        "id" => env("TRADER_BOT_CHANNEL"),
-                    ),
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [
-                                [
-                                    "text" => "👉 Aplicar a esta oferta",
-                                    'url' => "https://t.me/" . $bot->tenant->code . "?start=offer_{$offer->code}"
-                                ]
-                            ],
-                        ],
-                    ]),
-                ),
-            ),
+            $offer->getAsChannelMessage($bot),
             $bot->tenant->token
         );
         if ($response) {
