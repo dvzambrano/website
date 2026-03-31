@@ -96,7 +96,7 @@ class Offers extends Model
         return $text;
     }
 
-    public function getAsChannelMessage($bot)
+    public function getAsChannelMessage($botName)
     {
         // 1. Calculamos la antigüedad de la oferta
         $diff = DateService::getTimeDifference(
@@ -148,7 +148,7 @@ class Offers extends Model
                         [
                             [
                                 "text" => "👉 Aplicar a esta oferta",
-                                'url' => "https://t.me/" . $bot->tenant->code . "?start=offer_{$this->code}"
+                                'url' => "https://t.me/" . $botName . "?start=offer_{$this->code}"
                             ]
                         ],
                     ],

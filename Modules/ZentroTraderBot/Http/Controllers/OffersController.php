@@ -348,7 +348,7 @@ class OffersController extends Controller
 
         // 3. ENVÍO A TELEGRAM
         $response = TelegramController::sendMessage(
-            $offer->getAsChannelMessage($bot),
+            $offer->getAsChannelMessage($bot->tenant->code),
             $bot->tenant->token
         );
         if ($response) {
