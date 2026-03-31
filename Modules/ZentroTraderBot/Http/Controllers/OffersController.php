@@ -396,7 +396,7 @@ class OffersController extends Controller
         }
     }
 
-    private function showOffer($bot, $uuid, $menu = false)
+    public function showOffer($bot, $uuid, $menu = false)
     {
         $offer = Offers::on('tenant')->where('uuid', $uuid)->first();
         $title = "🟩";
