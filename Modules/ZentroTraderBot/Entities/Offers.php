@@ -69,27 +69,27 @@ class Offers extends Model
         $isSell = strtolower($this->type) == "sell";
 
         $text = "{$title}\n";
-        $text .= "🔖 Ticket: `{$this->code}`\n";
+        $text .= "🆔 `{$this->code}`\n";
 
         if ($isSell) {
-            $text .= "💎 Vendes: *{$amount} USD*\n";
+            $text .= "💵 Vendes: *{$amount} USD*\n";
         } else {
-            $text .= "💎 Compras: *{$amount} USD*\n";
+            $text .= "💵 Compras: *{$amount} USD*\n";
         }
 
-        $text .= "🏷️ Tasa: *{$this->price_per_usd} {$this->currency}/USD*\n";
+        $text .= "🔖 Tasa: *{$this->price_per_usd} {$this->currency}/USD*\n";
 
         if ($isSell) {
             if ($owner) {
-                $text .= "📥 Recibe: *{$total} {$this->currency}*\n";
+                $text .= "📥 Ud recibe: *{$total} {$this->currency}*\n";
             } else {
-                $text .= "📤 Paga: *{$total} {$this->currency}*\n";
+                $text .= "📤 Ud paga: *{$total} {$this->currency}*\n";
             }
         } else {
-            $text .= "📤 Entrega: *{$total} {$this->currency}*\n";
+            $text .= "📤 Ud entrega: *{$total} {$this->currency}*\n";
         }
 
-        $text .= "💳 Pago: *{$this->payment_method}*\n\n";
+        $text .= "💳 Medio de pago: *{$this->payment_method}*\n\n";
 
         return $text;
     }
