@@ -97,7 +97,7 @@ class Offers extends Model
 
     public function getAsChannelMessage($botName)
     {
-        // 1. Calculamos la antigüedad de la oferta (formato de dias y horas)
+        // 1. Calculamos la antigüedad de la oferta
         $diff = DateService::getTimeDifference(
             $this->created_at->getTimestamp(),
             now()->getTimestamp(),
@@ -109,81 +109,61 @@ class Offers extends Model
         if ($isSell)
             $icon = "🟥";
 
-        // 2. Lógica de Títulos Dinámicos basada en el tiempo y el status
-        $title = "📋 *OFERTA*"; // Default
         $buttons = [];
+        $title = ""; // Inicializamos vacío para construirlo abajo
+
+        // 2. Lógica de Títulos Dinámicos basada en el status
         switch ($this->status) {
             case 'open':
-                // Si tiene menos de 1 hora, es "NUEVA"
-                if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
+                // Solo si está abierta calculamos los prefijos de tiempo
+                if ($diff['days'] == 0 && $diff['hours'] < 1) {
                     $title = "{$icon} *¡NUEVA OFERTA!*";
-                    $diff = DateService::getTimeDifference(
-                        $this->created_at->getTimestamp(),
-                        now()->getTimestamp(),
-                        "IS"
-                    );
-                }
-                // Si tiene entre 1 y 24 horas, es "RECIENTE"
-                elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
+                    $diff = DateService::getTimeDifference($this->created_at->getTimestamp(), now()->getTimestamp(), "IS");
+                    $time = "💥 " . strtoupper($diff["legible"]);
+                } elseif ($diff['days'] == 0) {
                     $title = "{$icon} *OFERTA RECIENTE!*";
-                    $diff = DateService::getTimeDifference(
-                        $this->created_at->getTimestamp(),
-                        now()->getTimestamp(),
-                        "HI"
-                    );
-                }
-                // Si tiene más de un día, es "DISPONIBLE"
-                else {
+                    $diff = DateService::getTimeDifference($this->created_at->getTimestamp(), now()->getTimestamp(), "HI");
+                    $time = "🔥 " . strtoupper($diff["legible"]);
+                } else {
                     $title = "{$icon} *OFERTA DISPONIBLE*";
+                    $time = "✨ " . strtoupper($diff["legible"]);
                 }
+
+                $title .= " " . $time;
+
                 $buttons = [
                     "inline_keyboard" => [
                         [
-                            [
-                                "text" => "👉 Aplicar a esta oferta",
-                                'url' => "https://t.me/" . $botName . "?start=offer_{$this->code}"
-                            ]
-                        ],
+                            ["text" => "👉 Aplicar a esta oferta", 'url' => "https://t.me/" . $botName . "?start=offer_{$this->code}"]
+                        ]
                     ],
                 ];
                 break;
+
             case 'completed':
                 $title = "✅ *OFERTA FINALIZADA*";
                 break;
+
             default:
+                // Para 'taken', 'in_dispute', etc.
                 $title = "🟧 *OFERTA EN CURSO*";
                 break;
         }
-        $time = strtoupper($diff["legible"]);
-        // Si tiene menos de 1 hora, es "NUEVA"
-        if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
-            $title = "{$icon} *¡NUEVA OFERTA!*";
-            $time = "💥" . $time;
-        }
-        // Si tiene entre 1 y 24 horas, es "RECIENTE"
-        elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
-            $time = "🔥" . $time;
-        }
-        // Si tiene más de un día, es "DISPONIBLE"
-        else {
-            $time = "✨" . $time;
-        }
-        $title .= " " . $time;
 
         // 3. Renderizar y Editar
         $text = $this->renderAsTelegramMessage($title);
-        $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._\n\n";
+        $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._";
 
-        $array = array(
-            "message" => array(
+        $array = [
+            "message" => [
                 "text" => $text,
-                "chat" => array(
-                    "id" => env("TRADER_BOT_CHANNEL"),
-                ),
-            ),
-        );
-        if (count($buttons) > 0)
+                "chat" => ["id" => env("TRADER_BOT_CHANNEL")],
+            ],
+        ];
+
+        if (count($buttons) > 0) {
             $array["message"]["reply_markup"] = json_encode($buttons);
+        }
 
         return $array;
     }
