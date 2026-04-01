@@ -140,13 +140,29 @@ class Offers extends Model
                 ];
                 break;
 
+            case 'locked':
+                $title = "🟧 *OFERTA EN CURSO*";
+                break;
+            case 'cancelled':
+                $title = "🟫 *OFERTA FINALIZADA*";
+                break;
+            case 'expired':
+                $title = "🟦 *OFERTA FINALIZADA*";
+                break;
+            case 'signed':
+                $title = "🟨 *OFERTA EN CURSO*";
+                break;
+            case 'disputed':
+                $title = "🟪 *OFERTA EN CURSO*";
+                break;
             case 'completed':
                 $title = "✅ *OFERTA FINALIZADA*";
                 break;
-
+            case 'solved':
+                $title = "☑️ *OFERTA FINALIZADA*";
+                break;
             default:
-                // Para 'taken', 'in_dispute', etc.
-                $title = "🟧 *OFERTA EN CURSO*";
+                $title = "{$icon} *OFERTA ACTUALIZADA*";
                 break;
         }
 
