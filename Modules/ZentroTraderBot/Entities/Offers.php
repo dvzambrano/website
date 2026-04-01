@@ -110,26 +110,29 @@ class Offers extends Model
 
         // 2. Lógica de Títulos Dinámicos basada en el tiempo y el status
         $title = "📋 *OFERTA*"; // Default
-
-        if ($this->status === 'open') {
-            // Si tiene menos de 1 hora, es "NUEVA"
-            if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
-                $title = "{$icon} *¡NUEVA OFERTA!* 💥" . random_int(1, 3) . "S";
-                if ($diff['minutes'] > 0)
-                    $title = "{$icon} *¡NUEVA OFERTA!* 💥{$diff['minutes']}M";
-            }
-            // Si tiene entre 1 y 24 horas, es "RECIENTE"
-            elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
-                $title = "{$icon} *OFERTA RECIENTE!* 🔥{$diff['hours']}H";
-            }
-            // Si tiene más de un día, es "DISPONIBLE"
-            else {
-                $title = "{$icon} *OFERTA DISPONIBLE* ✨{$diff['days']}D{$diff['hours']}H";
-            }
-        } elseif ($this->status === 'in_progress') {
-            $title = "🟡 *OFERTA EN CURSO*";
-        } elseif ($this->status === 'completed') {
-            $title = "✅ *OFERTA FINALIZADA*";
+        switch ($this->status) {
+            case 'open':
+                // Si tiene menos de 1 hora, es "NUEVA"
+                if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
+                    $title = "{$icon} *¡NUEVA OFERTA!* 💥" . random_int(1, 3) . "S";
+                    if ($diff['minutes'] > 0)
+                        $title = "{$icon} *¡NUEVA OFERTA!* 💥{$diff['minutes']}M";
+                }
+                // Si tiene entre 1 y 24 horas, es "RECIENTE"
+                elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
+                    $title = "{$icon} *OFERTA RECIENTE!* 🔥{$diff['hours']}H";
+                }
+                // Si tiene más de un día, es "DISPONIBLE"
+                else {
+                    $title = "{$icon} *OFERTA DISPONIBLE* ✨{$diff['days']}D{$diff['hours']}H";
+                }
+                break;
+            case 'completed':
+                $title = "✅ *OFERTA FINALIZADA*";
+                break;
+            default:
+                $title = "🟡 *OFERTA EN CURSO*";
+                break;
         }
 
         // 3. Renderizar y Editar
