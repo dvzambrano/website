@@ -199,6 +199,8 @@ class ProcessContractActivity
 
         $offer = Offers::on('tenant')->where('id', $blockchainId)->first();
         $offer->updateStatus('LOCKED', [
+            'seller_address' => $seller,
+            'buyer_address' => $buyer,
             'updated_at' => now()
         ]);
 
