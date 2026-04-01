@@ -197,22 +197,9 @@ class ProcessContractActivity
             return;
         }
 
-        // 4. CREACIÓN: Si no hay coincidencia, es una oferta de VENTA nueva iniciada on Chain.
-        // Al ejecutar 'create', el OfferObserver->created() se disparará y enviará las alertas.
-        $offer = Offers::on('tenant')->create([
-            'uuid' => (string) Str::uuid(),
-            'user_id' => $suscriptor->user_id,
-            'type' => 'sell',
-            'amount' => $amount,
-            'status' => 'LOCKED',
-            'seller_address' => $seller,
-            'buyer_address' => $buyer,
-            'tx_hash_deposit' => $rawData['tx_hash'],
-            'network_id' => $rawData['network_id'],
-            'token_address' => $params['token'],
-            'payment_method' => 'TBD', // El usuario deberá completar esto en el bot luego
-            'currency' => 'USD',
-            'price_per_usd' => 1.00,
+        $offer = Offers::on('tenant')->where('id', $blockchainId)->first();
+        $offer->updateStatus('LOCKED', [
+            'updated_at' => now()
         ]);
 
         /*
@@ -220,7 +207,7 @@ class ProcessContractActivity
             'expires_at' => date('Y-m-d H:i:s', $params['timeoutAt']),
              */
 
-        Log::info("✅ Oferta {$offer->id} creada exitosamente: ", [
+        Log::info("✅ Oferta {$offer->id} bloqueada en ESCROW: ", [
             "id" => $offer->id,
             "blockchainId" => $blockchainId,
             "data" => $offer,
