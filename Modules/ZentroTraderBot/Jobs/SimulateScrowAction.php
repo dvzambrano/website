@@ -49,9 +49,7 @@ class SimulateScrowAction implements ShouldQueue
         $this->seller = Suscriptions::on('tenant')->find($seller);
         $this->buyer = Suscriptions::on('tenant')->find($buyer);
 
-
-        // --- NUEVO PASO: SIMULAR CREACIÓN DE OFERTA EN DB ---
-        // Esto es lo que antes hacía el Wizard y ahora el Job inicia aquí.
+        // 2. Crear Oferta
         $type = rand(1, 2) == 1 ? 'sell' : 'buy';
         $amountHuman = rand(10, 100);
 
@@ -78,24 +76,18 @@ class SimulateScrowAction implements ShouldQueue
         // Guardamos para disparar el ID autoincremental
         $offer->save();
 
-        // 3. ENVÍO A TELEGRAM
-        $response = TelegramController::sendMessage(
-            $offer->getAsChannelMessage($this->bot->code),
-            $this->bot->token
-        );
+        // 3. Telegram: Publicación inicial
+        $response = TelegramController::sendMessage($offer->getAsChannelMessage($this->bot->code), $this->bot->token);
         if ($response) {
             $array = json_decode($response, true);
-            $messageId = $array["result"]["message_id"] ?? null;
-
-            // 4. SEGUNDO GUARDADO (Actualización): Guardamos el ID del mensaje y activamos la oferta
-            $currentData = $offer->data;
-            $currentData["channel"] = ["message_id" => $messageId];
-            $offer->update([
-                'data' => $currentData
-            ]);
+            $offer->update(['data' => array_merge($offer->data, ["channel" => ["message_id" => $array["result"]["message_id"] ?? null]])]);
         }
 
-        // 2. Simulamos el Payload de TradeCreated (Como si el contrato detectara el bloqueo)
+        // --- DINAMISMO DE TIEMPOS ---
+        // $t es nuestro acumulador de minutos para que los eventos no se solapen
+        $t = rand(2, 5); // Alguien ve la oferta en el canal y le da a "Aplicar" en 2-5 min
+
+        // Evento: TradeCreated (Bloqueo de fondos en Escrow)
         $payload = ScrowMockService::getTradeCreatedPayload(
             $this->tenant,
             $this->seller->getWallet()["address"],
@@ -104,62 +96,55 @@ class SimulateScrowAction implements ShouldQueue
             false,
             $offer->id
         );
-
         $tradeId = $payload['decoded']['params']['tradeId'];
 
         // Ejecutamos el procesamiento del Scrow (esto activará notificaciones en el bot)
-        ProcessScrowAction::dispatch($payload)->delay(now()->addSeconds(30));
+        ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($t));
 
-        // 3. FLUJO DE ACCIONES ALEATORIAS (Igual que antes pero usando el tradeId generado)
+        // 4. FLUJO DE ACCIONES ALEATORIAS
         $action = rand(1, 10);
+
         switch ($action) {
-            // 10% de probabilidad: El Comprador se arrepiente y cancela
-            case 1:
-                $payload = ScrowMockService::getTradeCancelledPayload(
-                    $this->tenant,
-                    $tradeId
-                );
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(2));
+            case 1: // El Comprador se arrepiente rápido (Cancel)
+                $t += rand(1, 3);
+                $payload = ScrowMockService::getTradeCancelledPayload($this->tenant, $tradeId);
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($t));
                 break;
 
-            // 10% de probabilidad: El trade expira
-            case 2:
-                $payload = ScrowMockService::getTradeExpiredPayload(
-                    $this->tenant,
-                    $tradeId
-                );
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(65));
+            case 2: // El trade expira (Simulado)
+                // Para que sea realista, el Job de expiración debería ser mucho después
+                $payload = ScrowMockService::getTradeExpiredPayload($this->tenant, $tradeId);
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($t + 65));
                 break;
 
-            // 10% de probabilidad: Disputa
-            case 8:
+            case 8: // Disputa: El proceso se vuelve lento
+                $t += rand(5, 15); // Pasa un tiempo antes de que alguien reclame
                 $address = rand(1, 2) == 1 ? $this->seller->getWallet()["address"] : $this->buyer->getWallet()["address"];
 
-                // Abrir la disputa
-                $payload = ScrowMockService::getDisputeOpenedPayload($this->tenant, $address, $tradeId);
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(10));
+                $p1 = ScrowMockService::getDisputeOpenedPayload($this->tenant, $address, $tradeId);
+                ProcessScrowAction::dispatch($p1)->delay(now()->addMinutes($t));
 
-                // Resolverla a favor de uno al azar
+                $t += rand(5, 15); // El administrador de Kashio tarda en resolver
                 $winner = rand(1, 2) == 1 ? $this->seller->getWallet()["address"] : $this->buyer->getWallet()["address"];
-                $payload = ScrowMockService::getDisputeResolvedPayload($this->tenant, $winner, $tradeId);
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(15));
+                $p2 = ScrowMockService::getDisputeResolvedPayload($this->tenant, $winner, $tradeId);
+                ProcessScrowAction::dispatch($p2)->delay(now()->addMinutes($t));
                 break;
 
-            // Flujo normal: Firmas de ambas partes y cierre
-            default:
-                if (rand(1, 2) == 1) {
-                    // Firma vendedor -> Comprador
-                    $p1 = ScrowMockService::getTradeSignedPayload($this->tenant, $this->seller->getWallet()["address"], $tradeId);
-                    $p2 = ScrowMockService::getTradeSignedPayload($this->tenant, $this->buyer->getWallet()["address"], $tradeId);
-                } else {
-                    // Firma comprador -> Vendedor
-                    $p1 = ScrowMockService::getTradeSignedPayload($this->tenant, $this->buyer->getWallet()["address"], $tradeId);
-                    $p2 = ScrowMockService::getTradeSignedPayload($this->tenant, $this->seller->getWallet()["address"], $tradeId);
-                }
+            default: // Flujo Feliz (Firmas y Cierre)
+                // Firma 1: Alguien confirma que envió/recibió el pago (5-15 min después del bloqueo)
+                $t += rand(5, 15);
+                $signer1 = rand(1, 2) == 1 ? $this->seller : $this->buyer;
+                $p1 = ScrowMockService::getTradeSignedPayload($this->tenant, $signer1->getWallet()["address"], $tradeId);
+                ProcessScrowAction::dispatch($p1)->delay(now()->addMinutes($t));
 
-                ProcessScrowAction::dispatch($p1)->delay(now()->addMinutes(2));
-                ProcessScrowAction::dispatch($p2)->delay(now()->addMinutes(4));
+                // Firma 2: La otra parte verifica el banco y firma (10-25 min después de la primera firma)
+                $t += rand(5, 15);
+                $signer2 = ($signer1->id == $this->seller->id) ? $this->buyer : $this->seller;
+                $p2 = ScrowMockService::getTradeSignedPayload($this->tenant, $signer2->getWallet()["address"], $tradeId);
+                ProcessScrowAction::dispatch($p2)->delay(now()->addMinutes($t));
 
+                // Cierre: El contrato libera los fondos (Casi inmediato tras la 2da firma)
+                $t += rand(1, 2);
                 $payload = ScrowMockService::getTradeClosedPayload(
                     $this->tenant,
                     $this->seller->getWallet()["address"],
@@ -168,7 +153,7 @@ class SimulateScrowAction implements ShouldQueue
                     $amountHuman,
                     $tradeId
                 );
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes(6));
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($t));
                 break;
         }
 
@@ -182,7 +167,7 @@ class SimulateScrowAction implements ShouldQueue
             return;
         }
 
-        // Re-despachamos el Job para mantener la simulación viva
-        self::dispatch($this->tenant)->delay(now()->addMinutes(rand(5, 15)));
+        // Próxima oferta en el canal entre 30 min y 2 horas (para que no parezca spam)
+        self::dispatch($this->tenant)->delay(now()->addMinutes(rand(10, 60)));
     }
 }
