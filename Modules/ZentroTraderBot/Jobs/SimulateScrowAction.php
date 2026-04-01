@@ -41,15 +41,14 @@ class SimulateScrowAction implements ShouldQueue
         //{"token":{"chainId":137,"address":"0x8f3cf7ad23cd3cadbd9735aff958023239c6a063","decimals":18,"symbol":"DAI","name":"(PoS) Dai Stablecoin","logoURI":"https://tokens.1inch.io/0x6b175474e89094c44da98b954eedeac495271d0f.png","eip2612":true,"tags":[]}} 
         $this->token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
 
-        // Seleccionamos dos usuarios al azar de las suscripciones del tenant
-        $users = Suscriptions::on('tenant')->inRandomOrder()->limit(2)->get();
-        if ($users->count() < 2) {
-            Log::error("❌ Simulación abortada: Se necesitan al menos 2 suscriptores en el tenant.");
-            return;
-        }
+        // Asumimos que los IDs 1 y 2 existen en la DB de pruebas del tenant
+        $seller = rand(1, 2);
+        $buyer = 1;
+        if ($seller == 1)
+            $buyer = 2;
+        $this->seller = Suscriptions::on('tenant')->find($seller);
+        $this->buyer = Suscriptions::on('tenant')->find($buyer);
 
-        $this->seller = $users[0];
-        $this->buyer = $users[1];
 
         // --- NUEVO PASO: SIMULAR CREACIÓN DE OFERTA EN DB ---
         // Esto es lo que antes hacía el Wizard y ahora el Job inicia aquí.
