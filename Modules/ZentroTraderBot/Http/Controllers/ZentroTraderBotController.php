@@ -17,6 +17,7 @@ use Modules\ZentroTraderBot\Jobs\AlchemyUpdateWebhookAddresses;
 use Modules\ZentroTraderBot\Jobs\MoralisAddAddressToStream;
 use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
+use Modules\Laravel\Http\Controllers\LaravelController;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -36,6 +37,28 @@ class ZentroTraderBotController extends JsonsController
 
     public function processMessage()
     {
+        // Configurando idioma segun la interfaz de Telegram del usuario -------------------------------
+        // Telegram envía el idioma en: message.from.language_code
+        $langCode = 'es';
+        if (isset($this->message["from"]) && isset($this->message["from"]['language_code']))
+            $langCode = $this->message["from"]["language_code"];  // 'es', 'en', 'pt-br', 'fr'
+        // Limpiamos el código (por si viene 'pt-BR', dejarlo en 'pt')
+        $locale = substr($langCode, 0, 2);
+        // Validamos que tengamos esa traducción, si no, default a español
+        $availableLocales = LaravelController::getAvailableLanguages($this->tenant->module);
+        if (!in_array($locale, $availableLocales)) {
+            $locale = 'es';
+        }
+        // Establecemos el idioma para toda la ejecución de Laravel
+        app()->setLocale($locale);
+        /*
+        // Tambien podria cogerse de la configuracion del usuario al procesar el mensaje:
+        $user = Suscriptions::where('user_id', $telegramId)->first();
+        $locale = $user->language ?? substr($payload['message']['from']['language_code'], 0, 2);
+        app()->setLocale($locale);
+        */
+
+        // Analizando comando recibido ----------------------------------------------------
         $array = $this->getCommand($this->message["text"]);
         $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
         if (!$suscriptor) {
@@ -44,7 +67,7 @@ class ZentroTraderBotController extends JsonsController
         }
 
 
-
+        // Estrategias a utilizar para respuesta ------------------------------------------
         $this->strategies["/start"] = $this->strategies["start"] =
             function () use ($suscriptor, $array) {
                 $wallet = $suscriptor->getWallet();

@@ -22,6 +22,9 @@ use Modules\Web3\Http\Controllers\CoingeckoController;
 use Modules\Laravel\Services\Exchange\CambiocupService;
 use Modules\Web3\Http\Controllers\ZeroExController;
 use Illuminate\Support\Str;
+use Modules\Laravel\Http\Controllers\LaravelController;
+use Carbon\Carbon;
+use Modules\Laravel\Services\DateService;
 
 class CustomTestController extends BaseController
 {
@@ -49,6 +52,20 @@ class CustomTestController extends BaseController
 
         // 2. Si no hay nombre o el método no existe, ejecutamos la lógica base del paquete
         return parent::test($request);
+    }
+
+
+    public function testLang()
+    {
+        $start = Carbon::parse('2027-03-01 11:00:00')->timestamp;
+        $end = Carbon::parse('2027-03-02 12:30:15')->timestamp;
+
+        //app()->setLocale('fr');
+        $result = DateService::getTimeDifference($start, $end, "AMDHIS");
+        $short = DateService::getTimeDifference($start, $end, "IS");
+        dd($short, $result);
+
+        dd(LaravelController::getAvailableLanguages("ZentroTraderBot"));
     }
 
 

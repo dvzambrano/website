@@ -97,10 +97,11 @@ class Offers extends Model
 
     public function getAsChannelMessage($botName)
     {
-        // 1. Calculamos la antigüedad de la oferta
+        // 1. Calculamos la antigüedad de la oferta (formato de dias y horas)
         $diff = DateService::getTimeDifference(
             $this->created_at->getTimestamp(),
-            now()->getTimestamp()
+            now()->getTimestamp(),
+            "DH"
         );
 
         $isSell = strtolower($this->type) == "sell";
@@ -116,10 +117,20 @@ class Offers extends Model
                 // Si tiene menos de 1 hora, es "NUEVA"
                 if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
                     $title = "{$icon} *¡NUEVA OFERTA!*";
+                    $diff = DateService::getTimeDifference(
+                        $this->created_at->getTimestamp(),
+                        now()->getTimestamp(),
+                        "IS"
+                    );
                 }
                 // Si tiene entre 1 y 24 horas, es "RECIENTE"
                 elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
                     $title = "{$icon} *OFERTA RECIENTE!*";
+                    $diff = DateService::getTimeDifference(
+                        $this->created_at->getTimestamp(),
+                        now()->getTimestamp(),
+                        "HI"
+                    );
                 }
                 // Si tiene más de un día, es "DISPONIBLE"
                 else {
