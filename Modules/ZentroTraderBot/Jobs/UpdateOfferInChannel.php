@@ -19,11 +19,14 @@ class UpdateOfferInChannel implements ShouldQueue
 
     protected $tenant;
     protected $code;
+    protected $lastUpdate; // Guardamos el momento en que se programó
 
-    public function __construct($tenant, $code)
+    public function __construct($tenant, $code, $lastUpdate = null)
     {
         $this->tenant = $tenant;
         $this->code = $code;
+        // Si no se pasa (primera vez), usamos el tiempo actual
+        $this->lastUpdate = $lastUpdate;
     }
 
     public function handle()
@@ -37,14 +40,15 @@ class UpdateOfferInChannel implements ShouldQueue
 
             $offer = Offers::findByCode($this->code);
 
-            // 2. VALIDACIÓN CRÍTICA: Si no existe, abortamos el Job
-            if (!$offer) {
-                Log::warning("⚠️ Oferta no encontrada en el Job", ['code' => $this->code]);
+            // 2. VALIDACIÓN CRÍTICA: Si no existe o ya está cerrada, abortamos
+            if (!$offer || in_array($offer->status, ['completed', 'cancelled'])) {
                 return;
             }
 
-            // 1. Si la oferta ya no existe o está cerrada, no hacemos nada
-            if (!$offer || in_array($offer->status, ['completed', 'cancelled'])) {
+            // --- NUEVA VALIDACIÓN DE VERSIÓN ---
+            // Si el Job trae un timestamp y la oferta ha sido actualizada después,
+            // significa que hay un Job más reciente (disparado por el Observer) y este debe morir.
+            if ($this->lastUpdate && $offer->updated_at->getTimestamp() !== $this->lastUpdate) {
                 return;
             }
 
@@ -59,6 +63,8 @@ class UpdateOfferInChannel implements ShouldQueue
             ];
             if (isset($messageData['message']['reply_markup']))
                 $payload["message"]["reply_markup"] = $messageData['message']['reply_markup'];
+
+            // Editamos el mensaje (esto quita el botón si el estado cambió a 'taken')
             TelegramController::editMessageText($payload, $tenant->token);
 
             // 4. LA MAGIA: Re-programación con Decaimiento de Frecuencia
@@ -86,8 +92,8 @@ class UpdateOfferInChannel implements ShouldQueue
                     return;
                 }
 
-
-                self::dispatch($this->tenant, $this->code)->delay($nextDelay);
+                // Al re-programar, pasamos el updated_at actual para que el siguiente Job sea el "válido"
+                self::dispatch($this->tenant, $this->code, $offer->updated_at->getTimestamp())->delay($nextDelay);
             }
 
         } catch (\Throwable $th) {

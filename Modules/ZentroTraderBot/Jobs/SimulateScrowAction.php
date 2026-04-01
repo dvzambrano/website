@@ -63,7 +63,7 @@ class SimulateScrowAction implements ShouldQueue
             'price_per_usd' => rand(150, 200), // Ejemplo para CUP/MLC o similar
             'currency' => 'CUP',
             'payment_method' => 'Transferencia Bancaria',
-            'payment_details' => 'Cuenta: 9223 XXXX XXXX',
+            'payment_details' => "Cuenta: 9223 " . rand(1000, 9999) . " " . rand(1000, 9999) . " " . rand(1000, 9999),
             'status' => 'open',
             'network_id' => env('BASE_NETWORK'),
             'token_address' => env('BASE_TOKEN'),
