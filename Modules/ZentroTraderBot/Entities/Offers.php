@@ -115,19 +115,16 @@ class Offers extends Model
             case 'open':
                 // Si tiene menos de 1 hora, es "NUEVA"
                 if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
-                    $title = "{$icon} *¡NUEVA OFERTA!* 💥" . random_int(1, 3) . "S";
-                    if ($diff['minutes'] > 0)
-                        $title = "{$icon} *¡NUEVA OFERTA!* 💥{$diff['minutes']}M";
+                    $title = "{$icon} *¡NUEVA OFERTA!*";
                 }
                 // Si tiene entre 1 y 24 horas, es "RECIENTE"
                 elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
-                    $title = "{$icon} *OFERTA RECIENTE!* 🔥{$diff['hours']}H";
+                    $title = "{$icon} *OFERTA RECIENTE!*";
                 }
                 // Si tiene más de un día, es "DISPONIBLE"
                 else {
-                    $title = "{$icon} *OFERTA DISPONIBLE* ✨{$diff['days']}D{$diff['hours']}H";
+                    $title = "{$icon} *OFERTA DISPONIBLE*";
                 }
-
                 $buttons = [
                     "inline_keyboard" => [
                         [
@@ -146,6 +143,21 @@ class Offers extends Model
                 $title = "🟧 *OFERTA EN CURSO*";
                 break;
         }
+        $time = strtoupper($diff["legible"]);
+        // Si tiene menos de 1 hora, es "NUEVA"
+        if ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0 && $diff['hours'] < 1) {
+            $title = "{$icon} *¡NUEVA OFERTA!*";
+            $time = "💥" . $time;
+        }
+        // Si tiene entre 1 y 24 horas, es "RECIENTE"
+        elseif ($diff['years'] == 0 && $diff['months'] == 0 && $diff['days'] == 0) {
+            $time = "🔥" . $time;
+        }
+        // Si tiene más de un día, es "DISPONIBLE"
+        else {
+            $time = "✨" . $time;
+        }
+        $title .= " " . $time;
 
         // 3. Renderizar y Editar
         $text = $this->renderAsTelegramMessage($title);

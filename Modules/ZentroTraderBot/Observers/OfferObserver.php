@@ -80,17 +80,15 @@ class OfferObserver
 
             case 'COMPLETED':
                 $isDispute = !empty($offer->winner_address);
-                $uuid = $offer->uuid;
-
                 // 1. Mensaje para el Vendedor (Seller)
                 if ($isDispute) {
                     $msgSeller = "✅ *TRANSACCIÓN COMPLETADA* \n" .
-                        "🆔 `{$uuid}`\n" .
+                        "🆔 `{$offer->code}`\n" .
                         "⚖️ _La transacción ha sido finalizada tras el arbitraje._\n" .
                         "📦 *Estado final:* Fondos procesados.";
                 } else {
                     $msgSeller = "🎉 *¡FELICIDADES: transacción completada!* \n" .
-                        "🆔 `{$uuid}`\n" .
+                        "🆔 `{$offer->code}`\n" .
                         "✅ El intercambio se realizó con éxito.\n" .
                         "💵 _Se han descontado {$amount} USD de su cuenta._";
                 }
@@ -98,12 +96,12 @@ class OfferObserver
                 // 2. Mensaje para el Comprador (Buyer)
                 if ($isDispute) {
                     $msgBuyer = "✅ *TRANSACCIÓN COMPLETADA* \n" .
-                        "🆔 `{$uuid}`\n" .
+                        "🆔 `{$offer->code}`\n" .
                         "⚖️ _La transacción ha sido finalizada tras el arbitraje._\n" .
                         "💰 *Estado final:* Saldo actualizado.";
                 } else {
                     $msgBuyer = "🎉 *¡FELICIDADES: transacción completada!* \n" .
-                        "🆔 `{$uuid}`\n" .
+                        "🆔 `{$offer->code}`\n" .
                         "✅ El intercambio se realizó con éxito.\n" .
                         "💵 _Se han liberado {$amount} USD a su cuenta._";
                 }
@@ -167,19 +165,6 @@ class OfferObserver
                     $text,
                     $bot->token
                 );
-                /*
-                // Opcional: Notificar al que YA firmó que estamos avisando al otro
-                $text = "👍 *¡Firma REGISTRADA!* \n" .
-                    "🆔 `{$offer->code}`\n" .
-                    "✍️ Su firma ha sido registrada.\n\n" .
-                    "🔔 *Estamos notificando a la contraparte* para que confirme.\n" .
-                    "⏳ _Le avisaremos en cuanto la transacción avance..._";
-                $this->notifyByAddress(
-                    $signer,
-                    $text,
-                    $bot->token
-                );
-                */
                 break;
 
             case 'SOLVED':
