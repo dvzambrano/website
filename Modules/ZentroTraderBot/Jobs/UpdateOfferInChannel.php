@@ -86,6 +86,7 @@ class UpdateOfferInChannel implements ShouldQueue
                     return;
                 }
 
+
                 self::dispatch($this->tenant, $this->code)->delay($nextDelay);
             }
 
