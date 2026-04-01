@@ -34,9 +34,6 @@ class OfferObserver
 
         $bot = app('active_bot');
 
-        UpdateOfferInChannel::dispatch($bot->key, $offer->code, $offer->updated_at->getTimestamp());
-
-
         $newStatus = $offer->status;
         $amount = number_format($offer->amount, 2);
 
@@ -220,6 +217,8 @@ class OfferObserver
                 ]);
                 break;
         }
+
+        UpdateOfferInChannel::dispatch($bot->key, $offer->code, $offer->updated_at->getTimestamp());
     }
 
     /**
