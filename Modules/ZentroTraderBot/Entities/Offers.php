@@ -111,6 +111,7 @@ class Offers extends Model
 
         $buttons = [];
         $title = ""; // Inicializamos vacío para construirlo abajo
+        $subtitle = "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._";
 
         // 2. Lógica de Títulos Dinámicos basada en el status
         switch ($this->status) {
@@ -142,24 +143,31 @@ class Offers extends Model
 
             case 'locked':
                 $title = "🟧 *OFERTA EN CURSO*";
+                $subtitle = "🛡 _La liquidez de este intercambio ha sido bloqueada para garantía al comprador._";
                 break;
             case 'cancelled':
                 $title = "🟫 *OFERTA FINALIZADA*";
+                $subtitle = "🙅‍♂️ _El comprador no ha querido continuar con el intercambio._";
                 break;
             case 'expired':
                 $title = "🟦 *OFERTA FINALIZADA*";
+                $subtitle = "⏱️ _El tiempo de seguridad ha expirado antes de completar la verificación._";
                 break;
             case 'signed':
                 $title = "🟨 *OFERTA EN CURSO*";
+                $subtitle = "🏃‍♂️ _Una de las partes ya ha confirmado su compromiso con la transacción._";
                 break;
             case 'disputed':
                 $title = "🟪 *OFERTA EN CURSO*";
+                $subtitle = "👮‍♀️ _Un administrador está revisando este intercambio._";
                 break;
             case 'completed':
                 $title = "✅ *OFERTA FINALIZADA*";
+                $subtitle = "🙏 _¡Gracias por confiar en nosotros!_";
                 break;
             case 'solved':
                 $title = "☑️ *OFERTA FINALIZADA*";
+                $subtitle = "⚖️ _Este intercambio ha sido decidido por arbitraje._";
                 break;
             default:
                 $title = "{$icon} *OFERTA ACTUALIZADA*";
@@ -168,7 +176,7 @@ class Offers extends Model
 
         // 3. Renderizar y Editar
         $text = $this->renderAsTelegramMessage($title);
-        $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._";
+        $text .= $subtitle;
 
         $array = [
             "message" => [
