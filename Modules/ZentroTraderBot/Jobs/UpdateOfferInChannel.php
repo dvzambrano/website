@@ -96,6 +96,5 @@ class UpdateOfferInChannel implements ShouldQueue
                 'message' => $th->getMessage(),
             ]);
         }
-
     }
 }
