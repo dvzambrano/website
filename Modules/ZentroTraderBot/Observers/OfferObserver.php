@@ -20,43 +20,6 @@ class OfferObserver
         $bot = app('active_bot');
 
         dispatch(new UpdateOfferInChannel($bot->key, $offer->code))->delay(now()->addMinutes(1));
-
-        /*
-
-        $blockchain = new BlockchainController();
-        $status = $blockchain->getStatus();
-        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
-
-        $amount = number_format($offer->amount, 2);
-        $price = number_format($offer->amount * $offer->price_per_usd, 2);
-        $text = "🛡 *¡Intercambio asegurado!*\n" .
-            "🆔 `{$offer->code}`\n" .
-            "🔒 Se han bloquedado *{$amount} USD* para Ud\n" .
-            "🟢 *Ahora es seguro proceder:*\n\n" .
-            "💳 Realice el pago de {$price} {$offer->currency} a:\n" .
-            "🏦 `{$offer->payment_details}`\n" .
-            "👉 y luego, entregue su comprobante para verificación.\n\n" .
-            "⏱️ *Tiene un margen de " . $diff["legible"] . " para completar su pago.*\n" .
-            "_Luego de ese tiempo los USD estarán disponibles para que el vendedor los recupere._";
-        $this->notifyByAddress(
-            $offer->buyer_address,
-            $text,
-            $bot->token
-        );
-
-        $text = "🛡 *¡Intercambio asegurado!*\n" .
-            "🆔 `{$offer->code}`\n" .
-            "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n\n" .
-            "💳 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
-            "🏦 _{$offer->payment_details}_\n" .
-            "📋 _Y luego, enviará su comprobante para verificación._\n\n" .
-            "🚨 *Nunca libere los fondos sin comprobar el recibo de los {$price} {$offer->currency} en su cuenta*";
-        $this->notifyByAddress(
-            $offer->seller_address,
-            $text,
-            $bot->token
-        );
-        */
     }
 
     /**
@@ -82,6 +45,39 @@ class OfferObserver
         $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
 
         switch (strtoupper($newStatus)) {
+
+            case 'LOCKED':
+                $amount = number_format($offer->amount, 2);
+                $price = number_format($offer->amount * $offer->price_per_usd, 2);
+                $text = "🛡 *¡Intercambio asegurado!*\n" .
+                    "🆔 `{$offer->code}`\n" .
+                    "🔒 Se han bloquedado *{$amount} USD* para Ud\n" .
+                    "🟢 *Ahora es seguro proceder:*\n\n" .
+                    "💳 Realice el pago de {$price} {$offer->currency} a:\n" .
+                    "🏦 `{$offer->payment_details}`\n" .
+                    "👉 y luego, entregue su comprobante para verificación.\n\n" .
+                    "⏱️ *Tiene un margen de " . $diff["legible"] . " para completar su pago.*\n" .
+                    "_Luego de ese tiempo los USD estarán disponibles para que el vendedor los recupere._";
+                $this->notifyByAddress(
+                    $offer->buyer_address,
+                    $text,
+                    $bot->token
+                );
+
+                $text = "🛡 *¡Intercambio asegurado!*\n" .
+                    "🆔 `{$offer->code}`\n" .
+                    "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n\n" .
+                    "💳 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
+                    "🏦 _{$offer->payment_details}_\n" .
+                    "📋 _Y luego, enviará su comprobante para verificación._\n\n" .
+                    "🚨 *Nunca libere los fondos sin comprobar el recibo de los {$price} {$offer->currency} en su cuenta*";
+                $this->notifyByAddress(
+                    $offer->seller_address,
+                    $text,
+                    $bot->token
+                );
+                break;
+
             case 'COMPLETED':
                 $isDispute = !empty($offer->winner_address);
                 $uuid = $offer->uuid;

@@ -110,6 +110,7 @@ class Offers extends Model
 
         // 2. Lógica de Títulos Dinámicos basada en el tiempo y el status
         $title = "📋 *OFERTA*"; // Default
+        $buttons = [];
         switch ($this->status) {
             case 'open':
                 // Si tiene menos de 1 hora, es "NUEVA"
@@ -126,12 +127,23 @@ class Offers extends Model
                 else {
                     $title = "{$icon} *OFERTA DISPONIBLE* ✨{$diff['days']}D{$diff['hours']}H";
                 }
+
+                $buttons = [
+                    "inline_keyboard" => [
+                        [
+                            [
+                                "text" => "👉 Aplicar a esta oferta",
+                                'url' => "https://t.me/" . $botName . "?start=offer_{$this->code}"
+                            ]
+                        ],
+                    ],
+                ];
                 break;
             case 'completed':
                 $title = "✅ *OFERTA FINALIZADA*";
                 break;
             default:
-                $title = "🟡 *OFERTA EN CURSO*";
+                $title = "🟧 *OFERTA EN CURSO*";
                 break;
         }
 
@@ -145,16 +157,7 @@ class Offers extends Model
                 "chat" => array(
                     "id" => env("TRADER_BOT_CHANNEL"),
                 ),
-                "reply_markup" => json_encode([
-                    "inline_keyboard" => [
-                        [
-                            [
-                                "text" => "👉 Aplicar a esta oferta",
-                                'url' => "https://t.me/" . $botName . "?start=offer_{$this->code}"
-                            ]
-                        ],
-                    ],
-                ]),
+                "reply_markup" => json_encode($buttons),
             ),
         );
     }
