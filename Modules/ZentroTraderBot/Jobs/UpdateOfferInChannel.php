@@ -50,15 +50,15 @@ class UpdateOfferInChannel implements ShouldQueue
 
             // 3. Ejecutamos la edición en Telegram
             $messageData = $offer->getAsChannelMessage($tenant->code);
-
             $payload = [
                 "message" => [
                     "message_id" => $offer->data['channel']['message_id'],
                     "chat" => ["id" => env("TRADER_BOT_CHANNEL")],
                     "text" => $messageData['message']['text'],
-                    "reply_markup" => $messageData['message']['reply_markup']
                 ]
             ];
+            if (isset($messageData['message']['reply_markup']))
+                $payload["message"]["reply_markup"] = $messageData['message']['reply_markup'];
             TelegramController::editMessageText($payload, $tenant->token);
 
             // 4. LA MAGIA: Re-programación con Decaimiento de Frecuencia

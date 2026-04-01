@@ -174,14 +174,17 @@ class Offers extends Model
         $text = $this->renderAsTelegramMessage($title);
         $text .= "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._\n\n";
 
-        return array(
+        $array = array(
             "message" => array(
                 "text" => $text,
                 "chat" => array(
                     "id" => env("TRADER_BOT_CHANNEL"),
                 ),
-                "reply_markup" => json_encode($buttons),
             ),
         );
+        if (count($buttons) > 0)
+            $array["message"]["reply_markup"] = json_encode($buttons);
+
+        return $array;
     }
 }
