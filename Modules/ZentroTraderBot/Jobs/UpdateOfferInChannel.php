@@ -12,6 +12,7 @@ use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Log;
 use Modules\Laravel\Services\DateService;
+use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
 
 class UpdateOfferInChannel implements ShouldQueue
 {
@@ -40,8 +41,8 @@ class UpdateOfferInChannel implements ShouldQueue
 
             $offer = Offers::findByCode($this->code);
 
-            // 2. VALIDACIÓN CRÍTICA: Si no existe o ya está cerrada, abortamos
-            if (!$offer || in_array($offer->status, ['completed', 'cancelled'])) {
+            // 2. Si no existe, abortamos
+            if (!$offer) {
                 return;
             }
 
@@ -94,6 +95,28 @@ class UpdateOfferInChannel implements ShouldQueue
 
                 // Al re-programar, pasamos el updated_at actual para que el siguiente Job sea el "válido"
                 self::dispatch($this->tenant, $this->code, $offer->updated_at->getTimestamp())->delay($nextDelay);
+            }
+
+            // Si el estado es uno de los finales, borramos el mensaje y morimos.
+            $finalStatuses = ['completed', 'cancelled'];
+            if (in_array($offer->status, $finalStatuses)) {
+                if (isset($offer->data['channel']['message_id'])) {
+                    $payload = [
+                        "chat_id" => env("TRADER_BOT_CHANNEL"),
+                        "message_id" => $offer->data['channel']['message_id']
+                    ];
+
+                    DeleteTelegramMessage::dispatch(
+                        $tenant->token,
+                        env("TRADER_BOT_CHANNEL"),
+                        $offer->data['channel']['message_id']
+                    )->delay(now()->addMinutes(60));
+
+                    // Opcional: Limpiamos el ID en la DB para saber que ya no existe en el canal
+                    $currentData = $offer->data;
+                    unset($currentData['channel']['message_id']);
+                    $offer->update(['data' => $currentData]);
+                }
             }
 
         } catch (\Throwable $th) {
