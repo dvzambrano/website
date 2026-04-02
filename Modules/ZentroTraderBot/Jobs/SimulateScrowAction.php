@@ -160,7 +160,7 @@ class SimulateScrowAction implements ShouldQueue
                 ProcessScrowAction::dispatch($p1)->delay(now()->addMinutes($delay));
 
                 // Firma 2: La otra parte verifica el banco y firma (10-25 min después de la primera firma)
-                $delay += 1;
+                $delay += 2;
                 if (!$this->fast)
                     $delay += rand(5, 10);
                 $signer2 = ($signer1->id == $this->seller->id) ? $this->buyer : $this->seller;
@@ -168,7 +168,7 @@ class SimulateScrowAction implements ShouldQueue
                 ProcessScrowAction::dispatch($p2)->delay(now()->addMinutes($delay));
 
                 // Cierre: El contrato libera los fondos (Casi inmediato tras la 2da firma)
-                $delay += 1;
+                $delay += 3;
                 $payload = ScrowMockService::getTradeClosedPayload(
                     $this->tenant,
                     $this->seller->getWallet()["address"],
