@@ -216,7 +216,7 @@ class OfferObserver
                 $signer = $offer->buyer_address;
                 $pending = $offer->seller_address;
                 $menu = [
-                    [["text" => "👍 He recibido el Pago", "callback_data" => "menu"]]
+                    [["text" => "✍️ He recibido el Pago", "callback_data" => "menu"]]
                 ];
                 if (strtolower($json["signer"]) == strtolower($offer->seller_address)) {
                     $signer = $offer->seller_address;
