@@ -43,17 +43,18 @@ class OfferObserver
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
         $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+        $result = $offer->getNetProceeds($status);
+        $net = $result['net'];
 
         switch (strtoupper($newStatus)) {
 
             case 'LOCKED':
-                $result = $offer->getNetProceeds($status);
                 $amount = number_format($offer->amount, 2);
                 $price = number_format($offer->amount * $offer->price_per_usd, 2);
                 $text = "🛡 *¡Intercambio asegurado!*\n" .
                     "🆔 `{$offer->code}`\n" .
                     "🔒 Se han bloquedado *{$amount} USD*\n" .
-                    "💵 Ud recibe *{$amount} USD*\n\n" .
+                    "💵 Ud recibe *{$net} USD*\n\n" .
 
                     "🟢 *Ahora es seguro proceder:*\n" .
                     "💳 Realice el pago de {$price} {$offer->currency} a:\n" .
@@ -119,7 +120,7 @@ class OfferObserver
                     $msgBuyer = "🎉 *¡FELICIDADES: transacción completada!* \n" .
                         "🆔 `{$offer->code}`\n" .
                         "✅ El intercambio se realizó con éxito.\n" .
-                        "💵 _Se han liberado {$amount} USD a su cuenta._";
+                        "💵 _Se han liberado {$net} USD a su cuenta._";
                 }
 
                 // 3. Notificaciones finales
