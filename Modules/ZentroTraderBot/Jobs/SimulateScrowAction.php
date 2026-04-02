@@ -68,7 +68,7 @@ class SimulateScrowAction implements ShouldQueue
             'user_id' => $this->seller->user_id,
             'type' => $type,
             'amount' => $amountHuman,
-            'price_per_usd' => rand(150, 200), // Ejemplo para CUP/MLC o similar
+            'price_per_usd' => $price, // Ejemplo para CUP/MLC o similar
             'currency' => 'CUP',
             'payment_method' => 'Transferencia Bancaria',
             'payment_details' => "9223 " . rand(1000, 9999) . " " . rand(1000, 9999) . " " . rand(1000, 9999),
