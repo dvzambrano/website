@@ -155,7 +155,7 @@ class Offers extends Model
                 break;
             case 'signed':
                 $title = "🟨 *OFERTA EN CURSO*";
-                $subtitle = "🏃‍♂️ _Una de las partes ya ha confirmado su compromiso con la transacción._";
+                $subtitle = "🏃‍♂️ _Una de las partes ya ha confirmado la transacción._";
                 break;
             case 'disputed':
                 $title = "🟪 *OFERTA EN CURSO*";
@@ -190,5 +190,28 @@ class Offers extends Model
         }
 
         return $array;
+    }
+
+
+    public function getNetProceeds($status)
+    {
+        if (!$status) {
+            // Fallback de seguridad si falla el RPC (0.25% por defecto)
+            return number_format($this->amount * 0.9975, 2);
+        }
+
+        // 1. Cálculo por Porcentaje (BPS)
+        $feeByPercentage = $this->amount * $status['realFeeFactor'];
+        // 2. Comparación con el MinFee (en USD)
+        // El contrato siempre cobra lo que sea mayor para cubrir el GAS
+        $finalFee = max($feeByPercentage, $status['currentMinFeeUsd']);
+
+        $net = $this->amount - $finalFee;
+
+        return [
+            'net' => number_format($net, 2),
+            'fee' => number_format($finalFee, 2),
+            'min' => ($finalFee == $status['currentMinFeeUsd'])
+        ];
     }
 }

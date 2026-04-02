@@ -47,12 +47,15 @@ class OfferObserver
         switch (strtoupper($newStatus)) {
 
             case 'LOCKED':
+                $result = $offer->getNetProceeds($status);
                 $amount = number_format($offer->amount, 2);
                 $price = number_format($offer->amount * $offer->price_per_usd, 2);
                 $text = "🛡 *¡Intercambio asegurado!*\n" .
                     "🆔 `{$offer->code}`\n" .
-                    "🔒 Se han bloquedado *{$amount} USD* para Ud\n" .
-                    "🟢 *Ahora es seguro proceder:*\n\n" .
+                    "🔒 Se han bloquedado *{$amount} USD*\n" .
+                    "💵 Ud recibe *{$amount} USD*\n\n" .
+
+                    "🟢 *Ahora es seguro proceder:*\n" .
                     "💳 Realice el pago de {$price} {$offer->currency} a:\n" .
                     "🏦 `{$offer->payment_method}: {$offer->payment_details}`\n" .
                     "👉 y luego, entregue su comprobante para verificación.\n\n" .

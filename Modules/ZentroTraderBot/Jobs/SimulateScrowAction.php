@@ -191,10 +191,11 @@ class SimulateScrowAction implements ShouldQueue
             return;
         }
 
-        // Próxima oferta en el canal entre 30 min y 2 horas (para que no parezca spam)
         if ($this->fast)
+            // Próxima oferta en el canal entre 1 y 3 min (pruebas rapidas)
             self::dispatch($this->tenant, $this->fast)->delay(now()->addMinutes(rand(1, 3)));
         else
+            // Próxima oferta en el canal entre 5 y 30 min (para que no parezca spam)
             self::dispatch($this->tenant, $this->fast)->delay(now()->addMinutes(rand(5, 30)));
     }
 }
