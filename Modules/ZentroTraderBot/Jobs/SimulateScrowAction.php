@@ -178,6 +178,15 @@ class SimulateScrowAction implements ShouldQueue
                     $tradeId
                 );
                 ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($delay));
+
+                // --- SIMULACIÓN DE EVALUACIÓN MUTUA ---
+                // Simulamos que el Comprador califica al Vendedor 1-2 minutos después del cierre
+                $delay += rand(1, 2);
+                $evatuated1 = rand(1, 2) == 1 ? $this->seller : $this->buyer;
+                ProcessReputationUpdate::dispatch($evatuated1->user_id, rand(1, 5), $this->tenant)->delay(now()->addMinutes($delay + 1));
+                $evatuated2 = ($signer1->id == $this->seller->id) ? $this->buyer : $this->seller;
+                ProcessReputationUpdate::dispatch($evatuated2->user_id, rand(1, 5), $this->tenant)->delay(now()->addMinutes($delay + 2));
+
                 break;
         }
 
