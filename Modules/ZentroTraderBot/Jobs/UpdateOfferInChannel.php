@@ -88,9 +88,8 @@ class UpdateOfferInChannel implements ShouldQueue
                 } elseif ($diff['days'] < 7) {
                     // Más de 1 hora pero menos de 7 días: Actualizar cada hora
                     $nextDelay = now()->addHour();
-                } else {
-                    // Más de 7 días: No re-programar más (la oferta "muere" visualmente)
-                    return;
+                } elseif ($diff['days'] >= 7) {
+                    $nextDelay = now()->addDay();
                 }
 
                 // Al re-programar, pasamos el updated_at actual para que el siguiente Job sea el "válido"
@@ -101,11 +100,6 @@ class UpdateOfferInChannel implements ShouldQueue
             $finalStatuses = ['completed', 'cancelled'];
             if (in_array($offer->status, $finalStatuses)) {
                 if (isset($offer->data['channel']['message_id'])) {
-                    $payload = [
-                        "chat_id" => env("TRADER_BOT_CHANNEL"),
-                        "message_id" => $offer->data['channel']['message_id']
-                    ];
-
                     DeleteTelegramMessage::dispatch(
                         $tenant->token,
                         env("TRADER_BOT_CHANNEL"),
