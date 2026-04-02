@@ -220,14 +220,14 @@ class OfferObserver
                 $signer = $offer->buyer_address;
                 $pending = $offer->seller_address;
                 $menu = [
-                    [["text" => "☑️ He recibido el Pago", "callback_data" => "menu"]]
+                    [["text" => "👍 He recibido el Pago", "callback_data" => "menu"]]
                 ];
                 if (strtolower($json["signer"]) == strtolower($offer->seller_address)) {
                     $signer = $offer->seller_address;
                     $pending = $offer->buyer_address;
                     $menu = [
                         [
-                            ["text" => "☑️ Ya pagué", "callback_data" => "menu"],
+                            ["text" => "👍 Ya pagué", "callback_data" => "menu"],
                             ["text" => "🧾 Enviar Comprobante", "callback_data" => "menu"],
                         ]
                     ];
@@ -235,8 +235,8 @@ class OfferObserver
 
                 $text = "⚠️ *¡Confirmación Pendiente!* \n" .
                     "🆔 `{$offer->code}`\n" .
-                    "✍️ La contraparte ya ha confirmado esta transacción.\n\n" .
-                    "☑️ *Proceda a confirmar*; evite que entre en disputa o haya retrasos.\n" .
+                    "👍 La contraparte ya ha confirmado esta transacción.\n\n" .
+                    "☑️ *Proceda a confirmar*; evite que haya retrasos.\n" .
                     "⏳ _Estamos esperando por Ud..._";
                 $this->notifyByAddress(
                     $pending,
