@@ -104,7 +104,7 @@ class UpdateOfferInChannel implements ShouldQueue
                         $tenant->token,
                         env("TRADER_BOT_CHANNEL"),
                         $offer->data['channel']['message_id']
-                    )->delay(now()->addMinutes(60));
+                    )->delay(now()->addHours(24));
 
                     // Opcional: Limpiamos el ID en la DB para saber que ya no existe en el canal
                     $currentData = $offer->data;

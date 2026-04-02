@@ -16,20 +16,23 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Modules\Laravel\Services\Exchange\CambiocupService;
 
 class SimulateScrowAction implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    protected $fast;
     protected $tenant;
     protected $bot;
     protected $token;
     protected $seller;
     protected $buyer;
 
-    public function __construct($tenant)
+    public function __construct($tenant, $fast = false)
     {
         $this->tenant = $tenant;
+        $this->fast = $fast;
     }
 
     public function handle()
@@ -51,7 +54,14 @@ class SimulateScrowAction implements ShouldQueue
 
         // 2. Crear Oferta
         $type = rand(1, 2) == 1 ? 'sell' : 'buy';
-        $amountHuman = rand(10, 100);
+        $amountHuman = rand(10, 200);
+
+        $price = CambiocupService::getRate("cup");
+        if (rand(1, 2) == 1)
+            $price = $price + ($price * rand(5, 10) / 100);
+        else
+            $price = $price - ($price * rand(1, 5) / 100);
+
 
         $offer = new Offers([
             'uuid' => (string) Str::uuid(),
@@ -84,8 +94,10 @@ class SimulateScrowAction implements ShouldQueue
         }
 
         // --- DINAMISMO DE TIEMPOS ---
-        // $t es nuestro acumulador de minutos para que los eventos no se solapen
-        $t = rand(2, 5); // Alguien ve la oferta en el canal y le da a "Aplicar" en 2-5 min
+        // $delay es nuestro acumulador de minutos para que los eventos no se solapen
+        $delay = rand(2, 5); // Alguien ve la oferta en el canal y le da a "Aplicar" en 2-5 min
+        if ($this->fast)
+            $delay = 1;
 
         // Evento: TradeCreated (Bloqueo de fondos en Escrow)
         $payload = ScrowMockService::getTradeCreatedPayload(
@@ -99,52 +111,64 @@ class SimulateScrowAction implements ShouldQueue
         $tradeId = $payload['decoded']['params']['tradeId'];
 
         // Ejecutamos el procesamiento del Scrow (esto activará notificaciones en el bot)
-        ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($t));
+        ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($delay));
 
         // 4. FLUJO DE ACCIONES ALEATORIAS
         $action = rand(1, 10);
-
         switch ($action) {
             case 1: // El Comprador se arrepiente rápido (Cancel)
-                $t += rand(1, 3);
+                $delay += 1;
+                if (!$this->fast)
+                    $delay += rand(1, 2);
                 $payload = ScrowMockService::getTradeCancelledPayload($this->tenant, $tradeId);
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($t));
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($delay));
                 break;
 
             case 2: // El trade expira (Simulado)
                 // Para que sea realista, el Job de expiración debería ser mucho después
+                $extra = 5;
+                if (!$this->fast)
+                    $extra = rand(61, 69);
                 $payload = ScrowMockService::getTradeExpiredPayload($this->tenant, $tradeId);
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($t + 65));
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($delay + $extra));
                 break;
 
             case 8: // Disputa: El proceso se vuelve lento
-                $t += rand(5, 15); // Pasa un tiempo antes de que alguien reclame
+                $delay += 1;
+                if (!$this->fast)
+                    $delay += rand(5, 10); // Pasa un tiempo antes de que alguien reclame
                 $address = rand(1, 2) == 1 ? $this->seller->getWallet()["address"] : $this->buyer->getWallet()["address"];
 
                 $p1 = ScrowMockService::getDisputeOpenedPayload($this->tenant, $address, $tradeId);
-                ProcessScrowAction::dispatch($p1)->delay(now()->addMinutes($t));
+                ProcessScrowAction::dispatch($p1)->delay(now()->addMinutes($delay));
 
-                $t += rand(5, 15); // El administrador de Kashio tarda en resolver
+                $delay += 1;
+                if (!$this->fast)
+                    $delay += rand(5, 15); // El administrador de Kashio tarda en resolver
                 $winner = rand(1, 2) == 1 ? $this->seller->getWallet()["address"] : $this->buyer->getWallet()["address"];
                 $p2 = ScrowMockService::getDisputeResolvedPayload($this->tenant, $winner, $tradeId);
-                ProcessScrowAction::dispatch($p2)->delay(now()->addMinutes($t));
+                ProcessScrowAction::dispatch($p2)->delay(now()->addMinutes($delay));
                 break;
 
             default: // Flujo Feliz (Firmas y Cierre)
                 // Firma 1: Alguien confirma que envió/recibió el pago (5-15 min después del bloqueo)
-                $t += rand(5, 15);
+                $delay += 1;
+                if (!$this->fast)
+                    $delay += rand(5, 10);
                 $signer1 = rand(1, 2) == 1 ? $this->seller : $this->buyer;
                 $p1 = ScrowMockService::getTradeSignedPayload($this->tenant, $signer1->getWallet()["address"], $tradeId);
-                ProcessScrowAction::dispatch($p1)->delay(now()->addMinutes($t));
+                ProcessScrowAction::dispatch($p1)->delay(now()->addMinutes($delay));
 
                 // Firma 2: La otra parte verifica el banco y firma (10-25 min después de la primera firma)
-                $t += rand(5, 15);
+                $delay += 1;
+                if (!$this->fast)
+                    $delay += rand(5, 10);
                 $signer2 = ($signer1->id == $this->seller->id) ? $this->buyer : $this->seller;
                 $p2 = ScrowMockService::getTradeSignedPayload($this->tenant, $signer2->getWallet()["address"], $tradeId);
-                ProcessScrowAction::dispatch($p2)->delay(now()->addMinutes($t));
+                ProcessScrowAction::dispatch($p2)->delay(now()->addMinutes($delay));
 
                 // Cierre: El contrato libera los fondos (Casi inmediato tras la 2da firma)
-                $t += rand(1, 2);
+                $delay += 1;
                 $payload = ScrowMockService::getTradeClosedPayload(
                     $this->tenant,
                     $this->seller->getWallet()["address"],
@@ -153,7 +177,7 @@ class SimulateScrowAction implements ShouldQueue
                     $amountHuman,
                     $tradeId
                 );
-                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($t));
+                ProcessScrowAction::dispatch($payload)->delay(now()->addMinutes($delay));
                 break;
         }
 
@@ -168,6 +192,9 @@ class SimulateScrowAction implements ShouldQueue
         }
 
         // Próxima oferta en el canal entre 30 min y 2 horas (para que no parezca spam)
-        self::dispatch($this->tenant)->delay(now()->addMinutes(rand(10, 60)));
+        if ($this->fast)
+            self::dispatch($this->tenant, $this->fast)->delay(now()->addMinutes(rand(1, 3)));
+        else
+            self::dispatch($this->tenant, $this->fast)->delay(now()->addMinutes(rand(5, 30)));
     }
 }

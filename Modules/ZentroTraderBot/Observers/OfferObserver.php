@@ -74,17 +74,17 @@ class OfferObserver
 
                 $text = "🛡 *¡Intercambio asegurado!*\n" .
                     "🆔 `{$offer->code}`\n" .
-                    "🔒 Se han bloquedado *{$amount} USD* de su cuenta\n\n" .
+                    "🔒 Se han *bloquedado {$amount} USD* de su cuenta\n\n" .
                     "💳 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
-                    "🏦 _{$offer->payment_details}_\n" .
+                    "🏦 _{$offer->payment_method}: {$offer->payment_details}_\n" .
                     "📋 _Y luego, enviará su comprobante para verificación._\n\n" .
-                    "🚨 *Nunca libere los fondos sin comprobar el recibo de los {$price} {$offer->currency} en su cuenta*";
+                    "🚨 *Nunca confirme la transacción sin comprobar el recibo de los {$price} {$offer->currency} en su cuenta*";
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $text,
                     $bot->token,
                     [
-                        [["text" => "👩‍💻 Hablar con un Árbitro", "callback_data" => "menu"]]
+                        [["text" => "⏱️ Ha pasado " . $diff["legible"] . " y no me han pagado", "callback_data" => "menu"]]
                     ]
                 );
 
@@ -216,22 +216,23 @@ class OfferObserver
                 $signer = $offer->buyer_address;
                 $pending = $offer->seller_address;
                 $menu = [
-                    [["text" => "✍️ He recibido el Pago", "callback_data" => "menu"]]
+                    [["text" => "☑️ He recibido el Pago", "callback_data" => "menu"]]
                 ];
                 if (strtolower($json["signer"]) == strtolower($offer->seller_address)) {
                     $signer = $offer->seller_address;
                     $pending = $offer->buyer_address;
                     $menu = [
                         [
-                            ["text" => "🧾 Enviar Comprobante de Pago", "callback_data" => "menu"],
+                            ["text" => "☑️ Ya pagué", "callback_data" => "menu"],
+                            ["text" => "🧾 Enviar Comprobante", "callback_data" => "menu"],
                         ]
                     ];
                 }
 
-                $text = "⚠️ *¡Firma Pendiente!* \n" .
+                $text = "⚠️ *¡Confirmación Pendiente!* \n" .
                     "🆔 `{$offer->code}`\n" .
-                    "☑️ La contraparte ya ha firmado y depositado su confianza en esta transacción.\n\n" .
-                    "✍️ *Proceda a firmar*; evite que entre en disputa o haya retrasos.\n" .
+                    "✍️ La contraparte ya ha confirmado esta transacción.\n\n" .
+                    "☑️ *Proceda a confirmar*; evite que entre en disputa o haya retrasos.\n" .
                     "⏳ _Estamos esperando por Ud..._";
                 $this->notifyByAddress(
                     $pending,
