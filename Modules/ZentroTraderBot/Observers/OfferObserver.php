@@ -9,6 +9,9 @@ use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\Laravel\Services\DateService;
 use Carbon\Carbon;
 use Modules\ZentroTraderBot\Jobs\UpdateOfferInChannel;
+use Illuminate\Support\Facades\Lang;
+use Modules\TelegramBot\Entities\Actors;
+use Modules\TelegramBot\Http\Controllers\ActorsController;
 
 class OfferObserver
 {
@@ -58,7 +61,13 @@ class OfferObserver
                 $this->notifyByAddress(
                     $offer->buyer_address,
                     $text,
-                    $bot->token
+                    $bot->token,
+                    [
+                        [
+                            ["text" => "🧾 Enviar Comprobante de Pago", "callback_data" => "menu"],
+                            ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "adminmenu"],
+                        ]
+                    ]
                 );
 
                 $text = "🛡 *¡Intercambio asegurado!*\n" .
@@ -106,29 +115,78 @@ class OfferObserver
                 }
 
                 // 3. Notificaciones finales
-                $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token);
-                $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token);
+                $this->notifyByAddress(
+                    $offer->seller_address,
+                    $msgSeller,
+                    $bot->token,
+                    [
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    ]
+                );
+                $this->notifyByAddress(
+                    $offer->buyer_address,
+                    $msgBuyer,
+                    $bot->token,
+                    [
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    ]
+                );
 
                 break;
 
             case 'DISPUTED':
                 // Se abrió una disputa (DisputeOpened)
-                $text = "🙇🏻 *¡Transacción en DISPUTA!* \n" .
+                $generaltext = "🙇🏻 *¡Transacción en DISPUTA!* \n" .
                     "🆔 `{$offer->code}`\n" .
-                    "👉 _Se ha iniciado una reclamación de esta operación._\n" .
+                    "👉 _Se ha iniciado una reclamación de esta operación._\n";
+                $text = $generaltext .
                     "👮‍♀️ *Un administrador revisará el caso pronto*.\n\n" .
-                    "⚠️ *Tenga a mano evidencia* de que cumplió con su parte del acuerdo.";
+                    "⚠️ *Envíe evidencia* de que cumplió con su parte del acuerdo.";
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $text,
-                    $bot->token
+                    $bot->token,
+                    [
+                        [
+                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "menu"],
+                        ]
+                    ]
                 );
                 $this->notifyByAddress(
                     $offer->buyer_address,
                     $text,
-                    $bot->token
+                    $bot->token,
+                    [
+                        [
+                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "menu"],
+                        ]
+                    ]
                 );
-                // falta notificar a los arbitros
+
+                // Notificar a los administradores
+                $controller = new ActorsController();
+                $admins = $controller->getData(Actors::class, [
+                    [
+                        "contain" => true,
+                        "name" => "admin_level",
+                        "value" => [1, "1"],
+                    ],
+                ], $bot->code);
+                for ($i = 0; $i < count($admins); $i++) {
+                    TelegramController::sendMessage(array(
+                        "message" => array(
+                            "text" => $generaltext,
+                            "chat" => array(
+                                "id" => $admins[$i]->user_id,
+                            ),
+                            "reply_markup" => json_encode([
+                                "inline_keyboard" => [
+                                    [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                                ],
+                            ]),
+                        ),
+                    ), $bot->token);
+                }
                 break;
 
             case 'CANCELLED':
@@ -139,7 +197,10 @@ class OfferObserver
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $text,
-                    $bot->token
+                    $bot->token,
+                    [
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    ]
                 );
                 break;
 
@@ -149,9 +210,17 @@ class OfferObserver
 
                 $signer = $offer->buyer_address;
                 $pending = $offer->seller_address;
+                $menu = [
+                    [["text" => "👍 He recibido el Pago", "callback_data" => "menu"]]
+                ];
                 if (strtolower($json["signer"]) == strtolower($offer->seller_address)) {
                     $signer = $offer->seller_address;
                     $pending = $offer->buyer_address;
+                    $menu = [
+                        [
+                            ["text" => "🧾 Enviar Comprobante de Pago", "callback_data" => "menu"],
+                        ]
+                    ];
                 }
 
                 $text = "⚠️ *¡Firma Pendiente!* \n" .
@@ -162,7 +231,8 @@ class OfferObserver
                 $this->notifyByAddress(
                     $pending,
                     $text,
-                    $bot->token
+                    $bot->token,
+                    $menu
                 );
                 break;
 
@@ -183,7 +253,10 @@ class OfferObserver
                     "🏆 *La disputa ha finalizado a su favor.*\n\n" .
                     "💵 _Se han liberado {$amount} USD a su cuenta._\n" .
                     "🙏 _¡Gracias por confiar en nosotros!_\n",
-                    $bot->token
+                    $bot->token,
+                    [
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    ]
                 );
                 $this->notifyByAddress(
                     $looser,
@@ -191,7 +264,11 @@ class OfferObserver
                     "🛑 *Le informamos que el arbitraje ha concluido a favor de la contraparte*.\n\n" .
                     "🤝 _Si tiene dudas, contacte a soporte con el ID único de la transacción._\n" .
                     "🙏 _¡Gracias por confiar en nosotros!_\n",
-                    $bot->token
+                    $bot->token,
+                    [
+                        [["text" => "👩‍💻 Hablar con un Árbitro", "callback_data" => "menu"]],
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    ]
                 );
                 // cambiar estado a COMPLETED
                 $offer->updateStatus('COMPLETED', [
@@ -209,7 +286,10 @@ class OfferObserver
                 $this->notifyByAddress(
                     $offer->buyer_address,
                     $text,
-                    $bot->token
+                    $bot->token,
+                    [
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    ]
                 );
                 // cambiar estado a DISPUTED
                 $offer->updateStatus('DISPUTED', [
@@ -224,7 +304,7 @@ class OfferObserver
     /**
      * Helper para enviar mensajes directos vía TelegramController
      */
-    private function notifyUser($telegramId, $text, $token)
+    private function notifyUser($telegramId, $text, $token, $menu = [])
     {
         if (!$telegramId || !$token)
             return;
@@ -233,21 +313,26 @@ class OfferObserver
             'message' => [
                 'chat' => ['id' => $telegramId],
                 'text' => $text,
+
             ],
         ];
+        if (count($menu) > 0)
+            $payload["message"]["reply_markup"] = json_encode([
+                "inline_keyboard" => $menu,
+            ]);
         TelegramController::sendMessage($payload, $token);
     }
 
     /**
      * Helper para notificar buscando al usuario por su wallet address
      */
-    private function notifyByAddress($address, $text, $token)
+    private function notifyByAddress($address, $text, $token, $menu = [])
     {
         $suscriptor = Suscriptions::on('tenant')
             ->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(data, "$.wallet.address"))) = ?', [$address])
             ->first();
         if ($suscriptor && $suscriptor->user_id) {
-            $this->notifyUser($suscriptor->user_id, $text, $token);
+            $this->notifyUser($suscriptor->user_id, $text, $token, $menu);
         }
     }
 }
