@@ -64,7 +64,7 @@ class OfferObserver
                     $bot->token,
                     [
                         [
-                            ["text" => "🧾 Enviar Comprobante de Pago", "callback_data" => "menu"]
+                            ["text" => "🧾 Enviar Comprobante", "callback_data" => "menu"]
                         ],
                         [
                             ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "adminmenu"]
@@ -82,7 +82,10 @@ class OfferObserver
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $text,
-                    $bot->token
+                    $bot->token,
+                    [
+                        [["text" => "👩‍💻 Hablar con un Árbitro", "callback_data" => "menu"]]
+                    ]
                 );
 
 
