@@ -123,12 +123,26 @@ class OfferObserver
                         "💵 _Se han liberado {$net} USD a su cuenta._";
                 }
 
+                $msgeval = "🙏 Su experiencia ayudaría a crear un lugar más seguro para todos\n" .
+                    "👇 Toca un emoji para valorar este intercambio";
+                $msgSeller .= "\n\n{$msgeval}";
+                $msgBuyer .= "\n\n{$msgeval}";
+
+                $evalMenu = [
+                    ['text' => '😡', 'callback_data' => "rate_v2_{$offer->code}_1"], // Muy insatisfecho
+                    ['text' => '😟', 'callback_data' => "rate_v2_{$offer->code}_2"], // Insatisfecho
+                    ['text' => '😐', 'callback_data' => "rate_v2_{$offer->code}_3"], // Neutral
+                    ['text' => '🙂', 'callback_data' => "rate_v2_{$offer->code}_4"], // Satisfecho
+                    ['text' => '🤩', 'callback_data' => "rate_v2_{$offer->code}_5"], // Muy satisfecho
+                ];
+
                 // 3. Notificaciones finales
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $msgSeller,
                     $bot->token,
                     [
+                        $evalMenu,
                         [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                     ]
                 );
@@ -137,6 +151,7 @@ class OfferObserver
                     $msgBuyer,
                     $bot->token,
                     [
+                        $evalMenu,
                         [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                     ]
                 );
@@ -338,9 +353,7 @@ class OfferObserver
      */
     private function notifyByAddress($address, $text, $token, $menu = [])
     {
-        $suscriptor = Suscriptions::on('tenant')
-            ->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(data, "$.wallet.address"))) = ?', [$address])
-            ->first();
+        $suscriptor = Suscriptions::findByAddress($address);
         if ($suscriptor && $suscriptor->user_id) {
             $this->notifyUser($suscriptor->user_id, $text, $token, $menu);
         }

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Entities\Currencies;
-use Modules\ZentroTraderBot\Entities\Paymentmethods;
+use Modules\ZentroTraderBot\Entities\OffersRatings;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Lang;
 use Modules\Web3\Http\Controllers\CoingeckoController;
@@ -15,6 +15,7 @@ use Modules\Laravel\Services\Exchange\CambiocupService;
 use Modules\Laravel\Services\NumberService;
 use Illuminate\Support\Facades\Log;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
+use Modules\ZentroTraderBot\Jobs\ProcessReputationUpdate;
 
 class OffersController extends Controller
 {
@@ -479,5 +480,40 @@ class OffersController extends Controller
                 "inline_keyboard" => $menu,
             ]),
         ];
+    }
+
+    public function rateOfferPerformance($bot, $code, $stars)
+    {
+        // 2. Buscar la oferta
+        $offer = Offers::findByCode($code);
+        if ($offer) {
+            // Sugerencia de validación rápida
+            $suscriptor = Suscriptions::findByAddress($offer->seller_address);
+            if ($suscriptor && $suscriptor->user_id == $bot->actor->user_id) {
+                $suscriptor = Suscriptions::findByAddress($offer->buyer_address);
+            }
+            if (!$suscriptor) {
+                Log::error("No se pudo identificar la contraparte para calificar la oferta {$code}");
+                return;
+            }
+
+            $evaluated_user_id = $suscriptor->user_id;
+
+            try {
+                // 3. Guardar el voto en la fuente de verdad (SQL)
+                OffersRatings::create([
+                    'offer_id' => $offer->id,
+                    'rater_user_id' => $bot->actor->user_id,
+                    'rated_user_id' => $evaluated_user_id, // El que recibe la fama
+                    'stars' => $stars
+                ]);
+
+                // 4. ¡AQUÍ SE DISPARA EL JOB!
+                ProcessReputationUpdate::dispatch($evaluated_user_id, $stars, $bot->tenant->key);
+            } catch (\Throwable $th) {
+
+            }
+
+        }
     }
 }
