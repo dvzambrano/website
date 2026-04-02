@@ -143,7 +143,7 @@ class Offers extends Model
 
             case 'locked':
                 $title = "🟧 *OFERTA EN CURSO*";
-                $subtitle = "🛡 _La liquidez de este intercambio ha sido bloqueada para garantía al comprador._";
+                $subtitle = "🔐 _La liquidez de este intercambio ha sido bloqueada._";
                 break;
             case 'cancelled':
                 $title = "🟫 *OFERTA FINALIZADA*";
