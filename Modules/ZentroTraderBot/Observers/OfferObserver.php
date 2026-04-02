@@ -64,8 +64,10 @@ class OfferObserver
                     $bot->token,
                     [
                         [
-                            ["text" => "🧾 Enviar Comprobante de Pago", "callback_data" => "menu"],
-                            ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "adminmenu"],
+                            ["text" => "🧾 Enviar Comprobante de Pago", "callback_data" => "menu"]
+                        ],
+                        [
+                            ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "adminmenu"]
                         ]
                     ]
                 );
