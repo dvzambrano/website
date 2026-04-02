@@ -54,11 +54,11 @@ class OfferObserver
                 $text = "🛡 *¡Intercambio asegurado!*\n" .
                     "🆔 `{$offer->code}`\n" .
                     "🔒 Se han bloquedado *{$amount} USD*\n" .
-                    "💵 Ud recibe *{$net} USD*\n\n" .
+                    "💵 _Ud recibe {$net} USD_\n\n" .
 
                     "🟢 *Ahora es seguro proceder:*\n" .
                     "💳 Realice el pago de {$price} {$offer->currency} a:\n" .
-                    "🏦 `{$offer->payment_method}: {$offer->payment_details}`\n" .
+                    "🏦 {$offer->payment_method}: `{$offer->payment_details}`\n" .
                     "👉 y luego, entregue su comprobante para verificación.\n\n" .
                     "⏱️ *Tiene un margen de " . $diff["legible"] . " para completar su pago.*\n" .
                     "_Luego de ese tiempo los USD estarán disponibles para que el vendedor los recupere._";
