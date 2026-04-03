@@ -11,6 +11,7 @@ use Modules\Laravel\Http\Controllers\TestController as BaseController;
 use Modules\Web3\Http\Controllers\ChainidController;
 use Modules\Web3\Http\Controllers\InchController;
 use Modules\Laravel\Services\Codes\QrService;
+use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Crypt;
@@ -261,6 +262,17 @@ class CustomTestController extends BaseController
         $decrypted = decryptValue($encrypted);
 
         dd($decrypted, $encrypted);
+    }
+
+
+    public function testOffer()
+    {
+        $this->KashioBot->connectToThisTenant();
+        $offer = Offers::where("id", 1690)->first();
+
+        $offer1 = Offers::findByCode("K0001AYF");
+
+        dd($offer->code, $offer1->id);
     }
 
 

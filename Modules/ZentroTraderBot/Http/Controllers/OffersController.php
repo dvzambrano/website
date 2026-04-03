@@ -484,6 +484,9 @@ class OffersController extends Controller
 
     public function rateOfferPerformance($bot, $code, $stars)
     {
+        $text = "";
+        $menu = [];
+
         // 2. Buscar la oferta
         $offer = Offers::findByCode($code);
         if ($offer) {
@@ -514,6 +517,41 @@ class OffersController extends Controller
 
             }
 
+            $text = "✅ *¡Valoración recibida!*\n";
+            $text .= "🙏 Gracias por ayudar a la comunidad \n\n";
+            $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
+
+        } else {
+            $text = "🤔 *¡Que raro!*\n";
+            $text .= "_No he encontrado la oferta_\n\n";
+            $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
         }
+        array_push($menu, [
+            ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
+        ]);
+
+        // eliminar el mensaje anterior
+        //$bot->message["message_id"]
+
+        $payload = [
+            "message" => [
+                "text" => $text,
+                "chat" => ["id" => $bot->actor->user_id],
+                "message_id" => $bot->message["message_id"],
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => $menu,
+                ]),
+            ]
+        ];
+        try {
+            // Editamos el mensaje (esto quita el botón si el estado cambió a 'taken')
+            TelegramController::editMessageText($payload, $bot->tenant->token);
+        } catch (\Throwable $th) {
+        }
+
+        // Hacemos q no haya respuesta adicional
+        return [
+            "text" => "",
+        ];
     }
 }

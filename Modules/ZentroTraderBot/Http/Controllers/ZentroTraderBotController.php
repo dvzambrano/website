@@ -407,7 +407,7 @@ class ZentroTraderBotController extends JsonsController
             };
 
         $this->strategies["/network"] =
-            function () use ($array) {
+            function () {
                 $reply = $this->notifyNetworkStatus();
                 return $reply;
             };
@@ -426,6 +426,12 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+        $this->strategies["/rateoffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $reply = $controller->rateOfferPerformance($this, $array["pieces"][1], $array["pieces"][2]);
+                return $reply;
+            };
 
         return $this->getProcessedMessage();
     }

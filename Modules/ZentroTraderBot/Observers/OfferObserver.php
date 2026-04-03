@@ -129,11 +129,11 @@ class OfferObserver
                 $msgBuyer .= "\n\n{$msgeval}";
 
                 $evalMenu = [
-                    ['text' => '😡', 'callback_data' => "rate_v2_{$offer->code}_1"], // Muy insatisfecho
-                    ['text' => '😟', 'callback_data' => "rate_v2_{$offer->code}_2"], // Insatisfecho
-                    ['text' => '😐', 'callback_data' => "rate_v2_{$offer->code}_3"], // Neutral
-                    ['text' => '🙂', 'callback_data' => "rate_v2_{$offer->code}_4"], // Satisfecho
-                    ['text' => '🤩', 'callback_data' => "rate_v2_{$offer->code}_5"], // Muy satisfecho
+                    ['text' => '😡', 'callback_data' => "/rateoffer {$offer->code} 1"], // Muy insatisfecho
+                    ['text' => '😟', 'callback_data' => "/rateoffer {$offer->code} 2"], // Insatisfecho
+                    ['text' => '😐', 'callback_data' => "/rateoffer {$offer->code} 3"], // Neutral
+                    ['text' => '🙂', 'callback_data' => "/rateoffer {$offer->code} 4"], // Satisfecho
+                    ['text' => '🤩', 'callback_data' => "/rateoffer {$offer->code} 5"], // Muy satisfecho
                 ];
 
                 // 3. Notificaciones finales
