@@ -16,9 +16,14 @@ use Modules\Laravel\Services\NumberService;
 use Illuminate\Support\Facades\Log;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Jobs\ProcessReputationUpdate;
+use Modules\Web3\Http\Controllers\EscrowController;
+use Modules\Web3\Traits\BlockchainTools;
+use Modules\Web3\Services\ConfigService;
 
 class OffersController extends Controller
 {
+    use BlockchainTools;
+
     public function sell($bot)
     {
         return $this->wizard($bot, 'sell');
@@ -454,13 +459,13 @@ class OffersController extends Controller
 
             if ($isOwner)
                 array_push($menu, [
-                    ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->id}|menu"]
+                    ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"]
                 ]);
             else {
                 $total = number_format(($offer->amount * $offer->price_per_usd), 2);
-                $btnAction = $isSell ? "✅ Comprar (Pagar Fiat)" : "💰 Vender (Enviar USD)";
+                $btnAction = $isSell ? "✅ Comprar" : "💰 Vender";
                 array_push($menu, [
-                    ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "apply-{$offer->id}"]
+                    ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"]
                 ]);
             }
         } else {
@@ -480,6 +485,95 @@ class OffersController extends Controller
                 "inline_keyboard" => $menu,
             ]),
         ];
+    }
+
+    public function applyForOffer($bot, $code)
+    {
+        $updateStatus = function ($text) use ($bot) {
+            try {
+                TelegramController::editMessageText([
+                    "message" => [
+                        "text" => $text,
+                        "chat" => ["id" => $bot->actor->user_id],
+                        "message_id" => $bot->message["message_id"],
+                        "parse_mode" => "Markdown" // Importante para las negritas y emojis
+                    ]
+                ], $bot->tenant->token);
+            } catch (\Throwable $th) {
+            }
+        };
+
+        $updateStatus("🔍 *Verificando disponibilidad de fondos...*\nPor favor, no cierre esta ventana.");
+
+        // 1. Configuración de Red y Token
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        $tokenInfo = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+        $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+
+        $offer = Offers::findByCode($code);
+        if (!$offer)
+            return false;
+
+        // 2. Identificación de Roles
+        $isSell = strtolower($offer->type) == "sell";
+        $sellerUserId = $isSell ? $offer->user_id : $bot->actor->user_id;
+        $buyerUserId = $isSell ? $bot->actor->user_id : $offer->user_id;
+
+        $seller = Suscriptions::on('tenant')->where('user_id', $sellerUserId)->first();
+        $buyer = Suscriptions::on('tenant')->where('user_id', $buyerUserId)->first();
+
+        if (!$seller || !$buyer)
+            return false;
+
+        // 3. Preparación de datos para la Blockchain
+        $sellerPrivateKey = decryptValue($seller->data['wallet']['private_key']);
+        $buyerAddress = $buyer->data['wallet']['address'];
+        $treasuryPrivKey = decryptValue(env("TRADER_BOT_KEY"));
+
+        // Monto con decimales correctos (usando bcmath como tenías antes)
+        $amountWei = bcmul($offer->amount, bcpow(10, $tokenInfo["decimals"]));
+
+        $escrow = new EscrowController();
+        $deadline = time() + 3600; // 1 hora de validez para el Permit
+
+        // --- PASO ÚNICO: PERMIT + CREATE TRADE ---
+        // Informamos al usuario que Kashio asume el costo
+        $updateStatus("⛽ *Procesando intercambio seguro...*");
+
+        try {
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $sellerPrivateKey, $treasuryPrivKey, $offer, $amountWei, $buyerAddress, $deadline, $network) {
+                // Llamamos al método que hace TODO: 
+                // 1. Obtiene nonce del token
+                // 2. Obtiene Domain Separator
+                // 3. Firma el mensaje con la key del VENDEDOR
+                // 4. Envía la transacción con la key de TESORERÍA (Paga el gas)
+                return $escrow->createTradeWithPermit(
+                    $rpc,
+                    $sellerPrivateKey,           // Firma el permiso (0 gas)
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $offer->id,                  // ID del trade para el contrato
+                    env('BASE_TOKEN'),
+                    $amountWei,
+                    $buyerAddress,
+                    $deadline,
+                    env('ETHERSCAN_API_KEY')     // Para obtener el selector del contrato
+                );
+            });
+
+            if (!$txHash)
+                throw new \Exception("No se pudo obtener el hash de la transacción.");
+
+            $this->waitForConfirmation($rpcUrls, $txHash);
+
+            $updateStatus("✅ *¡Intercambio asegurado con éxito!*\nLos fondos están en custodia de Kashio.");
+
+            return $txHash;
+
+        } catch (\Exception $e) {
+            $updateStatus("❌ *Error en la red:*\n" . $e->getMessage());
+            return false;
+        }
     }
 
     public function rateOfferPerformance($bot, $code, $stars)
@@ -530,9 +624,6 @@ class OffersController extends Controller
             ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
         ]);
 
-        // eliminar el mensaje anterior
-        //$bot->message["message_id"]
-
         $payload = [
             "message" => [
                 "text" => $text,
@@ -548,10 +639,5 @@ class OffersController extends Controller
             TelegramController::editMessageText($payload, $bot->tenant->token);
         } catch (\Throwable $th) {
         }
-
-        // Hacemos q no haya respuesta adicional
-        return [
-            "text" => "",
-        ];
     }
 }

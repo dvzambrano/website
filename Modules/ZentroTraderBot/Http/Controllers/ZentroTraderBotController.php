@@ -429,8 +429,34 @@ class ZentroTraderBotController extends JsonsController
         $this->strategies["/rateoffer"] =
             function () use ($array) {
                 $controller = new OffersController();
-                $reply = $controller->rateOfferPerformance($this, $array["pieces"][1], $array["pieces"][2]);
-                return $reply;
+                $controller->rateOfferPerformance($this, $array["pieces"][1], $array["pieces"][2]);
+                return [
+                    "text" => "",
+                ];
+            };
+
+
+
+        $this->strategies["/offerapply"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->applyForOffer($this, $array["pieces"][1]);
+                return [
+                    "text" => "",
+                ];
+
+                /*
+                // Evento: TradeCreated (Bloqueo de fondos en Escrow)
+        $payload = ScrowMockService::getTradeCreatedPayload(
+            $this->tenant,
+            $this->seller->getWallet()["address"],
+            $this->buyer->getWallet()["address"],
+            $this->token['decimals'],
+            false,
+            $offer->id
+        );
+        $tradeId = $payload['decoded']['params']['tradeId'];
+                */
             };
 
         return $this->getProcessedMessage();

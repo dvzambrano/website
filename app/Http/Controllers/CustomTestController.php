@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use Modules\Laravel\Http\Controllers\LaravelController;
 use Carbon\Carbon;
 use Modules\Laravel\Services\DateService;
+use Modules\Web3\Http\Controllers\EscrowController;
 
 class CustomTestController extends BaseController
 {
@@ -240,6 +241,15 @@ class CustomTestController extends BaseController
 
     public function testEncryption()
     {
+        $escrow = new EscrowController();
+
+        // 1. Intentamos descifrar la llave maestra
+        $encrypted = env("TRADER_BOT_KEY");
+        $decrypted = decryptValue($encrypted);
+
+        $address = $escrow->getAddressFromKey($decrypted);
+
+        dd($address, $decrypted, $encrypted);
 
         $this->KashioBot->connectToThisTenant();
         //dd(cache('dvzambrano_laravel_vault_seed'));
@@ -256,12 +266,6 @@ class CustomTestController extends BaseController
         }
 
         die("DONE!");
-
-        // 1. Intentamos descifrar la llave maestra
-        $encrypted = env("ESCROW_ARBITER_KEY");
-        $decrypted = decryptValue($encrypted);
-
-        dd($decrypted, $encrypted);
     }
 
 
