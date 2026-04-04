@@ -55,4 +55,40 @@ class Suscriptions extends Actors
 
         return $wallet;
     }
+
+    public static function findByAddress($address)
+    {
+        if (!$address)
+            return null;
+
+        return self::on('tenant')
+            ->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(data, "$.wallet.address"))) = ?', [strtolower($address)])
+            ->first();
+    }
+
+    public function updateReputation($stars)
+    {
+        $data = $this->data ?? [];
+        $reputation = $data['reputation'] ?? [
+            'trades' => 1,
+            'stars' => 5,
+            'average' => 5,
+            'vip' => false
+        ];
+
+        // Actualizamos valores
+        $reputation['trades']++;
+        $reputation['stars'] += $stars;
+        $reputation['average'] = round($reputation['stars'] / $reputation['trades'], 2);
+
+        // Lógica VIP de Kashio
+        if ($reputation['trades'] >= 50 && $reputation['average'] == 5.00) {
+            $reputation['vip'] = true;
+        } else {
+            $reputation['vip'] = false;
+        }
+
+        $data['reputation'] = $reputation;
+        $this->update(['data' => $data]);
+    }
 }

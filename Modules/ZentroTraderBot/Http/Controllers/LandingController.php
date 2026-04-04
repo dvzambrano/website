@@ -7,9 +7,10 @@ use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\TelegramBot\Entities\Actors;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Laravel\Services\Codes\QrService;
+use Modules\Web3\Http\Controllers\BlockchainProviderController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Http\Controllers\DeBridgeController;
-use Modules\Web3\Http\Controllers\AlchemyController;
+use Modules\Web3\Http\Controllers\EthersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -230,32 +231,38 @@ class LandingController extends Controller
         $tokensData = $bridge->tokenList($chainId, 604800);
         $supportedTokens = collect($tokensData["tokens"]);
 
+        $chain = ConfigService::getNetworks($chainId);
+        $token = ConfigService::getToken($chainId, strtoupper($networkKey));
+
         // 1. Obtener Balances desde Alchemy
-        $nativeHex = AlchemyController::getNativeBalance(config('zentrotraderbot.alchemy_api_key'), $address, $networkKey);
-        $erc20Balances = AlchemyController::getTokenBalances(config('zentrotraderbot.alchemy_api_key'), $address, [], $networkKey);
+        $nativeHex = BlockchainProviderController::getNativeBalance($address, $chain);
+        $erc20Balances = BlockchainProviderController::getTokenBalance($address, $chain);
+        //dd($nativeHex, $erc20Balances);
+
 
         // 2. Unificar balances en una sola colección para el Map
         // Añadimos el nativo como si fuera un resultado más de Alchemy
         $allBalances = collect($erc20Balances)->prepend([
-            'contractAddress' => '0x0000000000000000000000000000000000000000',
-            'tokenBalance' => $nativeHex
+            'contract' => '0x0000000000000000000000000000000000000000',
+            'balance' => $nativeHex
         ]);
 
         // 3. Procesar todo con una sola lógica
         $portfolio = $allBalances->map(function ($balance) use ($supportedTokens) {
-            $contract = strtolower($balance['contractAddress']);
+            $contract = strtolower($balance['contract']);
 
             // Filtro rápido: si el balance es cero, ni buscamos info
-            if ($balance['tokenBalance'] === '0x' . str_repeat('0', 64) || $balance['tokenBalance'] === '0x0') {
+            if ($balance['balance'] == 0) {
                 return null;
             }
 
             $info = $supportedTokens->firstWhere('address', $contract);
 
             if ($info) {
-                $amount = Web3MathService::hexToDecimal($balance['tokenBalance'], $info['decimals']);
+                $amount = (float) $balance['balance'];
                 if ($amount > 0.00009) {// Si el balance es menor a 0.0001, lo ignoramos
-                    $info['balance'] = Web3MathService::hexToDecimal($balance['tokenBalance'], $info['decimals']);
+                    $info['balance'] = $amount;
+
                     return $info;
                 }
             }

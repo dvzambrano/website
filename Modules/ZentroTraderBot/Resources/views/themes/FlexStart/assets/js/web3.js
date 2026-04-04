@@ -601,7 +601,7 @@ async function startScanning(userAddress, forcedChainId = null) {
         // 1. Llamamos a tu nuevo endpoint (Asegúrate de que la ruta coincida con tu API)
         // Pasamos la dirección del usuario, el chainId y el networkKey (ej: 'POL')
         const response = await fetch(
-            `${SWAP.balancesUrl}/${userAddress}/${window.networkConfig.chainId}/${window.networkConfig.chain}`,
+            `${SWAP.balancesUrl}/${userAddress}/${window.networkConfig.chainId}/${window.networkConfig.shortName}`,
         );
 
         if (!response.ok)

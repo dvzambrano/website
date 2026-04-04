@@ -17,6 +17,7 @@ use Modules\ZentroTraderBot\Jobs\AlchemyUpdateWebhookAddresses;
 use Modules\ZentroTraderBot\Jobs\MoralisAddAddressToStream;
 use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
+use Modules\Laravel\Http\Controllers\LaravelController;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -36,6 +37,28 @@ class ZentroTraderBotController extends JsonsController
 
     public function processMessage()
     {
+        // Configurando idioma segun la interfaz de Telegram del usuario -------------------------------
+        // Telegram envía el idioma en: message.from.language_code
+        $langCode = 'es';
+        if (isset($this->message["from"]) && isset($this->message["from"]['language_code']))
+            $langCode = $this->message["from"]["language_code"];  // 'es', 'en', 'pt-br', 'fr'
+        // Limpiamos el código (por si viene 'pt-BR', dejarlo en 'pt')
+        $locale = substr($langCode, 0, 2);
+        // Validamos que tengamos esa traducción, si no, default a español
+        $availableLocales = LaravelController::getAvailableLanguages($this->tenant->module);
+        if (!in_array($locale, $availableLocales)) {
+            $locale = 'es';
+        }
+        // Establecemos el idioma para toda la ejecución de Laravel
+        app()->setLocale($locale);
+        /*
+        // Tambien podria cogerse de la configuracion del usuario al procesar el mensaje:
+        $user = Suscriptions::where('user_id', $telegramId)->first();
+        $locale = $user->language ?? substr($payload['message']['from']['language_code'], 0, 2);
+        app()->setLocale($locale);
+        */
+
+        // Analizando comando recibido ----------------------------------------------------
         $array = $this->getCommand($this->message["text"]);
         $suscriptor = Suscriptions::where("user_id", $this->actor->user_id)->first();
         if (!$suscriptor) {
@@ -44,8 +67,9 @@ class ZentroTraderBotController extends JsonsController
         }
 
 
+        // Estrategias a utilizar para respuesta ------------------------------------------
         $this->strategies["/start"] = $this->strategies["start"] =
-            function () use ($suscriptor) {
+            function () use ($suscriptor, $array) {
                 $wallet = $suscriptor->getWallet();
                 if (strtolower($wallet["status"]) == "created") {
                     // Es necesario recargarlo porq en el getWallet se actualizaron datos!!
@@ -57,9 +81,9 @@ class ZentroTraderBotController extends JsonsController
                     $suscriptor->save();
 
                     // notificando a aministradores de nuevo usuario sin rol
-                    $array = $this->AgentsController->getRoleMenu($this->actor->user_id, 0);
-                    array_push($array["menu"], [["text" => "❌ " . Lang::get("telegrambot::bot.options.delete"), "callback_data" => "confirmation|deleteuser-{$this->actor->user_id}|menu"]]);
-                    $this->notifyUserWithNoRole($this->actor->user_id, $array);
+                    $menu = $this->AgentsController->getRoleMenu($this->actor->user_id, 0);
+                    array_push($menu["menu"], [["text" => "❌ " . Lang::get("telegrambot::bot.options.delete"), "callback_data" => "confirmation|deleteuser-{$this->actor->user_id}|menu"]]);
+                    $this->notifyUserWithNoRole($this->actor->user_id, $menu);
 
                     // Registrar la wallet en el webhook de Moralis
                     MoralisAddAddressToStream::dispatch(
@@ -75,11 +99,27 @@ class ZentroTraderBotController extends JsonsController
                         $authToken,
                         [$wallet["address"]]
                     )->delay(now()->addSeconds(10));
-                    if (env("DEBUG_MODE", false))
-                        Log::debug("🐞 ZentroTraderBotController processMessage /start:" . json_encode($wallet));
                 }
 
-                $reply = $this->mainMenu($this->actor);
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 ZentroTraderBotController processMessage /start:", [
+                        "array" => $array,
+                        "wallet" => $wallet,
+                    ]);
+
+
+                $reply = [
+                    "text" => "",
+                ];
+                if ($array["message"] == "")
+                    $reply = $this->mainMenu($this->actor);
+                else {
+                    if (str_starts_with($array["message"], 'offer_')) {
+                        $code = str_replace('offer_', '', $array["message"]);
+                        $controller = new OffersController();
+                        $reply = $controller->showOffer($this, $code);
+                    }
+                }
                 return $reply;
             };
 
@@ -208,8 +248,8 @@ class ZentroTraderBotController extends JsonsController
                 $message .= "⏱️ *" . Lang::get("zentrotraderbot::bot.prompts.balance.lastoperations") . "*:\n";
                 foreach ($transactions as $tx) {
                     // 1. Formateamos la fecha y el monto
-                    $date = $suscriptor->actor->getLocalDateTime($tx['human']['date'], $this->tenant->code, "Y-m-d h:i a");
-                    $amount = ($tx['human']['value'] > 0 ? '+' : '') . number_format($tx['human']['value'], 2) . " USD";
+                    $date = $suscriptor->actor->getLocalDateTime($tx['timestamp'], $this->tenant->code, "Y-m-d h:i a");
+                    $amount = ($tx['amount'] > 0 ? '+' : '') . number_format($tx['amount'], 2) . " USD";
 
                     $message .= $textController->getDots($totalWidth, $date, $amount) . "\n";
                 }
@@ -309,7 +349,7 @@ class ZentroTraderBotController extends JsonsController
                                 ]
                             ],
                             [
-                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "confirmation|showseedphrase|wallet"]
+                                ["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "showseedphraseconfirmation|showseedphrase|wallet"]
                             ],
                             [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                         ],
@@ -353,7 +393,7 @@ class ZentroTraderBotController extends JsonsController
             };
 
 
-        $this->strategies["confirmation"] =
+        $this->strategies["showseedphraseconfirmation"] =
             function () use ($array) {
                 $reply = $this->getAreYouSurePrompt(
                     $array["pieces"][1],
@@ -367,8 +407,15 @@ class ZentroTraderBotController extends JsonsController
             };
 
         $this->strategies["/network"] =
-            function () use ($array) {
+            function () {
                 $reply = $this->notifyNetworkStatus();
+                return $reply;
+            };
+
+        $this->strategies["/p2pbuy"] =
+            function () {
+                $controller = new OffersController();
+                $reply = $controller->buy($this);
                 return $reply;
             };
 
@@ -379,6 +426,38 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+        $this->strategies["/rateoffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->rateOfferPerformance($this, $array["pieces"][1], $array["pieces"][2]);
+                return [
+                    "text" => "",
+                ];
+            };
+
+
+
+        $this->strategies["/offerapply"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->applyForOffer($this, $array["pieces"][1]);
+                return [
+                    "text" => "",
+                ];
+
+                /*
+                // Evento: TradeCreated (Bloqueo de fondos en Escrow)
+        $payload = ScrowMockService::getTradeCreatedPayload(
+            $this->tenant,
+            $this->seller->getWallet()["address"],
+            $this->buyer->getWallet()["address"],
+            $this->token['decimals'],
+            false,
+            $offer->id
+        );
+        $tradeId = $payload['decoded']['params']['tradeId'];
+                */
+            };
 
         return $this->getProcessedMessage();
     }
@@ -405,7 +484,7 @@ class ZentroTraderBotController extends JsonsController
 
         if (env("P2P_ENABLED", true))
             array_push($menu, [
-                ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "notimplemented"],
+                ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
                 ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
             ]);
 
@@ -509,7 +588,7 @@ class ZentroTraderBotController extends JsonsController
     public function configMenu($actor)
     {
         $menu = [];
-        array_push($menu, [["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "confirmation|showseedphrase|wallet"]]);
+        array_push($menu, [["text" => "🔑 " . Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.seedphrase"), "callback_data" => "showseedphraseconfirmation|showseedphrase|wallet"]]);
 
         return $this->getConfigMenu(
             $actor,

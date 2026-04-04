@@ -3,9 +3,10 @@
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
+use Modules\Web3\Http\Controllers\BlockchainProviderController;
+use Modules\Web3\Http\Controllers\EthersController;
 use Modules\Web3\Http\Controllers\WalletController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
-use Modules\Web3\Http\Controllers\AlchemyController;
 use Modules\Web3\Services\Web3MathService;
 use Modules\Web3\Http\Controllers\InchController;
 use Modules\Web3\Http\Controllers\ChainidController;
@@ -31,11 +32,11 @@ class TraderWalletController extends WalletController
 
     /**
      * CONSULTAR SALDO (ESTANDARIZADO)
-     * - Devuelve el balance de BASE_TOKEN en Polygon.
+     * - Devuelve el balance de BASE_TOKEN en BASE_NETWORK.
      * - Si no hay wallet, devuelve error específico.
      * - Si hay wallet pero no balance, devuelve 0.0 sin error.
      */
-    public function getBalance($suscriptor, $networkSymbol = "POL")
+    public function getBalance($suscriptor)
     {
         // 1. Obtener Wallet
         if (!$suscriptor || !isset($suscriptor->data['wallet']['address'])) {
@@ -43,19 +44,16 @@ class TraderWalletController extends WalletController
         }
 
         $address = $suscriptor->data['wallet']['address'];
-        $apiKey = config('zentrotraderbot.alchemy_api_key');
 
+        $chain = ConfigService::getActiveNetwork();
         $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+        //dd($address, $token);
 
-        $balances = AlchemyController::getTokenBalances($apiKey, $address, [$token["address"]]);
+        $balances = EthersController::getTokenBalance($address, $chain, [$token]);
+
         $humanBal = "0.0";
-        if (is_array($balances) && count($balances)) {
-            foreach ($balances as $bal) {
-                $hexBal = $bal['tokenBalance'] ?? '0x0';
-                // Conversión humana
-                $humanBal = Web3MathService::hexToDecimal($hexBal, $token["decimals"]);
-            }
-        }
+        foreach ($balances as $bal)
+            $humanBal = $bal['balance'];
 
         return $humanBal;
     }
@@ -72,7 +70,9 @@ class TraderWalletController extends WalletController
         $network = ConfigService::getActiveNetwork();
         $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
 
-        return AlchemyController::getRecentTransactions($apiKey, $address, strtoupper($network["shortName"]), ["erc20"], [$token["address"]], $limit);
+        $txs = BlockchainProviderController::getRecentTransactions($address, $network, [$token], $limit);
+        //dd($txs);
+        return $txs;
     }
 
     /**
