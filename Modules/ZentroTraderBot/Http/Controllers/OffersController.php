@@ -562,9 +562,8 @@ class OffersController extends Controller
         $escrow = new EscrowController();
         $deadline = time() + 3600; // 1 hora de validez para el Permit
 
-        // --- PASO ÚNICO: PERMIT + CREATE TRADE ---
-        // Informamos al usuario que Kashio asume el costo
-        $this->updateStatus($bot, "⌛️ *Procesando intercambio...*");
+        // ESTADO 1: Preparación Criptográfica (Local y rápido)
+        $this->updateStatus($bot, "🔐 *Paso 1/3:* Generando firma digital de seguridad...");
 
         if (env("DEBUG_MODE", false))
             Log::debug("🐞 OffersController applyForOffer:", [
@@ -578,9 +577,6 @@ class OffersController extends Controller
         $txHash = false;
         $successMsg = "✅ *¡Intercambio asegurado con éxito!*";
         try {
-            // ESTADO 1: Preparación Criptográfica (Local y rápido)
-            $this->updateStatus($bot, "🔐 *Paso 1/3:* Generando firma digital de seguridad...");
-
             $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($bot, $escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network) {
 
                 // ESTADO 2: Envío a la Mempool (Aquí es donde Kashio paga el gas)
