@@ -568,6 +568,7 @@ class OffersController extends Controller
                 "deadline" => $deadline,
             ]);
 
+        $txHash = false;
         try {
             $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network) {
                 // Llamamos al método que hace TODO: 
@@ -597,13 +598,23 @@ class OffersController extends Controller
             $this->waitForConfirmation($rpcUrls, $txHash);
 
             $this->updateStatus($bot, "✅ *¡Intercambio asegurado con éxito!*");
-
-            return $txHash;
-
         } catch (\Exception $e) {
+            // SI EL ERROR DICE QUE EL ID YA EXISTE, ES QUE SE ENVIÓ CORRECTAMENTE
+            if (str_contains($e->getMessage(), 'ID already exists')) {
+                // En este punto, no tenemos el TX Hash porque el nodo falló al simular,
+                // pero sabemos que el ID $offer->id ya está en la blockchain.
+                $this->updateStatus($bot, "✅ *¡Intercambio asegurado con éxito!*");
+
+                // Opcional: Podrías buscar el hash en tu base de datos si Moralis ya lo guardó
+                // o simplemente marcar como éxito si confías en que el ID ya está ocupado.
+                return true;
+            }
+
             $this->updateStatus($bot, "❌ *Error en la red:*\n" . $e->getMessage());
             return false;
         }
+
+        return $txHash;
     }
 
     public function recoverOffer($bot, $code)

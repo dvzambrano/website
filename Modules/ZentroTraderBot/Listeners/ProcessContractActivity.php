@@ -60,6 +60,11 @@ class ProcessContractActivity
         }
         */
 
+        // Ignoramos transferencias de tokens que no son nuestro Escrow
+        if (strtolower($data['contract']) !== strtolower(env('ESCROW_CONTRACT'))) {
+            return;
+        }
+
         // 1. Filtro de Confirmación (Seguridad Blockchain)
         if (!($data['confirmed'] ?? false)) {
             if (env("DEBUG_MODE", false))
