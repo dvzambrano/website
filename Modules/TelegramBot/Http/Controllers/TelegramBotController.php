@@ -4,6 +4,7 @@ namespace Modules\TelegramBot\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
 use Modules\Laravel\Http\Controllers\Controller;
+use Modules\TelegramBot\Events\TelegramUpdateReceived;
 
 class TelegramBotController extends Controller
 {
@@ -21,11 +22,13 @@ class TelegramBotController extends Controller
         // Validación básica
         if (!$tenant || !isset($tenant->module)) {
             Log::error('🆘 TelegramBotController handle: Active bot not found or invalid module', ['tenant' => $tenant]);
-            abort(404, 'Bot handle controller not found');
+            return response()->json(['ok' => false], 404);
         }
 
-        $controller = $this->getController($tenant->module, $tenant->module);
-        return $this->callControllerMethod($controller, 'receiveMessage', [$tenant, $update], 'Bot handle controller not found');
+        // DISPARAMOS EL EVENTO
+        event(new TelegramUpdateReceived($tenant->key, $update));
+        // Respondemos a Telegram de inmediato
+        return response()->json(['ok' => true], 200);
     }
 
     /**
@@ -110,7 +113,7 @@ class TelegramBotController extends Controller
      * @param array $logContext
      * @return mixed|null
      */
-    private function callControllerMethod($controller, $method, $params = [], $abortMsg = null, $logContext = [])
+    public function callControllerMethod($controller, $method, $params = [], $abortMsg = null, $logContext = [])
     {
         if ($controller && method_exists($controller, $method)) {
             try {

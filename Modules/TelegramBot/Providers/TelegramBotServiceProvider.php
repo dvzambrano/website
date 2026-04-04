@@ -14,6 +14,9 @@ use Illuminate\Routing\Router;
 use Modules\TelegramBot\Middleware\TenantMiddleware;
 use Modules\TelegramBot\Middleware\TelegramBotDataMiddleware;
 use Modules\TelegramBot\Middleware\TelegramIsAuthenticatedMiddleware;
+use Illuminate\Support\Facades\Event;
+use Modules\TelegramBot\Events\TelegramUpdateReceived;
+use Modules\TelegramBot\Listeners\ProcessTelegramUpdate;
 
 class TelegramBotServiceProvider extends ServiceProvider
 {
@@ -43,6 +46,11 @@ class TelegramBotServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'Database/Migrations'));
+
+        Event::listen(
+            TelegramUpdateReceived::class,
+            ProcessTelegramUpdate::class
+        );
     }
 
     /**

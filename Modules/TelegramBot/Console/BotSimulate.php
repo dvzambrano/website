@@ -1,9 +1,12 @@
 <?php
+
 namespace Modules\TelegramBot\Console;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\TelegramBot\Events\TelegramUpdateReceived;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 
 class BotSimulate extends Command
 {
@@ -67,19 +70,13 @@ class BotSimulate extends Command
             ]
         ];
 
-        // Ejecutamos la petición POST incluyendo el SECRET TOKEN en el header
-        $response = Http::withHeaders([
-            'X-Telegram-Bot-Api-Secret-Token' => $bot->secret,
-            'Content-Type' => 'application/json',
-        ])->post($url, $payload);
+        // FORZAMOS EL DRIVER DE COLA A SYNC SOLO PARA ESTA EJECUCIÓN
+        config(['queue.default' => 'sync']);
 
-        // Mostramos el resultado del debug
-        if ($response->successful()) {
-            $this->info("✅ Respuesta del servidor (200):");
-            $this->line($response->body());
-        } else {
-            $this->error("❌ Error ({$response->status()}):");
-            $this->line($response->body());
-        }
+        // 3. DISPARAR EL EVENTO DIRECTAMENTE
+        // Esto activará el ProcessTelegramUpdate Listener
+        event(new TelegramUpdateReceived($bot->key, $payload));
+
+        $this->info("✅ Evento disparado correctamente.");
     }
 }
