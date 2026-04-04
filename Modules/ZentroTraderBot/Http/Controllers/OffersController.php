@@ -557,7 +557,7 @@ class OffersController extends Controller
 
         // --- PASO ÚNICO: PERMIT + CREATE TRADE ---
         // Informamos al usuario que Kashio asume el costo
-        $this->updateStatus($bot, "⌛️ *Procesando intercambio...*");
+        $this->updateStatus($bot, "⌛️ *" . date("i:s") . ": Procesando intercambio...*");
 
         if (env("DEBUG_MODE", false))
             Log::debug("🐞 OffersController applyForOffer:", [
