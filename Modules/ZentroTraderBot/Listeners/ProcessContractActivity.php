@@ -97,76 +97,79 @@ class ProcessContractActivity
             return;
         }
 
-        try {
-            $eventName = strtoupper($data['decoded']['name']);
-            $params = $data['decoded']['params'];
-            $tradeId = $params['tradeId'];
-            $offer = Offers::on('tenant')->where('id', $tradeId)->first();
+        $eventName = strtoupper($data['decoded']['name']);
+        $params = $data['decoded']['params'];
+        if (isset($params['tradeId'])) {
+            try {
+                $tradeId = $params['tradeId'];
+                $offer = Offers::on('tenant')->where('id', $tradeId)->first();
 
-            switch ($eventName) {
-                case 'TRADECREATED':
-                    // En el nuevo contrato, el trade ya nace LOCKED (bloqueado)
-                    $this->syncTradeCreated($tradeId, $params, $data);
-                    break;
+                switch ($eventName) {
+                    case 'TRADECREATED':
+                        // En el nuevo contrato, el trade ya nace LOCKED (bloqueado)
+                        $this->syncTradeCreated($tradeId, $params, $data);
+                        break;
 
-                case 'TRADEEXPIRED':
-                    // El tiempo se agotó y el vendedor ejecutó la reclamación
-                    $offer->updateStatus('EXPIRED', [
-                        'updated_at' => now()
-                    ]);
-                    break;
+                    case 'TRADEEXPIRED':
+                        // El tiempo se agotó y el vendedor ejecutó la reclamación
+                        $offer->updateStatus('EXPIRED', [
+                            'updated_at' => now()
+                        ]);
+                        break;
 
-                case 'TRADECANCELLED':
-                    // El vendedor canceló antes de que el comprador firmara
-                    $offer->updateStatus('CANCELLED', [
-                        'updated_at' => now()
-                    ]);
-                    break;
+                    case 'TRADECANCELLED':
+                        // El vendedor canceló antes de que el comprador firmara
+                        $offer->updateStatus('CANCELLED', [
+                            'updated_at' => now()
+                        ]);
+                        break;
 
-                case 'DISPUTEOPENED':
-                    $offer->updateStatus('DISPUTED', [
-                        'updated_at' => now()
-                    ]);
-                    break;
+                    case 'DISPUTEOPENED':
+                        $offer->updateStatus('DISPUTED', [
+                            'updated_at' => now()
+                        ]);
+                        break;
 
-                case 'DISPUTERESOLVED':
-                    // El arbitro decidió un ganador
-                    $offer->updateStatus('SOLVED', [
-                        'winner_address' => $params['winner'],
-                        'tx_hash_release' => $data['tx_hash'],
-                        'updated_at' => now()
-                    ]);
-                    break;
+                    case 'DISPUTERESOLVED':
+                        // El arbitro decidió un ganador
+                        $offer->updateStatus('SOLVED', [
+                            'winner_address' => $params['winner'],
+                            'tx_hash_release' => $data['tx_hash'],
+                            'updated_at' => now()
+                        ]);
+                        break;
 
-                case 'TRADESIGNED':
-                    // Útil para avisar al otro: "¡Oye, ya firmaron, solo faltas tú!"
-                    $json = $offer->data;
-                    $json["signer"] = $params['signer'];
-                    $offer->data = $json;
-                    $offer->save();
-                    $offer->refresh();
+                    case 'TRADESIGNED':
+                        // Útil para avisar al otro: "¡Oye, ya firmaron, solo faltas tú!"
+                        $json = $offer->data;
+                        $json["signer"] = $params['signer'];
+                        $offer->data = $json;
+                        $offer->save();
+                        $offer->refresh();
 
-                    $offer->updateStatus('SIGNED', [
-                        'updated_at' => now()
-                    ]);
-                    break;
+                        $offer->updateStatus('SIGNED', [
+                            'updated_at' => now()
+                        ]);
+                        break;
 
-                case 'TRADECLOSED':
-                    // Ambos firmaron y los fondos volaron al comprador
-                    $offer->updateStatus('COMPLETED', [
-                        'tx_hash_release' => $data['tx_hash'],
-                        'updated_at' => now()
-                    ]);
-                    break;
+                    case 'TRADECLOSED':
+                        // Ambos firmaron y los fondos volaron al comprador
+                        $offer->updateStatus('COMPLETED', [
+                            'tx_hash_release' => $data['tx_hash'],
+                            'updated_at' => now()
+                        ]);
+                        break;
 
-                default:
-                    break;
+                    default:
+                        break;
+                }
+
+            } catch (\Exception $e) {
+                Cache::forget($cacheKey);
+                Log::error("🆘 ProcessContractActivity handle Listener: ", [
+                    "message" => $e->getMessage()
+                ]);
             }
-        } catch (\Exception $e) {
-            Cache::forget($cacheKey);
-            Log::error("🆘 ProcessContractActivity handle Listener: ", [
-                "message" => $e->getMessage()
-            ]);
         }
     }
 
@@ -206,6 +209,7 @@ class ProcessContractActivity
         $offer->updateStatus('LOCKED', [
             'seller_address' => $seller,
             'buyer_address' => $buyer,
+            'tx_hash_deposit' => $rawData['tx_hash'],
             'updated_at' => now()
         ]);
 
