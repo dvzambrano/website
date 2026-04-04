@@ -65,12 +65,23 @@ class ProcessContractActivity
             return;
         }
 
+        $eventName = strtoupper($data['decoded']['name']);
+
+        // Idempotencia: tx_hash + eventName + estado de confirmación: permite que el flujo pase una vez por 'unconfirmed' y una vez por 'confirmed'
+        $statusSuffix = $data['confirmed'] ? 'confirmed' : 'unconfirmed';
+        $cacheKey = 'escrow_ev_proc_' . $eventName . '_' . $data['tx_hash'] . '_' . $statusSuffix;
+        if (!Cache::add($cacheKey, true, now()->addDays(2))) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 ProcessContractActivity handle escaped by tx_processed ($statusSuffix): ", [
+                    "key" => $cacheKey
+                ]);
+            return;
+        }
+
         // 1. Filtro de Confirmación (Seguridad Blockchain)
         if (!($data['confirmed'] ?? false)) {
             if (env("DEBUG_MODE", false))
-                Log::debug("🐞 ProcessContractActivity handle escaped by !confirmed: ", [
-                    "data" => $data,
-                ]);
+                Log::debug("🐞 ProcessContractActivity handle unconfirmed event cached but ignored.");
             return;
         }
 
@@ -86,18 +97,7 @@ class ProcessContractActivity
         }
         $bot->connectToThisTenant();
 
-        // Idempotencia: tx_hash + log_index (por si una TX dispara varios eventos)
-        $cacheKey = 'escrow_ev_processed_' . $data['tx_hash'] . '_' . ($data['log_index'] ?? 0);
-        if (!Cache::add($cacheKey, true, now()->addDays(2))) {
-            if (env("DEBUG_MODE", false))
-                Log::debug("🐞 ProcessContractActivity handle escaped by tx_processed: ", [
-                    "key" => $cacheKey,
-                    "data" => $data,
-                ]);
-            return;
-        }
-
-        $eventName = strtoupper($data['decoded']['name']);
+        // A partir de aquí, solo entra una vez por cada TX CONFIRMADA
         $params = $data['decoded']['params'];
         if (isset($params['tradeId'])) {
             try {
@@ -165,7 +165,9 @@ class ProcessContractActivity
                 }
 
             } catch (\Exception $e) {
-                Cache::forget($cacheKey);
+                if ($data['confirmed'])
+                    Cache::forget($cacheKey);
+
                 Log::error("🆘 ProcessContractActivity handle Listener: ", [
                     "message" => $e->getMessage()
                 ]);
@@ -206,6 +208,10 @@ class ProcessContractActivity
         }
 
         $offer = Offers::on('tenant')->where('id', $blockchainId)->first();
+        if (!$offer) {
+            Log::warning("⚠️ Intento de sincronizar TradeCreated para ID inexistente: $blockchainId");
+            return;
+        }
         $offer->updateStatus('LOCKED', [
             'seller_address' => $seller,
             'buyer_address' => $buyer,

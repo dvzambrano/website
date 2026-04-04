@@ -521,6 +521,13 @@ class OffersController extends Controller
 
     public function applyForOffer($bot, $code)
     {
+        // Creamos una llave única para este usuario y esta oferta
+        $lockKey = "applying_offer_{$bot->actor->user_id}_{$code}";
+        // Si no podemos obtener el "candado", es que ya hay un proceso en marcha (reintento de Telegram)
+        if (!Cache::add($lockKey, true, now()->addMinutes(2))) {
+            return true; // Retornamos true para que el flujo no dé error, pero no hacemos nada
+        }
+
         //$this->updateStatus($bot, "🔍 *Verificando fondos...*");
 
         // 1. Configuración de Red y Token
@@ -600,6 +607,9 @@ class OffersController extends Controller
 
             $this->updateStatus($bot, $successMsg);
         } catch (\Exception $e) {
+            // Si falla, liberamos para que pueda reintentar
+            Cache::forget($lockKey);
+
             // SI EL ERROR DICE QUE EL ID YA EXISTE, ES QUE SE ENVIÓ CORRECTAMENTE
             if (str_contains($e->getMessage(), 'ID already exists')) {
                 // En este punto, no tenemos el TX Hash porque el nodo falló al simular,
