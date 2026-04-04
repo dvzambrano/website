@@ -16,9 +16,7 @@ class TelegramBotController extends Controller
     {
         // El Middleware 'tenant.detector' ya hizo el trabajo sucio 
         // de configurar la DB 'tenant' antes de llegar aquí.
-        $update = request()->all();
         $tenant = app('active_bot'); // Recuperamos lo que guardó el Middleware
-
         // Validación básica
         if (!$tenant || !isset($tenant->module)) {
             Log::error('🆘 TelegramBotController handle: Active bot not found or invalid module', ['tenant' => $tenant]);

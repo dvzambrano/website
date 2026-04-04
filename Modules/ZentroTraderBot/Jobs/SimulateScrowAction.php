@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Laravel\Services\Exchange\CambiocupService;
+use Modules\Laravel\Services\BehaviorService;
 
 class SimulateScrowAction implements ShouldQueue
 {
@@ -38,7 +39,10 @@ class SimulateScrowAction implements ShouldQueue
     public function handle()
     {
         // 1. Aseguramos que el bot existe y conectamos
-        $this->bot = TelegramBots::where('key', $this->tenant)->first();
+        $this->bot = BehaviorService::cache('tenant_' . $this->tenant, function () {
+            return TelegramBots::where('key', $this->tenant)->first();
+        });
+
         $this->bot->connectToThisTenant();
 
         //{"token":{"chainId":137,"address":"0x8f3cf7ad23cd3cadbd9735aff958023239c6a063","decimals":18,"symbol":"DAI","name":"(PoS) Dai Stablecoin","logoURI":"https://tokens.1inch.io/0x6b175474e89094c44da98b954eedeac495271d0f.png","eip2612":true,"tags":[]}} 

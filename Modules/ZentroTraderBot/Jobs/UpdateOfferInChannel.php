@@ -13,6 +13,7 @@ use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Log;
 use Modules\Laravel\Services\DateService;
 use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
+use Modules\Laravel\Services\BehaviorService;
 
 class UpdateOfferInChannel implements ShouldQueue
 {
@@ -34,7 +35,9 @@ class UpdateOfferInChannel implements ShouldQueue
     {
         try {
             // 1. Conectar al Tenant para obtener el token del bot
-            $tenant = TelegramBots::where('key', $this->tenant)->first();
+            $tenant = BehaviorService::cache('tenant_' . $this->tenant, function () {
+                return TelegramBots::where('key', $this->tenant)->first();
+            });
             if (!$tenant)
                 return;
             $tenant->connectToThisTenant();

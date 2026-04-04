@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\Laravel\Services\BehaviorService;
 
 class TenantMiddleware
 {
@@ -17,7 +18,9 @@ class TenantMiddleware
         $headerToken = $request->header('X-Telegram-Bot-Api-Secret-Token') ?? $secret;
 
         // Buscamos la configuración en la DB principal
-        $tenant = TelegramBots::where('key', $key)->firstOrFail();
+        $tenant = BehaviorService::cache('tenant_' . $key, function () use ($key) {
+            return TelegramBots::where('key', $key)->firstOrFail();
+        });
         // 2. Si no existe o el token del header no coincide, rechazamos
         if (!$tenant || $tenant->secret !== $headerToken) {
             return response()->json(['error' => 'Unauthorized'], 403);

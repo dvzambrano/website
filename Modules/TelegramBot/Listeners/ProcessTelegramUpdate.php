@@ -6,18 +6,19 @@ use Modules\TelegramBot\Events\TelegramUpdateReceived;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Http\Controllers\TelegramBotController;
+use Modules\Laravel\Services\BehaviorService;
 
 class ProcessTelegramUpdate
 {
-    // Esto hace que se procese en el queue worker
-    public $queue = 'telegram-updates';
-
     public function handle(TelegramUpdateReceived $event)
     {
         $update = $event->update;
 
         // 2. Identificar el Bot/Tenant
-        $tenant = TelegramBots::where('key', $event->tenantKey)->first();
+        $tenant = BehaviorService::cache('tenant_' . $event->tenantKey, function () use ($event) {
+            return TelegramBots::where('key', $event->tenantKey)->first();
+        });
+
         if (!$tenant) {
             Log::error("🆘  ProcessTelegramUpdate handle escaped by !bot: ", [
                 "tenant_code" => $event->tenantKey,

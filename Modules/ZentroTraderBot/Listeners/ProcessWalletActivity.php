@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
 use Modules\Laravel\Services\NumberService;
+use Modules\Laravel\Services\BehaviorService;
 
 class ProcessWalletActivity
 {
@@ -125,7 +126,9 @@ class ProcessWalletActivity
 
 
         // 4. Identificar el Bot/Tenant
-        $bot = TelegramBots::where('key', $data['tenant_code'])->first();
+        $bot = BehaviorService::cache('tenant_' . $data['tenant_code'], function () use ($data) {
+            return TelegramBots::where('key', $data['tenant_code'])->first();
+        });
         if (!$bot) {
             if (env("DEBUG_MODE", false))
                 Log::debug("🐞 ProcessWalletActivity handle escaped by !bot: ", [

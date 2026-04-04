@@ -15,6 +15,7 @@ use Modules\Web3\Services\Web3MathService;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\ZentroTraderBot\Jobs\ManageScrow;
 use Modules\Laravel\Services\NumberService;
+use Modules\Laravel\Services\BehaviorService;
 
 class CheckGas implements ShouldQueue
 {
@@ -32,7 +33,9 @@ class CheckGas implements ShouldQueue
     public function handle()
     {
         // 1. Conectar al Tenant para obtener el token del bot
-        $tenant = TelegramBots::where('key', $this->tenant)->first();
+        $tenant = BehaviorService::cache('tenant_' . $this->tenant, function () {
+            return TelegramBots::where('key', $this->tenant)->first();
+        });
         if (!$tenant)
             return;
         $tenant->connectToThisTenant();
