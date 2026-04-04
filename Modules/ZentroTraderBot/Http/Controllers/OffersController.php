@@ -521,7 +521,7 @@ class OffersController extends Controller
 
     public function applyForOffer($bot, $code)
     {
-        $this->updateStatus($bot, "🔍 *Verificando disponibilidad de fondos...*\nPor favor, no cierre esta ventana.");
+        $this->updateStatus($bot, "🔍 *Verificando fondos...*");
 
         // 1. Configuración de Red y Token
         $network = ConfigService::getNetworks(env("BASE_NETWORK"));
@@ -529,8 +529,10 @@ class OffersController extends Controller
         $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
 
         $offer = Offers::findByCode($code);
-        if (!$offer)
+        if (!$offer) {
+            $this->updateStatus($bot, "❌ No se encontró la oferta {$code}.");
             return false;
+        }
 
         // 2. Identificación de Roles
         $isSell = strtolower($offer->type) == "sell";
@@ -544,9 +546,8 @@ class OffersController extends Controller
             return false;
 
         // 3. Preparación de datos para la Blockchain
-        $sellerPrivateKey = decryptValue($seller->data['wallet']['private_key']);
+        $key = decryptValue($seller->data['wallet']['private_key']);
         $buyerAddress = $buyer->data['wallet']['address'];
-        $treasuryPrivKey = decryptValue(env("TRADER_BOT_KEY"));
 
         // Monto con decimales correctos (usando bcmath como tenías antes)
         $amountWei = bcmul($offer->amount, bcpow(10, $tokenInfo["decimals"]));
@@ -556,10 +557,19 @@ class OffersController extends Controller
 
         // --- PASO ÚNICO: PERMIT + CREATE TRADE ---
         // Informamos al usuario que Kashio asume el costo
-        $this->updateStatus($bot, "⛽ *Procesando intercambio seguro...*");
+        $this->updateStatus($bot, "⌛️ *Procesando intercambio...*");
+
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 OffersController applyForOffer:", [
+                "code" => $code,
+                "sellerUserId" => $sellerUserId,
+                "buyerUserId" => $buyerUserId,
+                "offer" => $offer,
+                "deadline" => $deadline,
+            ]);
 
         try {
-            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $sellerPrivateKey, $treasuryPrivKey, $offer, $amountWei, $buyerAddress, $deadline, $network) {
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network) {
                 // Llamamos al método que hace TODO: 
                 // 1. Obtiene nonce del token
                 // 2. Obtiene Domain Separator
@@ -567,7 +577,7 @@ class OffersController extends Controller
                 // 4. Envía la transacción con la key de TESORERÍA (Paga el gas)
                 return $escrow->createTradeWithPermit(
                     $rpc,
-                    $sellerPrivateKey,           // Firma el permiso (0 gas)
+                    $key,           // Firma el permiso (0 gas)
                     env('ESCROW_CONTRACT'),
                     $network['chainId'],
                     $offer->id,                  // ID del trade para el contrato
@@ -579,12 +589,14 @@ class OffersController extends Controller
                 );
             });
 
-            if (!$txHash)
-                throw new \Exception("No se pudo obtener el hash de la transacción.");
+            if (!$txHash) {
+                $this->updateStatus($bot, "❌ No se pudo obtener el hash de la transacción.");
+                return;
+            }
 
             $this->waitForConfirmation($rpcUrls, $txHash);
 
-            $this->updateStatus($bot, "✅ *¡Intercambio asegurado con éxito!*\nLos fondos están en custodia de Kashio.");
+            $this->updateStatus($bot, "✅ *¡Intercambio asegurado con éxito!*");
 
             return $txHash;
 
@@ -645,12 +657,12 @@ class OffersController extends Controller
         try {
             // Obtenemos la llave del vendedor (el dueño de la oferta)
             $seller = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
-            $sellerPrivateKey = decryptValue($seller->data['wallet']['private_key']);
+            $key = decryptValue($seller->data['wallet']['private_key']);
 
-            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $sellerPrivateKey, $network, $offer) {
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $key, $network, $offer) {
                 return $escrow->expireTrade(
                     $rpc,
-                    $sellerPrivateKey, // El vendedor firma la petición de expiración
+                    $key, // El vendedor firma la petición de expiración
                     env('ESCROW_CONTRACT'),
                     $network['chainId'],
                     $offer->id,
