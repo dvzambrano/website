@@ -569,6 +569,7 @@ class OffersController extends Controller
             ]);
 
         $txHash = false;
+        $successMsg = "✅ *¡Intercambio asegurado con éxito!*";
         try {
             $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network) {
                 // Llamamos al método que hace TODO: 
@@ -592,21 +593,41 @@ class OffersController extends Controller
 
             if (!$txHash) {
                 $this->updateStatus($bot, "❌ No se pudo obtener el hash de la transacción.");
-                return;
+                return false;
             }
 
             $this->waitForConfirmation($rpcUrls, $txHash);
 
-            $this->updateStatus($bot, "✅ *¡Intercambio asegurado con éxito!*");
+            $this->updateStatus($bot, $successMsg);
         } catch (\Exception $e) {
             // SI EL ERROR DICE QUE EL ID YA EXISTE, ES QUE SE ENVIÓ CORRECTAMENTE
             if (str_contains($e->getMessage(), 'ID already exists')) {
                 // En este punto, no tenemos el TX Hash porque el nodo falló al simular,
                 // pero sabemos que el ID $offer->id ya está en la blockchain.
-                $this->updateStatus($bot, "✅ *¡Intercambio asegurado con éxito!*");
+                // 1. Intentamos recuperar los datos directamente del contrato
+                try {
+                    $blockchainTrade = $escrow->getTradeById(
+                        $rpcUrls[0],
+                        env('ESCROW_CONTRACT'),
+                        $network['chainId'],
+                        $offer->id,
+                        env('ETHERSCAN_API_KEY')
+                    );
 
-                // Opcional: Podrías buscar el hash en tu base de datos si Moralis ya lo guardó
-                // o simplemente marcar como éxito si confías en que el ID ya está ocupado.
+                    if ($blockchainTrade && $blockchainTrade['seller'] !== '0x0000000000000000000000000000000000000000') {
+                        // 2. Si el trade existe, actualizamos manualmente antes de que llegue el evento
+                        $offer->updateStatus('LOCKED', [
+                            'seller_address' => $blockchainTrade['seller'],
+                            'buyer_address' => $blockchainTrade['buyer'],
+                            // Nota: El tx_hash no lo tenemos aquí porque getTradeById lee el estado, no la TX.
+                            // Pero el Listener de Moralis lo pondrá cuando llegue.
+                        ]);
+                    }
+                } catch (\Throwable $th) {
+                    Log::error("🐞 Falló recuperación manual en catch: " . $th->getMessage());
+                }
+
+                $this->updateStatus($bot, $successMsg);
                 return true;
             }
 
