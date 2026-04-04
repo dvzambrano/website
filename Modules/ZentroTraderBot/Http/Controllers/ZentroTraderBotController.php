@@ -435,6 +435,15 @@ class ZentroTraderBotController extends JsonsController
                 ];
             };
 
+        $this->strategies["/recoveroffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->recoverOffer($this, $array["pieces"][1]);
+                return [
+                    "text" => "",
+                ];
+            };
+
 
 
         $this->strategies["/offerapply"] =

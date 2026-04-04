@@ -19,6 +19,8 @@ use Modules\ZentroTraderBot\Jobs\ProcessReputationUpdate;
 use Modules\Web3\Http\Controllers\EscrowController;
 use Modules\Web3\Traits\BlockchainTools;
 use Modules\Web3\Services\ConfigService;
+use Modules\Laravel\Services\DateService;
+use Carbon\Carbon;
 
 class OffersController extends Controller
 {
@@ -444,6 +446,11 @@ class OffersController extends Controller
 
     public function showOffer($bot, $code, $menu = false)
     {
+        $blockchain = new BlockchainController();
+        $status = $blockchain->getStatus();
+        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+
+
         $text = "";
         if (!$menu)
             $menu = [];
@@ -457,11 +464,22 @@ class OffersController extends Controller
             $text = $offer->renderAsTelegramMessage("{$title} *OFERTA*", $isOwner);
             $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
 
-            if ($isOwner)
-                array_push($menu, [
-                    ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"]
-                ]);
-            else {
+            if ($isOwner) {
+                switch ($offer->status) {
+                    case 'open':
+                        array_push($menu, [
+                            ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"]
+                        ]);
+                        break;
+                    case 'locked':
+                        array_push($menu, [
+                            ["text" => "⏱️ Ha pasado más de " . $diff["legible"] . " y no me han pagado", "callback_data" => "/recoveroffer {$offer->code}"]
+                        ]);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
                 $total = number_format(($offer->amount * $offer->price_per_usd), 2);
                 $btnAction = $isSell ? "✅ Comprar" : "💰 Vender";
                 array_push($menu, [
@@ -487,23 +505,23 @@ class OffersController extends Controller
         ];
     }
 
+    public function updateStatus($bot, $text)
+    {
+        try {
+            TelegramController::editMessageText([
+                "message" => [
+                    "text" => $text,
+                    "chat" => ["id" => $bot->actor->user_id],
+                    "message_id" => $bot->message["message_id"],
+                ]
+            ], $bot->tenant->token);
+        } catch (\Throwable $th) {
+        }
+    }
+
     public function applyForOffer($bot, $code)
     {
-        $updateStatus = function ($text) use ($bot) {
-            try {
-                TelegramController::editMessageText([
-                    "message" => [
-                        "text" => $text,
-                        "chat" => ["id" => $bot->actor->user_id],
-                        "message_id" => $bot->message["message_id"],
-                        "parse_mode" => "Markdown" // Importante para las negritas y emojis
-                    ]
-                ], $bot->tenant->token);
-            } catch (\Throwable $th) {
-            }
-        };
-
-        $updateStatus("🔍 *Verificando disponibilidad de fondos...*\nPor favor, no cierre esta ventana.");
+        $this->updateStatus($bot, "🔍 *Verificando disponibilidad de fondos...*\nPor favor, no cierre esta ventana.");
 
         // 1. Configuración de Red y Token
         $network = ConfigService::getNetworks(env("BASE_NETWORK"));
@@ -538,7 +556,7 @@ class OffersController extends Controller
 
         // --- PASO ÚNICO: PERMIT + CREATE TRADE ---
         // Informamos al usuario que Kashio asume el costo
-        $updateStatus("⛽ *Procesando intercambio seguro...*");
+        $this->updateStatus($bot, "⛽ *Procesando intercambio seguro...*");
 
         try {
             $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $sellerPrivateKey, $treasuryPrivKey, $offer, $amountWei, $buyerAddress, $deadline, $network) {
@@ -566,12 +584,91 @@ class OffersController extends Controller
 
             $this->waitForConfirmation($rpcUrls, $txHash);
 
-            $updateStatus("✅ *¡Intercambio asegurado con éxito!*\nLos fondos están en custodia de Kashio.");
+            $this->updateStatus($bot, "✅ *¡Intercambio asegurado con éxito!*\nLos fondos están en custodia de Kashio.");
 
             return $txHash;
 
         } catch (\Exception $e) {
-            $updateStatus("❌ *Error en la red:*\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ *Error en la red:*\n" . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function recoverOffer($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer)
+            return false;
+
+        $blockchain = new BlockchainController();
+        $status = $blockchain->getStatus();
+        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+
+        $this->updateStatus($bot, "⏳ *Verificando condiciones de recuperación...*");
+
+        // 1. Configuración de Red
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+        $escrow = new EscrowController();
+
+        // 2. Obtener datos del trade desde la Blockchain para validar el tiempo
+        // Usamos el método de tu controlador que decodifica el struct Trade
+        $blockchainTrade = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $offer) {
+            return $escrow->getTradeById(
+                $rpc,
+                env('ESCROW_CONTRACT'),
+                $network['chainId'],
+                $offer->id,
+                env('ETHERSCAN_API_KEY')
+            );
+        });
+
+        if (!$blockchainTrade) {
+            $this->updateStatus($bot, "❌ *Error:* No se encontró el intercambio en la red.");
+            return false;
+        }
+
+        // 3. Validaciones de Seguridad
+        $now = time();
+        $timeoutAt = $blockchainTrade['createdAt'] + $status["tradeTimeout"];
+
+        if ($now < $timeoutAt) {
+            $remaining = $timeoutAt - $now;
+            $minutes = ceil($remaining / 60);
+            $this->updateStatus($bot, "🚫 *Aún no puedes reclamar:*\nDebes esperar $minutes minutos más para que el trade expire legalmente.");
+            return false;
+        }
+
+        // 4. Ejecución de la recuperación (Expire Trade)
+        $this->updateStatus($bot, "⚖️ *Solicitando devolución de fondos...*\nEl árbitro procesará la expiración.");
+
+        try {
+            // Obtenemos la llave del vendedor (el dueño de la oferta)
+            $seller = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+            $sellerPrivateKey = decryptValue($seller->data['wallet']['private_key']);
+
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $sellerPrivateKey, $network, $offer) {
+                return $escrow->expireTrade(
+                    $rpc,
+                    $sellerPrivateKey, // El vendedor firma la petición de expiración
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $offer->id,
+                    env('ETHERSCAN_API_KEY')
+                );
+            });
+
+            if (!$txHash)
+                $this->updateStatus($bot, "❌ La red rechazó la solicitud de expiración.");
+
+            $this->waitForConfirmation($rpcUrls, $txHash);
+
+            $this->updateStatus($bot, "✅ *¡Fondos en revisión!*\nEl intercambio ha sido cancelado por expiración: un árbitro revisará que no haya pendientes y sus " . number_format($offer->amount, 2) . " USD serán devueltos a su cuenta.");
+
+            return $txHash;
+
+        } catch (\Exception $e) {
+            $this->updateStatus($bot, "❌ *Error al recuperar:* " . $e->getMessage());
             return false;
         }
     }
