@@ -564,7 +564,7 @@ class OffersController extends Controller
 
         // --- PASO ÚNICO: PERMIT + CREATE TRADE ---
         // Informamos al usuario que Kashio asume el costo
-        $this->updateStatus($bot, "⌛️ *" . date("i:s") . ": Procesando intercambio...*");
+        $this->updateStatus($bot, "⌛️ *Procesando intercambio...*");
 
         if (env("DEBUG_MODE", false))
             Log::debug("🐞 OffersController applyForOffer:", [
@@ -578,7 +578,15 @@ class OffersController extends Controller
         $txHash = false;
         $successMsg = "✅ *¡Intercambio asegurado con éxito!*";
         try {
-            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network) {
+            // ESTADO 1: Preparación Criptográfica (Local y rápido)
+            $this->updateStatus($bot, "🔐 *Paso 1/3:* Generando firma digital de seguridad...");
+
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($bot, $escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network) {
+
+                // ESTADO 2: Envío a la Mempool (Aquí es donde Kashio paga el gas)
+                // Podrías pasar el $bot al closure si rpcCallWithFallback lo permite para actualizar aquí
+                $this->updateStatus($bot, "🚀 *Paso 2/3:* Moviendo fondos al ESCROW para garantizar el intercambio...");
+
                 // Llamamos al método que hace TODO: 
                 // 1. Obtiene nonce del token
                 // 2. Obtiene Domain Separator
@@ -603,7 +611,25 @@ class OffersController extends Controller
                 return false;
             }
 
-            $this->waitForConfirmation($rpcUrls, $txHash);
+            $this->waitForConfirmation($rpcUrls[0], $txHash, true, 60, function ($step, $attempt) use ($bot, $txHash, $network) {
+
+                $explorerUrl = $network['explorers'][0]['url'] . "/tx/" . $txHash;
+
+                // Una lista de mensajes para dar variedad
+                $messages = [
+                    1 => "⏳ *Paso 3/3:* Transacción enviada...",
+                    2 => "☕️ *Paso 3/3:* Validadores trabajando...",
+                    3 => "🛰 *Paso 3/3:* Casi listo. Confirmando los datos...",
+                    4 => "💎 *Paso 3/3:* Finalizando el contrato seguro de Escrow...",
+                    5 => "⚓️ *Paso 3/3:* La red está congestionada, pero tu transacción sigue activa...",
+                    6 => "⚠️ *Paso 3/3:* El tiempo de espera es inusual, por favor sea paciente..."
+                ];
+
+                $text = ($messages[$step] ?? "⌛️ Procesando confirmación...") .
+                    "\n\n🔗 [Ver en Polygonscan]({$explorerUrl})";
+
+                $this->updateStatus($bot, $text);
+            });
 
             $this->updateStatus($bot, $successMsg);
         } catch (\Exception $e) {
@@ -646,6 +672,47 @@ class OffersController extends Controller
         }
 
         return $txHash;
+    }
+
+    private function updateStatusWithPolling($bot, $txHash, $rpcUrls, $network)
+    {
+        $start = time();
+        $confirmed = false;
+        $explorerUrl = $network['explorers'][0]['url'] . "/tx/" . $txHash;
+
+        // Frases para rotar y que no parezca un robot estático
+        $waitingMessages = [
+            "⏳ La red está procesando su intercambio...",
+            "☕️ Casi listo, confirmando el intercambio...",
+            "🔗 Verificando integridad...",
+            "📡 Propagando el contrato del intercambio...",
+            "💎 Los fondos están entrando al Escrow seguro..."
+        ];
+
+        $i = 0;
+        while (time() - $start < 600) { // Timeout de 10 min
+            $msgIndex = $i % count($waitingMessages);
+            $elapsed = round((time() - $start) / 60);
+
+            $statusText = "🛰 *Paso 3/3: Confirmando*\n" .
+                "{$waitingMessages[$msgIndex]}\n\n" .
+                "⏱ Tiempo transcurrido: {$elapsed} min";
+
+            $this->updateStatus($bot, $statusText);
+
+            // Chequear si ya se confirmó
+            if ($this->checkTxStatus($rpcUrls[0], $txHash)) {
+                $confirmed = true;
+                break;
+            }
+
+            $i++;
+            sleep(30); // Actualizamos cada 30 segundos
+        }
+
+        if (!$confirmed) {
+            throw new \Exception("La transacción está tardando más de lo habitual. Por favor, verifica el explorador.");
+        }
     }
 
     public function recoverOffer($bot, $code)
