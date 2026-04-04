@@ -14,6 +14,7 @@ use Illuminate\Routing\Router;
 use Modules\TelegramBot\Middleware\TenantMiddleware;
 use Modules\TelegramBot\Middleware\TelegramBotDataMiddleware;
 use Modules\TelegramBot\Middleware\TelegramIsAuthenticatedMiddleware;
+use Modules\TelegramBot\Middleware\AsyncTelegramProcessor;
 use Illuminate\Support\Facades\Event;
 use Modules\TelegramBot\Events\TelegramUpdateReceived;
 use Modules\TelegramBot\Listeners\ProcessTelegramUpdate;
@@ -41,6 +42,7 @@ class TelegramBotServiceProvider extends ServiceProvider
         $router->aliasMiddleware('tenant.detector', TenantMiddleware::class);
         $router->aliasMiddleware('telegrambot.detector', TelegramBotDataMiddleware::class);
         $router->aliasMiddleware('telegrambot.auth', TelegramIsAuthenticatedMiddleware::class);
+        $router->aliasMiddleware('telegram.async', AsyncTelegramProcessor::class);
 
         $this->registerTranslations();
         $this->registerConfig();

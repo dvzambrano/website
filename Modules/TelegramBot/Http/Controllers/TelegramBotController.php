@@ -25,9 +25,9 @@ class TelegramBotController extends Controller
             return response()->json(['ok' => false], 404);
         }
 
-        // DISPARAMOS EL EVENTO
-        event(new TelegramUpdateReceived($tenant->key, $update));
-        // Respondemos a Telegram de inmediato
+        // El middleware 'telegram.async' dispara el evento TelegramUpdateReceived el método terminate().
+
+        // Respondemos a Telegram
         return response()->json(['ok' => true], 200);
     }
 

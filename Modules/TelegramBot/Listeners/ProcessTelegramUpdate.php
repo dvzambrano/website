@@ -3,12 +3,11 @@
 namespace Modules\TelegramBot\Listeners;
 
 use Modules\TelegramBot\Events\TelegramUpdateReceived;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Http\Controllers\TelegramBotController;
 
-class ProcessTelegramUpdate implements ShouldQueue
+class ProcessTelegramUpdate
 {
     // Esto hace que se procese en el queue worker
     public $queue = 'telegram-updates';
