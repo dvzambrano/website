@@ -521,7 +521,7 @@ class OffersController extends Controller
 
     public function applyForOffer($bot, $code)
     {
-        $this->updateStatus($bot, "🔍 *Verificando fondos...*");
+        //$this->updateStatus($bot, "🔍 *Verificando fondos...*");
 
         // 1. Configuración de Red y Token
         $network = ConfigService::getNetworks(env("BASE_NETWORK"));
