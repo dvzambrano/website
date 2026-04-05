@@ -415,8 +415,8 @@ class ZentroTraderBotController extends JsonsController
 
 
         $this->strategies["/p2pmenu"] =
-            function () {
-                return $this->getP2PMenu();
+            function () use ($suscriptor) {
+                return $this->getP2PMenu($suscriptor);
             };
 
 
@@ -688,18 +688,23 @@ class ZentroTraderBotController extends JsonsController
         return $reply;
     }
 
-    public function getP2PMenu()
+    public function getP2PMenu($suscriptor)
     {
-        $number = rand(2, 5);
-        $eval = TextService::getStars($number, 0.25, "⭐", "🌟", "");
+
+        $offers = 0;
+        $number = 5;
+        if (isset($suscriptor->data['reputation'])) {
+            $offers = $suscriptor->data['reputation']['trades'] ?? 0;
+            $number = $suscriptor->data['reputation']['average'] ?? 0;
+        }
+        $stars = TextService::getStars($number, 0.25, "⭐", "🌟", "");
         $reply = array(
             "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n" .
                 "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n\n" .
                 "🔒 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n\n" .
-                "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "*\n" .
-                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line4", ["amount" => rand(50, 100)]) . "\n" .
-                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line5", ["amount" => rand(50, 100)]) . "\n" .
-                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line6", ["amount" => $eval]) . "\n\n" .
+                "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . ":*\n" .
+                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line4", ["amount" => $offers]) . "\n" .
+                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line5", ["amount" => $stars]) . "\n\n" .
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
 
             "reply_markup" => json_encode([

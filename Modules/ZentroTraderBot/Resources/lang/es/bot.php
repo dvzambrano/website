@@ -31,8 +31,7 @@ return [
         "line2" => "Garantía Escrow: Todos los fondos están protegidos por contratos inteligentes hasta que el pago sea confirmado por ambas partes.",
         "line3" => "Tu Actividad",
         "line4" => "Ofertas publicadas: :amount",
-        "line5" => "Operaciones exitosas: :amount",
-        "line6" => "Calificación: :amount",
+        "line5" => "Calificación: :amount",
     ],
     "options" => [
         "subscribtion" => "Suscripción",
