@@ -697,7 +697,7 @@ class ZentroTraderBotController extends JsonsController
             $offers = $suscriptor->data['reputation']['trades'] ?? 0;
             $number = $suscriptor->data['reputation']['average'] ?? 0;
         }
-        $stars = TextService::getStars($number, 0.25, "⭐", "🌟", "");
+        $stars = TextService::getStars($number, 0.25, "⭐", "💫", "");
         $reply = array(
             "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n" .
                 "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n\n" .
