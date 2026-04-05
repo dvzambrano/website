@@ -690,7 +690,7 @@ class ZentroTraderBotController extends JsonsController
     public function getP2PMenu()
     {
         $reply = array(
-            "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n\n_" .
+            "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n\n" .
                 Lang::get("zentrotraderbot::bot.p2pmenu.line1") . ":\n" .
                 "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "_\n" .
                 "🔒 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n\n" .
