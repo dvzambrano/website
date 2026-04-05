@@ -51,6 +51,7 @@ return [
         "viewp2poffers" => "Ver mercado de ofertas",
         "myoffers" => "Mis Ofertas Activas",
         "mypaymentmethods" => "Métodos de Pago",
+        "backtop2pmenu" => "Volver al Mercado P2P",
     ],
     "prompts" => [
         "clienturl" => [

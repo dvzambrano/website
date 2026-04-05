@@ -66,6 +66,7 @@ class OffersController extends Controller
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
+                        [["text" => "⬅️ " . Lang::get("telegrambot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
                         [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                     ],
                 ]),
