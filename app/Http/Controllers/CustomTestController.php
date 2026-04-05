@@ -29,6 +29,7 @@ use Modules\Laravel\Services\DateService;
 use Modules\Web3\Http\Controllers\EscrowController;
 use Random\Randomizer;
 use Random\IntervalBoundary;
+use Modules\Laravel\Services\TextService;
 
 class CustomTestController extends BaseController
 {
@@ -76,29 +77,14 @@ class CustomTestController extends BaseController
     {
         $randomizer = new Randomizer();
 
+
         // Genera un float entre 0 y 5
         // IntervalBoundary::Closed hace que incluya tanto el 0 como el 5
         $rating = $randomizer->getFloat(0, 5, IntervalBoundary::ClosedClosed);
 
-        $rating = max(0, min(5, $rating));
-        $fullStars = floor($rating);
-        $halfStar = ($rating - $fullStars) >= 0.2 ? 1 : 0;
-        $emptyStars = 5 - $fullStars - $halfStar;
+        $text = TextService::getStars($rating, 0.5);
 
-        $stars = str_repeat('⭐', $fullStars);
-
-        // Si hay media estrella, usamos un símbolo que visualmente sea intermedio
-        // El carácter '✬' o '⭑' suele funcionar bien, pero '⭐' es muy dominante.
-        // Una opción elegante es usar '🔸' (rombo naranja) para el "medio punto"
-        if ($halfStar) {
-            $stars .= '🌟'; // El brillo da sensación de "casi completa" o "media"
-        }
-
-        //$stars .= str_repeat('▫️', $emptyStars);
-
-        dd($rating, $stars);
-
-        return $stars;
+        dd($rating, $text);
     }
 
 

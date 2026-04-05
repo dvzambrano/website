@@ -18,6 +18,7 @@ use Modules\ZentroTraderBot\Jobs\MoralisAddAddressToStream;
 use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\Laravel\Http\Controllers\LaravelController;
+use Modules\Laravel\Services\TextService;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -689,6 +690,8 @@ class ZentroTraderBotController extends JsonsController
 
     public function getP2PMenu()
     {
+        $number = rand(2, 5);
+        $eval = TextService::getStars($number);
         $reply = array(
             "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n" .
                 "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n\n" .
@@ -696,7 +699,7 @@ class ZentroTraderBotController extends JsonsController
                 "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "*\n" .
                 "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line4", ["amount" => rand(50, 100)]) . "\n" .
                 "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line5", ["amount" => rand(50, 100)]) . "\n" .
-                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line6", ["amount" => "⭐" . (rand(2, 5)) . "/5"]) . "\n\n" .
+                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line6", ["amount" => $eval]) . "\n\n" .
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
 
             "reply_markup" => json_encode([
