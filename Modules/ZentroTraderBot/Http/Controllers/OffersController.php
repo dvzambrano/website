@@ -607,25 +607,24 @@ class OffersController extends Controller
                 return false;
             }
 
-            $this->waitForConfirmation($rpcUrls[0], $txHash, true, 60, function ($step, $attempt) use ($bot, $txHash, $network) {
+            // Ejemplo de llamada con 3 bloques de seguridad extra
+            $this->waitForConfirmation($rpcUrls[0], $txHash, true, 100, function ($state, $current, $total) use ($bot, $txHash, $network) {
 
                 $explorerUrl = $network['explorers'][0]['url'] . "/tx/" . $txHash;
 
-                // Una lista de mensajes para dar variedad
-                $messages = [
-                    1 => "⏳ *Paso 3/3:* Transacción enviada...",
-                    2 => "☕️ *Paso 3/3:* Validadores trabajando...",
-                    3 => "🛰 *Paso 3/3:* Casi listo. Confirmando los datos...",
-                    4 => "💎 *Paso 3/3:* Finalizando el contrato seguro de Escrow...",
-                    5 => "⚓️ *Paso 3/3:* La red está congestionada, pero tu transacción sigue activa...",
-                    6 => "⚠️ *Paso 3/3:* El tiempo de espera es inusual, por favor sea paciente..."
-                ];
+                if ($state === 'pending') {
+                    $text = "⏳ *Paso 3/3:* Transacción enviada...";
+                } else {
+                    // Estado 'confirming'
+                    $bar = str_repeat("✅", $current) . str_repeat("⚪️", $total - $current);
+                    $text = "🛡 *Paso 3/3: Verificando seguridad...*\n" .
+                        "Confirmaciones: `{$bar}` ({$current}/{$total})";
+                }
 
-                $text = ($messages[$step] ?? "⌛️ Procesando confirmación...") .
-                    "\n\n🔗 [Ver en Polygonscan]({$explorerUrl})";
-
+                $text .= "\n\n🔗 [Ver]({$explorerUrl})";
                 $this->updateStatus($bot, $text);
-            });
+
+            }, 5);
 
             $this->updateStatus($bot, $successMsg);
         } catch (\Exception $e) {
