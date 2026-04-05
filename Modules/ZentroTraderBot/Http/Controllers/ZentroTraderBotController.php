@@ -691,7 +691,7 @@ class ZentroTraderBotController extends JsonsController
     public function getP2PMenu()
     {
         $number = rand(2, 5);
-        $eval = TextService::getStars($number);
+        $eval = TextService::getStars($number, 0.25, "⭐", "🌟", "");
         $reply = array(
             "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n" .
                 "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n\n" .
