@@ -699,32 +699,28 @@ class ZentroTraderBotController extends JsonsController
                 "🏆 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n" .
                 "👨🏻‍🏫 " . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "\n\n" .
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
+
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [
+                        ["text" => "🛒 " . Lang::get("telegrambot::bot.options.viewp2poffers"), "callback_data" => "menu"],
+                    ],
+                    [
+                        ["text" => "🟢 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
+                        ["text" => "🔴 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
+                    ],
+                    [
+                        ["text" => "📋 " . Lang::get("telegrambot::bot.options.myoffers"), "callback_data" => "menu"],
+                    ],
+                    [
+                        ["text" => "💳 " . Lang::get("telegrambot::bot.options.mypaymentmethods"), "callback_data" => "menu"],
+                    ],
+                    [
+                        ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
+                    ],
+                ],
+            ]),
         );
-
-        if (true) {
-            array_push($menu, ["text" => "🌎 " . Lang::get("zentrotraderbot::bot.options.clienturl"), "callback_data" => "clienturl"]);
-        }
-
-        $reply["reply_markup"] = json_encode([
-            "inline_keyboard" => [
-                [
-                    ["text" => "🛒 " . Lang::get("telegrambot::bot.options.viewp2poffers"), "callback_data" => "menu"],
-                ],
-                [
-                    ["text" => "🟢 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
-                    ["text" => "🔴 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
-                ],
-                [
-                    ["text" => "📋 " . Lang::get("telegrambot::bot.options.myoffers"), "callback_data" => "menu"],
-                ],
-                [
-                    ["text" => "💳 " . Lang::get("telegrambot::bot.options.mypaymentmethods"), "callback_data" => "menu"],
-                ],
-                [
-                    ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
-                ],
-            ],
-        ]);
 
         return $reply;
     }
