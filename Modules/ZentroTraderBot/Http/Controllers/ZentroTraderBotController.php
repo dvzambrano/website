@@ -696,7 +696,7 @@ class ZentroTraderBotController extends JsonsController
                 "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "*\n" .
                 "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line4", ["amount" => rand(50, 100)]) . "\n" .
                 "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line5", ["amount" => rand(50, 100)]) . "\n" .
-                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line6", ["amount" => rand(50, 100)]) . "\n\n" .
+                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line6", ["amount" => "⭐" . (rand(2, 5)) . "/5"]) . "\n\n" .
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
 
             "reply_markup" => json_encode([
