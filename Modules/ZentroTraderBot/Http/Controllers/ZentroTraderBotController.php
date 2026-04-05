@@ -691,9 +691,9 @@ class ZentroTraderBotController extends JsonsController
     {
         $reply = array(
             "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n" .
-                "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n" .
-                "🔒 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n" .
-                "🗂 " . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "\n\n" .
+                "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n\n" .
+                "🔒 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n\n" .
+                "🗂 " . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "\n" .
                 "🗓 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line4") . "*\n" .
                 "🏆 " . Lang::get("zentrotraderbot::bot.p2pmenu.line5") . "\n" .
                 "👨🏻‍🏫 " . Lang::get("zentrotraderbot::bot.p2pmenu.line6") . "\n\n" .
