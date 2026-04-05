@@ -705,8 +705,8 @@ class ZentroTraderBotController extends JsonsController
                         ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.viewp2poffers"), "url" => "https://t.me/KashioChannel"]
                     ],
                     [
-                        ["text" => "🟢 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
-                        ["text" => "🔴 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
+                        ["text" => "🟩 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
+                        ["text" => "🟥 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
                     ],
                     [
                         ["text" => "📋 " . Lang::get("zentrotraderbot::bot.options.myoffers"), "callback_data" => "menu"],
