@@ -34,6 +34,9 @@ class OfferObserver
         if (!$offer->isDirty('status')) {
             return;
         }
+        if (strtolower($offer->status) === strtolower($offer->getOriginal('status'))) {
+            return;
+        }
 
         $bot = app('active_bot');
 
