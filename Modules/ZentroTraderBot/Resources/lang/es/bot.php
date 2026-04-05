@@ -24,6 +24,16 @@ return [
         "line6" => "Eres un suscriptor de nivel :level",
         "therefore" => "por lo tanto, puedes usar el botón “URL del Cliente” para obtener tu enlace de alertas de TradingView",
     ],
+
+    "p2pmenu" => [
+        "header" => "Mercado P2P",
+        "line1" => "Compra y vende USD de forma segura, directa y sin intermediarios centralizados",
+        "line2" => "Garantía Escrow: Todos los fondos están protegidos por contratos inteligentes hasta que el pago sea confirmado por ambas partes.",
+        "line3" => "Tu Actividad",
+        "line4" => "Ofertas publicadas:",
+        "line5" => "Operaciones exitosas:",
+        "line6" => "Calificación:",
+    ],
     "options" => [
         "subscribtion" => "Suscripción",
         "subscribtionlevel" => ":icon Nivel :char",
@@ -38,6 +48,9 @@ return [
         "topupcripto" => "Depositar Criptomonedas",
         "topupramp" => "Depositar USD",
         "withdraw" => "Extraer USD",
+        "viewp2poffers" => "Ver mercado de ofertas",
+        "myoffers" => "Mis Ofertas Activas",
+        "mypaymentmethods" => "Métodos de Pago",
     ],
     "prompts" => [
         "clienturl" => [

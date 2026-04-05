@@ -412,6 +412,13 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+
+        $this->strategies["/p2pmenu"] =
+            function () {
+                return $this->getP2PMenu();
+            };
+
+
         $this->strategies["/p2pbuy"] =
             function () {
                 $controller = new OffersController();
@@ -493,8 +500,7 @@ class ZentroTraderBotController extends JsonsController
 
         if (env("P2P_ENABLED", true))
             array_push($menu, [
-                ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
-                ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
+                ["text" => "🤝 " . Lang::get("zentrotraderbot::bot.p2pmenu.header"), "callback_data" => "/p2pmenu"],
             ]);
 
         array_push($menu, [
@@ -576,7 +582,7 @@ class ZentroTraderBotController extends JsonsController
         $reply = array(
             "text" => "🔔 *" . Lang::get("zentrotraderbot::bot.actionmenu.header") . "*\n\n_" .
                 Lang::get("zentrotraderbot::bot.actionmenu.line1") . ":\n" .
-                "📣 " . Lang::get("zentrotraderbot::bot.actionmenu.line2") . ".\n" .
+                "📣 " . Lang::get("zentrotraderbot::bot.actionmenu.line2") . "\n" .
                 "💵 " . Lang::get("zentrotraderbot::bot.actionmenu.line3") . "._\n\n" .
                 "✅ " . Lang::get("zentrotraderbot::bot.actionmenu.line4", ["option" => $option]) . "\n\n" .
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
@@ -672,6 +678,48 @@ class ZentroTraderBotController extends JsonsController
         $reply["reply_markup"] = json_encode([
             "inline_keyboard" => [
                 $suscription_settings_menu,
+                [
+                    ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
+                ],
+            ],
+        ]);
+
+        return $reply;
+    }
+
+    public function getP2PMenu()
+    {
+        $reply = array(
+            "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n\n_" .
+                Lang::get("zentrotraderbot::bot.p2pmenu.line1") . ":\n" .
+                "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "_\n" .
+                "🔒 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n\n" .
+                "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "*\n" .
+                "🗓 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n" .
+                "🏆 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n" .
+                "👨🏻‍🏫 " . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "._\n\n" .
+                "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
+        );
+
+        if (true) {
+            array_push($menu, ["text" => "🌎 " . Lang::get("zentrotraderbot::bot.options.clienturl"), "callback_data" => "clienturl"]);
+        }
+
+        $reply["reply_markup"] = json_encode([
+            "inline_keyboard" => [
+                [
+                    ["text" => "🛒 " . Lang::get("telegrambot::bot.options.viewp2poffers"), "callback_data" => "menu"],
+                ],
+                [
+                    ["text" => "🟢 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
+                    ["text" => "🔴 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
+                ],
+                [
+                    ["text" => "📋 " . Lang::get("telegrambot::bot.options.myoffers"), "callback_data" => "menu"],
+                ],
+                [
+                    ["text" => "💳 " . Lang::get("telegrambot::bot.options.mypaymentmethods"), "callback_data" => "menu"],
+                ],
                 [
                     ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
                 ],
