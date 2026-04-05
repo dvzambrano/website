@@ -703,17 +703,17 @@ class ZentroTraderBotController extends JsonsController
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "🛒 " . Lang::get("telegrambot::bot.options.viewp2poffers"), "callback_data" => "menu"],
+                        ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.viewp2poffers"), "callback_data" => "menu"],
                     ],
                     [
                         ["text" => "🟢 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
                         ["text" => "🔴 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
                     ],
                     [
-                        ["text" => "📋 " . Lang::get("telegrambot::bot.options.myoffers"), "callback_data" => "menu"],
+                        ["text" => "📋 " . Lang::get("zentrotraderbot::bot.options.myoffers"), "callback_data" => "menu"],
                     ],
                     [
-                        ["text" => "💳 " . Lang::get("telegrambot::bot.options.mypaymentmethods"), "callback_data" => "menu"],
+                        ["text" => "💳 " . Lang::get("zentrotraderbot::bot.options.mypaymentmethods"), "callback_data" => "menu"],
                     ],
                     [
                         ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
