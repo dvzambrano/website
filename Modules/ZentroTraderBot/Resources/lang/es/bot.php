@@ -27,12 +27,12 @@ return [
 
     "p2pmenu" => [
         "header" => "Mercado P2P",
-        "line1" => "Compra y vende USD de forma segura, directa y sin intermediarios centralizados",
+        "line1" => "Compra y vende USD de forma segura, directa y sin intermediarios",
         "line2" => "Garantía Escrow: Todos los fondos están protegidos por contratos inteligentes hasta que el pago sea confirmado por ambas partes.",
         "line3" => "Tu Actividad",
-        "line4" => "Ofertas publicadas:",
-        "line5" => "Operaciones exitosas:",
-        "line6" => "Calificación:",
+        "line4" => "Ofertas publicadas: :amount",
+        "line5" => "Operaciones exitosas: :amount",
+        "line6" => "Calificación: :amount",
     ],
     "options" => [
         "subscribtion" => "Suscripción",
