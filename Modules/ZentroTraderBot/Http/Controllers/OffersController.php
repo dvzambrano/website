@@ -521,27 +521,40 @@ class OffersController extends Controller
 
     public function applyForOffer($bot, $code)
     {
-        // Creamos una llave única para este usuario y esta oferta
-        $lockKey = "applying_offer_{$bot->actor->user_id}_{$code}";
-        // Si no podemos obtener el "candado", es que ya hay un proceso en marcha (reintento de Telegram)
-        if (!Cache::add($lockKey, true, now()->addMinutes(2))) {
-            return true; // Retornamos true para que el flujo no dé error, pero no hacemos nada
+        // 1. Usamos el $code o $offer->id para que NADIE más pueda tocar esta oferta por 2 minutos
+        $lockKey = "applying_offer_lock_{$code}";
+
+        if (!Cache::add($lockKey, $bot->actor->user_id, now()->addMinutes(2))) {
+            $whoIsApplying = Cache::get($lockKey);
+            // Si el que tiene el candado soy yo mismo, es un reintento de Telegram, dejamos pasar.
+            // Si es otro ID, detenemos el proceso.
+            if ($whoIsApplying != $bot->actor->user_id) {
+                $this->updateStatus($bot, "⚠️ Esta oferta ya está siendo procesada por otro usuario.");
+                return true;
+            }
         }
 
-        //$this->updateStatus($bot, "🔍 *Verificando fondos...*");
+        // 2. Localización y Validación de la Oferta
+        $offer = Offers::findByCode($code);
+        if (!$offer || strtoupper($offer->status) !== 'OPEN') { // Validación extra de estado
+            $this->updateStatus($bot, "❌ La oferta {$code} ya no está disponible.");
+            Cache::forget($lockKey);
+            return false;
+        }
 
-        // 1. Configuración de Red y Token
+        // Guardamos el message_id para ediciones futuras desde el Listener
+        $currentData = $offer->data ?? [];
+        $currentData["apply"] = [
+            "message_id" => $bot->message["message_id"],
+            "user_id" => $bot->actor->user_id // Guardamos quién aplicó
+        ];
+        $offer->update(['data' => $currentData]);
+
+        // 3. Configuración de Red y Roles 
         $network = ConfigService::getNetworks(env("BASE_NETWORK"));
         $tokenInfo = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
         $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
 
-        $offer = Offers::findByCode($code);
-        if (!$offer) {
-            $this->updateStatus($bot, "❌ No se encontró la oferta {$code}.");
-            return false;
-        }
-
-        // 2. Identificación de Roles
         $isSell = strtolower($offer->type) == "sell";
         $sellerUserId = $isSell ? $offer->user_id : $bot->actor->user_id;
         $buyerUserId = $isSell ? $bot->actor->user_id : $offer->user_id;
@@ -549,21 +562,22 @@ class OffersController extends Controller
         $seller = Suscriptions::on('tenant')->where('user_id', $sellerUserId)->first();
         $buyer = Suscriptions::on('tenant')->where('user_id', $buyerUserId)->first();
 
-        if (!$seller || !$buyer)
+        if (!$seller || !$buyer) {
+            Cache::forget($lockKey);
             return false;
+        }
 
-        // 3. Preparación de datos para la Blockchain
+        // 4. Preparación Blockchain
         $key = decryptValue($seller->data['wallet']['private_key']);
         $buyerAddress = $buyer->data['wallet']['address'];
 
         // Monto con decimales correctos (usando bcmath como tenías antes)
         $amountWei = bcmul($offer->amount, bcpow(10, $tokenInfo["decimals"]));
-
         $escrow = new EscrowController();
         $deadline = time() + 3600; // 1 hora de validez para el Permit
 
         // ESTADO 1: Preparación Criptográfica (Local y rápido)
-        $this->updateStatus($bot, "🔐 *Paso 1/3:* Generando firma digital de seguridad...");
+        $this->updateStatus($bot, "⌛️ *Paso 1/3:* Generando firma de seguridad...");
 
         if (env("DEBUG_MODE", false))
             Log::debug("🐞 OffersController applyForOffer:", [
@@ -574,20 +588,11 @@ class OffersController extends Controller
                 "deadline" => $deadline,
             ]);
 
-        $txHash = false;
-        $successMsg = "✅ *¡Intercambio asegurado con éxito!*";
         try {
             $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($bot, $escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network) {
 
-                // ESTADO 2: Envío a la Mempool (Aquí es donde Kashio paga el gas)
-                // Podrías pasar el $bot al closure si rpcCallWithFallback lo permite para actualizar aquí
-                $this->updateStatus($bot, "🚀 *Paso 2/3:* Moviendo fondos al ESCROW para garantizar el intercambio...");
+                $this->updateStatus($bot, "⌛️ *Paso 2/3:* Moviendo fondos para garantizar el intercambio...");
 
-                // Llamamos al método que hace TODO: 
-                // 1. Obtiene nonce del token
-                // 2. Obtiene Domain Separator
-                // 3. Firma el mensaje con la key del VENDEDOR
-                // 4. Envía la transacción con la key de TESORERÍA (Paga el gas)
                 return $escrow->createTradeWithPermit(
                     $rpc,
                     $key,           // Firma el permiso (0 gas)
@@ -607,106 +612,23 @@ class OffersController extends Controller
                 return false;
             }
 
-            // Ejemplo de llamada con 3 bloques de seguridad extra
-            $this->waitForConfirmation($rpcUrls[0], $txHash, true, 100, function ($state, $current, $total) use ($bot, $txHash, $network) {
+            $this->updateStatus($bot, "⌛️ *Paso 3/3:* ¡Intercambio asegurado con éxito!");
 
-                $explorerUrl = $network['explorers'][0]['url'] . "/tx/" . $txHash;
+            // NOTA: No liberamos el $lockKey aquí, dejamos que expire o 
+            // que el Listener lo haga al confirmar, para evitar "clicks" rápidos.
+            return $txHash;
 
-                if ($state === 'pending') {
-                    $text = "⏳ *Paso 3/3:* Transacción enviada...";
-                } else {
-                    // Estado 'confirming'
-                    $bar = str_repeat("✅", $current) . str_repeat("⚪️", $total - $current);
-                    $text = "🛡 *Paso 3/3: Verificando seguridad...*\n" .
-                        "Confirmaciones: `{$bar}` ({$current}/{$total})";
-                }
-
-                $text .= "\n\n🔗 [Ver]({$explorerUrl})";
-                $this->updateStatus($bot, $text);
-
-            }, 5);
-
-            $this->updateStatus($bot, $successMsg);
         } catch (\Exception $e) {
-            // Si falla, liberamos para que pueda reintentar
-            Cache::forget($lockKey);
-
-            // SI EL ERROR DICE QUE EL ID YA EXISTE, ES QUE SE ENVIÓ CORRECTAMENTE
+            // Manejo de error "ID already exists" (Transacción enviada pero error en respuesta RPC)
             if (str_contains($e->getMessage(), 'ID already exists')) {
-                // En este punto, no tenemos el TX Hash porque el nodo falló al simular,
-                // pero sabemos que el ID $offer->id ya está en la blockchain.
-                // 1. Intentamos recuperar los datos directamente del contrato
-                try {
-                    $blockchainTrade = $escrow->getTradeById(
-                        $rpcUrls[0],
-                        env('ESCROW_CONTRACT'),
-                        $network['chainId'],
-                        $offer->id,
-                        env('ETHERSCAN_API_KEY')
-                    );
-
-                    if ($blockchainTrade && $blockchainTrade['seller'] !== '0x0000000000000000000000000000000000000000') {
-                        // 2. Si el trade existe, actualizamos manualmente antes de que llegue el evento
-                        $offer->updateStatus('LOCKED', [
-                            'seller_address' => $blockchainTrade['seller'],
-                            'buyer_address' => $blockchainTrade['buyer'],
-                            // Nota: El tx_hash no lo tenemos aquí porque getTradeById lee el estado, no la TX.
-                            // Pero el Listener de Moralis lo pondrá cuando llegue.
-                        ]);
-                    }
-                } catch (\Throwable $th) {
-                    Log::error("🐞 Falló recuperación manual en catch: " . $th->getMessage());
-                }
-
-                $this->updateStatus($bot, $successMsg);
+                $this->updateStatus($bot, "⌛️ *Paso 3/3:* ¡Intercambio asegurado con éxito!");
                 return true;
             }
 
+            // Si es un error real, liberamos para permitir reintento
+            Cache::forget($lockKey);
             $this->updateStatus($bot, "❌ *Error en la red:*\n" . $e->getMessage());
             return false;
-        }
-
-        return $txHash;
-    }
-
-    private function updateStatusWithPolling($bot, $txHash, $rpcUrls, $network)
-    {
-        $start = time();
-        $confirmed = false;
-        $explorerUrl = $network['explorers'][0]['url'] . "/tx/" . $txHash;
-
-        // Frases para rotar y que no parezca un robot estático
-        $waitingMessages = [
-            "⏳ La red está procesando su intercambio...",
-            "☕️ Casi listo, confirmando el intercambio...",
-            "🔗 Verificando integridad...",
-            "📡 Propagando el contrato del intercambio...",
-            "💎 Los fondos están entrando al Escrow seguro..."
-        ];
-
-        $i = 0;
-        while (time() - $start < 600) { // Timeout de 10 min
-            $msgIndex = $i % count($waitingMessages);
-            $elapsed = round((time() - $start) / 60);
-
-            $statusText = "🛰 *Paso 3/3: Confirmando*\n" .
-                "{$waitingMessages[$msgIndex]}\n\n" .
-                "⏱ Tiempo transcurrido: {$elapsed} min";
-
-            $this->updateStatus($bot, $statusText);
-
-            // Chequear si ya se confirmó
-            if ($this->checkTxStatus($rpcUrls[0], $txHash)) {
-                $confirmed = true;
-                break;
-            }
-
-            $i++;
-            sleep(30); // Actualizamos cada 30 segundos
-        }
-
-        if (!$confirmed) {
-            throw new \Exception("La transacción está tardando más de lo habitual. Por favor, verifica el explorador.");
         }
     }
 

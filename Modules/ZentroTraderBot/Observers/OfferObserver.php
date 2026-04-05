@@ -42,7 +42,7 @@ class OfferObserver
 
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
-        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+        $diff = DateService::getTimeDifference($offer->created_at->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
         $result = $offer->getNetProceeds($status);
         $net = $result['net'];
 
