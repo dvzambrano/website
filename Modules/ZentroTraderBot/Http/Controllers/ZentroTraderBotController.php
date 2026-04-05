@@ -690,14 +690,13 @@ class ZentroTraderBotController extends JsonsController
     public function getP2PMenu()
     {
         $reply = array(
-            "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n\n" .
-                Lang::get("zentrotraderbot::bot.p2pmenu.line1") . ":\n" .
-                "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "_\n" .
-                "🔒 " . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "\n\n" .
-                "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line4") . "*\n" .
-                "🗓 " . Lang::get("zentrotraderbot::bot.p2pmenu.line5") . "\n" .
-                "🏆 " . Lang::get("zentrotraderbot::bot.p2pmenu.line6") . "\n" .
-                //"👨🏻‍🏫 " . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "\n\n" .
+            "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n" .
+                "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n" .
+                "🔒 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n" .
+                "🗂 " . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "\n\n" .
+                "🗓 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line4") . "*\n" .
+                "🏆 " . Lang::get("zentrotraderbot::bot.p2pmenu.line5") . "\n" .
+                "👨🏻‍🏫 " . Lang::get("zentrotraderbot::bot.p2pmenu.line6") . "\n\n" .
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
 
             "reply_markup" => json_encode([
