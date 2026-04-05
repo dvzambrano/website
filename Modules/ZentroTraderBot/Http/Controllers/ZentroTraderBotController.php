@@ -697,7 +697,7 @@ class ZentroTraderBotController extends JsonsController
                 "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "*\n" .
                 "🗓 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n" .
                 "🏆 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n" .
-                "👨🏻‍🏫 " . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "._\n\n" .
+                "👨🏻‍🏫 " . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . "\n\n" .
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
         );
 
