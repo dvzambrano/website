@@ -783,6 +783,11 @@ class ZentroTraderBotController extends JsonsController
                 "chat" => array(
                     "id" => $suscriptor->user_id,
                 ),
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    ],
+                ]),
             ),
         );
         TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
