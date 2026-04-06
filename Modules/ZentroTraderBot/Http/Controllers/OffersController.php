@@ -680,7 +680,7 @@ class OffersController extends Controller
         }
 
         // 4. Ejecución de la recuperación (Expire Trade)
-        $this->updateStatus($bot, "⚖️ *Solicitando devolución de fondos...*\nEl árbitro procesará la expiración.");
+        $this->updateStatus($bot, "⚖️ *Solicitando devolución de fondos...*\nUn árbitro procesará la expiración `{$offer->code}`.");
 
         try {
             // Obtenemos la llave del vendedor (el dueño de la oferta)

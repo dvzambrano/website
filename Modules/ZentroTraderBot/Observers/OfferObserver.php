@@ -91,7 +91,7 @@ class OfferObserver
                     $text,
                     $bot->token,
                     [
-                        [["text" => "⏱️ Ha pasado " . $diff["legible"] . " y no me han pagado", "callback_data" => "menu"]]
+                        [["text" => "⏱️ Ha pasado " . $diff["legible"] . " y no me han pagado", "callback_data" => "/recoveroffer {$offer->code}"]]
                     ]
                 );
 
