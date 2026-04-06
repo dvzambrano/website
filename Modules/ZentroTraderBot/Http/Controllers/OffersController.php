@@ -81,7 +81,7 @@ class OffersController extends Controller
             $state['data'] = $lastState['data'];
             Cache::forever($cacheKey, $state);
             $bot->message["text"] = null;
-            return $this->wizard($bot, $state['data']['type']);
+            return $this->wizard($bot, $state['data']['type'], $stars);
         }
 
         switch ($state['step']) {
@@ -144,7 +144,7 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_CURRENCY'; // SALTO A MONEDA
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type']);
+                    return $this->wizard($bot, $state['data']['type'], $stars);
                 }
 
                 $amountPrompt = $isSell
@@ -171,7 +171,7 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_PRICE'; // SALTO A PRECIO
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type']);
+                    return $this->wizard($bot, $state['data']['type'], $stars);
                 }
 
                 $currencies = Currencies::where('is_active', true)
@@ -239,7 +239,7 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_METHOD'; // SALTO A MÉTODO
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type']);
+                    return $this->wizard($bot, $state['data']['type'], $stars);
                 }
 
                 return [
@@ -267,7 +267,7 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_DETAILS';
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type']);
+                    return $this->wizard($bot, $state['data']['type'], $stars);
                 }
 
                 $currency = Currencies::where('code', $state['data']['currency'])->first();
@@ -305,7 +305,7 @@ class OffersController extends Controller
                     $state['step'] = 'CONFIRM';
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type']);
+                    return $this->wizard($bot, $state['data']['type'], $stars);
                 }
 
                 $methodName = $state['data']['method_name'] ?? $state['data']['method'];
