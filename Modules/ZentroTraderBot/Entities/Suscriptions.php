@@ -6,7 +6,7 @@ use Modules\TelegramBot\Entities\Actors;
 use Modules\Laravel\Traits\TenantTrait;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Lang;
 
 class Suscriptions extends Actors
 {
@@ -108,12 +108,22 @@ class Suscriptions extends Actors
         $buyerBalance = Offers::asBuyer($address)->whereIn('status', $activeStatuses)->sum('amount');
         $sellerBalance = Offers::asSeller($address)->whereIn('status', $activeStatuses)->sum('amount');
 
+        $balanceText = "";
+        if ($balance > 0)
+            $balanceText .= "\n\n💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance, 2) . " USD";
+        else
+            $balanceText .= "\n";
+        if ($sellerBalance > 0)
+            $balanceText .= "\n🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($sellerBalance, 2) . " USD";
+
+
         return [
             "amount" => $balance,
             "escrow" => [
                 "buyer" => $buyerBalance,
                 "seller" => $sellerBalance,
             ],
+            "text" => $balanceText,
         ];
     }
 }
