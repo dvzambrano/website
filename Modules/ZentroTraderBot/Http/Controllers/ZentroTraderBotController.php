@@ -422,16 +422,26 @@ class ZentroTraderBotController extends JsonsController
 
 
         $this->strategies["/p2pbuy"] =
-            function () {
+            function () use ($suscriptor) {
+                $number = 0;
+                if (isset($suscriptor->data['reputation']))
+                    $number = $suscriptor->data['reputation']['average'] ?? 0;
+                $stars = TextService::getStars($number, 0.25, "⭐", "💫", "");
+
                 $controller = new OffersController();
-                $reply = $controller->buy($this);
+                $reply = $controller->buy($this, $stars);
                 return $reply;
             };
 
         $this->strategies["/p2psell"] =
-            function () {
+            function () use ($suscriptor) {
+                $number = 0;
+                if (isset($suscriptor->data['reputation']))
+                    $number = $suscriptor->data['reputation']['average'] ?? 0;
+                $stars = TextService::getStars($number, 0.25, "⭐", "💫", "");
+
                 $controller = new OffersController();
-                $reply = $controller->sell($this);
+                $reply = $controller->sell($this, $stars);
                 return $reply;
             };
 

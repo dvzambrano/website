@@ -21,22 +21,23 @@ use Modules\Web3\Traits\BlockchainTools;
 use Modules\Web3\Services\ConfigService;
 use Modules\Laravel\Services\DateService;
 use Carbon\Carbon;
+use Modules\Laravel\Services\TextService;
 
 class OffersController extends Controller
 {
     use BlockchainTools;
 
-    public function sell($bot)
+    public function sell($bot, $stars = "")
     {
-        return $this->wizard($bot, 'sell');
+        return $this->wizard($bot, 'sell', $stars);
     }
 
-    public function buy($bot)
+    public function buy($bot, $stars = "")
     {
-        return $this->wizard($bot, 'buy');
+        return $this->wizard($bot, 'buy', $stars);
     }
 
-    public function wizard($bot, $type = 'sell')
+    public function wizard($bot, $type = 'sell', $stars = "")
     {
         $text = $bot->message["text"] ?? null;
         $userId = $bot->actor->user_id;
@@ -328,7 +329,7 @@ class OffersController extends Controller
             case 'CONFIRM':
                 $this->deleteUserText($bot);
                 if ($text === '/offerconfirm') {
-                    return $this->publishOffer($bot, $state);
+                    return $this->publishOffer($bot, $state, $stars);
                 }
 
                 $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
@@ -360,7 +361,7 @@ class OffersController extends Controller
         }
     }
 
-    private function publishOffer($bot, $state)
+    private function publishOffer($bot, $state, $stars = "")
     {
         // 1. PRIMER GUARDADO: Creamos la instancia y la persistimos para obtener el ID real de la DB
         $offer = new Offers([
@@ -389,7 +390,7 @@ class OffersController extends Controller
 
         // 3. ENVÍO A TELEGRAM
         $response = TelegramController::sendMessage(
-            $offer->getAsChannelMessage($bot->tenant->code),
+            $offer->getAsChannelMessage($bot->tenant->code, $stars),
             $bot->tenant->token
         );
         if ($response) {

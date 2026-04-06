@@ -71,14 +71,14 @@ class Offers extends Model
         $this->update(array_merge(["status" => $status], $extra));
     }
 
-    public function renderAsTelegramMessage($title = "", $owner = false)
+    public function renderAsTelegramMessage($title = "", $owner = false, $stars = "")
     {
         $total = number_format(($this->amount * $this->price_per_usd), 2);
         $amount = number_format($this->amount, 2);
         $isSell = strtolower($this->type) == "sell";
 
         $text = "{$title}\n";
-        $text .= "🆔 `{$this->code}`\n";
+        $text .= "🆔 `{$this->code}` {$stars}\n";
 
         if ($isSell) {
             $text .= "💵 En venta: *{$amount} USD*\n";
@@ -107,7 +107,7 @@ class Offers extends Model
         return $text;
     }
 
-    public function getAsChannelMessage($botName)
+    public function getAsChannelMessage($botName, $stars = "")
     {
         // 1. Calculamos la antigüedad de la oferta
         $diff = DateService::getTimeDifference(
@@ -189,7 +189,7 @@ class Offers extends Model
         }
 
         // 3. Renderizar y Editar
-        $text = $this->renderAsTelegramMessage($title);
+        $text = $this->renderAsTelegramMessage($title, $stars);
         $text .= $subtitle;
 
         $array = [
