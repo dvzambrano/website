@@ -776,4 +776,61 @@ class OffersController extends Controller
         } catch (\Throwable $th) {
         }
     }
+
+    public function getActiveOffers($suscriptor)
+    {
+        $address = strtolower($suscriptor->data['wallet']['address']);
+        $activeStatuses = ['LOCKED', 'SIGNED', 'DISPUTED', 'EXPIRED'];
+
+        // 1. Obtener todas las ofertas activas en una sola consulta (más eficiente)
+        $offers = Offers::on('tenant')
+            ->whereIn('status', $activeStatuses)
+            ->where(function ($query) use ($address) {
+                $query->asSeller($address)
+                    ->orWhere->asBuyer($address);
+            })
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        if ($offers->isEmpty()) {
+            return [
+                "text" => "📭 *No tienes ofertas activas en este momento.*\n" .
+                    "¡Publica una o explora el mercado!",
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [
+                            ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]
+                        ]
+                    ]
+                ])
+            ];
+        }
+
+        // 2. Construir el menú visual
+        $text = "📋 *Tus Ofertas Activas*\n";
+        $text .= "Toca una para ver detalles o gestionar el Escrow.\n\n";
+
+        $buttons = [];
+        foreach ($offers as $offer) {
+            $isSeller = strtolower($offer->seller_address) === $address;
+            $roleEmoji = $isSeller ? "📤" : "📥"; // Salida (Venta) o Entrada (Compra)
+            $emoji = Offers::getStatusEmoji($offer->status);
+            $statusEmoji = $emoji["icon"];
+
+            // Etiqueta del botón: [Icono Rol] [ID] [Estado] - [Monto] USD
+            $label = "{$roleEmoji} #{$offer->code} {$statusEmoji} - " . number_format($offer->amount, 2) . " USD";
+
+            $buttons[] = [
+                ["text" => $label, "callback_data" => "/viewoffer {$offer->code}"]
+            ];
+        }
+
+        // Botón para volver
+        $buttons[] = [["text" => "⬅️ " . Lang::get("telegrambot::bot.options.back"), "callback_data" => "/p2pmenu"]];
+
+        return [
+            "text" => $text,
+            "reply_markup" => json_encode(["inline_keyboard" => $buttons])
+        ];
+    }
 }

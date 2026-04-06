@@ -455,6 +455,14 @@ class ZentroTraderBotController extends JsonsController
 
 
 
+
+        $this->strategies["/activeoffers"] =
+            function () use ($suscriptor) {
+                return $this->getActiveOffers($suscriptor);
+            };
+
+
+
         $this->strategies["/offerapply"] =
             function () use ($array) {
                 $controller = new OffersController();
@@ -732,7 +740,7 @@ class ZentroTraderBotController extends JsonsController
                         ["text" => "🟥 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
                     ],
                     [
-                        ["text" => "📋 " . Lang::get("zentrotraderbot::bot.options.myoffers"), "callback_data" => "menu"],
+                        ["text" => "📋 " . Lang::get("zentrotraderbot::bot.options.myoffers"), "callback_data" => "/activeoffers"],
                     ],
                     [
                         ["text" => "💳 " . Lang::get("zentrotraderbot::bot.options.mypaymentmethods"), "callback_data" => "menu"],

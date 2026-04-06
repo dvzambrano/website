@@ -222,4 +222,22 @@ class Offers extends Model
             'min' => ($finalFee == $status['currentMinFeeUsd'])
         ];
     }
+
+    /**
+     * Helper para iconos de estado rápidos
+     */
+    public static function getStatusEmoji($status)
+    {
+        return match (strtoupper($status)) {
+            'OPEN' => ["icon" => '▫️', "color" => "⬜️"],
+            'CANCELLED' => ["icon" => '▫️', "color" => "🟫"],
+            'COMPLETED' => ["icon" => '✅', "color" => "🟩"],
+            'LOCKED' => ["icon" => '🔒', "color" => "🟧"],   // Fondos en Escrow
+            'SIGNED' => ["icon" => '✍️', "color" => "🟨"],   // Una parte ya firmó
+            'DISPUTED' => ["icon" => '⚖️', "color" => "🟪"], // En disputa
+            'SOLVED' => ["icon" => '☑️', "color" => "🟪"],
+            'EXPIRED' => ["icon" => '⏱️', "color" => "🟦"],  // Tiempo agotado
+            default => ["icon" => '▫️', "color" => "⬜️"],
+        };
+    }
 }
