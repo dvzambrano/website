@@ -105,10 +105,7 @@ class Suscriptions extends Actors
         // Estados que consideramos como "dinero retenido en Escrow"
         $activeStatuses = ['LOCKED', 'SIGNED', 'DISPUTED', 'EXPIRED'];
         $address = strtolower($this->data['wallet']['address']);
-        $escrowBalance = Offers::on('tenant') // Si usas multi-tenant
-            ->whereRaw('LOWER(seller_address) = ?', [$address])
-            ->whereIn('status', $activeStatuses)
-            ->sum('amount');
+        $escrowBalance = Offers::forAddress($address)->whereIn('status', $activeStatuses)->sum('amount');
 
         return [
             "amount" => $balance,

@@ -57,6 +57,10 @@ class Offers extends Model
             ->when($filters["method"] ?? null, fn($q, $m) => $q->where("payment_method", $m))
             ->orderBy($filters["sort"] ?? "price_per_usd", "asc");
     }
+    public function scopeForAddress($query, $address)
+    {
+        return $query->whereRaw('LOWER(seller_address) = ?', [strtolower($address)]);
+    }
 
     public function updateStatus($status, $extra = [])
     {
