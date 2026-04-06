@@ -813,12 +813,12 @@ class OffersController extends Controller
         $buttons = [];
         foreach ($offers as $offer) {
             $isSeller = strtolower($offer->seller_address) === $address;
-            $roleEmoji = $isSeller ? Offers::getTypeEmoji("sell")["icon"] : Offers::getTypeEmoji("buy")["icon"]; // Salida (Venta) o Entrada (Compra)
+            $roleEmoji = $isSeller ? Offers::getTypeEmoji("sell")["color"] : Offers::getTypeEmoji("buy")["color"];
             $emoji = Offers::getStatusEmoji($offer->status);
             $statusEmoji = $emoji["icon"];
 
             // Etiqueta del botón: [Icono Rol] [ID] [Estado] - [Monto] USD
-            $label = "{$roleEmoji} #{$offer->code} {$statusEmoji} - " . number_format($offer->amount, 2) . " USD";
+            $label = "{$roleEmoji} {$offer->code} - " . number_format($offer->amount, 2) . " USD {$statusEmoji}";
 
             $buttons[] = [
                 ["text" => $label, "callback_data" => "/showoffer {$offer->code}"]
