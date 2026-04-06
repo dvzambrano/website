@@ -747,7 +747,7 @@ class ZentroTraderBotController extends JsonsController
         return $reply;
     }
 
-    public function notifyDepositConfirmed($user_id, $amount, $token_address)
+    public function notifyDepositConfirmed($suscriptor, $amount, $token_address)
     {
         $token = ConfigService::getToken($token_address, env("BASE_NETWORK"));
 
@@ -769,6 +769,11 @@ class ZentroTraderBotController extends JsonsController
                             "currency" => $token["symbol"]
                         ]) . "\n" .
                 "✨ _" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.text") . "_";
+
+            $balance = $suscriptor->getBalance();
+            if ($balance["text"] != "")
+                $text .= $balance["text"];
+
             $autodestroy = 0;
         }
 
@@ -776,7 +781,7 @@ class ZentroTraderBotController extends JsonsController
             "message" => array(
                 "text" => $text,
                 "chat" => array(
-                    "id" => $user_id,
+                    "id" => $suscriptor->user_id,
                 ),
             ),
         );

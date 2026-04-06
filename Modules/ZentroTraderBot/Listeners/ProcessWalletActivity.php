@@ -170,7 +170,7 @@ class ProcessWalletActivity
             //$botController = new ZentroTraderBotController();
             $botController = app(ZentroTraderBotController::class);
             $botController->notifyDepositConfirmed(
-                $suscriptor->user_id,
+                $suscriptor,
                 NumberService::round($data['value'], 4, false),
                 $data['token_address']
             );
