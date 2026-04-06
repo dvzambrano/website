@@ -57,7 +57,7 @@ class UpdateOfferInChannel implements ShouldQueue
             }
 
             // 3. Ejecutamos la edición en Telegram
-            $messageData = $offer->getAsChannelMessage($tenant->code);
+            $messageData = $offer->getAsChannelMessage($tenant->code, 4.4);
             $payload = [
                 "message" => [
                     "message_id" => $offer->data['channel']['message_id'],
