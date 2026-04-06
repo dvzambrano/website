@@ -493,10 +493,9 @@ class ZentroTraderBotController extends JsonsController
                 "🚀 " . Lang::get("zentrotraderbot::bot.mainmenu.line1") . "\n" .
                 "✅ " . Lang::get("zentrotraderbot::bot.mainmenu.line2");
 
-
             $balance = $suscriptor->getBalance();
             if ($balance["text"] != "")
-                $description .= $balance["text"];
+                $description .= $balance["text"] . "\n\n";
         }
 
 
