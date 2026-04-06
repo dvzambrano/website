@@ -90,15 +90,17 @@ class Offers extends Model
 
         if ($isSell) {
             if ($owner) {
-                $text .= "📥 Ud recibe: *{$total} {$this->currency}*\n";
+                $text .= Offers::getTypeEmoji("buy")["icon"] . " Ud recibe: *{$total} {$this->currency}*\n";
             } else {
-                $text .= "📤 Ud paga: *{$total} {$this->currency}*\n";
+                $text .= Offers::getTypeEmoji("sell")["icon"] . " Ud paga: *{$total} {$this->currency}*\n";
             }
         } else {
-            $text .= "📤 Ud entrega: *{$total} {$this->currency}*\n";
+            $text .= Offers::getTypeEmoji("sell")["icon"] . " Ud entrega: *{$total} {$this->currency}*\n";
         }
 
         $text .= "💳 Medio de pago: *{$this->payment_method}*\n\n";
+
+        //$this->created_at
 
         return $text;
     }
@@ -113,9 +115,7 @@ class Offers extends Model
         );
 
         $isSell = strtolower($this->type) == "sell";
-        $icon = "🟩";
-        if ($isSell)
-            $icon = "🟥";
+        $icon = Offers::getStatusEmoji($this->status)["icon"];
 
         $buttons = [];
         $title = ""; // Inicializamos vacío para construirlo abajo
@@ -124,6 +124,10 @@ class Offers extends Model
         // 2. Lógica de Títulos Dinámicos basada en el status
         switch ($this->status) {
             case 'open':
+                $icon = "🟩";
+                if ($isSell)
+                    $icon = "🟥";
+
                 // Solo si está abierta calculamos los prefijos de tiempo
                 if ($diff['days'] == 0 && $diff['hours'] < 1) {
                     $title = "{$icon} *¡NUEVA OFERTA!*";
@@ -150,31 +154,31 @@ class Offers extends Model
                 break;
 
             case 'locked':
-                $title = "🟧 *OFERTA EN CURSO*";
+                $title = "{$icon} *OFERTA EN CURSO*";
                 $subtitle = "🔐 _La liquidez de este intercambio ha sido bloqueada._";
                 break;
             case 'cancelled':
-                $title = "🟫 *OFERTA FINALIZADA*";
+                $title = "{$icon} *OFERTA FINALIZADA*";
                 $subtitle = "🙅‍♂️ _El comprador no ha querido continuar con el intercambio._";
                 break;
             case 'expired':
-                $title = "🟦 *OFERTA FINALIZADA*";
+                $title = "{$icon} *OFERTA FINALIZADA*";
                 $subtitle = "⏱️ _El tiempo de seguridad ha expirado antes de completar la verificación._";
                 break;
             case 'signed':
-                $title = "🟨 *OFERTA EN CURSO*";
+                $title = "{$icon} *OFERTA EN CURSO*";
                 $subtitle = "🏃‍♂️ _Una de las partes ya ha confirmado la transacción._";
                 break;
             case 'disputed':
-                $title = "🟪 *OFERTA EN CURSO*";
+                $title = "{$icon} *OFERTA EN CURSO*";
                 $subtitle = "👮‍♀️ _Un administrador está revisando este intercambio._";
                 break;
             case 'completed':
-                $title = "✅ *OFERTA FINALIZADA*";
+                $title = "{$icon} *OFERTA FINALIZADA*";
                 $subtitle = "🙏 _¡Gracias por confiar en nosotros!_";
                 break;
             case 'solved':
-                $title = "☑️ *OFERTA FINALIZADA*";
+                $title = "{$icon} *OFERTA FINALIZADA*";
                 $subtitle = "⚖️ _Este intercambio ha sido decidido por arbitraje._";
                 break;
             default:
@@ -223,14 +227,11 @@ class Offers extends Model
         ];
     }
 
-    /**
-     * Helper para iconos de estado rápidos
-     */
     public static function getStatusEmoji($status)
     {
         return match (strtoupper($status)) {
-            'OPEN' => ["icon" => '▫️', "color" => "⬜️"],
-            'CANCELLED' => ["icon" => '▫️', "color" => "🟫"],
+            'OPEN' => ["icon" => '⬜️', "color" => "⬜️"],
+            'CANCELLED' => ["icon" => '❌', "color" => "🟫"],
             'COMPLETED' => ["icon" => '✅', "color" => "🟩"],
             'LOCKED' => ["icon" => '🔒', "color" => "🟧"],   // Fondos en Escrow
             'SIGNED' => ["icon" => '✍️', "color" => "🟨"],   // Una parte ya firmó
@@ -238,6 +239,14 @@ class Offers extends Model
             'SOLVED' => ["icon" => '☑️', "color" => "🟪"],
             'EXPIRED' => ["icon" => '⏱️', "color" => "🟦"],  // Tiempo agotado
             default => ["icon" => '▫️', "color" => "⬜️"],
+        };
+    }
+
+    public static function getTypeEmoji($type)
+    {
+        return match (strtolower($type)) {
+            'sell' => ["icon" => '📤', "color" => "🟥"],
+            default => ["icon" => '📥', "color" => "🟩"],
         };
     }
 }

@@ -808,12 +808,12 @@ class OffersController extends Controller
 
         // 2. Construir el menú visual
         $text = "📋 *Tus Ofertas Activas*\n";
-        $text .= "Toca una para ver detalles o gestionar el Escrow.\n\n";
+        $text .= "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption");
 
         $buttons = [];
         foreach ($offers as $offer) {
             $isSeller = strtolower($offer->seller_address) === $address;
-            $roleEmoji = $isSeller ? "📤" : "📥"; // Salida (Venta) o Entrada (Compra)
+            $roleEmoji = $isSeller ? Offers::getTypeEmoji("sell")["icon"] : Offers::getTypeEmoji("buy")["icon"]; // Salida (Venta) o Entrada (Compra)
             $emoji = Offers::getStatusEmoji($offer->status);
             $statusEmoji = $emoji["icon"];
 
