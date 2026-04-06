@@ -492,7 +492,7 @@ class ZentroTraderBotController extends JsonsController
                 ];
             };
 
-        $this->strategies["deleteoffer"] =
+        $this->strategies["/deleteoffer"] =
             function () use ($array, $suscriptor) {
                 return [
                     "text" => "Test: " . count($array["pieces"]),
