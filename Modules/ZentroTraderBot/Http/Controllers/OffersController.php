@@ -821,7 +821,7 @@ class OffersController extends Controller
             $label = "{$roleEmoji} #{$offer->code} {$statusEmoji} - " . number_format($offer->amount, 2) . " USD";
 
             $buttons[] = [
-                ["text" => $label, "callback_data" => "/viewoffer {$offer->code}"]
+                ["text" => $label, "callback_data" => "/showoffer {$offer->code}"]
             ];
         }
 
