@@ -910,7 +910,9 @@ class OffersController extends Controller
                 'updated_at' => now(),
             ]);
 
-            $reply["text"] = "✅ La oferta #{$code} ha sido retirada del mercado con éxito.";
+            $reply["text"] = "✅ *¡Oferta eliminada!*\n" .
+                "_La oferta ha sido retirada del mercado con éxito._\n\n" .
+                "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
 
         } catch (\Exception $e) {
             Log::error("🆘 Error cancelando oferta {$code}: " . $e->getMessage());
