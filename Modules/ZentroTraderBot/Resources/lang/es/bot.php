@@ -128,6 +128,7 @@ return [
         ],
         "balance" => [
             "available" => "Saldo disponible",
+            "locked" => "Bloqueado",
             "lastoperations" => "Últimas operaciones",
         ],
     ],

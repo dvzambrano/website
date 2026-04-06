@@ -19,6 +19,7 @@ use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\Laravel\Http\Controllers\LaravelController;
 use Modules\Laravel\Services\TextService;
+use Modules\ZentroTraderBot\Entities\Offers;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -691,20 +692,38 @@ class ZentroTraderBotController extends JsonsController
     public function getP2PMenu($suscriptor)
     {
 
-        $offers = 0;
+        $balance = 0;
+        try {
+            $walletController = new TraderWalletController();
+            // 3. Obtener Balance REAL (específicamente de BASE_TOKEN en Polygon)
+            $balance = $walletController->getBalance($suscriptor);
+        } catch (\Throwable $th) {
+
+        }
+        // Estados que consideramos como "dinero retenido en Escrow"
+        $activeStatuses = ['LOCKED', 'SIGNED', 'DISPUTED', 'EXPIRED'];
+        $address = strtolower($suscriptor->data['wallet']['address']);
+        $escrowBalance = Offers::on('tenant') // Si usas multi-tenant
+            ->whereRaw('LOWER(seller_address) = ?', [$address])
+            ->whereIn('status', $activeStatuses)
+            ->sum('amount');
+
+        $califications = 0;
         $number = 5;
         if (isset($suscriptor->data['reputation'])) {
-            $offers = $suscriptor->data['reputation']['trades'] ?? 0;
+            $califications = $suscriptor->data['reputation']['trades'] > 0 ? $suscriptor->data['reputation']['trades'] - 1 ?? 0 : 0;
             $number = $suscriptor->data['reputation']['average'] ?? 0;
         }
         $stars = TextService::getStars($number, 0.25, "⭐", "💫", "");
         $reply = array(
             "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n" .
                 "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n\n" .
-                "🔒 " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n\n" .
+                "✅ " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n\n" .
                 "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . ":*\n" .
-                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line4", ["amount" => $offers]) . "\n" .
+                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line4", ["amount" => $califications]) . "\n" .
                 "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line5", ["amount" => $stars]) . "\n\n" .
+                "💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance, 2) . "\n" .
+                "🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($escrowBalance, 2) . "\n" .
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
 
             "reply_markup" => json_encode([
