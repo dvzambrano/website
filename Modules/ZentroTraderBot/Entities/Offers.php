@@ -189,7 +189,7 @@ class Offers extends Model
         }
 
         // 3. Renderizar y Editar
-        $text = $this->renderAsTelegramMessage($title, $stars);
+        $text = $this->renderAsTelegramMessage($title, false, $stars);
         $text .= $subtitle;
 
         $array = [
