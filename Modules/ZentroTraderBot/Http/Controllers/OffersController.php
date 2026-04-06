@@ -851,4 +851,74 @@ class OffersController extends Controller
             "reply_markup" => json_encode(["inline_keyboard" => $buttons])
         ];
     }
+
+    /**
+     * Cancela una oferta abierta: la elimina del canal y actualiza el estado en DB.
+     */
+    public function cancelOffer($bot, $code)
+    {
+        $reply = [
+            "text" => "",
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
+                    [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                ],
+            ]),
+        ];
+
+        try {
+            $userId = $bot->actor->user_id;
+
+            // 1. Buscar la oferta en el tenant actual
+            $offer = Offers::on('tenant')->where('code', $code)->first();
+
+            if (!$offer) {
+                $reply["text"] = "⚠️ Oferta no encontrada.";
+                return $reply;
+            }
+
+            // 2. Validar propiedad: Solo el creador puede cancelarla
+            if ((int) $offer->user_id !== $userId) {
+                $reply["text"] = "🚫 No tienes permiso para cancelar esta oferta.";
+                return $reply;
+            }
+
+            // 3. Verificar que esté abierta (Si ya hay un Escrow LOCK, no se puede cancelar así)
+            if (strtoupper($offer->status) !== 'OPEN') {
+                $reply["text"] = "🛑 Esta oferta ya está en proceso de intercambio y no puede ser cancelada.";
+                return $reply;
+            }
+
+            // 4. ELIMINAR DEL CANAL
+            if (isset($offer->data['channel']['message_id'])) {
+                try {
+                    TelegramController::deleteMessage([
+                        "message" => [
+                            "chat" => ["id" => env("TRADER_BOT_CHANNEL")],
+                            "id" => $offer->data['channel']['message_id']
+                        ]
+                    ], $bot->tenant->token);
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
+            }
+
+            // 5. ACTUALIZAR BASE DE DATOS
+            // Usamos updateStatus para que el Observer dispare cualquier notificación necesaria
+            $offer->updateStatus('CANCELLED', [
+                'updated_at' => now(),
+            ]);
+
+            $reply["text"] = "✅ La oferta #{$code} ha sido retirada del mercado con éxito.";
+
+        } catch (\Exception $e) {
+            Log::error("🆘 Error cancelando oferta {$code}: " . $e->getMessage());
+
+            $reply["text"] = "❌ Ocurrió un error al procesar la cancelación.";
+        }
+
+
+        return $reply;
+    }
 }

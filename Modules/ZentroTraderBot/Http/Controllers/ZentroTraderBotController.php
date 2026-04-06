@@ -493,10 +493,9 @@ class ZentroTraderBotController extends JsonsController
             };
 
         $this->strategies["deleteoffer"] =
-            function () use ($array, $suscriptor) {
-                return [
-                    "text" => "Test: " . $array["pieces"][1],
-                ];
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->cancelOffer($this, $array["pieces"][1]);
             };
 
         return $this->getProcessedMessage();
