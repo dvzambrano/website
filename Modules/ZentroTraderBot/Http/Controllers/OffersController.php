@@ -871,7 +871,7 @@ class OffersController extends Controller
             $userId = $bot->actor->user_id;
 
             // 1. Buscar la oferta en el tenant actual
-            $offer = Offers::on('tenant')->where('code', $code)->first();
+            $offer = Offers::findByCode($code);
 
             if (!$offer) {
                 $reply["text"] = "⚠️ Oferta no encontrada.";
