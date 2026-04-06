@@ -3,8 +3,8 @@
 return [
 
     "mainmenu" => [
-        "description" => "El puente más rápido y seguro para mover tu dinero entre Zelle, Bizum, Pago Móvil y más, usando la estabilidad del USD digital.",
-        "body" => "🔒 Seguro: Tus fondos están protegidos por contratos inteligentes. 💸 Sin Gas: Tú no pagas comisiones de red, nosotros nos encargamos. 🚀 Rápido: Intercambios P2P en minutos.",
+        "description" => "El puente más rápido y seguro para mover tu dinero usando la estabilidad del USD digital.",
+        "line1" => "Seguro: Tus fondos están protegidos por contratos inteligentes. 💸 Sin Gas: Tú no pagas comisiones de red, nosotros nos encargamos. 🚀 Rápido: Intercambios P2P en minutos.",
 
     ],
     "actionmenu" => [

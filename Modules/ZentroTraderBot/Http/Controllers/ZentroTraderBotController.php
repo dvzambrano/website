@@ -490,15 +490,25 @@ class ZentroTraderBotController extends JsonsController
         if (isset($wallet["address"])) {
             //$description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n🫆 `" . $wallet["address"] . "`\n\n";
             $description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n\n" .
-                Lang::get("zentrotraderbot::bot.mainmenu.body") . "\n\n";
+                "✅ " . Lang::get("zentrotraderbot::bot.mainmenu.line1");
+
+            $balance = "";
+            if ($balance["amount"] > 0)
+                $balance = "\n💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance["amount"], 2) . " USD";
+            if ($balance["escrow"]["seller"] > 0)
+                $balance = "\n🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($balance["escrow"]["seller"], 2) . " USD";
+            if ($balance != "")
+                $description .= "\n\n{$balance}";
         }
 
 
         $menu = [];
 
+        /*
         array_push($menu, [
             ["text" => "💵 " . Lang::get("zentrotraderbot::bot.options.balance"), "callback_data" => "/balance"],
         ]);
+        */
 
         if (env("P2P_ENABLED", true))
             array_push($menu, [
