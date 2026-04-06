@@ -826,7 +826,8 @@ class OffersController extends Controller
         }
 
         // Botón para volver
-        $buttons[] = [["text" => "⬅️ " . Lang::get("telegrambot::bot.options.back"), "callback_data" => "/p2pmenu"]];
+        $buttons[] = [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]];
+        $buttons[] = [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]];
 
         return [
             "text" => $text,
