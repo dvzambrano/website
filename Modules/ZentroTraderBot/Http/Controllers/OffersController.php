@@ -470,7 +470,7 @@ class OffersController extends Controller
                 switch ($offer->status) {
                     case 'open':
                         array_push($menu, [
-                            ["text" => "❌ Eliminar", "callback_data" => "confirmation|/deleteoffer {$offer->code}|menu"]
+                            ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"]
                         ]);
                         break;
                     case 'locked':
