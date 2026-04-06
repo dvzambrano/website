@@ -722,8 +722,8 @@ class ZentroTraderBotController extends JsonsController
                 "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . ":*\n" .
                 "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line4", ["amount" => $califications]) . "\n" .
                 "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line5", ["amount" => $stars]) . "\n\n" .
-                "💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance, 2) . "\n" .
-                "🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($escrowBalance, 2) . "\n" .
+                "💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance, 2) . " USD\n" .
+                "🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($escrowBalance, 2) . " USD\n\n" .
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
 
             "reply_markup" => json_encode([
