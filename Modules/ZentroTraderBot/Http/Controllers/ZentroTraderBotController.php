@@ -713,17 +713,29 @@ class ZentroTraderBotController extends JsonsController
             $number = $suscriptor->data['reputation']['average'] ?? 0;
         }
         $stars = TextService::getStars($number, 0.25, "⭐", "💫", "");
-        $reply = array(
-            "text" => "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n" .
-                "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n\n" .
-                "✅ " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n\n" .
-                "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . ":*\n" .
-                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line4", ["amount" => $califications]) . "\n" .
-                "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line5", ["amount" => number_format($number, 2) . " " . $stars]) . "\n\n" .
-                "💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance["amount"], 2) . " USD\n" .
-                "🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($balance["escrow"]["seller"], 2) . " USD\n\n" .
-                "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
 
+        $text = "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n" .
+            "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n\n" .
+            "✅ " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n\n" .
+            "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . ":*\n" .
+            "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line4", ["amount" => $califications]) . "\n" .
+            "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line5", ["amount" => number_format($number, 2) . " " . $stars]);
+
+
+        $balanceText = "";
+        if ($balance["amount"] > 0)
+            $balanceText .= "\n\n💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance["amount"], 2) . " USD";
+        else
+            $balanceText .= "\n";
+        if ($balance["escrow"]["seller"] > 0)
+            $balanceText .= "\n🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($balance["escrow"]["seller"], 2) . " USD";
+        if ($balanceText != "")
+            $text .= "{$balanceText}\n\n";
+
+        $text .= "\n\n👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":";
+
+        $reply = array(
+            "text" => $text,
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
