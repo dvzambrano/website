@@ -490,19 +490,14 @@ class ZentroTraderBotController extends JsonsController
                 return [
                     "text" => "",
                 ];
+            };
 
-                /*
-                // Evento: TradeCreated (Bloqueo de fondos en Escrow)
-        $payload = ScrowMockService::getTradeCreatedPayload(
-            $this->tenant,
-            $this->seller->getWallet()["address"],
-            $this->buyer->getWallet()["address"],
-            $this->token['decimals'],
-            false,
-            $offer->id
-        );
-        $tradeId = $payload['decoded']['params']['tradeId'];
-                */
+
+        $this->strategies["deleteoffer"] =
+            function () use ($array, $suscriptor) {
+                return [
+                    "text" => "Test: " . count($array["pieces"]),
+                ];
             };
 
         return $this->getProcessedMessage();
