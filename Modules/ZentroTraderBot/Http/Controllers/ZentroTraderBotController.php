@@ -490,8 +490,8 @@ class ZentroTraderBotController extends JsonsController
         if (isset($wallet["address"])) {
             //$description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n🫆 `" . $wallet["address"] . "`\n\n";
             $description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n\n" .
-                "✅ " . Lang::get("zentrotraderbot::bot.mainmenu.line1") . "\n" .
-                "🚀 " . Lang::get("zentrotraderbot::bot.mainmenu.line2");
+                "🚀 " . Lang::get("zentrotraderbot::bot.mainmenu.line1") . "\n" .
+                "✅ " . Lang::get("zentrotraderbot::bot.mainmenu.line2");
 
 
             $balance = $suscriptor->getBalance();

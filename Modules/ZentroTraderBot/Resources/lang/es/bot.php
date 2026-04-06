@@ -4,9 +4,8 @@ return [
 
     "mainmenu" => [
         "description" => "El puente más rápido y seguro para mover tu dinero usando la estabilidad del USD digital.",
-        "line1" => "Seguro: Tus fondos están protegidos por contratos inteligentes.",
-        "line2" => "Rápido: Intercambios P2P en minutos.",
-
+        "line1" => "Rápido: Intercambios P2P en minutos.",
+        "line2" => "Seguro: Tus fondos están protegidos por contratos inteligentes.",
     ],
     "actionmenu" => [
         "header" => "Menú de acciones",
