@@ -730,7 +730,7 @@ class ZentroTraderBotController extends JsonsController
         if ($balance["escrow"]["seller"] > 0)
             $balanceText .= "\n🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($balance["escrow"]["seller"], 2) . " USD";
         if ($balanceText != "")
-            $text .= "{$balanceText}\n\n";
+            $text .= $balanceText;
 
         $text .= "\n\n👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":";
 
