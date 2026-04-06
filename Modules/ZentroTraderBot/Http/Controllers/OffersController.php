@@ -778,19 +778,25 @@ class OffersController extends Controller
         }
     }
 
-    public function getActiveOffers($suscriptor)
+    public function getActiveOffers($suscriptor, $page = 1)
     {
+
         $address = strtolower($suscriptor->data['wallet']['address']);
         $activeStatuses = ['LOCKED', 'SIGNED', 'DISPUTED', 'EXPIRED'];
 
-        // 1. Obtener todas las ofertas activas en una sola consulta (más eficiente)
-        $offers = Offers::on('tenant')
+        $perPage = 8; // Número ideal de ofertas por pantalla
+        $offset = ($page - 1) * $perPage;
+
+        $query = Offers::on('tenant')
             ->whereIn('status', $activeStatuses)
             ->where(function ($query) use ($address) {
-                $query->asSeller($address)
-                    ->orWhere->asBuyer($address);
-            })
-            ->orderBy('updated_at', 'desc')
+                $query->asSeller($address)->orWhere->asBuyer($address);
+            });
+
+        $total = $query->count();
+        $offers = $query->orderBy('updated_at', 'desc')
+            ->limit($perPage)
+            ->offset($offset)
             ->get();
 
         if ($offers->isEmpty()) {
@@ -825,6 +831,16 @@ class OffersController extends Controller
                 ["text" => $label, "callback_data" => "/showoffer {$offer->code}"]
             ];
         }
+
+        $navigation = [];
+        if ($page > 1)
+            $navigation[] = ["text" => "◀️ Anterior", "callback_data" => "/activeoffers " . ($page - 1)];
+        if ($total > ($page * $perPage))
+            $navigation[] = ["text" => "Siguiente ▶️", "callback_data" => "/activeoffers " . ($page + 1)];
+
+        if (!empty($navigation))
+            $buttons[] = $navigation;
+
 
         // Botón para volver
         $buttons[] = [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]];

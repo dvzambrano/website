@@ -467,9 +467,12 @@ class ZentroTraderBotController extends JsonsController
 
 
         $this->strategies["/activeoffers"] =
-            function () use ($suscriptor) {
+            function () use ($array, $suscriptor) {
+                $page = 1;
+                if (isset($array["pieces"][1]))
+                    $page = $array["pieces"][1];
                 $controller = new OffersController();
-                return $controller->getActiveOffers($suscriptor);
+                return $controller->getActiveOffers($suscriptor, $page);
             };
 
         $this->strategies["/showoffer"] =
