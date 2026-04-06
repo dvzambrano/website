@@ -496,11 +496,11 @@ class ZentroTraderBotController extends JsonsController
             $balance = $suscriptor->getBalance();
             $balanceText = "";
             if ($balance["amount"] > 0)
-                $balanceText = "\n💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance["amount"], 2) . " USD";
+                $balanceText .= "\n💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance["amount"], 2) . " USD";
             if ($balance["escrow"]["seller"] > 0)
-                $balanceText = "\n🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($balance["escrow"]["seller"], 2) . " USD";
+                $balanceText .= "\n🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($balance["escrow"]["seller"], 2) . " USD";
             if ($balanceText != "")
-                $description .= "\n\n{$balanceText}";
+                $description .= "\n\n{$balanceText}\n\n";
         }
 
 
