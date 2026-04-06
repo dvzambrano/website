@@ -98,8 +98,10 @@ class Offers extends Model
             $text .= Offers::getTypeEmoji("sell")["icon"] . " Ud entrega: *{$total} {$this->currency}*\n";
         }
 
-        $text .= "💳 Medio de pago: *{$this->payment_method}*\n\n";
+        $text .= "💳 Medio de pago: *{$this->payment_method}*\n";
+        $text .= "🗓 Creada: *{$this->created_at}*\n\n";
 
+        //$created_at = $actor->getLocalDateTime($this->created_at, $tenant->code);
         //$this->created_at
 
         return $text;
