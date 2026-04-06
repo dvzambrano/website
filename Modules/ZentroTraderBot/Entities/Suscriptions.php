@@ -105,11 +105,15 @@ class Suscriptions extends Actors
         // Estados que consideramos como "dinero retenido en Escrow"
         $activeStatuses = ['LOCKED', 'SIGNED', 'DISPUTED', 'EXPIRED'];
         $address = strtolower($this->data['wallet']['address']);
-        $escrowBalance = Offers::forAddress($address)->whereIn('status', $activeStatuses)->sum('amount');
+        $buyerBalance = Offers::asBuyer($address)->whereIn('status', $activeStatuses)->sum('amount');
+        $sellerBalance = Offers::asSeller($address)->whereIn('status', $activeStatuses)->sum('amount');
 
         return [
             "amount" => $balance,
-            "escrow" => $escrowBalance,
+            "escrow" => [
+                "buyer" => $buyerBalance,
+                "seller" => $sellerBalance,
+            ],
         ];
     }
 }
