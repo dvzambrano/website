@@ -808,10 +808,13 @@ class OffersController extends Controller
         $perPage = 8; // Número ideal de ofertas por pantalla
         $offset = ($page - 1) * $perPage;
 
+        $userId = $suscriptor->user_id; // El ID de Telegram del suscriptor
         $query = Offers::on('tenant')
             ->whereIn('status', $activeStatuses)
-            ->where(function ($query) use ($address) {
-                $query->asSeller($address)->orWhere->asBuyer($address);
+            ->where(function ($query) use ($address, $userId) {
+                $query->asSeller($address)
+                    ->orWhere->asBuyer($address)
+                    ->orWhere('user_id', $userId); // Filtro por el creador original
             });
 
         $total = $query->count();
