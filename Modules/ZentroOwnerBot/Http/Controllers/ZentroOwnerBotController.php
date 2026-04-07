@@ -88,114 +88,116 @@ class ZentroOwnerBotController extends JsonsController
 
         // Kashio Commmands -------------------------------------------------------------------------------
 
-        $this->strategies["/arbiter"] =
-            function () use ($array) {
-                try {
-                    $controller = new EscrowController();
-                    $hash = $controller->proposeArbiter($array["pieces"][1]);
-                    return array(
-                        "text" =>
-                            "✅ proposeArbiter `" . $array["pieces"][1] . "` DONE:\n" .
-                            "`{$hash}`",
-                    );
-                } catch (\Exception $e) {
-                    return array(
-                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
-                    );
-                }
-            };
-
-        $this->strategies["/dispute"] =
-            function () use ($array) {
-                try {
-                    $controller = new EscrowController();
-                    $hash = $controller->resolveDispute($array["pieces"][1], $array["pieces"][2]);
-                    return array(
-                        "text" =>
-                            "✅ resolveDispute `" . $array["pieces"][1] . "` DONE:\n" .
-                            "🥇 Winner=`" . $array["pieces"][2] . "`\n" .
-                            "`{$hash}`",
-                    );
-                } catch (\Exception $e) {
-                    return array(
-                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
-                    );
-                }
-            };
-
-        $this->strategies["/rescue"] =
-            function () use ($array) {
-                try {
-                    $controller = new EscrowController();
-                    $hash = $controller->rescueTokens($array["pieces"][1]);
-                    return array(
-                        "text" =>
-                            "✅ rescueTokens `" . $array["pieces"][1] . "` DONE:\n" .
-                            "`{$hash}`",
-                    );
-                } catch (\Exception $e) {
-                    return array(
-                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
-                    );
-                }
-            };
-
-        $this->strategies["/percentagefee"] =
-            function () use ($array) {
-                try {
-                    $controller = new EscrowController();
-                    $hash = $controller->setFee($array["pieces"][1]);
-                    return array(
-                        "text" =>
-                            "✅ setFee `" . $array["pieces"][1] . "` DONE:\n" .
-                            "`{$hash}`",
-                    );
-                } catch (\Exception $e) {
-                    return array(
-                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
-                    );
-                }
-            };
-
-        $this->strategies["/tokenfee"] =
-            function () use ($array) {
-                try {
-                    $controller = new EscrowController();
-                    $hash = $controller->setMinFeePerToken($array["pieces"][1]);
-                    if ($hash)
+        if ($this->actor->isLevel(1, $this->tenant->code)) {
+            $this->strategies["/arbiter"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->proposeArbiter($array["pieces"][1]);
                         return array(
                             "text" =>
-                                "✅ setMinFeePerToken `" . $array["pieces"][1] . "` DONE:\n" .
+                                "✅ proposeArbiter `" . $array["pieces"][1] . "` DONE:\n" .
                                 "`{$hash}`",
                         );
-                    return array(
-                        "text" =>
-                            "❌ setMinFeePerToken `" . $array["pieces"][1] . "` ERROR",
-                    );
-                } catch (\Exception $e) {
-                    return array(
-                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
-                    );
-                }
-            };
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+
+            $this->strategies["/dispute"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->resolveDispute($array["pieces"][1], $array["pieces"][2]);
+                        return array(
+                            "text" =>
+                                "✅ resolveDispute `" . $array["pieces"][1] . "` DONE:\n" .
+                                "🥇 Winner=`" . $array["pieces"][2] . "`\n" .
+                                "`{$hash}`",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+
+            $this->strategies["/rescue"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->rescueTokens($array["pieces"][1]);
+                        return array(
+                            "text" =>
+                                "✅ rescueTokens `" . $array["pieces"][1] . "` DONE:\n" .
+                                "`{$hash}`",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+
+            $this->strategies["/percentagefee"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->setFee($array["pieces"][1]);
+                        return array(
+                            "text" =>
+                                "✅ setFee `" . $array["pieces"][1] . "` DONE:\n" .
+                                "`{$hash}`",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+
+            $this->strategies["/tokenfee"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->setMinFeePerToken($array["pieces"][1]);
+                        if ($hash)
+                            return array(
+                                "text" =>
+                                    "✅ setMinFeePerToken `" . $array["pieces"][1] . "` DONE:\n" .
+                                    "`{$hash}`",
+                            );
+                        return array(
+                            "text" =>
+                                "❌ setMinFeePerToken `" . $array["pieces"][1] . "` ERROR",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
 
 
-        $this->strategies["/withdraw"] =
-            function () use ($array) {
-                try {
-                    $controller = new EscrowController();
-                    $hash = $controller->withdrawFees();
-                    return array(
-                        "text" =>
-                            "✅ withdrawFees DONE:\n" .
-                            "`{$hash}`",
-                    );
-                } catch (\Exception $e) {
-                    return array(
-                        "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
-                    );
-                }
-            };
+            $this->strategies["/withdraw"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->withdrawFees();
+                        return array(
+                            "text" =>
+                                "✅ withdrawFees DONE:\n" .
+                                "`{$hash}`",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+        }
 
         return $this->getProcessedMessage();
     }
