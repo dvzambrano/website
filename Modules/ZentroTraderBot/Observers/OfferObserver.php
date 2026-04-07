@@ -167,7 +167,7 @@ class OfferObserver
                     "🆔 `{$offer->code}`\n" .
                     "👉 _Se ha iniciado una reclamación de esta operación._\n";
                 $text = $generaltext .
-                    "👮‍♀️ *Un administrador revisará el caso pronto*.\n\n" .
+                    "👮‍♀️ *Un árbitro revisará el caso pronto*.\n\n" .
                     "⚠️ *Envíe evidencia* de que cumplió con su parte del acuerdo.";
                 $this->notifyByAddress(
                     $offer->seller_address,

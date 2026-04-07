@@ -679,6 +679,14 @@ class OffersController extends Controller
             return false;
         }
 
+        // Guardamos el message_id para ediciones futuras desde el Listener
+        $currentData = $offer->data ?? [];
+        $currentData["recover"] = [
+            "message_id" => $bot->message["message_id"],
+            "user_id" => $bot->actor->user_id // Guardamos quién aplicó para la recuperacion
+        ];
+        $offer->update(['data' => $currentData]);
+
         // 4. Ejecución de la recuperación (Expire Trade)
         $this->updateStatus($bot, "⚖️ *Solicitando devolución de fondos...*\nUn árbitro procesará la expiración `{$offer->code}`.");
 
@@ -700,8 +708,6 @@ class OffersController extends Controller
 
             if (!$txHash)
                 $this->updateStatus($bot, "❌ La red rechazó la solicitud de expiración.");
-
-            $this->waitForConfirmation($rpcUrls, $txHash);
 
             $this->updateStatus($bot, "✅ *¡Fondos en revisión!*\nEl intercambio ha sido cancelado por expiración: un árbitro revisará que no haya pendientes y sus " . number_format($offer->amount, 2) . " USD serán devueltos a su cuenta.");
 

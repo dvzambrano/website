@@ -150,17 +150,38 @@ class ProcessContractActivity
                     return; // Terminamos aquí para TRADECREATED
                 }
 
+                // --- MANEJO DE TRADEEXPIRED (UNCONFIRMED & CONFIRMED) ---
+                if ($eventName === 'TRADEEXPIRED') {
+                    // 1. Limpieza de interfaz: Borrar el mensaje de "Recuperando..." si existe
+                    $recoverData = $offer->data['recover'] ?? null;
+                    if (!$isConfirmed && $recoverData && isset($recoverData['message_id'])) {
+                        try {
+                            // El chat_id es el del comprador (quien inició el recover)
+                            $userId = $recoverData['user_id'] ?? null;
+                            if ($userId) {
+                                DeleteTelegramMessage::dispatch(
+                                    (string) $bot->token,
+                                    (int) $userId,
+                                    (int) $recoverData['message_id']
+                                );
+                            }
+                        } catch (\Exception $e) {
+                        }
+                    }
+
+                    // 2. Actualizamos estado para disparar Observer (Mensajes a las 3 partes)
+                    $offer->updateStatus('EXPIRED', [
+                        'updated_at' => now()
+                    ]);
+
+                    return; // Terminamos aquí para TRADEEXPIRED
+                }
+
                 // --- RESTO DE EVENTOS (SOLO CONFIRMADOS) ---
                 if (!$isConfirmed)
                     return;
 
                 switch ($eventName) {
-                    case 'TRADEEXPIRED':
-                        // El tiempo se agotó y el vendedor ejecutó la reclamación
-                        $offer->updateStatus('EXPIRED', [
-                            'updated_at' => now()
-                        ]);
-                        break;
                     case 'TRADECANCELLED':
                         // El vendedor canceló antes de que el comprador firmara
                         $offer->updateStatus('CANCELLED', [
