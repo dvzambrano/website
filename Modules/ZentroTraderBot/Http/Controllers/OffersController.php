@@ -482,11 +482,13 @@ class OffersController extends Controller
                         break;
                 }
             } else {
-                $total = number_format(($offer->amount * $offer->price_per_usd), 2);
-                $btnAction = $isSell ? "✅ Comprar" : "💰 Vender";
-                array_push($menu, [
-                    ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"]
-                ]);
+                if (strtoupper($offer->status) === 'OPEN') {
+                    $total = number_format(($offer->amount * $offer->price_per_usd), 2);
+                    $btnAction = $isSell ? "✅ Comprar" : "💰 Vender";
+                    array_push($menu, [
+                        ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"]
+                    ]);
+                }
             }
         } else {
             $text = "🤔 *¡Que raro!*\n";
