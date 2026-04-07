@@ -57,20 +57,28 @@ class Offers extends Model
             ->when($filters["method"] ?? null, fn($q, $m) => $q->where("payment_method", $m))
             ->orderBy($filters["sort"] ?? "price_per_usd", "asc");
     }
+    public function scopeAsBuyer($query, $address)
+    {
+        return $query->whereRaw('LOWER(buyer_address) = ?', [strtolower($address)]);
+    }
+    public function scopeAsSeller($query, $address)
+    {
+        return $query->whereRaw('LOWER(seller_address) = ?', [strtolower($address)]);
+    }
 
     public function updateStatus($status, $extra = [])
     {
         $this->update(array_merge(["status" => $status], $extra));
     }
 
-    public function renderAsTelegramMessage($title = "", $owner = false)
+    public function renderAsTelegramMessage($title = "", $owner = false, $stars = "")
     {
         $total = number_format(($this->amount * $this->price_per_usd), 2);
         $amount = number_format($this->amount, 2);
         $isSell = strtolower($this->type) == "sell";
 
         $text = "{$title}\n";
-        $text .= "🆔 `{$this->code}`\n";
+        $text .= "🆔 `{$this->code}` {$stars}\n";
 
         if ($isSell) {
             $text .= "💵 En venta: *{$amount} USD*\n";
@@ -82,20 +90,24 @@ class Offers extends Model
 
         if ($isSell) {
             if ($owner) {
-                $text .= "📥 Ud recibe: *{$total} {$this->currency}*\n";
+                $text .= Offers::getTypeEmoji("buy")["icon"] . " Ud recibe: *{$total} {$this->currency}*\n";
             } else {
-                $text .= "📤 Ud paga: *{$total} {$this->currency}*\n";
+                $text .= Offers::getTypeEmoji("sell")["icon"] . " Ud paga: *{$total} {$this->currency}*\n";
             }
         } else {
-            $text .= "📤 Ud entrega: *{$total} {$this->currency}*\n";
+            $text .= Offers::getTypeEmoji("sell")["icon"] . " Ud entrega: *{$total} {$this->currency}*\n";
         }
 
-        $text .= "💳 Medio de pago: *{$this->payment_method}*\n\n";
+        $text .= "💳 Medio de pago: *{$this->payment_method}*\n";
+        $text .= "🗓 Creada: *{$this->created_at}*\n\n";
+
+        //$created_at = $actor->getLocalDateTime($this->created_at, $tenant->code);
+        //$this->created_at
 
         return $text;
     }
 
-    public function getAsChannelMessage($botName)
+    public function getAsChannelMessage($botName, $stars = "")
     {
         // 1. Calculamos la antigüedad de la oferta
         $diff = DateService::getTimeDifference(
@@ -105,28 +117,29 @@ class Offers extends Model
         );
 
         $isSell = strtolower($this->type) == "sell";
-        $icon = "🟩";
-        if ($isSell)
-            $icon = "🟥";
+        $icon = Offers::getStatusEmoji($this->status)["icon"];
 
         $buttons = [];
-        $title = ""; // Inicializamos vacío para construirlo abajo
+        $title = "*" . Offers::getStatusTitle($this->status, $diff) . "*";
         $subtitle = "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._";
 
         // 2. Lógica de Títulos Dinámicos basada en el status
         switch ($this->status) {
             case 'open':
+                $icon = "🟩";
+                if ($isSell)
+                    $icon = "🟥";
+
+                $title = "{$icon} " . $title;
+
                 // Solo si está abierta calculamos los prefijos de tiempo
                 if ($diff['days'] == 0 && $diff['hours'] < 1) {
-                    $title = "{$icon} *¡NUEVA OFERTA!*";
                     $diff = DateService::getTimeDifference($this->created_at->getTimestamp(), now()->getTimestamp(), "IS");
                     $time = "💥 " . strtoupper($diff["legible"]);
                 } elseif ($diff['days'] == 0) {
-                    $title = "{$icon} *OFERTA RECIENTE!*";
                     $diff = DateService::getTimeDifference($this->created_at->getTimestamp(), now()->getTimestamp(), "HI");
                     $time = "🔥 " . strtoupper($diff["legible"]);
                 } else {
-                    $title = "{$icon} *OFERTA DISPONIBLE*";
                     $time = "✨ " . strtoupper($diff["legible"]);
                 }
 
@@ -142,40 +155,40 @@ class Offers extends Model
                 break;
 
             case 'locked':
-                $title = "🟧 *OFERTA EN CURSO*";
+                $title = "{$icon} " . $title;
                 $subtitle = "🔐 _La liquidez de este intercambio ha sido bloqueada._";
                 break;
             case 'cancelled':
-                $title = "🟫 *OFERTA FINALIZADA*";
+                $title = "{$icon} " . $title;
                 $subtitle = "🙅‍♂️ _El comprador no ha querido continuar con el intercambio._";
                 break;
             case 'expired':
-                $title = "🟦 *OFERTA FINALIZADA*";
+                $title = "{$icon} " . $title;
                 $subtitle = "⏱️ _El tiempo de seguridad ha expirado antes de completar la verificación._";
                 break;
             case 'signed':
-                $title = "🟨 *OFERTA EN CURSO*";
+                $title = "{$icon} " . $title;
                 $subtitle = "🏃‍♂️ _Una de las partes ya ha confirmado la transacción._";
                 break;
             case 'disputed':
-                $title = "🟪 *OFERTA EN CURSO*";
+                $title = "{$icon} " . $title;
                 $subtitle = "👮‍♀️ _Un administrador está revisando este intercambio._";
                 break;
             case 'completed':
-                $title = "✅ *OFERTA FINALIZADA*";
+                $title = "{$icon} " . $title;
                 $subtitle = "🙏 _¡Gracias por confiar en nosotros!_";
                 break;
             case 'solved':
-                $title = "☑️ *OFERTA FINALIZADA*";
+                $title = "{$icon} " . $title;
                 $subtitle = "⚖️ _Este intercambio ha sido decidido por arbitraje._";
                 break;
             default:
-                $title = "{$icon} *OFERTA ACTUALIZADA*";
+                $title = "{$icon} " . $title;
                 break;
         }
 
         // 3. Renderizar y Editar
-        $text = $this->renderAsTelegramMessage($title);
+        $text = $this->renderAsTelegramMessage($title, false, $stars);
         $text .= $subtitle;
 
         $array = [
@@ -213,5 +226,53 @@ class Offers extends Model
             'fee' => number_format($finalFee, 2),
             'min' => ($finalFee == $status['currentMinFeeUsd'])
         ];
+    }
+
+    public static function getStatusTitle($status, $diff)
+    {
+        $title = "";
+        // Solo si está abierta calculamos los prefijos de tiempo
+        if ($diff['days'] == 0 && $diff['hours'] < 1) {
+            $title = "¡NUEVA OFERTA";
+        } elseif ($diff['days'] == 0) {
+            $title = "OFERTA RECIENTE";
+        } else {
+            $title = "OFERTA DISPONIBLE";
+        }
+
+        return match (strtoupper($status)) {
+            'OPEN' => $title,
+            'CANCELLED' => "OFERTA FINALIZADA",
+            'COMPLETED' => "OFERTA FINALIZADA",
+            'LOCKED' => "OFERTA EN CURSO",   // Fondos en Escrow
+            'SIGNED' => "OFERTA EN CURSO",   // Una parte ya firmó
+            'DISPUTED' => "OFERTA EN CURSO", // En disputa
+            'SOLVED' => "OFERTA FINALIZADA",
+            'EXPIRED' => "OFERTA FINALIZADA",  // Tiempo agotado
+            default => "OFERTA ACTUALIZADA",
+        };
+    }
+
+    public static function getStatusEmoji($status)
+    {
+        return match (strtoupper($status)) {
+            'OPEN' => ["icon" => '⬜️', "color" => "⬜️"],
+            'CANCELLED' => ["icon" => '❌', "color" => "🟫"],
+            'COMPLETED' => ["icon" => '✅', "color" => "🟩"],
+            'LOCKED' => ["icon" => '🔒', "color" => "🟧"],   // Fondos en Escrow
+            'SIGNED' => ["icon" => '✍️', "color" => "🟨"],   // Una parte ya firmó
+            'DISPUTED' => ["icon" => '⚖️', "color" => "🟪"], // En disputa
+            'SOLVED' => ["icon" => '☑️', "color" => "🟪"],
+            'EXPIRED' => ["icon" => '⏱️', "color" => "🟦"],  // Tiempo agotado
+            default => ["icon" => '▫️', "color" => "⬜️"],
+        };
+    }
+
+    public static function getTypeEmoji($type)
+    {
+        return match (strtolower($type)) {
+            'sell' => ["icon" => '📤', "color" => "🟥"],
+            default => ["icon" => '📥', "color" => "🟩"],
+        };
     }
 }

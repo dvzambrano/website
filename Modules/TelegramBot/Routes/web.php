@@ -17,7 +17,7 @@ Route::prefix('telegrambot')->group(function () {
 
 Route::prefix('telegram')->group(function () {
     Route::post('/bot/{key}', 'TelegramBotController@handle')
-        ->middleware('tenant.detector')
+        ->middleware(['tenant.detector', 'telegram.async'])
         ->name('telegram-bot-webhhok');
 
     // Ruta para servir avatares de Telegram a través de nuestro servidor

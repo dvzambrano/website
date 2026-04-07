@@ -6,7 +6,7 @@ use Modules\TelegramBot\Entities\Actors;
 use Modules\Laravel\Traits\TenantTrait;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Lang;
 
 class Suscriptions extends Actors
 {
@@ -90,5 +90,40 @@ class Suscriptions extends Actors
 
         $data['reputation'] = $reputation;
         $this->update(['data' => $data]);
+    }
+
+    public function getBalance()
+    {
+        $balance = 0;
+        try {
+            $walletController = new TraderWalletController();
+            // 3. Obtener Balance REAL (específicamente de BASE_TOKEN en Polygon)
+            $balance = $walletController->getBalance($this);
+        } catch (\Throwable $th) {
+
+        }
+        // Estados que consideramos como "dinero retenido en Escrow"
+        $activeStatuses = ['LOCKED', 'SIGNED', 'DISPUTED', 'EXPIRED'];
+        $address = strtolower($this->data['wallet']['address']);
+        $buyerBalance = Offers::asBuyer($address)->whereIn('status', $activeStatuses)->sum('amount');
+        $sellerBalance = Offers::asSeller($address)->whereIn('status', $activeStatuses)->sum('amount');
+
+        $balanceText = "";
+        if ($balance > 0)
+            $balanceText .= "\n\n💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance, 2) . " USD";
+        else
+            $balanceText .= "\n";
+        if ($sellerBalance > 0)
+            $balanceText .= "\n🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($sellerBalance, 2) . " USD";
+
+
+        return [
+            "amount" => $balance,
+            "escrow" => [
+                "buyer" => $buyerBalance,
+                "seller" => $sellerBalance,
+            ],
+            "text" => $balanceText,
+        ];
     }
 }

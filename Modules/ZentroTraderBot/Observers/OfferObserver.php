@@ -34,6 +34,9 @@ class OfferObserver
         if (!$offer->isDirty('status')) {
             return;
         }
+        if (strtolower($offer->status) === strtolower($offer->getOriginal('status'))) {
+            return;
+        }
 
         $bot = app('active_bot');
 
@@ -42,7 +45,7 @@ class OfferObserver
 
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
-        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+        $diff = DateService::getTimeDifference($offer->created_at->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
         $result = $offer->getNetProceeds($status);
         $net = $result['net'];
 
@@ -68,10 +71,10 @@ class OfferObserver
                     $bot->token,
                     [
                         [
-                            ["text" => "🧾 Enviar Comprobante", "callback_data" => "menu"]
+                            ["text" => "🧾 Enviar Comprobante", "callback_data" => "/comprobantoffer " . $offer->code]
                         ],
                         [
-                            ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "adminmenu"]
+                            ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "/canceloffer " . $offer->code]
                         ]
                     ]
                 );
@@ -88,7 +91,7 @@ class OfferObserver
                     $text,
                     $bot->token,
                     [
-                        [["text" => "⏱️ Ha pasado " . $diff["legible"] . " y no me han pagado", "callback_data" => "menu"]]
+                        [["text" => "⏱️ Ha pasado " . $diff["legible"] . " y no me han pagado", "callback_data" => "/recoveroffer {$offer->code}"]]
                     ]
                 );
 
@@ -155,7 +158,6 @@ class OfferObserver
                         [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                     ]
                 );
-
                 break;
 
             case 'DISPUTED':
@@ -164,7 +166,7 @@ class OfferObserver
                     "🆔 `{$offer->code}`\n" .
                     "👉 _Se ha iniciado una reclamación de esta operación._\n";
                 $text = $generaltext .
-                    "👮‍♀️ *Un administrador revisará el caso pronto*.\n\n" .
+                    "👮‍♀️ *Un árbitro revisará el caso pronto*.\n\n" .
                     "⚠️ *Envíe evidencia* de que cumplió con su parte del acuerdo.";
                 $this->notifyByAddress(
                     $offer->seller_address,
@@ -172,7 +174,7 @@ class OfferObserver
                     $bot->token,
                     [
                         [
-                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "menu"],
+                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "/evidenceoffer " . $offer->code],
                         ]
                     ]
                 );
@@ -182,7 +184,7 @@ class OfferObserver
                     $bot->token,
                     [
                         [
-                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "menu"],
+                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "/evidenceoffer " . $offer->code],
                         ]
                     ]
                 );

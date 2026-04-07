@@ -18,6 +18,8 @@ use Modules\ZentroTraderBot\Jobs\MoralisAddAddressToStream;
 use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\Laravel\Http\Controllers\LaravelController;
+use Modules\Laravel\Services\TextService;
+use Modules\ZentroTraderBot\Entities\Offers;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -412,17 +414,34 @@ class ZentroTraderBotController extends JsonsController
                 return $reply;
             };
 
+
+        $this->strategies["/p2pmenu"] =
+            function () use ($suscriptor) {
+                return $this->getP2PMenu($suscriptor);
+            };
+
+
         $this->strategies["/p2pbuy"] =
-            function () {
+            function () use ($suscriptor) {
+                $number = 0;
+                if (isset($suscriptor->data['reputation']))
+                    $number = $suscriptor->data['reputation']['average'] ?? 0;
+                $stars = TextService::getStars($number, 0.25, "⭐", "💫", "");
+
                 $controller = new OffersController();
-                $reply = $controller->buy($this);
+                $reply = $controller->buy($this, $stars);
                 return $reply;
             };
 
         $this->strategies["/p2psell"] =
-            function () {
+            function () use ($suscriptor) {
+                $number = 0;
+                if (isset($suscriptor->data['reputation']))
+                    $number = $suscriptor->data['reputation']['average'] ?? 0;
+                $stars = TextService::getStars($number, 0.25, "⭐", "💫", "");
+
                 $controller = new OffersController();
-                $reply = $controller->sell($this);
+                $reply = $controller->sell($this, $stars);
                 return $reply;
             };
 
@@ -435,6 +454,33 @@ class ZentroTraderBotController extends JsonsController
                 ];
             };
 
+        $this->strategies["/recoveroffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->recoverOffer($this, $array["pieces"][1]);
+                return [
+                    "text" => "",
+                ];
+            };
+
+
+
+
+        $this->strategies["/activeoffers"] =
+            function () use ($array, $suscriptor) {
+                $page = 1;
+                if (isset($array["pieces"][1]))
+                    $page = $array["pieces"][1];
+                $controller = new OffersController();
+                return $controller->getActiveOffers($suscriptor, $page);
+            };
+
+        $this->strategies["/showoffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->showOffer($this, $array["pieces"][1]);
+            };
+
 
 
         $this->strategies["/offerapply"] =
@@ -444,19 +490,12 @@ class ZentroTraderBotController extends JsonsController
                 return [
                     "text" => "",
                 ];
+            };
 
-                /*
-                // Evento: TradeCreated (Bloqueo de fondos en Escrow)
-        $payload = ScrowMockService::getTradeCreatedPayload(
-            $this->tenant,
-            $this->seller->getWallet()["address"],
-            $this->buyer->getWallet()["address"],
-            $this->token['decimals'],
-            false,
-            $offer->id
-        );
-        $tradeId = $payload['decoded']['params']['tradeId'];
-                */
+        $this->strategies["deleteoffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->cancelOffer($this, $array["pieces"][1]);
             };
 
         return $this->getProcessedMessage();
@@ -472,20 +511,26 @@ class ZentroTraderBotController extends JsonsController
         if (isset($wallet["address"])) {
             //$description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n🫆 `" . $wallet["address"] . "`\n\n";
             $description = "_" . Lang::get("zentrotraderbot::bot.mainmenu.description") . ":_\n\n" .
-                Lang::get("zentrotraderbot::bot.mainmenu.body") . "\n\n";
+                "🚀 " . Lang::get("zentrotraderbot::bot.mainmenu.line1") . "\n" .
+                "✅ " . Lang::get("zentrotraderbot::bot.mainmenu.line2");
+
+            $balance = $suscriptor->getBalance();
+            if ($balance["text"] != "")
+                $description .= $balance["text"] . "\n\n";
         }
 
 
         $menu = [];
 
+        /*
         array_push($menu, [
             ["text" => "💵 " . Lang::get("zentrotraderbot::bot.options.balance"), "callback_data" => "/balance"],
         ]);
+        */
 
         if (env("P2P_ENABLED", true))
             array_push($menu, [
-                ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
-                ["text" => "💰 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
+                ["text" => "🤝 " . Lang::get("zentrotraderbot::bot.p2pmenu.header"), "callback_data" => "/p2pmenu"],
             ]);
 
         array_push($menu, [
@@ -567,7 +612,7 @@ class ZentroTraderBotController extends JsonsController
         $reply = array(
             "text" => "🔔 *" . Lang::get("zentrotraderbot::bot.actionmenu.header") . "*\n\n_" .
                 Lang::get("zentrotraderbot::bot.actionmenu.line1") . ":\n" .
-                "📣 " . Lang::get("zentrotraderbot::bot.actionmenu.line2") . ".\n" .
+                "📣 " . Lang::get("zentrotraderbot::bot.actionmenu.line2") . "\n" .
                 "💵 " . Lang::get("zentrotraderbot::bot.actionmenu.line3") . "._\n\n" .
                 "✅ " . Lang::get("zentrotraderbot::bot.actionmenu.line4", ["option" => $option]) . "\n\n" .
                 "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":",
@@ -672,7 +717,58 @@ class ZentroTraderBotController extends JsonsController
         return $reply;
     }
 
-    public function notifyDepositConfirmed($user_id, $amount, $token_address)
+    public function getP2PMenu($suscriptor)
+    {
+        $balance = $suscriptor->getBalance();
+
+        $califications = 0;
+        $number = 5;
+        if (isset($suscriptor->data['reputation'])) {
+            $califications = $suscriptor->data['reputation']['trades'] > 0 ? $suscriptor->data['reputation']['trades'] - 1 ?? 0 : 0;
+            $number = $suscriptor->data['reputation']['average'] ?? 0;
+        }
+        $stars = TextService::getStars($number, 0.25, "⭐", "💫", "");
+
+        $text = "🤝 *" . Lang::get("zentrotraderbot::bot.p2pmenu.header") . "*\n" .
+            "_" . Lang::get("zentrotraderbot::bot.p2pmenu.line1") . "_\n\n" .
+            "✅ " . Lang::get("zentrotraderbot::bot.p2pmenu.line2") . "\n\n" .
+            "🗂 *" . Lang::get("zentrotraderbot::bot.p2pmenu.line3") . ":*\n" .
+            "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line4", ["amount" => $califications]) . "\n" .
+            "▫️ " . Lang::get("zentrotraderbot::bot.p2pmenu.line5", ["amount" => number_format($number, 2) . " " . $stars]);
+
+        if ($balance["text"] != "")
+            $text .= $balance["text"];
+
+        $text .= "\n\n👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption") . ":";
+
+        $reply = array(
+            "text" => $text,
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [
+                        ["text" => "🛒 " . Lang::get("zentrotraderbot::bot.options.viewp2poffers"), "url" => "https://t.me/KashioChannel"]
+                    ],
+                    [
+                        ["text" => "🟩 " . Lang::get("zentrotraderbot::bot.options.buyoffer"), "callback_data" => "/p2pbuy"],
+                        ["text" => "🟥 " . Lang::get("zentrotraderbot::bot.options.selloffer"), "callback_data" => "/p2psell"],
+                    ],
+                    [
+                        ["text" => "📋 " . Lang::get("zentrotraderbot::bot.options.myoffers"), "callback_data" => "/activeoffers"],
+                    ],
+                    [
+                        ["text" => "💳 " . Lang::get("zentrotraderbot::bot.options.mypaymentmethods"), "callback_data" => "menu"],
+                    ],
+                    [
+                        ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
+                    ],
+                ],
+            ]),
+        );
+
+        return $reply;
+    }
+
+    public function notifyDepositConfirmed($suscriptor, $amount, $token_address)
     {
         $token = ConfigService::getToken($token_address, env("BASE_NETWORK"));
 
@@ -694,6 +790,11 @@ class ZentroTraderBotController extends JsonsController
                             "currency" => $token["symbol"]
                         ]) . "\n" .
                 "✨ _" . Lang::get("zentrotraderbot::bot.prompts.buy.completed.text") . "_";
+
+            $balance = $suscriptor->getBalance();
+            if ($balance["text"] != "")
+                $text .= $balance["text"];
+
             $autodestroy = 0;
         }
 
@@ -701,8 +802,13 @@ class ZentroTraderBotController extends JsonsController
             "message" => array(
                 "text" => $text,
                 "chat" => array(
-                    "id" => $user_id,
+                    "id" => $suscriptor->user_id,
                 ),
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    ],
+                ]),
             ),
         );
         TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);

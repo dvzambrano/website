@@ -13,6 +13,9 @@ use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Log;
 use Modules\Laravel\Services\DateService;
 use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
+use Modules\Laravel\Services\BehaviorService;
+use Modules\ZentroTraderBot\Entities\Suscriptions;
+use Modules\Laravel\Services\TextService;
 
 class UpdateOfferInChannel implements ShouldQueue
 {
@@ -34,7 +37,9 @@ class UpdateOfferInChannel implements ShouldQueue
     {
         try {
             // 1. Conectar al Tenant para obtener el token del bot
-            $tenant = TelegramBots::where('key', $this->tenant)->first();
+            $tenant = BehaviorService::cache('tenant_' . $this->tenant, function () {
+                return TelegramBots::where('key', $this->tenant)->first();
+            });
             if (!$tenant)
                 return;
             $tenant->connectToThisTenant();
@@ -46,15 +51,20 @@ class UpdateOfferInChannel implements ShouldQueue
                 return;
             }
 
-            // --- NUEVA VALIDACIÓN DE VERSIÓN ---
             // Si el Job trae un timestamp y la oferta ha sido actualizada después,
             // significa que hay un Job más reciente (disparado por el Observer) y este debe morir.
             if ($this->lastUpdate && $offer->updated_at->getTimestamp() !== $this->lastUpdate) {
                 return;
             }
 
+            $suscriptor = Suscriptions::on('tenant')->where('user_id', $offer->user_id)->first();
+            $number = 0;
+            if (isset($suscriptor->data['reputation']))
+                $number = $suscriptor->data['reputation']['average'] ?? 0;
+            $stars = TextService::getStars($number, 0.25, "⭐", "💫", "");
+
             // 3. Ejecutamos la edición en Telegram
-            $messageData = $offer->getAsChannelMessage($tenant->code);
+            $messageData = $offer->getAsChannelMessage($tenant->code, $stars);
             $payload = [
                 "message" => [
                     "message_id" => $offer->data['channel']['message_id'],

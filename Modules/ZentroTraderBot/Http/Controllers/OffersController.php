@@ -19,22 +19,25 @@ use Modules\ZentroTraderBot\Jobs\ProcessReputationUpdate;
 use Modules\Web3\Http\Controllers\EscrowController;
 use Modules\Web3\Traits\BlockchainTools;
 use Modules\Web3\Services\ConfigService;
+use Modules\Laravel\Services\DateService;
+use Carbon\Carbon;
+use Modules\Laravel\Services\TextService;
 
 class OffersController extends Controller
 {
     use BlockchainTools;
 
-    public function sell($bot)
+    public function sell($bot, $stars = "")
     {
-        return $this->wizard($bot, 'sell');
+        return $this->wizard($bot, 'sell', $stars);
     }
 
-    public function buy($bot)
+    public function buy($bot, $stars = "")
     {
-        return $this->wizard($bot, 'buy');
+        return $this->wizard($bot, 'buy', $stars);
     }
 
-    public function wizard($bot, $type = 'sell')
+    public function wizard($bot, $type = 'sell', $stars = "")
     {
         $text = $bot->message["text"] ?? null;
         $userId = $bot->actor->user_id;
@@ -64,6 +67,7 @@ class OffersController extends Controller
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
+                        [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
                         [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                     ],
                 ]),
@@ -77,7 +81,7 @@ class OffersController extends Controller
             $state['data'] = $lastState['data'];
             Cache::forever($cacheKey, $state);
             $bot->message["text"] = null;
-            return $this->wizard($bot, $state['data']['type']);
+            return $this->wizard($bot, $state['data']['type'], $stars);
         }
 
         switch ($state['step']) {
@@ -140,7 +144,7 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_CURRENCY'; // SALTO A MONEDA
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type']);
+                    return $this->wizard($bot, $state['data']['type'], $stars);
                 }
 
                 $amountPrompt = $isSell
@@ -167,7 +171,7 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_PRICE'; // SALTO A PRECIO
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type']);
+                    return $this->wizard($bot, $state['data']['type'], $stars);
                 }
 
                 $currencies = Currencies::where('is_active', true)
@@ -235,7 +239,7 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_METHOD'; // SALTO A MÉTODO
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type']);
+                    return $this->wizard($bot, $state['data']['type'], $stars);
                 }
 
                 return [
@@ -263,7 +267,7 @@ class OffersController extends Controller
                     $state['step'] = 'STEP_DETAILS';
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type']);
+                    return $this->wizard($bot, $state['data']['type'], $stars);
                 }
 
                 $currency = Currencies::where('code', $state['data']['currency'])->first();
@@ -301,7 +305,7 @@ class OffersController extends Controller
                     $state['step'] = 'CONFIRM';
                     Cache::forever($cacheKey, $state);
                     $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type']);
+                    return $this->wizard($bot, $state['data']['type'], $stars);
                 }
 
                 $methodName = $state['data']['method_name'] ?? $state['data']['method'];
@@ -325,7 +329,7 @@ class OffersController extends Controller
             case 'CONFIRM':
                 $this->deleteUserText($bot);
                 if ($text === '/offerconfirm') {
-                    return $this->publishOffer($bot, $state);
+                    return $this->publishOffer($bot, $state, $stars);
                 }
 
                 $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
@@ -357,7 +361,7 @@ class OffersController extends Controller
         }
     }
 
-    private function publishOffer($bot, $state)
+    private function publishOffer($bot, $state, $stars = "")
     {
         // 1. PRIMER GUARDADO: Creamos la instancia y la persistimos para obtener el ID real de la DB
         $offer = new Offers([
@@ -386,7 +390,7 @@ class OffersController extends Controller
 
         // 3. ENVÍO A TELEGRAM
         $response = TelegramController::sendMessage(
-            $offer->getAsChannelMessage($bot->tenant->code),
+            $offer->getAsChannelMessage($bot->tenant->code, $stars),
             $bot->tenant->token
         );
         if ($response) {
@@ -444,6 +448,11 @@ class OffersController extends Controller
 
     public function showOffer($bot, $code, $menu = false)
     {
+        $blockchain = new BlockchainController();
+        $status = $blockchain->getStatus();
+        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+
+
         $text = "";
         if (!$menu)
             $menu = [];
@@ -457,16 +466,42 @@ class OffersController extends Controller
             $text = $offer->renderAsTelegramMessage("{$title} *OFERTA*", $isOwner);
             $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
 
-            if ($isOwner)
-                array_push($menu, [
-                    ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"]
-                ]);
-            else {
-                $total = number_format(($offer->amount * $offer->price_per_usd), 2);
-                $btnAction = $isSell ? "✅ Comprar" : "💰 Vender";
-                array_push($menu, [
-                    ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"]
-                ]);
+
+            switch ($offer->status) {
+                case 'open':
+                    if ($isOwner)
+                        array_push($menu, [
+                            ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"]
+                        ]);
+                    else {
+                        $total = number_format(($offer->amount * $offer->price_per_usd), 2);
+                        $btnAction = $isSell ? "✅ Comprar" : "💰 Vender";
+                        array_push($menu, [
+                            ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"]
+                        ]);
+                    }
+                    break;
+                case 'locked':
+                    if ($isOwner)
+                        array_push($menu, [
+                            ["text" => "⏱️ Ha pasado más de " . $diff["legible"] . " y no me han pagado", "callback_data" => "/recoveroffer {$offer->code}"]
+                        ]);
+                    else {
+                        array_push($menu, [
+                            ["text" => "🧾 Enviar Comprobante", "callback_data" => "/comprobantoffer " . $offer->code]
+                        ]);
+                        array_push($menu, [
+                            ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "/canceloffer " . $offer->code]
+                        ]);
+                    }
+                    break;
+                case 'disputed':
+                    array_push($menu, [
+                        ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "/evidenceoffer " . $offer->code],
+                    ]);
+                    break;
+                default:
+                    break;
             }
         } else {
             $text = "🤔 *¡Que raro!*\n";
@@ -487,34 +522,56 @@ class OffersController extends Controller
         ];
     }
 
+    public function updateStatus($bot, $text)
+    {
+        try {
+            TelegramController::editMessageText([
+                "message" => [
+                    "text" => $text,
+                    "chat" => ["id" => $bot->actor->user_id],
+                    "message_id" => $bot->message["message_id"],
+                ]
+            ], $bot->tenant->token);
+        } catch (\Throwable $th) {
+        }
+    }
+
     public function applyForOffer($bot, $code)
     {
-        $updateStatus = function ($text) use ($bot) {
-            try {
-                TelegramController::editMessageText([
-                    "message" => [
-                        "text" => $text,
-                        "chat" => ["id" => $bot->actor->user_id],
-                        "message_id" => $bot->message["message_id"],
-                        "parse_mode" => "Markdown" // Importante para las negritas y emojis
-                    ]
-                ], $bot->tenant->token);
-            } catch (\Throwable $th) {
+        // 1. Usamos el $code o $offer->id para que NADIE más pueda tocar esta oferta por 2 minutos
+        $lockKey = "applying_offer_lock_{$code}";
+
+        if (!Cache::add($lockKey, $bot->actor->user_id, now()->addMinutes(2))) {
+            $whoIsApplying = Cache::get($lockKey);
+            // Si el que tiene el candado soy yo mismo, es un reintento de Telegram, dejamos pasar.
+            // Si es otro ID, detenemos el proceso.
+            if ($whoIsApplying != $bot->actor->user_id) {
+                $this->updateStatus($bot, "⚠️ Esta oferta ya está siendo procesada por otro usuario.");
+                return true;
             }
-        };
+        }
 
-        $updateStatus("🔍 *Verificando disponibilidad de fondos...*\nPor favor, no cierre esta ventana.");
+        // 2. Localización y Validación de la Oferta
+        $offer = Offers::findByCode($code);
+        if (!$offer || strtoupper($offer->status) !== 'OPEN') { // Validación extra de estado
+            $this->updateStatus($bot, "❌ La oferta {$code} ya no está disponible.");
+            Cache::forget($lockKey);
+            return false;
+        }
 
-        // 1. Configuración de Red y Token
+        // Guardamos el message_id para ediciones futuras desde el Listener
+        $currentData = $offer->data ?? [];
+        $currentData["apply"] = [
+            "message_id" => $bot->message["message_id"],
+            "user_id" => $bot->actor->user_id // Guardamos quién aplicó
+        ];
+        $offer->update(['data' => $currentData]);
+
+        // 3. Configuración de Red y Roles 
         $network = ConfigService::getNetworks(env("BASE_NETWORK"));
         $tokenInfo = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
         $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
 
-        $offer = Offers::findByCode($code);
-        if (!$offer)
-            return false;
-
-        // 2. Identificación de Roles
         $isSell = strtolower($offer->type) == "sell";
         $sellerUserId = $isSell ? $offer->user_id : $bot->actor->user_id;
         $buyerUserId = $isSell ? $bot->actor->user_id : $offer->user_id;
@@ -522,34 +579,40 @@ class OffersController extends Controller
         $seller = Suscriptions::on('tenant')->where('user_id', $sellerUserId)->first();
         $buyer = Suscriptions::on('tenant')->where('user_id', $buyerUserId)->first();
 
-        if (!$seller || !$buyer)
+        if (!$seller || !$buyer) {
+            Cache::forget($lockKey);
             return false;
+        }
 
-        // 3. Preparación de datos para la Blockchain
-        $sellerPrivateKey = decryptValue($seller->data['wallet']['private_key']);
+        // 4. Preparación Blockchain
+        $key = decryptValue($seller->data['wallet']['private_key']);
         $buyerAddress = $buyer->data['wallet']['address'];
-        $treasuryPrivKey = decryptValue(env("TRADER_BOT_KEY"));
 
         // Monto con decimales correctos (usando bcmath como tenías antes)
         $amountWei = bcmul($offer->amount, bcpow(10, $tokenInfo["decimals"]));
-
         $escrow = new EscrowController();
         $deadline = time() + 3600; // 1 hora de validez para el Permit
 
-        // --- PASO ÚNICO: PERMIT + CREATE TRADE ---
-        // Informamos al usuario que Kashio asume el costo
-        $updateStatus("⛽ *Procesando intercambio seguro...*");
+        // ESTADO 1: Preparación Criptográfica (Local y rápido)
+        $this->updateStatus($bot, "⌛️ *Paso 1/3:* Generando firma de seguridad...");
+
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 OffersController applyForOffer:", [
+                "code" => $code,
+                "sellerUserId" => $sellerUserId,
+                "buyerUserId" => $buyerUserId,
+                "offer" => $offer,
+                "deadline" => $deadline,
+            ]);
 
         try {
-            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $sellerPrivateKey, $treasuryPrivKey, $offer, $amountWei, $buyerAddress, $deadline, $network) {
-                // Llamamos al método que hace TODO: 
-                // 1. Obtiene nonce del token
-                // 2. Obtiene Domain Separator
-                // 3. Firma el mensaje con la key del VENDEDOR
-                // 4. Envía la transacción con la key de TESORERÍA (Paga el gas)
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($bot, $escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network) {
+
+                $this->updateStatus($bot, "⌛️ *Paso 2/3:* Moviendo fondos para garantizar el intercambio...");
+
                 return $escrow->createTradeWithPermit(
                     $rpc,
-                    $sellerPrivateKey,           // Firma el permiso (0 gas)
+                    $key,           // Firma el permiso (0 gas)
                     env('ESCROW_CONTRACT'),
                     $network['chainId'],
                     $offer->id,                  // ID del trade para el contrato
@@ -561,17 +624,119 @@ class OffersController extends Controller
                 );
             });
 
-            if (!$txHash)
-                throw new \Exception("No se pudo obtener el hash de la transacción.");
+            if (!$txHash) {
+                $this->updateStatus($bot, "❌ No se pudo obtener el hash de la transacción.");
+                return false;
+            }
 
-            $this->waitForConfirmation($rpcUrls, $txHash);
+            $this->updateStatus($bot, "⌛️ *Paso 3/3:* ¡Intercambio asegurado con éxito!");
 
-            $updateStatus("✅ *¡Intercambio asegurado con éxito!*\nLos fondos están en custodia de Kashio.");
+            // NOTA: No liberamos el $lockKey aquí, dejamos que expire o 
+            // que el Listener lo haga al confirmar, para evitar "clicks" rápidos.
+            return $txHash;
+
+        } catch (\Exception $e) {
+            // Manejo de error "ID already exists" (Transacción enviada pero error en respuesta RPC)
+            if (str_contains($e->getMessage(), 'ID already exists')) {
+                $this->updateStatus($bot, "⌛️ *Paso 3/3:* ¡Intercambio asegurado con éxito!");
+                return true;
+            }
+
+            // Si es un error real, liberamos para permitir reintento
+            Cache::forget($lockKey);
+            $this->updateStatus($bot, "❌ *Error en la red:*\n" . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function recoverOffer($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer)
+            return false;
+
+        $blockchain = new BlockchainController();
+        $status = $blockchain->getStatus();
+
+        $this->updateStatus($bot, "⏳ *Verificando condiciones de recuperación...*");
+
+        // 1. Configuración de Red
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+        $escrow = new EscrowController();
+
+        // 2. Obtener datos del trade desde la Blockchain
+        $blockchainTrade = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $offer) {
+            return $escrow->getTradeById(
+                $rpc,
+                env('ESCROW_CONTRACT'),
+                $network['chainId'],
+                $offer->id,
+                env('ETHERSCAN_API_KEY')
+            );
+        });
+
+        if (!$blockchainTrade) {
+            $this->updateStatus($bot, "❌ *Error:* No se encontró el intercambio en la red.");
+            return false;
+        }
+
+        // 3. Validaciones de Seguridad (Tiempo de expiración)
+        $now = time();
+        $timeoutAt = (int) $blockchainTrade['createdAt'] + (int) $status["tradeTimeout"];
+
+        if ($now < $timeoutAt) {
+            $minutes = ceil(($timeoutAt - $now) / 60);
+            $this->updateStatus($bot, "🚫 *Aún no puedes reclamar:* Debes esperar $minutes minutos.");
+            return false;
+        }
+
+        // Guardamos metadata de la recuperación
+        $currentData = $offer->data ?? [];
+        $currentData["recover"] = [
+            "message_id" => $bot->message["message_id"],
+            "user_id" => $bot->actor->user_id // Guardamos quién aplicó para la recuperacion
+        ];
+        $offer->update(['data' => $currentData]);
+
+        // 4. Ejecución Gasless (expireTradeWithSignature)
+        $this->updateStatus($bot, "⚖️ *Solicitando devolución sin gas...*");
+
+        try {
+            // Obtenemos la llave del vendedor para FIRMAR (No gasta gas)
+            $seller = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+            $userPrivateKey = decryptValue($seller->data['wallet']['private_key']);
+
+            // Obtenemos la llave de la Tesorería para PAGAR el gas (Relayer)
+            $relayerKey = env('TRADER_BOT_KEY');
+
+            // Definimos un deadline para la firma (ej. 1 hora desde ahora)
+            $deadline = time() + 3600;
+
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $relayerKey, $userPrivateKey, $network, $offer, $deadline) {
+                return $escrow->expireTradeWithSignature(
+                    $rpc,
+                    $relayerKey,      // Paga el POL
+                    $userPrivateKey,   // Firma el mensaje EIP-712
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $offer->id,
+                    $deadline,
+                    env('ETHERSCAN_API_KEY')
+                );
+            });
+
+            if (!$txHash) {
+                $this->updateStatus($bot, "❌ La red rechazó la solicitud de expiración.");
+                return false;
+            }
+
+            $this->updateStatus($bot, "✅ *¡Fondos en revisión!*\nEl intercambio ha sido cancelado por expiración: un árbitro revisará que no haya pendientes y sus " . number_format($offer->amount, 2) . " USD serán devueltos a su cuenta.");
 
             return $txHash;
 
         } catch (\Exception $e) {
-            $updateStatus("❌ *Error en la red:*\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ *Error al recuperar:* " . $e->getMessage());
             return false;
         }
     }
@@ -639,5 +804,154 @@ class OffersController extends Controller
             TelegramController::editMessageText($payload, $bot->tenant->token);
         } catch (\Throwable $th) {
         }
+    }
+
+    public function getActiveOffers($suscriptor, $page = 1)
+    {
+
+        $address = strtolower($suscriptor->data['wallet']['address']);
+        $activeStatuses = ['OPEN', 'LOCKED', 'SIGNED', 'DISPUTED', 'EXPIRED'];
+
+        $perPage = 8; // Número ideal de ofertas por pantalla
+        $offset = ($page - 1) * $perPage;
+
+        $userId = $suscriptor->user_id; // El ID de Telegram del suscriptor
+        $query = Offers::on('tenant')
+            ->whereIn('status', $activeStatuses)
+            ->where(function ($query) use ($address, $userId) {
+                $query->asSeller($address)
+                    ->orWhere->asBuyer($address)
+                    ->orWhere('user_id', $userId); // Filtro por el creador original
+            });
+
+        $total = $query->count();
+        $offers = $query->orderBy('updated_at', 'desc')
+            ->limit($perPage)
+            ->offset($offset)
+            ->get();
+
+        if ($offers->isEmpty()) {
+            return [
+                "text" => "📭 *No tienes ofertas activas en este momento.*\n" .
+                    "¡Publica una o explora el mercado!",
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [
+                            ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]
+                        ]
+                    ]
+                ])
+            ];
+        }
+
+        // 2. Construir el menú visual
+        $text = "📋 *Tus Ofertas Activas*\n";
+        $text .= "👇 " . Lang::get("telegrambot::bot.prompts.chooseoneoption");
+
+        $buttons = [];
+        foreach ($offers as $offer) {
+            $isSeller = strtolower($offer->seller_address) === $address;
+            $roleEmoji = $isSeller ? Offers::getTypeEmoji("sell")["color"] : Offers::getTypeEmoji("buy")["color"];
+            $emoji = Offers::getStatusEmoji($offer->status);
+            $statusEmoji = $emoji["icon"];
+
+            // Etiqueta del botón: [Icono Rol] [ID] [Estado] - [Monto] USD
+            $label = "{$roleEmoji} {$offer->code} - " . number_format($offer->amount, 2) . " USD {$statusEmoji}";
+
+            $buttons[] = [
+                ["text" => $label, "callback_data" => "/showoffer {$offer->code}"]
+            ];
+        }
+
+        $navigation = [];
+        if ($page > 1)
+            $navigation[] = ["text" => "◀️ Anterior", "callback_data" => "/activeoffers " . ($page - 1)];
+        if ($total > ($page * $perPage))
+            $navigation[] = ["text" => "Siguiente ▶️", "callback_data" => "/activeoffers " . ($page + 1)];
+
+        if (!empty($navigation))
+            $buttons[] = $navigation;
+
+
+        // Botón para volver
+        $buttons[] = [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]];
+        $buttons[] = [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]];
+
+        return [
+            "text" => $text,
+            "reply_markup" => json_encode(["inline_keyboard" => $buttons])
+        ];
+    }
+
+    /**
+     * Cancela una oferta abierta: la elimina del canal y actualiza el estado en DB.
+     */
+    public function cancelOffer($bot, $code)
+    {
+        $reply = [
+            "text" => "",
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
+                    [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                ],
+            ]),
+        ];
+
+        try {
+            $userId = $bot->actor->user_id;
+
+            // 1. Buscar la oferta en el tenant actual
+            $offer = Offers::findByCode($code);
+
+            if (!$offer) {
+                $reply["text"] = "⚠️ Oferta no encontrada.";
+                return $reply;
+            }
+
+            // 2. Validar propiedad: Solo el creador puede cancelarla
+            if ((int) $offer->user_id !== $userId) {
+                $reply["text"] = "🚫 No tienes permiso para cancelar esta oferta.";
+                return $reply;
+            }
+
+            // 3. Verificar que esté abierta (Si ya hay un Escrow LOCK, no se puede cancelar así)
+            if (strtoupper($offer->status) !== 'OPEN') {
+                $reply["text"] = "🛑 Esta oferta ya está en proceso de intercambio y no puede ser cancelada.";
+                return $reply;
+            }
+
+            // 4. ELIMINAR DEL CANAL
+            if (isset($offer->data['channel']['message_id'])) {
+                try {
+                    TelegramController::deleteMessage([
+                        "message" => [
+                            "chat" => ["id" => env("TRADER_BOT_CHANNEL")],
+                            "id" => $offer->data['channel']['message_id']
+                        ]
+                    ], $bot->tenant->token);
+                } catch (\Throwable $th) {
+                    //throw $th;
+                }
+            }
+
+            // 5. ACTUALIZAR BASE DE DATOS
+            // Usamos updateStatus para que el Observer dispare cualquier notificación necesaria
+            $offer->updateStatus('CANCELLED', [
+                'updated_at' => now(),
+            ]);
+
+            $reply["text"] = "✅ *¡Oferta eliminada!*\n" .
+                "_La oferta ha sido retirada del mercado con éxito._\n\n" .
+                "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
+
+        } catch (\Exception $e) {
+            Log::error("🆘 Error cancelando oferta {$code}: " . $e->getMessage());
+
+            $reply["text"] = "❌ Ocurrió un error al procesar la cancelación.";
+        }
+
+
+        return $reply;
     }
 }

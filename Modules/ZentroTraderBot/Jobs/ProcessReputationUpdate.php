@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\Laravel\Services\BehaviorService;
 
 class ProcessReputationUpdate implements ShouldQueue
 {
@@ -42,7 +43,10 @@ class ProcessReputationUpdate implements ShouldQueue
     {
         try {
             // 1. Reconexión al Tenant (Vital para Jobs en segundo plano)
-            $bot = TelegramBots::where('key', $this->tenant)->first();
+            $bot = BehaviorService::cache('tenant_' . $this->tenant, function () {
+                return TelegramBots::where('key', $this->tenant)->first();
+            });
+
             if (!$bot) {
                 Log::error("❌ [ReputationJob] Tenant no encontrado: {$this->tenant}");
                 return;

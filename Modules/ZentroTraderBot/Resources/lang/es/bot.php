@@ -3,9 +3,9 @@
 return [
 
     "mainmenu" => [
-        "description" => "El puente más rápido y seguro para mover tu dinero entre Zelle, Bizum, Pago Móvil y más, usando la estabilidad del USD digital.",
-        "body" => "🔒 Seguro: Tus fondos están protegidos por contratos inteligentes. 💸 Sin Gas: Tú no pagas comisiones de red, nosotros nos encargamos. 🚀 Rápido: Intercambios P2P en minutos.",
-
+        "description" => "El puente más rápido y seguro para mover tu dinero usando la estabilidad del USD digital.",
+        "line1" => "Rápido: Intercambios P2P en minutos.",
+        "line2" => "Seguro: Fondos protegidos por contratos inteligentes.",
     ],
     "actionmenu" => [
         "header" => "Menú de acciones",
@@ -24,6 +24,15 @@ return [
         "line6" => "Eres un suscriptor de nivel :level",
         "therefore" => "por lo tanto, puedes usar el botón “URL del Cliente” para obtener tu enlace de alertas de TradingView",
     ],
+
+    "p2pmenu" => [
+        "header" => "Mercado P2P",
+        "line1" => "Compra y vende USD de forma segura, directa y sin intermediarios",
+        "line2" => "Garantía Escrow: Todos los fondos están protegidos por contratos inteligentes hasta que el pago sea confirmado por ambas partes.",
+        "line3" => "Tu Actividad",
+        "line4" => "Ofertas publicadas: :amount",
+        "line5" => "Calificación: :amount",
+    ],
     "options" => [
         "subscribtion" => "Suscripción",
         "subscribtionlevel" => ":icon Nivel :char",
@@ -38,6 +47,10 @@ return [
         "topupcripto" => "Depositar Criptomonedas",
         "topupramp" => "Depositar USD",
         "withdraw" => "Extraer USD",
+        "viewp2poffers" => "Ver mercado de ofertas",
+        "myoffers" => "Mis Ofertas Activas",
+        "mypaymentmethods" => "Métodos de Pago",
+        "backtop2pmenu" => "Volver al Mercado P2P",
     ],
     "prompts" => [
         "clienturl" => [
@@ -115,6 +128,7 @@ return [
         ],
         "balance" => [
             "available" => "Saldo disponible",
+            "locked" => "Bloqueado",
             "lastoperations" => "Últimas operaciones",
         ],
     ],
