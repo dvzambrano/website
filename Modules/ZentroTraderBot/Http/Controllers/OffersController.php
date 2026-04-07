@@ -803,7 +803,7 @@ class OffersController extends Controller
     {
 
         $address = strtolower($suscriptor->data['wallet']['address']);
-        $activeStatuses = ['LOCKED', 'SIGNED', 'DISPUTED', 'EXPIRED'];
+        $activeStatuses = ['OPEN', 'LOCKED', 'SIGNED', 'DISPUTED', 'EXPIRED'];
 
         $perPage = 8; // Número ideal de ofertas por pantalla
         $offset = ($page - 1) * $perPage;
