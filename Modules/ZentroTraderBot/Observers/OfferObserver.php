@@ -158,7 +158,6 @@ class OfferObserver
                         [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                     ]
                 );
-
                 break;
 
             case 'DISPUTED':
