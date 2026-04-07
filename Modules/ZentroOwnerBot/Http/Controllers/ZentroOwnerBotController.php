@@ -162,10 +162,15 @@ class ZentroOwnerBotController extends JsonsController
                 try {
                     $controller = new EscrowController();
                     $hash = $controller->setMinFeePerToken($array["pieces"][1]);
+                    if ($hash)
+                        return array(
+                            "text" =>
+                                "✅ setMinFeePerToken `" . $array["pieces"][1] . "` DONE:\n" .
+                                "`{$hash}`",
+                        );
                     return array(
                         "text" =>
-                            "✅ setMinFeePerToken `" . $array["pieces"][1] . "` DONE:\n" .
-                            "`{$hash}`",
+                            "❌ setMinFeePerToken `" . $array["pieces"][1] . "` ERROR",
                     );
                 } catch (\Exception $e) {
                     return array(
