@@ -120,7 +120,7 @@ class Offers extends Model
         $icon = Offers::getStatusEmoji($this->status)["icon"];
 
         $buttons = [];
-        $title = ""; // Inicializamos vacío para construirlo abajo
+        $title = "*" . Offers::getStatusTitle($this->status, $diff) . "*";
         $subtitle = "🛡 _Use siempre el sistema de custodia para transacciones 100% seguras en nuestro P2P._";
 
         // 2. Lógica de Títulos Dinámicos basada en el status
@@ -130,17 +130,16 @@ class Offers extends Model
                 if ($isSell)
                     $icon = "🟥";
 
+                $title = "{$icon} " . $title;
+
                 // Solo si está abierta calculamos los prefijos de tiempo
                 if ($diff['days'] == 0 && $diff['hours'] < 1) {
-                    $title = "{$icon} *¡NUEVA OFERTA!*";
                     $diff = DateService::getTimeDifference($this->created_at->getTimestamp(), now()->getTimestamp(), "IS");
                     $time = "💥 " . strtoupper($diff["legible"]);
                 } elseif ($diff['days'] == 0) {
-                    $title = "{$icon} *OFERTA RECIENTE!*";
                     $diff = DateService::getTimeDifference($this->created_at->getTimestamp(), now()->getTimestamp(), "HI");
                     $time = "🔥 " . strtoupper($diff["legible"]);
                 } else {
-                    $title = "{$icon} *OFERTA DISPONIBLE*";
                     $time = "✨ " . strtoupper($diff["legible"]);
                 }
 
@@ -156,35 +155,35 @@ class Offers extends Model
                 break;
 
             case 'locked':
-                $title = "{$icon} *OFERTA EN CURSO*";
+                $title = "{$icon} " . $title;
                 $subtitle = "🔐 _La liquidez de este intercambio ha sido bloqueada._";
                 break;
             case 'cancelled':
-                $title = "{$icon} *OFERTA FINALIZADA*";
+                $title = "{$icon} " . $title;
                 $subtitle = "🙅‍♂️ _El comprador no ha querido continuar con el intercambio._";
                 break;
             case 'expired':
-                $title = "{$icon} *OFERTA FINALIZADA*";
+                $title = "{$icon} " . $title;
                 $subtitle = "⏱️ _El tiempo de seguridad ha expirado antes de completar la verificación._";
                 break;
             case 'signed':
-                $title = "{$icon} *OFERTA EN CURSO*";
+                $title = "{$icon} " . $title;
                 $subtitle = "🏃‍♂️ _Una de las partes ya ha confirmado la transacción._";
                 break;
             case 'disputed':
-                $title = "{$icon} *OFERTA EN CURSO*";
+                $title = "{$icon} " . $title;
                 $subtitle = "👮‍♀️ _Un administrador está revisando este intercambio._";
                 break;
             case 'completed':
-                $title = "{$icon} *OFERTA FINALIZADA*";
+                $title = "{$icon} " . $title;
                 $subtitle = "🙏 _¡Gracias por confiar en nosotros!_";
                 break;
             case 'solved':
-                $title = "{$icon} *OFERTA FINALIZADA*";
+                $title = "{$icon} " . $title;
                 $subtitle = "⚖️ _Este intercambio ha sido decidido por arbitraje._";
                 break;
             default:
-                $title = "{$icon} *OFERTA ACTUALIZADA*";
+                $title = "{$icon} " . $title;
                 break;
         }
 
@@ -227,6 +226,31 @@ class Offers extends Model
             'fee' => number_format($finalFee, 2),
             'min' => ($finalFee == $status['currentMinFeeUsd'])
         ];
+    }
+
+    public static function getStatusTitle($status, $diff)
+    {
+        $title = "";
+        // Solo si está abierta calculamos los prefijos de tiempo
+        if ($diff['days'] == 0 && $diff['hours'] < 1) {
+            $title = "¡NUEVA OFERTA";
+        } elseif ($diff['days'] == 0) {
+            $title = "OFERTA RECIENTE";
+        } else {
+            $title = "OFERTA DISPONIBLE";
+        }
+
+        return match (strtoupper($status)) {
+            'OPEN' => $title,
+            'CANCELLED' => "OFERTA FINALIZADA",
+            'COMPLETED' => "OFERTA FINALIZADA",
+            'LOCKED' => "OFERTA EN CURSO",   // Fondos en Escrow
+            'SIGNED' => "OFERTA EN CURSO",   // Una parte ya firmó
+            'DISPUTED' => "OFERTA EN CURSO", // En disputa
+            'SOLVED' => "OFERTA FINALIZADA",
+            'EXPIRED' => "OFERTA FINALIZADA",  // Tiempo agotado
+            default => "OFERTA ACTUALIZADA",
+        };
     }
 
     public static function getStatusEmoji($status)
