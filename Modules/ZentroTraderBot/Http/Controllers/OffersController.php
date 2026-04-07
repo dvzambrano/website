@@ -466,29 +466,37 @@ class OffersController extends Controller
             $text = $offer->renderAsTelegramMessage("{$title} *OFERTA*", $isOwner);
             $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
 
-            if ($isOwner) {
-                switch ($offer->status) {
-                    case 'open':
+
+            switch ($offer->status) {
+                case 'open':
+                    if ($isOwner)
                         array_push($menu, [
                             ["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"]
                         ]);
-                        break;
-                    case 'locked':
+                    else {
+                        $total = number_format(($offer->amount * $offer->price_per_usd), 2);
+                        $btnAction = $isSell ? "✅ Comprar" : "💰 Vender";
+                        array_push($menu, [
+                            ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"]
+                        ]);
+                    }
+                    break;
+                case 'locked':
+                    if ($isOwner)
                         array_push($menu, [
                             ["text" => "⏱️ Ha pasado más de " . $diff["legible"] . " y no me han pagado", "callback_data" => "/recoveroffer {$offer->code}"]
                         ]);
-                        break;
-                    default:
-                        break;
-                }
-            } else {
-                if (strtoupper($offer->status) === 'OPEN') {
-                    $total = number_format(($offer->amount * $offer->price_per_usd), 2);
-                    $btnAction = $isSell ? "✅ Comprar" : "💰 Vender";
-                    array_push($menu, [
-                        ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"]
-                    ]);
-                }
+                    else {
+                        array_push($menu, [
+                            ["text" => "🧾 Enviar Comprobante", "callback_data" => "/comprobantoffer " . $offer->code]
+                        ]);
+                        array_push($menu, [
+                            ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "/canceloffer " . $offer->code]
+                        ]);
+                    }
+                    break;
+                default:
+                    break;
             }
         } else {
             $text = "🤔 *¡Que raro!*\n";
