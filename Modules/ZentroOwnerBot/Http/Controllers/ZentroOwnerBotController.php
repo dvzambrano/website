@@ -171,7 +171,7 @@ class ZentroOwnerBotController extends JsonsController
                             );
                         return array(
                             "text" =>
-                                "❌ setMinFeePerToken `" . $array["pieces"][1] . "` ERROR",
+                                "❌ setMinFeePerToken `" . $array["pieces"][1] . "`",
                         );
                     } catch (\Exception $e) {
                         return array(
