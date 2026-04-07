@@ -174,7 +174,7 @@ class OfferObserver
                     $bot->token,
                     [
                         [
-                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "menu"],
+                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "/evidenceoffer " . $offer->code],
                         ]
                     ]
                 );
@@ -184,7 +184,7 @@ class OfferObserver
                     $bot->token,
                     [
                         [
-                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "menu"],
+                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "/evidenceoffer " . $offer->code],
                         ]
                     ]
                 );

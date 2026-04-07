@@ -495,6 +495,11 @@ class OffersController extends Controller
                         ]);
                     }
                     break;
+                case 'disputed':
+                    array_push($menu, [
+                        ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "/evidenceoffer " . $offer->code],
+                    ]);
+                    break;
                 default:
                     break;
             }
