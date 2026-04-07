@@ -657,7 +657,6 @@ class OffersController extends Controller
 
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
-        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
 
         $this->updateStatus($bot, "⏳ *Verificando condiciones de recuperación...*");
 
@@ -666,8 +665,7 @@ class OffersController extends Controller
         $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
         $escrow = new EscrowController();
 
-        // 2. Obtener datos del trade desde la Blockchain para validar el tiempo
-        // Usamos el método de tu controlador que decodifica el struct Trade
+        // 2. Obtener datos del trade desde la Blockchain
         $blockchainTrade = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $offer) {
             return $escrow->getTradeById(
                 $rpc,
@@ -683,18 +681,17 @@ class OffersController extends Controller
             return false;
         }
 
-        // 3. Validaciones de Seguridad
+        // 3. Validaciones de Seguridad (Tiempo de expiración)
         $now = time();
-        $timeoutAt = $blockchainTrade['createdAt'] + $status["tradeTimeout"];
+        $timeoutAt = (int) $blockchainTrade['createdAt'] + (int) $status["tradeTimeout"];
 
         if ($now < $timeoutAt) {
-            $remaining = $timeoutAt - $now;
-            $minutes = ceil($remaining / 60);
-            $this->updateStatus($bot, "🚫 *Aún no puedes reclamar:*\nDebes esperar $minutes minutos más para que el trade expire legalmente.");
+            $minutes = ceil(($timeoutAt - $now) / 60);
+            $this->updateStatus($bot, "🚫 *Aún no puedes reclamar:* Debes esperar $minutes minutos.");
             return false;
         }
 
-        // Guardamos el message_id para ediciones futuras desde el Listener
+        // Guardamos metadata de la recuperación
         $currentData = $offer->data ?? [];
         $currentData["recover"] = [
             "message_id" => $bot->message["message_id"],
@@ -702,27 +699,37 @@ class OffersController extends Controller
         ];
         $offer->update(['data' => $currentData]);
 
-        // 4. Ejecución de la recuperación (Expire Trade)
-        $this->updateStatus($bot, "⚖️ *Solicitando devolución de fondos...*\nUn árbitro procesará la expiración `{$offer->code}`.");
+        // 4. Ejecución Gasless (expireTradeWithSignature)
+        $this->updateStatus($bot, "⚖️ *Solicitando devolución sin gas...*");
 
         try {
-            // Obtenemos la llave del vendedor (el dueño de la oferta)
+            // Obtenemos la llave del vendedor para FIRMAR (No gasta gas)
             $seller = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
-            $key = decryptValue($seller->data['wallet']['private_key']);
+            $userPrivateKey = decryptValue($seller->data['wallet']['private_key']);
 
-            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $key, $network, $offer) {
-                return $escrow->expireTrade(
+            // Obtenemos la llave de la Tesorería para PAGAR el gas (Relayer)
+            $relayerKey = env('TRADER_BOT_KEY');
+
+            // Definimos un deadline para la firma (ej. 1 hora desde ahora)
+            $deadline = time() + 3600;
+
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $relayerKey, $userPrivateKey, $network, $offer, $deadline) {
+                return $escrow->expireTradeWithSignature(
                     $rpc,
-                    $key, // El vendedor firma la petición de expiración
+                    $relayerKey,      // Paga el POL
+                    $userPrivateKey,   // Firma el mensaje EIP-712
                     env('ESCROW_CONTRACT'),
                     $network['chainId'],
                     $offer->id,
+                    $deadline,
                     env('ETHERSCAN_API_KEY')
                 );
             });
 
-            if (!$txHash)
+            if (!$txHash) {
                 $this->updateStatus($bot, "❌ La red rechazó la solicitud de expiración.");
+                return false;
+            }
 
             $this->updateStatus($bot, "✅ *¡Fondos en revisión!*\nEl intercambio ha sido cancelado por expiración: un árbitro revisará que no haya pendientes y sus " . number_format($offer->amount, 2) . " USD serán devueltos a su cuenta.");
 
