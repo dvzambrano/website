@@ -450,8 +450,6 @@ class OffersController extends Controller
     {
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
-        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
-
 
         $text = "";
         if (!$menu)
@@ -459,6 +457,8 @@ class OffersController extends Controller
 
         $offer = Offers::findByCode($code);
         if ($offer && $offer->id > 0) {
+            $diff = DateService::getTimeDifference($offer->created_at->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+
             $isSell = strtolower($offer->type) == "sell";
             $title = $isSell ? "🟥" : "🟩";
             $isOwner = $bot->actor->user_id == $offer->user_id;
