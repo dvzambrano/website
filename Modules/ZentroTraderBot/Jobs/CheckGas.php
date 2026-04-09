@@ -117,7 +117,18 @@ class CheckGas implements ShouldQueue
             if (!empty($msg)) {
                 $cacheKey = "gas_alert_{$this->tenant}_" . strtolower($network['chain']) . "_{$alertType}";
                 if (!Cache::has($cacheKey)) {
-                    TelegramController::sendMessage(["message" => ["text" => $msg, "chat" => ["id" => $this->userId]]], $tenant->token);
+                    TelegramController::sendMessage([
+                        "message" =>
+                            [
+                                "text" => $msg,
+                                "chat" => ["id" => $this->userId],
+                                "reply_markup" => json_encode([
+                                    "inline_keyboard" => [
+                                        [["text" => "🌐 Ver estado de la red", "callback_data" => "/network"]]
+                                    ],
+                                ]),
+                            ]
+                    ], $tenant->token);
                     Cache::put($cacheKey, true, 3600);
                     Cache::put($statusKey, 'alert', 86400);
                 }

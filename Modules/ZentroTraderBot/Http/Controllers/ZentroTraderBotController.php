@@ -900,6 +900,11 @@ class ZentroTraderBotController extends JsonsController
             return [
                 "text" => $msg,
                 "chat" => ["id" => $this->actor->user_id],
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [["text" => "🔄 Volver a cargar", "callback_data" => "/network"]]
+                    ],
+                ]),
             ];
 
         } catch (\Exception $e) {
