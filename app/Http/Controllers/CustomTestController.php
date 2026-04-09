@@ -51,6 +51,7 @@ use Modules\ZentroPackageBot\Entities\Packages;
 use Modules\ZentroTraderBot\Http\Controllers\RampController;
 
 use Modules\Laravel\Http\Controllers\TestController as BaseController;
+use Modules\Laravel\Services\ConfigService;
 
 class CustomTestController extends BaseController
 {
@@ -70,6 +71,18 @@ class CustomTestController extends BaseController
         return response()->json([
             "status" => "no bot found",
         ]);
+    }
+
+
+
+    public function testNetworks()
+    {
+        //$network = ConfigService::getNetworks(137);
+        //dd($network);
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        //dd($network);
+        $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+        dd($network, $token);
     }
 
     public function test(Request $request, $name = null)
