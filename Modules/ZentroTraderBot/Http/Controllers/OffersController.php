@@ -609,10 +609,12 @@ class OffersController extends Controller
             $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($bot, $escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network) {
 
                 $this->updateStatus($bot, "⌛️ *Paso 2/3:* Moviendo fondos para garantizar el intercambio...");
+                $relayerKey = env('TRADER_BOT_KEY');
 
-                return $escrow->createTradeWithPermit(
+                return $escrow->createTradeWithSignature(
                     $rpc,
-                    $key,           // Firma el permiso (0 gas)
+                    $relayerKey,
+                    $key,
                     env('ESCROW_CONTRACT'),
                     $network['chainId'],
                     $offer->id,                  // ID del trade para el contrato
