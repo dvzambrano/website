@@ -2,6 +2,7 @@
 
 namespace Modules\ZentroTraderBot\Console;
 
+use Modules\Web3\Services\ConfigService;
 use Modules\Laravel\Console\ClearLaravel as BaseClear;
 
 class ClearLaravel extends BaseClear
@@ -13,6 +14,18 @@ class ClearLaravel extends BaseClear
     {
         // 1. Ejecuta toda la limpieza profunda
         parent::handle();
+
+
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        if ($network && isset($network["name"]))
+            $this->info('🌐 Network: ' . $network["name"]);
+        else
+            $this->alert('🔴 NO Network!');
+        $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+        if ($token && isset($token["name"]))
+            $this->info('💲 Token: ' . $token["name"]);
+        else
+            $this->alert('🔴 NO Token!');
 
         $this->newLine();
         $this->alert('🔐 RE-ACTIVACIÓN DE SEGURIDAD');
