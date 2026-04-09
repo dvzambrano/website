@@ -498,6 +498,48 @@ class ZentroTraderBotController extends JsonsController
                 return $controller->cancelOffer($this, $array["pieces"][1]);
             };
 
+        // Buyer confirms payment was sent → signs on-chain via relayer (cero POL)
+        $this->strategies["/comprobantoffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->comprobantoffer($this, $array["pieces"][1]);
+                return ["text" => ""];
+            };
+
+        // Seller (or pending signer) confirms receipt → signs on-chain via relayer (cero POL)
+        $this->strategies["/signoffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->signOffer($this, $array["pieces"][1]);
+                return ["text" => ""];
+            };
+
+        // Buyer cancels a LOCKED trade on-chain via relayer (cero POL)
+        $this->strategies["/canceloffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->cancelOnChain($this, $array["pieces"][1]);
+                return ["text" => ""];
+            };
+
+        // Evidence submission for disputed offers (UI only — admin reviews off-chain)
+        $this->strategies["/evidenceoffer"] =
+            function () use ($array) {
+                return [
+                    "text" => "🧾 *Envío de evidencias*\n\n" .
+                        "Para enviar sus evidencias del intercambio, comparta en este chat:\n" .
+                        "📸 Capturas de pantalla del pago\n" .
+                        "🏦 Comprobantes bancarios o de transferencia\n\n" .
+                        "👮‍♀️ _Un árbitro revisará las evidencias y resolverá la disputa._",
+                    "chat" => ["id" => $this->actor->user_id],
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "↖️ " . \Illuminate\Support\Facades\Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                        ],
+                    ]),
+                ];
+            };
+
         return $this->getProcessedMessage();
     }
 

@@ -886,6 +886,201 @@ class OffersController extends Controller
     }
 
     /**
+     * Buyer confirms payment was sent and signs the trade on-chain.
+     * The relayer pays gas; buyer signs off-chain only.
+     */
+    public function comprobantoffer($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer) {
+            $this->updateStatus($bot, "❌ Oferta no encontrada.");
+            return false;
+        }
+
+        if (!in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED'])) {
+            $this->updateStatus($bot, "⚠️ Esta oferta no puede ser firmada en su estado actual.");
+            return false;
+        }
+
+        $buyer = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+        if (!$buyer) {
+            $this->updateStatus($bot, "❌ No se encontró tu cuenta.");
+            return false;
+        }
+
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+
+        $buyerKey = decryptValue($buyer->data['wallet']['private_key']);
+        $relayerKey = env('TRADER_BOT_KEY');
+        $deadline = time() + 3600;
+
+        $this->updateStatus($bot, "⌛️ Enviando confirmación de pago...");
+
+        try {
+            $escrow = new EscrowController();
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $relayerKey, $buyerKey, $network, $offer, $deadline) {
+                return $escrow->signTradeWithSignature(
+                    $rpc,
+                    $relayerKey,
+                    $buyerKey,
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $offer->id,
+                    $deadline,
+                    env('ETHERSCAN_API_KEY')
+                );
+            });
+
+            if (!$txHash) {
+                $this->updateStatus($bot, "❌ No se pudo confirmar el pago.");
+                return false;
+            }
+
+            $this->updateStatus($bot, "✅ *¡Comprobante enviado!*\nEsperando confirmación en la red...");
+            return $txHash;
+
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'ID already exists')) {
+                $this->updateStatus($bot, "✅ *¡Comprobante enviado!*\nEsperando confirmación en la red...");
+                return true;
+            }
+            $this->updateStatus($bot, "❌ *Error:*\n" . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Seller (or the pending signer) confirms receipt and signs the trade on-chain.
+     * The relayer pays gas; signer signs off-chain only.
+     */
+    public function signOffer($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer) {
+            $this->updateStatus($bot, "❌ Oferta no encontrada.");
+            return false;
+        }
+
+        if (!in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED'])) {
+            $this->updateStatus($bot, "⚠️ Esta oferta no puede ser firmada en su estado actual.");
+            return false;
+        }
+
+        $signer = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+        if (!$signer) {
+            $this->updateStatus($bot, "❌ No se encontró tu cuenta.");
+            return false;
+        }
+
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+
+        $signerKey = decryptValue($signer->data['wallet']['private_key']);
+        $relayerKey = env('TRADER_BOT_KEY');
+        $deadline = time() + 3600;
+
+        $this->updateStatus($bot, "⌛️ Confirmando recepción del pago...");
+
+        try {
+            $escrow = new EscrowController();
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $relayerKey, $signerKey, $network, $offer, $deadline) {
+                return $escrow->signTradeWithSignature(
+                    $rpc,
+                    $relayerKey,
+                    $signerKey,
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $offer->id,
+                    $deadline,
+                    env('ETHERSCAN_API_KEY')
+                );
+            });
+
+            if (!$txHash) {
+                $this->updateStatus($bot, "❌ No se pudo confirmar.");
+                return false;
+            }
+
+            $this->updateStatus($bot, "✅ *¡Confirmación enviada!*\nEsperando confirmación en la red...");
+            return $txHash;
+
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'ID already exists')) {
+                $this->updateStatus($bot, "✅ *¡Confirmación enviada!*\nEsperando confirmación en la red...");
+                return true;
+            }
+            $this->updateStatus($bot, "❌ *Error:*\n" . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Buyer cancels a LOCKED trade on-chain via meta-transacción.
+     * The relayer pays gas; buyer signs off-chain only.
+     */
+    public function cancelOnChain($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer) {
+            $this->updateStatus($bot, "❌ Oferta no encontrada.");
+            return false;
+        }
+
+        if (strtoupper($offer->status) !== 'LOCKED') {
+            $this->updateStatus($bot, "⚠️ Solo puedes cancelar intercambios que estén bloqueados.");
+            return false;
+        }
+
+        $buyer = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+        if (!$buyer || strtolower($buyer->data['wallet']['address']) !== strtolower($offer->buyer_address)) {
+            $this->updateStatus($bot, "🚫 Solo el comprador puede cancelar este intercambio.");
+            return false;
+        }
+
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+
+        $buyerKey = decryptValue($buyer->data['wallet']['private_key']);
+        $relayerKey = env('TRADER_BOT_KEY');
+        $deadline = time() + 3600;
+
+        $this->updateStatus($bot, "⌛️ Procesando cancelación...");
+
+        try {
+            $escrow = new EscrowController();
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $relayerKey, $buyerKey, $network, $offer, $deadline) {
+                return $escrow->cancelTradeWithSignature(
+                    $rpc,
+                    $relayerKey,
+                    $buyerKey,
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $offer->id,
+                    $deadline,
+                    env('ETHERSCAN_API_KEY')
+                );
+            });
+
+            if (!$txHash) {
+                $this->updateStatus($bot, "❌ No se pudo cancelar el intercambio.");
+                return false;
+            }
+
+            $this->updateStatus($bot, "⌛️ Cancelación enviada. Esperando confirmación en la red...");
+            return $txHash;
+
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'ID already exists')) {
+                $this->updateStatus($bot, "⌛️ Cancelación enviada. Esperando confirmación en la red...");
+                return true;
+            }
+            $this->updateStatus($bot, "❌ *Error al cancelar:*\n" . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Cancela una oferta abierta: la elimina del canal y actualiza el estado en DB.
      */
     public function cancelOffer($bot, $code)

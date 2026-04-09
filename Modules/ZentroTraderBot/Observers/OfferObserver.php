@@ -236,16 +236,17 @@ class OfferObserver
 
                 $signer = $offer->buyer_address;
                 $pending = $offer->seller_address;
+                // Seller is pending: confirm they received the payment (signs on-chain via relayer)
                 $menu = [
-                    [["text" => "👍 He recibido el Pago", "callback_data" => "menu"]]
+                    [["text" => "👍 He recibido el Pago", "callback_data" => "/signoffer {$offer->code}"]]
                 ];
                 if (strtolower($json["signer"]) == strtolower($offer->seller_address)) {
                     $signer = $offer->seller_address;
                     $pending = $offer->buyer_address;
+                    // Buyer is pending: confirm they sent the payment (signs on-chain via relayer)
                     $menu = [
                         [
-                            ["text" => "👍 Ya pagué", "callback_data" => "menu"],
-                            ["text" => "🧾 Enviar Comprobante", "callback_data" => "menu"],
+                            ["text" => "🧾 Enviar Comprobante", "callback_data" => "/comprobantoffer {$offer->code}"],
                         ]
                     ];
                 }
