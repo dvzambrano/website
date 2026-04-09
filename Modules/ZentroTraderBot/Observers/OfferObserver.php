@@ -54,274 +54,223 @@ class OfferObserver
             case 'LOCKED':
                 $amount = number_format($offer->amount, 2);
                 $price = number_format($offer->amount * $offer->price_per_usd, 2);
-                $text = "🛡 *¡Intercambio asegurado!*\n" .
-                    "🆔 `{$offer->code}`\n" .
-                    "🔒 Se han bloquedado *{$amount} USD*\n" .
-                    "💵 _Ud recibe {$net} USD_\n\n" .
 
-                    "🟢 *Ahora es seguro proceder:*\n" .
-                    "💳 Realice el pago de {$price} {$offer->currency} a:\n" .
-                    "🏦 {$offer->payment_method}: `{$offer->payment_details}`\n" .
-                    "👉 y luego, entregue su comprobante para verificación.\n\n" .
-                    "⏱️ *Tiene un margen de " . $diff["legible"] . " para completar su pago.*\n" .
-                    "_Luego de ese tiempo los USD estarán disponibles para que el vendedor los recupere._";
+                // Mensaje al COMPRADOR
+                $text = "🛡 *" . Lang::get("zentrotraderbot::bot.offer.locked.title") . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "🔒 " . Lang::get("zentrotraderbot::bot.offer.locked.buyer.funds_blocked", ['amount' => $amount]) . "\n"
+                    . "💵 _" . Lang::get("zentrotraderbot::bot.offer.locked.buyer.you_receive", ['net' => $net]) . "_\n\n"
+                    . "🟢 *" . Lang::get("zentrotraderbot::bot.offer.locked.buyer.proceed") . "*\n"
+                    . "💳 " . Lang::get("zentrotraderbot::bot.offer.locked.buyer.make_payment", ['price' => $price, 'currency' => $offer->currency]) . "\n"
+                    . "🏦 {$offer->payment_method}: `{$offer->payment_details}`\n"
+                    . "👉 " . Lang::get("zentrotraderbot::bot.offer.locked.buyer.then_proof") . "\n\n"
+                    . "⏱️ *" . Lang::get("zentrotraderbot::bot.offer.locked.buyer.time_margin", ['time' => $diff["legible"]]) . "*\n"
+                    . "_" . Lang::get("zentrotraderbot::bot.offer.locked.buyer.after_timeout") . "_";
+
                 $this->notifyByAddress(
                     $offer->buyer_address,
                     $text,
                     $bot->token,
                     [
-                        [
-                            ["text" => "🧾 Enviar Comprobante", "callback_data" => "/comprobantoffer " . $offer->code]
-                        ],
-                        [
-                            ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "/canceloffer " . $offer->code]
-                        ]
+                        [["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer " . $offer->code]],
+                        [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/canceloffer " . $offer->code]],
                     ]
                 );
 
-                $text = "🛡 *¡Intercambio asegurado!*\n" .
-                    "🆔 `{$offer->code}`\n" .
-                    "🔒 Se han *bloquedado {$amount} USD* de su cuenta\n\n" .
-                    "💳 _El comprador realizará el pago de {$price} {$offer->currency} a:_\n" .
-                    "🏦 _{$offer->payment_method}: {$offer->payment_details}_\n" .
-                    "📋 _Y luego, enviará su comprobante para verificación._\n\n" .
-                    "🚨 *Nunca confirme la transacción sin comprobar el recibo de los {$price} {$offer->currency} en su cuenta*";
+                // Mensaje al VENDEDOR
+                $text = "🛡 *" . Lang::get("zentrotraderbot::bot.offer.locked.title") . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "🔒 " . Lang::get("zentrotraderbot::bot.offer.locked.seller.funds_blocked", ['amount' => $amount]) . "\n\n"
+                    . "💳 _" . Lang::get("zentrotraderbot::bot.offer.locked.seller.buyer_will_pay", ['price' => $price, 'currency' => $offer->currency]) . "_\n"
+                    . "🏦 _{$offer->payment_method}: {$offer->payment_details}_\n"
+                    . "📋 _" . Lang::get("zentrotraderbot::bot.offer.locked.seller.then_proof") . "_\n\n"
+                    . "🚨 *" . Lang::get("zentrotraderbot::bot.offer.locked.seller.never_confirm", ['price' => $price, 'currency' => $offer->currency]) . "*";
+
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $text,
                     $bot->token,
                     [
-                        [["text" => "⏱️ Ha pasado " . $diff["legible"] . " y no me han pagado", "callback_data" => "/recoveroffer {$offer->code}"]]
+                        [["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.options.recover_not_paid", ['time' => $diff["legible"]]), "callback_data" => "/recoveroffer {$offer->code}"]],
                     ]
                 );
-
-
                 break;
 
             case 'COMPLETED':
                 $isDispute = !empty($offer->winner_address);
-                // 1. Mensaje para el Vendedor (Seller)
+
+                // Mensaje al VENDEDOR
                 if ($isDispute) {
-                    $msgSeller = "✅ *TRANSACCIÓN COMPLETADA* \n" .
-                        "🆔 `{$offer->code}`\n" .
-                        "⚖️ _La transacción ha sido finalizada tras el arbitraje._\n" .
-                        "📦 *Estado final:* Fondos procesados.";
+                    $msgSeller = "✅ *" . Lang::get("zentrotraderbot::bot.offer.completed.title_dispute") . "*\n"
+                        . "🆔 `{$offer->code}`\n"
+                        . "⚖️ _" . Lang::get("zentrotraderbot::bot.offer.completed.finalized_by_arbitrage") . "_\n"
+                        . "📦 *" . Lang::get("zentrotraderbot::bot.offer.completed.seller_dispute_status") . "*";
                 } else {
-                    $msgSeller = "🎉 *¡FELICIDADES: transacción completada!* \n" .
-                        "🆔 `{$offer->code}`\n" .
-                        "✅ El intercambio se realizó con éxito.\n" .
-                        "💵 _Se han descontado {$amount} USD de su cuenta._";
+                    $msgSeller = "🎉 *" . Lang::get("zentrotraderbot::bot.offer.completed.title") . "*\n"
+                        . "🆔 `{$offer->code}`\n"
+                        . "✅ " . Lang::get("zentrotraderbot::bot.offer.completed.success") . "\n"
+                        . "💵 _" . Lang::get("zentrotraderbot::bot.offer.completed.deducted_from_seller", ['amount' => $amount]) . "_";
                 }
 
-                // 2. Mensaje para el Comprador (Buyer)
+                // Mensaje al COMPRADOR
                 if ($isDispute) {
-                    $msgBuyer = "✅ *TRANSACCIÓN COMPLETADA* \n" .
-                        "🆔 `{$offer->code}`\n" .
-                        "⚖️ _La transacción ha sido finalizada tras el arbitraje._\n" .
-                        "💰 *Estado final:* Saldo actualizado.";
+                    $msgBuyer = "✅ *" . Lang::get("zentrotraderbot::bot.offer.completed.title_dispute") . "*\n"
+                        . "🆔 `{$offer->code}`\n"
+                        . "⚖️ _" . Lang::get("zentrotraderbot::bot.offer.completed.finalized_by_arbitrage") . "_\n"
+                        . "💰 *" . Lang::get("zentrotraderbot::bot.offer.completed.buyer_dispute_status") . "*";
                 } else {
-                    $msgBuyer = "🎉 *¡FELICIDADES: transacción completada!* \n" .
-                        "🆔 `{$offer->code}`\n" .
-                        "✅ El intercambio se realizó con éxito.\n" .
-                        "💵 _Se han liberado {$net} USD a su cuenta._";
+                    $msgBuyer = "🎉 *" . Lang::get("zentrotraderbot::bot.offer.completed.title") . "*\n"
+                        . "🆔 `{$offer->code}`\n"
+                        . "✅ " . Lang::get("zentrotraderbot::bot.offer.completed.success") . "\n"
+                        . "💵 _" . Lang::get("zentrotraderbot::bot.offer.completed.released_to_buyer", ['net' => $net]) . "_";
                 }
 
-                $msgeval = "🙏 Su experiencia ayudaría a crear un lugar más seguro para todos\n" .
-                    "👇 Toca un emoji para valorar este intercambio";
+                $msgeval = "🙏 " . Lang::get("zentrotraderbot::bot.offer.completed.rate_invite") . "\n"
+                    . "👇 " . Lang::get("zentrotraderbot::bot.offer.completed.rate_instruction");
                 $msgSeller .= "\n\n{$msgeval}";
-                $msgBuyer .= "\n\n{$msgeval}";
+                $msgBuyer  .= "\n\n{$msgeval}";
 
                 $evalMenu = [
-                    ['text' => '😡', 'callback_data' => "/rateoffer {$offer->code} 1"], // Muy insatisfecho
-                    ['text' => '😟', 'callback_data' => "/rateoffer {$offer->code} 2"], // Insatisfecho
-                    ['text' => '😐', 'callback_data' => "/rateoffer {$offer->code} 3"], // Neutral
-                    ['text' => '🙂', 'callback_data' => "/rateoffer {$offer->code} 4"], // Satisfecho
-                    ['text' => '🤩', 'callback_data' => "/rateoffer {$offer->code} 5"], // Muy satisfecho
+                    ['text' => '😡', 'callback_data' => "/rateoffer {$offer->code} 1"],
+                    ['text' => '😟', 'callback_data' => "/rateoffer {$offer->code} 2"],
+                    ['text' => '😐', 'callback_data' => "/rateoffer {$offer->code} 3"],
+                    ['text' => '🙂', 'callback_data' => "/rateoffer {$offer->code} 4"],
+                    ['text' => '🤩', 'callback_data' => "/rateoffer {$offer->code} 5"],
                 ];
 
-                // 3. Notificaciones finales
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $msgSeller,
                     $bot->token,
-                    [
-                        $evalMenu,
-                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
-                    ]
+                    [$evalMenu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]
                 );
                 $this->notifyByAddress(
                     $offer->buyer_address,
                     $msgBuyer,
                     $bot->token,
-                    [
-                        $evalMenu,
-                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
-                    ]
+                    [$evalMenu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]
                 );
                 break;
 
             case 'DISPUTED':
-                // Se abrió una disputa (DisputeOpened)
-                $generaltext = "🙇🏻 *¡Transacción en DISPUTA!* \n" .
-                    "🆔 `{$offer->code}`\n" .
-                    "👉 _Se ha iniciado una reclamación de esta operación._\n";
-                $text = $generaltext .
-                    "👮‍♀️ *Un árbitro revisará el caso pronto*.\n\n" .
-                    "⚠️ *Envíe evidencia* de que cumplió con su parte del acuerdo.";
-                $this->notifyByAddress(
-                    $offer->seller_address,
-                    $text,
-                    $bot->token,
-                    [
-                        [
-                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "/evidenceoffer " . $offer->code],
-                        ]
-                    ]
-                );
-                $this->notifyByAddress(
-                    $offer->buyer_address,
-                    $text,
-                    $bot->token,
-                    [
-                        [
-                            ["text" => "🧾 Enviar evidencias del intercambio", "callback_data" => "/evidenceoffer " . $offer->code],
-                        ]
-                    ]
-                );
+                $generaltext = "🙇🏻 *" . Lang::get("zentrotraderbot::bot.offer.disputed.title") . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "👉 _" . Lang::get("zentrotraderbot::bot.offer.disputed.claim_started") . "_\n";
+
+                $text = $generaltext
+                    . "👮‍♀️ *" . Lang::get("zentrotraderbot::bot.offer.disputed.arbiter_will_review") . "*\n\n"
+                    . "⚠️ *" . Lang::get("zentrotraderbot::bot.offer.disputed.send_evidence_note") . "*";
+
+                $evidenceMenu = [[["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_evidence"), "callback_data" => "/evidenceoffer " . $offer->code]]];
+
+                $this->notifyByAddress($offer->seller_address, $text, $bot->token, $evidenceMenu);
+                $this->notifyByAddress($offer->buyer_address,  $text, $bot->token, $evidenceMenu);
 
                 // Notificar a los administradores
                 $controller = new ActorsController();
                 $admins = $controller->getData(Actors::class, [
-                    [
-                        "contain" => true,
-                        "name" => "admin_level",
-                        "value" => [1, "1"],
-                    ],
+                    ["contain" => true, "name" => "admin_level", "value" => [1, "1"]],
                 ], $bot->code);
-                for ($i = 0; $i < count($admins); $i++) {
-                    TelegramController::sendMessage(array(
-                        "message" => array(
+                foreach ($admins as $admin) {
+                    TelegramController::sendMessage([
+                        "message" => [
                             "text" => $generaltext,
-                            "chat" => array(
-                                "id" => $admins[$i]->user_id,
-                            ),
+                            "chat" => ["id" => $admin->user_id],
                             "reply_markup" => json_encode([
                                 "inline_keyboard" => [
                                     [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                                 ],
                             ]),
-                        ),
-                    ), $bot->token);
+                        ],
+                    ], $bot->token);
                 }
                 break;
 
             case 'CANCELLED':
-                $text = "❌ *Oferta Cancelada!* \n" .
-                    "🆔 `{$offer->code}`\n\n" .
-                    "👉 _La Oferta ha sido cancelada por el comprador._\n" .
-                    "💵 Se han *devuelto *{$amount} USD* a su cuenta.";
+                $text = "❌ *" . Lang::get("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
+                    . "🆔 `{$offer->code}`\n\n"
+                    . "👉 _" . Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_buyer") . "_\n"
+                    . "💵 " . Lang::get("zentrotraderbot::bot.offer.cancelled.funds_returned", ['amount' => $amount]);
+
                 $this->notifyByAddress(
                     $offer->seller_address,
                     $text,
                     $bot->token,
-                    [
-                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
-                    ]
+                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]
                 );
                 break;
 
             case 'SIGNED':
-                // 1. Identificamos quién es el que falta por firmar
-                $json = $offer->data;
-
-                $signer = $offer->buyer_address;
+                $json    = $offer->data;
                 $pending = $offer->seller_address;
-                $menu = [
-                    [["text" => "👍 He recibido el Pago", "callback_data" => "menu"]]
-                ];
+                // Seller is pending: confirm they received the payment
+                $menu = [[["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"]]];
+
                 if (strtolower($json["signer"]) == strtolower($offer->seller_address)) {
-                    $signer = $offer->seller_address;
                     $pending = $offer->buyer_address;
-                    $menu = [
-                        [
-                            ["text" => "👍 Ya pagué", "callback_data" => "menu"],
-                            ["text" => "🧾 Enviar Comprobante", "callback_data" => "menu"],
-                        ]
-                    ];
+                    // Buyer is pending: confirm they sent the payment
+                    $menu = [[["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer {$offer->code}"]]];
                 }
 
-                $text = "⚠️ *¡Confirmación Pendiente!* \n" .
-                    "🆔 `{$offer->code}`\n" .
-                    "👍 La contraparte ya ha confirmado esta transacción.\n\n" .
-                    "☑️ *Proceda a confirmar*; evite que haya retrasos.\n" .
-                    "⏳ _Estamos esperando por Ud..._";
-                $this->notifyByAddress(
-                    $pending,
-                    $text,
-                    $bot->token,
-                    $menu
-                );
+                $text = "⚠️ *" . Lang::get("zentrotraderbot::bot.offer.signed.pending_title") . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "👍 " . Lang::get("zentrotraderbot::bot.offer.signed.counterpart_confirmed") . "\n\n"
+                    . "☑️ *" . Lang::get("zentrotraderbot::bot.offer.signed.proceed_confirm") . "*\n"
+                    . "⏳ _" . Lang::get("zentrotraderbot::bot.offer.signed.waiting") . "_";
+
+                $this->notifyByAddress($pending, $text, $bot->token, $menu);
                 break;
 
             case 'SOLVED':
-                // mandar mensaje a winner felicitando y a perdedor informando
                 $winner = $offer->buyer_address;
                 $looser = $offer->seller_address;
                 if (strtolower($offer->winner_address) == strtolower($offer->seller_address)) {
                     $winner = $offer->seller_address;
                     $looser = $offer->buyer_address;
                 }
-                $text = "👩‍💻 *¡Transacción REVISADA!*\n" .
-                    "🆔 `{$offer->code}`\n" .
-                    "⚖️ _Un adminstrador ha revisado las evidencias presentadas._\n";
+
+                $textBase = "👩‍💻 *" . Lang::get("zentrotraderbot::bot.offer.solved.title") . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "⚖️ _" . Lang::get("zentrotraderbot::bot.offer.solved.admin_reviewed") . "_\n";
+
                 $this->notifyByAddress(
                     $winner,
-                    $text .
-                    "🏆 *La disputa ha finalizado a su favor.*\n\n" .
-                    "💵 _Se han liberado {$amount} USD a su cuenta._\n" .
-                    "🙏 _¡Gracias por confiar en nosotros!_\n",
+                    $textBase
+                        . "🏆 *" . Lang::get("zentrotraderbot::bot.offer.solved.winner") . "*\n\n"
+                        . "💵 _" . Lang::get("zentrotraderbot::bot.offer.solved.funds_released", ['amount' => $amount]) . "_\n"
+                        . "🙏 _" . Lang::get("zentrotraderbot::bot.offer.solved.thanks") . "_\n",
                     $bot->token,
-                    [
-                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
-                    ]
+                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]
                 );
                 $this->notifyByAddress(
                     $looser,
-                    $text .
-                    "🛑 *Le informamos que el arbitraje ha concluido a favor de la contraparte*.\n\n" .
-                    "🤝 _Si tiene dudas, contacte a soporte con el ID único de la transacción._\n" .
-                    "🙏 _¡Gracias por confiar en nosotros!_\n",
+                    $textBase
+                        . "🛑 *" . Lang::get("zentrotraderbot::bot.offer.solved.loser") . "*\n\n"
+                        . "🤝 _" . Lang::get("zentrotraderbot::bot.offer.solved.contact_support") . "_\n"
+                        . "🙏 _" . Lang::get("zentrotraderbot::bot.offer.solved.thanks") . "_\n",
                     $bot->token,
                     [
-                        [["text" => "👩‍💻 Hablar con un Árbitro", "callback_data" => "menu"]],
-                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                        [["text" => "👩‍💻 " . Lang::get("zentrotraderbot::bot.options.talk_arbiter"), "callback_data" => "menu"]],
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
                     ]
                 );
-                // cambiar estado a COMPLETED
-                $offer->updateStatus('COMPLETED', [
-                    'updated_at' => now()
-                ]);
+                $offer->updateStatus('COMPLETED', ['updated_at' => now()]);
                 break;
 
             case 'EXPIRED':
-                // mandar mensaje al comprador de q se le ha vencido el tiempo y entramos en disputa
-                $text = "⏱️ *¡Transacción en EXPIRADA!* \n" .
-                    "🆔 `{$offer->code}`\n" .
-                    "👉 _El vendedor ha informado que esta operación no fue pagada en " . $diff["legible"] . "._\n" .
-                    "🚨 *Se abrirá una DISPUTA automáticamente*.\n\n" .
-                    "🔒 _Los fondos estarán congelados hasta que la administración revise el caso._";
+                $text = "⏱️ *" . Lang::get("zentrotraderbot::bot.offer.expired.title") . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "👉 _" . Lang::get("zentrotraderbot::bot.offer.expired.seller_reported", ['time' => $diff["legible"]]) . "_\n"
+                    . "🚨 *" . Lang::get("zentrotraderbot::bot.offer.expired.auto_dispute") . "*\n\n"
+                    . "🔒 _" . Lang::get("zentrotraderbot::bot.offer.expired.funds_frozen") . "_";
+
                 $this->notifyByAddress(
                     $offer->buyer_address,
                     $text,
                     $bot->token,
-                    [
-                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
-                    ]
+                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]
                 );
-                // cambiar estado a DISPUTED
-                $offer->updateStatus('DISPUTED', [
-                    'updated_at' => now()
-                ]);
+                $offer->updateStatus('DISPUTED', ['updated_at' => now()]);
                 break;
         }
 
@@ -340,13 +289,11 @@ class OfferObserver
             'message' => [
                 'chat' => ['id' => $telegramId],
                 'text' => $text,
-
             ],
         ];
         if (count($menu) > 0)
-            $payload["message"]["reply_markup"] = json_encode([
-                "inline_keyboard" => $menu,
-            ]);
+            $payload["message"]["reply_markup"] = json_encode(["inline_keyboard" => $menu]);
+
         TelegramController::sendMessage($payload, $token);
     }
 

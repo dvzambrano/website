@@ -498,6 +498,48 @@ class ZentroTraderBotController extends JsonsController
                 return $controller->cancelOffer($this, $array["pieces"][1]);
             };
 
+        // Buyer confirms payment was sent → signs on-chain via relayer (cero POL)
+        $this->strategies["/comprobantoffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->comprobantoffer($this, $array["pieces"][1]);
+                return ["text" => ""];
+            };
+
+        // Seller (or pending signer) confirms receipt → signs on-chain via relayer (cero POL)
+        $this->strategies["/signoffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->signOffer($this, $array["pieces"][1]);
+                return ["text" => ""];
+            };
+
+        // Buyer cancels a LOCKED trade on-chain via relayer (cero POL)
+        $this->strategies["/canceloffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->cancelOnChain($this, $array["pieces"][1]);
+                return ["text" => ""];
+            };
+
+        // Evidence submission for disputed offers (UI only — admin reviews off-chain)
+        $this->strategies["/evidenceoffer"] =
+            function () use ($array) {
+                return [
+                    "text" => "🧾 *" . Lang::get("zentrotraderbot::bot.evidence_offer.title") . "*\n\n" .
+                        Lang::get("zentrotraderbot::bot.evidence_offer.instructions") . "\n" .
+                        "📸 " . Lang::get("zentrotraderbot::bot.evidence_offer.screenshots") . "\n" .
+                        "🏦 " . Lang::get("zentrotraderbot::bot.evidence_offer.receipts") . "\n\n" .
+                        "👮‍♀️ _" . Lang::get("zentrotraderbot::bot.evidence_offer.arbiter_note") . "_",
+                    "chat" => ["id" => $this->actor->user_id],
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                        ],
+                    ]),
+                ];
+            };
+
         return $this->getProcessedMessage();
     }
 
@@ -858,6 +900,11 @@ class ZentroTraderBotController extends JsonsController
             return [
                 "text" => $msg,
                 "chat" => ["id" => $this->actor->user_id],
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [["text" => "🔄 Volver a cargar", "callback_data" => "/network"]]
+                    ],
+                ]),
             ];
 
         } catch (\Exception $e) {

@@ -9,20 +9,20 @@ return [
     ],
     "actionmenu" => [
         "header" => "Menú de acciones",
-        "line1" => "Usando el “Botón de Acción”, puedes cambiar entre 2 niveles",
+        "line1" => 'Usando el botón de Acción, puedes cambiar entre 2 niveles',
         "line2" => "Notificaciones: Cuando aparece una señal, el bot solo notifica a los usuarios",
         "line3" => "Ejecutar órdenes: El bot notifica a los usuarios de la comunidad y ejecuta las órdenes correspondientes",
-        "line4" => "En este momento la opción “:bot_name” está seleccionada",
+        "line4" => 'En este momento la opción ":bot_name" está seleccionada',
     ],
     "subscribtionmenu" => [
         "header" => "Menú de suscripción",
         "line1" => "Aquí puede ajustar sus preferencias",
-        "line2" => "Usando el botón “Nivel”, puedes cambiar entre 3 niveles",
+        "line2" => 'Usando el botón Nivel, puedes cambiar entre 3 niveles',
         "line3" => "solo recibirás señales de la comunidad",
         "line4" => "solo recibirás tus alertas personales",
         "line5" => "recibirás tanto alertas de la comunidad como las personales",
         "line6" => "Eres un suscriptor de nivel :level",
-        "therefore" => "por lo tanto, puedes usar el botón “URL del Cliente” para obtener tu enlace de alertas de TradingView",
+        "therefore" => 'por lo tanto, puedes usar el botón URL del Cliente para obtener tu enlace de alertas de TradingView',
     ],
 
     "p2pmenu" => [
@@ -33,6 +33,7 @@ return [
         "line4" => "Ofertas publicadas: :amount",
         "line5" => "Calificación: :amount",
     ],
+
     "options" => [
         "subscribtion" => "Suscripción",
         "subscribtionlevel" => ":icon Nivel :char",
@@ -51,7 +52,22 @@ return [
         "myoffers" => "Mis Ofertas Activas",
         "mypaymentmethods" => "Métodos de Pago",
         "backtop2pmenu" => "Volver al Mercado P2P",
+        // Offer actions
+        "delete_offer" => "Eliminar",
+        "send_proof" => "Enviar Comprobante",
+        "send_evidence" => "Enviar evidencias del intercambio",
+        "recover_not_paid" => "Ha pasado :time y no me han pagado",
+        "recover_long_wait" => "Ha pasado más de :time y no me han pagado",
+        "confirm_received" => "He recibido el Pago",
+        "talk_arbiter" => "Hablar con un Árbitro",
+        "view_my_offer" => "Ver mi Oferta",
+        "publish" => "Publicar",
+        "back" => "Atrás",
+        "cancel" => "Cancelar",
+        "previous" => "Anterior",
+        "next" => "Siguiente",
     ],
+
     "prompts" => [
         "clienturl" => [
             "header" => "Su URL de cliente es la siguiente",
@@ -64,35 +80,33 @@ return [
             "exchangetitle" => "Depositar en :name",
             "update" => [
                 "header" => "Actualización de Depósito",
-                "completed" => "¡Sus fondos están en camino a su cuenta!",
-                "failed" => "¡La transacción HA FALLADO!",
+                "completed" => "Sus fondos están en camino a su cuenta.",
+                "failed" => "La transacción HA FALLADO.",
                 "processing" => "Estamos procesando su solicitud.",
             ],
             "completed" => [
-                "header" => "¡Saldo Acreditado!",
+                "header" => "Saldo Acreditado",
                 "warning" => "Ha recibido un depósito de :amount USD.",
                 "text" => "Sus fondos ya están disponibles en su cuenta para ser utilizados.",
             ],
             "badcurrency" => [
-                "header" => "¡Saldo Recibido!",
+                "header" => "Saldo Recibido",
                 "warning" => "Ha recibido un depósito de :amount :currency.",
                 "text" => "Estos fondos están en :currency, los cambiaremos a USD para acreditarlos en su cuenta...",
             ],
-
         ],
         "sell" => [
             "exchangetitle" => "Retirar de :name",
             "update" => [
                 "header" => "Actualización de Extracción",
-                "completed" => "¡Sus fondos están en camino a su cuenta!",
-                "failed" => "¡La transacción HA FALLADO!",
+                "completed" => "Sus fondos están en camino a su cuenta.",
+                "failed" => "La transacción HA FALLADO.",
                 "processing" => "Estamos procesando su solicitud.",
             ],
             "completed" => [
-                "header" => "Saldo Acreditado!",
+                "header" => "Saldo Acreditado",
                 "text" => "Hemos recibido una extracción de Ud de :amount :currency correctamente",
             ],
-
         ],
         "fail" => [
             "suscriptor" => "Lo sentimos, no pudimos encontrar tu billetera configurada.",
@@ -109,12 +123,11 @@ return [
                     "seedphrase" => "Exportar frase semilla",
                 ],
             ],
-
         ],
         "seedphrase" => [
             "warning" => [
-                "line1" => "Lo que está a punto de exhibir es su *FRASE SEMILLA*",
-                "line2" => "Cualquiera que la vea tendrá *CONTROL TOTAL Y PERMANENTE de todos tus fondos*",
+                "line1" => "Lo que está a punto de exhibir es su FRASE SEMILLA",
+                "line2" => "Cualquiera que la vea tendrá CONTROL TOTAL Y PERMANENTE de todos tus fondos",
                 "line3" => "Asegúrese de que nadie está mirando su pantalla",
             ],
             "export" => [
@@ -131,5 +144,261 @@ return [
             "locked" => "Bloqueado",
             "lastoperations" => "Últimas operaciones",
         ],
+    ],
+
+    // =========================================================
+    // OFFER OBSERVER — Notificaciones por cambio de estado
+    // =========================================================
+
+    "offer" => [
+        "locked" => [
+            "title" => "Intercambio asegurado",
+            "buyer" => [
+                "funds_blocked" => "Se han bloqueado :amount USD",
+                "you_receive" => "Ud recibe :net USD",
+                "proceed" => "Ahora es seguro proceder:",
+                "make_payment" => "Realice el pago de :price :currency a:",
+                "then_proof" => "y luego, entregue su comprobante para verificación.",
+                "time_margin" => "Tiene un margen de :time para completar su pago.",
+                "after_timeout" => "Luego de ese tiempo los USD estarán disponibles para que el vendedor los recupere.",
+            ],
+            "seller" => [
+                "funds_blocked" => "Se han bloqueado :amount USD de su cuenta",
+                "buyer_will_pay" => "El comprador realizará el pago de :price :currency a:",
+                "then_proof" => "Y luego, enviará su comprobante para verificación.",
+                "never_confirm" => "Nunca confirme la transacción sin comprobar el recibo de los :price :currency en su cuenta",
+            ],
+        ],
+        "completed" => [
+            "title" => "FELICIDADES: transaccion completada",
+            "title_dispute" => "TRANSACCION COMPLETADA",
+            "success" => "El intercambio se realizó con éxito.",
+            "finalized_by_arbitrage" => "La transacción ha sido finalizada tras el arbitraje.",
+            "seller_dispute_status" => "Estado final: Fondos procesados.",
+            "buyer_dispute_status" => "Estado final: Saldo actualizado.",
+            "deducted_from_seller" => "Se han descontado :amount USD de su cuenta.",
+            "released_to_buyer" => "Se han liberado :net USD a su cuenta.",
+            "rate_invite" => "Su experiencia ayudaría a crear un lugar más seguro para todos",
+            "rate_instruction" => "Toca un emoji para valorar este intercambio",
+        ],
+        "disputed" => [
+            "title" => "Transaccion en DISPUTA",
+            "claim_started" => "Se ha iniciado una reclamación de esta operación.",
+            "arbiter_will_review" => "Un árbitro revisará el caso pronto.",
+            "send_evidence_note" => "Envíe evidencia de que cumplió con su parte del acuerdo.",
+        ],
+        "cancelled" => [
+            "title" => "Oferta Cancelada",
+            "cancelled_by_buyer" => "La Oferta ha sido cancelada por el comprador.",
+            "funds_returned" => "Se han devuelto :amount USD a su cuenta.",
+        ],
+        "signed" => [
+            "pending_title" => "Confirmacion Pendiente",
+            "counterpart_confirmed" => "La contraparte ya ha confirmado esta transacción.",
+            "proceed_confirm" => "Proceda a confirmar; evite que haya retrasos.",
+            "waiting" => "Estamos esperando por Ud...",
+        ],
+        "solved" => [
+            "title" => "Transaccion REVISADA",
+            "admin_reviewed" => "Un administrador ha revisado las evidencias presentadas.",
+            "winner" => "La disputa ha finalizado a su favor.",
+            "funds_released" => "Se han liberado :amount USD a su cuenta.",
+            "thanks" => "Gracias por confiar en nosotros.",
+            "loser" => "Le informamos que el arbitraje ha concluido a favor de la contraparte.",
+            "contact_support" => "Si tiene dudas, contacte a soporte con el ID único de la transacción.",
+        ],
+        "expired" => [
+            "title" => "Transaccion EXPIRADA",
+            "seller_reported" => "El vendedor ha informado que esta operación no fue pagada en :time.",
+            "auto_dispute" => "Se abrirá una DISPUTA automáticamente.",
+            "funds_frozen" => "Los fondos estarán congelados hasta que la administración revise el caso.",
+        ],
+    ],
+
+    // =========================================================
+    // WIZARD — Asistente de creación de ofertas
+    // =========================================================
+
+    "wizard" => [
+        "title" => "Asistente de creación de ofertas",
+        "cancelled_title" => "Operacion cancelada.",
+        "cancelled" => "Ud ha cancelado la publicación de su Oferta satisfactoriamente.",
+        "step" => "Paso :n de :total",
+        "step1" => [
+            "subtitle" => "Definir el monto de la transacción",
+            "invalid_amount" => ":value no es un monto válido",
+            "ask_sell" => "Cuántos de sus :balance USD disponibles desea vender? Escriba solo el número. Ejemplo: :example",
+            "ask_buy" => "Cuántos USD desea comprar? Escriba solo el número. Ejemplo: 100",
+            "selling_too_much" => "Intentas vender :amount USD",
+            "ask_sell_available" => "Cuántos de sus :balance USD disponibles desea vender?",
+            "number_hint" => "Escriba solo el número. Ejemplo: :example",
+        ],
+        "step2" => [
+            "subtitle" => "Moneda local del intercambio",
+            "ask_sell" => "En qué moneda recibirá el pago?",
+            "ask_buy" => "En qué moneda enviará el pago?",
+            "select_available" => "Seleccione una de las disponibles",
+        ],
+        "step3" => [
+            "subtitle" => "Precio de venta USD/:coin",
+            "invalid_price" => ":value no es un precio válido",
+            "ask_sell" => "Cuántos :coin desea recibir por cada USD?",
+            "ask_buy" => "Cuántos :coin desea pagar por cada USD?",
+            "example" => "Por ejemplo: :example",
+        ],
+        "step4" => [
+            "subtitle" => "Método de pago deseado",
+            "ask_sell" => "Por qué vía deben enviarle sus :currency?",
+            "ask_buy" => "Por qué vía enviará usted los :currency?",
+            "select_available" => "Seleccione una de las disponibles",
+        ],
+        "step5" => [
+            "subtitle" => "Datos de la cuenta",
+            "ask_sell" => "Escriba los detalles de su cuenta :method:",
+            "ask_buy" => "Escriba los detalles o bancos desde donde pagará por :method:",
+            "be_explicit" => "Recuerde ser explícito, cualquier dato faltante podría afectar el tiempo de la transacción.",
+        ],
+        "confirm" => [
+            "title" => "Resumen de su Oferta",
+            "selling" => "Vendes",
+            "buying" => "Compras",
+            "receiving" => "Recibes",
+            "paying" => "Pagas",
+        ],
+    ],
+
+    // =========================================================
+    // PUBLISH — Respuesta tras publicar una oferta
+    // =========================================================
+
+    "offer_publish" => [
+        "title" => "SU OFERTA YA ESTA ACTIVA",
+        "published" => "Su anuncio ha sido publicado en nuestro canal.",
+        "security_notes" => "NOTAS IMPORTANTES DE SEGURIDAD:",
+        "sell_lock" => "Bloqueo de Garantia: Tan pronto como un interesado aplique a su oferta, los fondos serán bloqueados automáticamente. Esto garantiza al comprador que existen y estarán disponibles para su compra.",
+        "sell_rule" => "Regla de Oro: NUNCA libere los fondos hasta que haya verificado manualmente la recepción del pago en su cuenta.",
+        "buy_custody" => "Custodia Segura: Una vez que el vendedor acepte su compra, sus USD quedarán bloqueados por el sistema hasta que usted confirme el pago fiat.",
+        "buy_rule" => "Regla de Oro: Realice el pago únicamente por los medios acordados y conserve su comprobante.",
+        "arbitrage" => "Sistema de arbitraje: Nuestro equipo de soporte está listo para intervenir en caso de cualquier disputa durante el proceso.",
+        "goodluck_sell" => "Suerte con tu venta.",
+        "goodluck_buy" => "Suerte con tu compra.",
+        "notify" => "Le notificaremos en cuanto alguien aplique.",
+        "error" => "Error al publicar en el canal.",
+        "error_retry" => "Por favor, intente nuevamente o contacte a soporte.",
+    ],
+
+    // =========================================================
+    // SHOW — Mostrar una oferta
+    // =========================================================
+
+    "show_offer" => [
+        "offer_label" => "OFERTA",
+        "not_found_title" => "Que raro",
+        "not_found" => "No he encontrado la oferta",
+    ],
+
+    // =========================================================
+    // APPLY — Flujo de aplicar a una oferta
+    // =========================================================
+
+    "apply_offer" => [
+        "being_processed" => "Esta oferta ya está siendo procesada por otro usuario.",
+        "not_available" => "La oferta :code ya no está disponible.",
+        "step1" => "Paso 1/3: Generando firma de seguridad...",
+        "step2" => "Paso 2/3: Moviendo fondos para garantizar el intercambio...",
+        "step3" => "Paso 3/3: Intercambio asegurado con éxito.",
+        "no_hash" => "No se pudo obtener el hash de la transacción.",
+        "network_error" => "Error en la red:",
+    ],
+
+    // =========================================================
+    // RECOVER — Recuperar/Expirar una oferta
+    // =========================================================
+
+    "recover_offer" => [
+        "checking" => "Verificando condiciones de recuperación...",
+        "not_found_blockchain" => "No se encontró el intercambio en la red.",
+        "wait" => "Aún no puedes reclamar: Debes esperar :minutes minutos.",
+        "requesting" => "Solicitando devolución sin gas...",
+        "success" => "Fondos en revision. El intercambio ha sido cancelado por expiración: un árbitro revisará que no haya pendientes y sus :amount USD serán devueltos a su cuenta.",
+        "rejected" => "La red rechazó la solicitud de expiración.",
+        "error" => "Error al recuperar:",
+    ],
+
+    // =========================================================
+    // SIGN — Firmar una oferta (buyer/seller)
+    // =========================================================
+
+    "sign_offer" => [
+        "not_found" => "Oferta no encontrada.",
+        "wrong_state" => "Esta oferta no puede ser firmada en su estado actual.",
+        "account_not_found" => "No se encontró tu cuenta.",
+        "sending_proof" => "Enviando confirmación de pago...",
+        "no_confirm_payment" => "No se pudo confirmar el pago.",
+        "proof_sent" => "Comprobante enviado. Esperando confirmación en la red...",
+        "confirming_receipt" => "Confirmando recepción del pago...",
+        "no_sign" => "No se pudo confirmar.",
+        "confirmation_sent" => "Confirmación enviada. Esperando confirmación en la red...",
+        "error" => "Error:",
+    ],
+
+    // =========================================================
+    // CANCEL ON-CHAIN — Cancelar una oferta bloqueada
+    // =========================================================
+
+    "cancel_onchain" => [
+        "not_found" => "Oferta no encontrada.",
+        "wrong_state" => "Solo puedes cancelar intercambios que estén bloqueados.",
+        "not_buyer" => "Solo el comprador puede cancelar este intercambio.",
+        "processing" => "Procesando cancelación...",
+        "no_cancel" => "No se pudo cancelar el intercambio.",
+        "sent" => "Cancelación enviada. Esperando confirmación en la red...",
+        "error" => "Error al cancelar:",
+    ],
+
+    // =========================================================
+    // DELETE OFFER — Eliminar oferta abierta (solo DB)
+    // =========================================================
+
+    "delete_offer" => [
+        "not_found" => "Oferta no encontrada.",
+        "no_permission" => "No tienes permiso para cancelar esta oferta.",
+        "wrong_state" => "Esta oferta ya está en proceso de intercambio y no puede ser cancelada.",
+        "success_title" => "Oferta eliminada",
+        "success" => "La oferta ha sido retirada del mercado con éxito.",
+        "error" => "Ocurrió un error al procesar la cancelación.",
+    ],
+
+    // =========================================================
+    // RATE — Valorar una oferta
+    // =========================================================
+
+    "rate_offer" => [
+        "success_title" => "Valoración recibida",
+        "thanks" => "Gracias por ayudar a la comunidad",
+        "not_found_title" => "Que raro",
+        "not_found" => "No he encontrado la oferta",
+    ],
+
+    // =========================================================
+    // EVIDENCE — Envío de evidencias en disputa
+    // =========================================================
+
+    "evidence_offer" => [
+        "title" => "Envío de evidencias",
+        "instructions" => "Para enviar sus evidencias del intercambio, comparta en este chat:",
+        "screenshots" => "Capturas de pantalla del pago",
+        "receipts" => "Comprobantes bancarios o de transferencia",
+        "arbiter_note" => "Un árbitro revisará las evidencias y resolverá la disputa.",
+    ],
+
+    // =========================================================
+    // ACTIVE OFFERS — Lista de ofertas activas
+    // =========================================================
+
+    "active_offers" => [
+        "empty" => "No tienes ofertas activas en este momento.",
+        "empty_cta" => "Publica una o explora el mercado.",
+        "title" => "Tus Ofertas Activas",
     ],
 ];
