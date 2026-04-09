@@ -87,6 +87,11 @@ class CustomTestController extends BaseController
         dd($rating, $text);
     }
 
+    public function testNumbers()
+    {
+        dd(TextService::getNumberAsEmoji(1));
+    }
+
 
     public function testUuid()
     {

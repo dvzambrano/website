@@ -526,15 +526,15 @@ class ZentroTraderBotController extends JsonsController
         $this->strategies["/evidenceoffer"] =
             function () use ($array) {
                 return [
-                    "text" => "🧾 *Envío de evidencias*\n\n" .
-                        "Para enviar sus evidencias del intercambio, comparta en este chat:\n" .
-                        "📸 Capturas de pantalla del pago\n" .
-                        "🏦 Comprobantes bancarios o de transferencia\n\n" .
-                        "👮‍♀️ _Un árbitro revisará las evidencias y resolverá la disputa._",
+                    "text" => "🧾 *" . Lang::get("zentrotraderbot::bot.evidence_offer.title") . "*\n\n" .
+                        Lang::get("zentrotraderbot::bot.evidence_offer.instructions") . "\n" .
+                        "📸 " . Lang::get("zentrotraderbot::bot.evidence_offer.screenshots") . "\n" .
+                        "🏦 " . Lang::get("zentrotraderbot::bot.evidence_offer.receipts") . "\n\n" .
+                        "👮‍♀️ _" . Lang::get("zentrotraderbot::bot.evidence_offer.arbiter_note") . "_",
                     "chat" => ["id" => $this->actor->user_id],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
-                            [["text" => "↖️ " . \Illuminate\Support\Facades\Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                            [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
                         ],
                     ]),
                 ];
