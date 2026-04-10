@@ -674,6 +674,11 @@ class OffersController extends Controller
                 );
             });
 
+
+            Log::debug("🐞 OffersController applyForOffer:", [
+                "txHash" => $txHash,
+            ]);
+
             if (!$txHash) {
                 $this->updateStatus($bot, "❌ " . Lang::get("zentrotraderbot::bot.apply_offer.no_hash"));
                 return false;
