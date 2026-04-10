@@ -198,27 +198,36 @@ class ProcessContractActivity
                 $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.creating");
                 $seller = $params['seller'] ?? $offer->seller_address;
                 $buyer = $params['buyer'] ?? $offer->buyer_address;
-                $this->notifyByAddress($seller, $msg, $bot->token);
-                $this->notifyByAddress($buyer, $msg, $bot->token);
+                $this->notifyByAddress($seller, $msg, $bot->token, [], $offer);
+                $this->notifyByAddress($buyer, $msg, $bot->token, [], $offer);
                 break;
 
             case 'TRADECANCELLED':
                 $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.cancelling");
-                $this->notifyByAddress($offer->seller_address, $msg, $bot->token);
-                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token);
+                $this->notifyByAddress($offer->seller_address, $msg, $bot->token, [], $offer);
+                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer);
                 break;
 
             case 'TRADESIGNED':
                 $signer = $params['signer'] ?? null;
-                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.signing");
-                // Notificamos solo a quien firmó para confirmar que su TX está en la red
-                $this->notifyByAddress($signer ?: $offer->seller_address, $msg, $bot->token);
+                // Determinar si quien firma es el comprador o el vendedor para contextualizar el mensaje
+                $signerIsBuyer = $signer && strtolower($signer) === strtolower($offer->buyer_address ?? '');
+                if ($signerIsBuyer) {
+                    // El comprador envió su comprobante → le confirmamos y le explicamos que espera al vendedor
+                    $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof");
+                    $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer);
+                } else {
+                    // El vendedor confirmó la recepción → le indicamos que la TX se está cerrando
+                    $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm");
+                    $this->notifyByAddress($signer ?: $offer->seller_address, $msg, $bot->token, [], $offer);
+                }
                 break;
 
             case 'TRADECLOSED':
-                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.closing");
-                $this->notifyByAddress($offer->seller_address, $msg, $bot->token);
-                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token);
+                $msgBuyer  = $header . Lang::get("zentrotraderbot::bot.offer.pending.closing_buyer");
+                $msgSeller = $header . Lang::get("zentrotraderbot::bot.offer.pending.closing_seller");
+                $this->notifyByAddress($offer->buyer_address,  $msgBuyer,  $bot->token, [], $offer);
+                $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, [], $offer);
                 break;
 
             case 'TRADEEXPIRED':
@@ -228,20 +237,20 @@ class ProcessContractActivity
                 if ($userId) {
                     $suscriptor = Suscriptions::where('user_id', $userId)->first();
                     if ($suscriptor)
-                        $this->notifyByAddress($suscriptor->data['wallet']['address'] ?? '', $msg, $bot->token);
+                        $this->notifyByAddress($suscriptor->data['wallet']['address'] ?? '', $msg, $bot->token, [], $offer);
                 }
                 break;
 
             case 'DISPUTEOPENED':
                 $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.dispute");
-                $this->notifyByAddress($offer->seller_address, $msg, $bot->token);
-                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token);
+                $this->notifyByAddress($offer->seller_address, $msg, $bot->token, [], $offer);
+                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer);
                 break;
 
             case 'DISPUTERESOLVED':
                 $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.resolving");
-                $this->notifyByAddress($offer->seller_address, $msg, $bot->token);
-                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token);
+                $this->notifyByAddress($offer->seller_address, $msg, $bot->token, [], $offer);
+                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer);
                 break;
         }
     }
@@ -308,8 +317,9 @@ class ProcessContractActivity
 
     /**
      * Envía un mensaje de Telegram buscando al usuario por su dirección de wallet.
+     * Elimina el mensaje de estado anterior del usuario (si existe) y almacena el nuevo message_id.
      */
-    private function notifyByAddress(?string $address, string $text, string $token, array $menu = []): void
+    private function notifyByAddress(?string $address, string $text, string $token, array $menu = [], ?Offers $offer = null): void
     {
         if (!$address)
             return;
@@ -318,9 +328,19 @@ class ProcessContractActivity
         if (!$suscriptor || !$suscriptor->user_id)
             return;
 
+        $telegramId = $suscriptor->user_id;
+
+        // Eliminar el mensaje de estado anterior para este usuario
+        if ($offer) {
+            $prevMsgId = $offer->data['last_status_messages'][$telegramId] ?? null;
+            if ($prevMsgId && (int) $prevMsgId > 0) {
+                DeleteTelegramMessage::dispatch($token, (int) $telegramId, (int) $prevMsgId);
+            }
+        }
+
         $payload = [
             'message' => [
-                'chat' => ['id' => $suscriptor->user_id],
+                'chat' => ['id' => $telegramId],
                 'text' => $text,
             ],
         ];
@@ -328,6 +348,17 @@ class ProcessContractActivity
         if (!empty($menu))
             $payload['message']['reply_markup'] = json_encode(['inline_keyboard' => $menu]);
 
-        TelegramController::sendMessage($payload, $token);
+        $response = TelegramController::sendMessage($payload, $token);
+
+        // Guardar el message_id del mensaje enviado para poder eliminarlo en el siguiente estado
+        if ($offer) {
+            $arr = json_decode($response, true);
+            $msgId = $arr['result']['message_id'] ?? null;
+            if ($msgId && (int) $msgId > 0) {
+                $data = $offer->data ?? [];
+                $data['last_status_messages'][$telegramId] = (int) $msgId;
+                $offer->update(['data' => $data]);
+            }
+        }
     }
 }

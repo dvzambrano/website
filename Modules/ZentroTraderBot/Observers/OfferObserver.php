@@ -12,6 +12,7 @@ use Modules\ZentroTraderBot\Jobs\UpdateOfferInChannel;
 use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Entities\Actors;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
+use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
 
 class OfferObserver
 {
@@ -74,7 +75,8 @@ class OfferObserver
                     [
                         [["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer " . $offer->code]],
                         [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/canceloffer " . $offer->code]],
-                    ]
+                    ],
+                    $offer
                 );
 
                 // Mensaje al VENDEDOR
@@ -92,7 +94,8 @@ class OfferObserver
                     $bot->token,
                     [
                         [["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.options.recover_not_paid", ['time' => $diff["legible"]]), "callback_data" => "/recoveroffer {$offer->code}"]],
-                    ]
+                    ],
+                    $offer
                 );
                 break;
 
@@ -142,13 +145,15 @@ class OfferObserver
                     $offer->seller_address,
                     $msgSeller,
                     $bot->token,
-                    [$evalMenu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]
+                    [$evalMenu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
+                    $offer
                 );
                 $this->notifyByAddress(
                     $offer->buyer_address,
                     $msgBuyer,
                     $bot->token,
-                    [$evalMenu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]
+                    [$evalMenu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
+                    $offer
                 );
                 break;
 
@@ -163,8 +168,8 @@ class OfferObserver
 
                 $evidenceMenu = [[["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_evidence"), "callback_data" => "/evidenceoffer " . $offer->code]]];
 
-                $this->notifyByAddress($offer->seller_address, $text, $bot->token, $evidenceMenu);
-                $this->notifyByAddress($offer->buyer_address,  $text, $bot->token, $evidenceMenu);
+                $this->notifyByAddress($offer->seller_address, $text, $bot->token, $evidenceMenu, $offer);
+                $this->notifyByAddress($offer->buyer_address,  $text, $bot->token, $evidenceMenu, $offer);
 
                 // Notificar a los administradores
                 $controller = new ActorsController();
@@ -196,7 +201,8 @@ class OfferObserver
                     $offer->seller_address,
                     $text,
                     $bot->token,
-                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]
+                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
+                    $offer
                 );
                 break;
 
@@ -218,7 +224,7 @@ class OfferObserver
                     . "☑️ *" . Lang::get("zentrotraderbot::bot.offer.signed.proceed_confirm") . "*\n"
                     . "⏳ _" . Lang::get("zentrotraderbot::bot.offer.signed.waiting") . "_";
 
-                $this->notifyByAddress($pending, $text, $bot->token, $menu);
+                $this->notifyByAddress($pending, $text, $bot->token, $menu, $offer);
                 break;
 
             case 'SOLVED':
@@ -240,7 +246,8 @@ class OfferObserver
                         . "💵 _" . Lang::get("zentrotraderbot::bot.offer.solved.funds_released", ['amount' => $amount]) . "_\n"
                         . "🙏 _" . Lang::get("zentrotraderbot::bot.offer.solved.thanks") . "_\n",
                     $bot->token,
-                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]
+                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
+                    $offer
                 );
                 $this->notifyByAddress(
                     $looser,
@@ -252,7 +259,8 @@ class OfferObserver
                     [
                         [["text" => "👩‍💻 " . Lang::get("zentrotraderbot::bot.options.talk_arbiter"), "callback_data" => "menu"]],
                         [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
-                    ]
+                    ],
+                    $offer
                 );
                 $offer->updateStatus('COMPLETED', ['updated_at' => now()]);
                 break;
@@ -268,7 +276,8 @@ class OfferObserver
                     $offer->buyer_address,
                     $text,
                     $bot->token,
-                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]
+                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
+                    $offer
                 );
                 $offer->updateStatus('DISPUTED', ['updated_at' => now()]);
                 break;
@@ -278,12 +287,22 @@ class OfferObserver
     }
 
     /**
-     * Helper para enviar mensajes directos vía TelegramController
+     * Helper para enviar mensajes directos vía TelegramController.
+     * Elimina el mensaje de estado anterior del usuario (si existe) antes de enviar el nuevo,
+     * y almacena el message_id resultante en offer->data['last_status_messages'].
      */
-    private function notifyUser($telegramId, $text, $token, $menu = [])
+    private function notifyUser($telegramId, $text, $token, $menu = [], ?Offers $offer = null): void
     {
         if (!$telegramId || !$token)
             return;
+
+        // Eliminar el mensaje de estado anterior para este usuario
+        if ($offer) {
+            $prevMsgId = $offer->data['last_status_messages'][$telegramId] ?? null;
+            if ($prevMsgId && (int) $prevMsgId > 0) {
+                DeleteTelegramMessage::dispatch($token, (int) $telegramId, (int) $prevMsgId);
+            }
+        }
 
         $payload = [
             'message' => [
@@ -294,17 +313,28 @@ class OfferObserver
         if (count($menu) > 0)
             $payload["message"]["reply_markup"] = json_encode(["inline_keyboard" => $menu]);
 
-        TelegramController::sendMessage($payload, $token);
+        $response = TelegramController::sendMessage($payload, $token);
+
+        // Guardar el message_id del mensaje enviado para poder eliminarlo en el siguiente estado
+        if ($offer) {
+            $arr = json_decode($response, true);
+            $msgId = $arr['result']['message_id'] ?? null;
+            if ($msgId && (int) $msgId > 0) {
+                $data = $offer->data ?? [];
+                $data['last_status_messages'][$telegramId] = (int) $msgId;
+                $offer->update(['data' => $data]);
+            }
+        }
     }
 
     /**
      * Helper para notificar buscando al usuario por su wallet address
      */
-    private function notifyByAddress($address, $text, $token, $menu = [])
+    private function notifyByAddress($address, $text, $token, $menu = [], ?Offers $offer = null): void
     {
         $suscriptor = Suscriptions::findByAddress($address);
         if ($suscriptor && $suscriptor->user_id) {
-            $this->notifyUser($suscriptor->user_id, $text, $token, $menu);
+            $this->notifyUser($suscriptor->user_id, $text, $token, $menu, $offer);
         }
     }
 }
