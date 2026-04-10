@@ -100,6 +100,14 @@ class ProcessContractActivity
             try {
                 $tradeId = $params['tradeId'];
                 $offer = Offers::on('tenant')->where('id', $tradeId)->first();
+                if (!$offer) {
+                    if (env("DEBUG_MODE", false))
+                        Log::debug("🐞 ProcessContractActivity handle escaped by !offer: ", [
+                            "tradeId" => $tradeId,
+                            "params" => $params,
+                        ]);
+                    return;
+                }
 
                 // --- MANEJO DE TRADECREATED (UNCONFIRMED & CONFIRMED) ---
                 if ($eventName === 'TRADECREATED') {
