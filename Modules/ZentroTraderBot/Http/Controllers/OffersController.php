@@ -234,10 +234,10 @@ class OffersController extends Controller
                                 "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(3), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
                                 "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step3.subtitle", ['coin' => $coin]) . "*\n" .
                                 "❌ " . Lang::get("zentrotraderbot::bot.wizard.step3.invalid_price", ['value' => $text]) . "\n" .
-                                "▫️ _" . ($isSell
+                                "▫️ " . ($isSell
                                     ? Lang::get("zentrotraderbot::bot.wizard.step3.ask_sell", ['coin' => $coin])
-                                    : Lang::get("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin])) . "_\n" .
-                                "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step3.example", ['example' => number_format($val, 2)]) . "_",
+                                    : Lang::get("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin])) . "\n" .
+                                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step3.example", ['example' => "`" . number_format($val, 2) . "`"]),
                             "chat" => ["id" => $userId],
                             "reply_markup" => json_encode([
                                 "inline_keyboard" => [
@@ -264,10 +264,10 @@ class OffersController extends Controller
                         "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(3), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
                         "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step3.subtitle", ['coin' => $coin]) . "*\n" .
                         "◾️ \n" .
-                        "▫️ _" . ($isSell
+                        "▫️ " . ($isSell
                             ? Lang::get("zentrotraderbot::bot.wizard.step3.ask_sell", ['coin' => $coin])
-                            : Lang::get("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin])) . "_\n" .
-                        "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step3.example", ['example' => number_format($val, 2)]) . "_",
+                            : Lang::get("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin])) . "\n" .
+                        "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step3.example", ['example' => "`" . number_format($val, 2) . "`"]),
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
