@@ -686,6 +686,15 @@ class OffersController extends Controller
             return $txHash;
 
         } catch (\Exception $e) {
+            Log::error("🆘 OffersController applyForOffer:", [
+                "code" => $code,
+                "sellerUserId" => $sellerUserId,
+                "buyerUserId" => $buyerUserId,
+                "offer" => $offer,
+                "deadline" => $deadline,
+                "message" => $e->getMessage()
+            ]);
+
             // Manejo de error "ID already exists" (Transacción enviada pero error en respuesta RPC)
             if (str_contains($e->getMessage(), 'ID already exists')) {
                 $this->updateStatus($bot, "⌛️ *" . Lang::get("zentrotraderbot::bot.apply_offer.step3") . "*");
