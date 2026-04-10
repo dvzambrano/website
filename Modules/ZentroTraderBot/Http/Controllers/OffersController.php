@@ -653,11 +653,12 @@ class OffersController extends Controller
                 "deadline" => $deadline,
             ]);
 
+        $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
+
         try {
-            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($bot, $escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network) {
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($bot, $escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network, $relayerKey, $tokenInfo) {
 
                 $this->updateStatus($bot, "⌛️ *" . Lang::get("zentrotraderbot::bot.apply_offer.step2") . "*");
-                $relayerKey = env('TRADER_BOT_KEY');
 
                 return $escrow->createTradeWithSignature(
                     $rpc,
@@ -666,7 +667,7 @@ class OffersController extends Controller
                     env('ESCROW_CONTRACT'),
                     $network['chainId'],
                     $offer->id,                  // ID del trade para el contrato
-                    env('BASE_TOKEN'),
+                    $tokenInfo['address'],
                     $amountWei,
                     $buyerAddress,
                     $deadline,
