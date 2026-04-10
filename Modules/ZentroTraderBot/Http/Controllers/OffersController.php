@@ -94,7 +94,7 @@ class OffersController extends Controller
                 if ($isSell) {
                     $walletCtrl = new TraderWalletController();
                     $suscriptor = Suscriptions::where('user_id', $userId)->first();
-                    $balance = $walletCtrl->getBalance($suscriptor);
+                    $balance = number_format($walletCtrl->getBalance($suscriptor), 2);
                 }
 
                 if ($text !== null && !in_array($text, ['/p2psell', '/p2pbuy'])) {
@@ -116,7 +116,7 @@ class OffersController extends Controller
                                 "▫️ " . ($isSell
                                     ? Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance])
                                     : Lang::get("zentrotraderbot::bot.wizard.step1.ask_buy")) . "\n" .
-                                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "_" . ($balance ?: 100) . "_"]),
+                                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "`" . ($balance ?: 100) . "`"]),
                             "chat" => ["id" => $userId],
                             "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]]]),
                             "editprevious" => 1
@@ -132,7 +132,7 @@ class OffersController extends Controller
                                 "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step1.subtitle") . "*\n" .
                                 "❌ " . Lang::get("zentrotraderbot::bot.wizard.step1.selling_too_much", ['amount' => $text]) . "\n" .
                                 "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance]) . "\n" .
-                                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "_" . $balance . "_"]),
+                                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "`" . $balance . "`"]),
                             "chat" => ["id" => $userId],
                             "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]]]),
                             "editprevious" => 1
@@ -149,8 +149,8 @@ class OffersController extends Controller
                 }
 
                 $amountPrompt = $isSell
-                    ? "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance]) . "_\n" .
-                    "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => $balance]) . "_"
+                    ? "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance]) . "\n" .
+                    "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "`" . $balance . "`"])
                     : "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step1.ask_buy") . "_";
 
                 return [
