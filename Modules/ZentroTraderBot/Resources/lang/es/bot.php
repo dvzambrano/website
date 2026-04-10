@@ -213,6 +213,16 @@ return [
             "auto_dispute" => "Se abrirá una DISPUTA automáticamente.",
             "funds_frozen" => "Los fondos estarán congelados hasta que la administración revise el caso.",
         ],
+        "pending" => [
+            "title"      => "Procesando transacción...",
+            "creating"   => "Se detectó tu transacción de bloqueo de fondos.\n_Espera unos segundos mientras se confirma en la red._",
+            "cancelling" => "Se detectó tu cancelación en la red.\n_Confirmando en breve..._",
+            "signing"    => "Se detectó tu firma en la red.\n_Confirmando en breve..._",
+            "closing"    => "Se detectó el cierre del intercambio.\n_Confirmando en breve..._",
+            "expiring"   => "Se detectó la expiración del intercambio.\n_Confirmando en breve..._",
+            "dispute"    => "Se detectó la apertura de disputa.\n_Confirmando en breve..._",
+            "resolving"  => "Se detectó la resolución del árbitro.\n_Confirmando en breve..._",
+        ],
     ],
 
     // =========================================================

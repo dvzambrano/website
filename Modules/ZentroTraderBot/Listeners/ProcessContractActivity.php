@@ -5,33 +5,38 @@ namespace Modules\ZentroTraderBot\Listeners;
 use Modules\Web3\Events\ContractActivityDetected;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Log;
-use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
-use Modules\Laravel\Services\NumberService;
+use Illuminate\Support\Facades\Lang;
 use Modules\ZentroTraderBot\Entities\Offers;
-use Illuminate\Support\Str;
 use Modules\Laravel\Services\BehaviorService;
 use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
 
 class ProcessContractActivity
 {
     /**
-     * Procesa eventos provenientes del contrato de Escrow.
-     * Maneja: TradeCreated, TradeCancelled, DisputeOpened, DisputeResolved, TradeSigned, TradeClosed
-     * Recibe datos normalizados (DTO) desde cualquier fuente (Moralis, Alchemy, etc.), 
-     * identifica el tenant correspondiente y dispara las notificaciones al usuario.
+     * Procesa eventos del contrato Escrow con doble pass: unconfirmed + confirmed.
      *
-     * @param ContractActivityDetected $event Contiene el DTO normalizado con 
-     * la estructura: 'network_id', 'confirmed', 'tx_hash', 'from', 'to', 'value', 'token_symbol', 'tenant_code'.
-     * * @return void
+     * Unconfirmed pass:
+     *   - Registra el evento en offer->data['blockchain_events'] (pending_at).
+     *   - Realiza limpieza de UX (borra mensajes de Telegram obsoletos).
+     *   - Envía una notificación breve "⌛️ Procesando..." a las partes implicadas.
+     *   - NO cambia offer->status (evita brechas de seguridad ante reorgs).
+     *
+     * Confirmed pass:
+     *   - Registra confirmed_at en offer->data['blockchain_events'].
+     *   - Cambia offer->status → dispara el OfferObserver con el mensaje completo.
+     *
+     * @param ContractActivityDetected $event DTO normalizado con estructura:
+     *   network_id, confirmed, tx_hash, contract, decoded{name, params}, tenant_code, trace_id
      */
-    public function handle(ContractActivityDetected $event)
+    public function handle(ContractActivityDetected $event): void
     {
         $data = $event->data;
 
         if (env("DEBUG_MODE", false))
-            Log::debug("🐞 ProcessContractActivity handle: ", [
+            Log::debug("🐞 ProcessContractActivity handle:", [
                 "id" => $data['trace_id'],
                 "confirmed" => $data['confirmed'],
                 "event_name" => $data['decoded']['name'] ?? 'Unknown',
@@ -62,182 +67,267 @@ class ProcessContractActivity
         }
         */
 
-        // Ignoramos transferencias de tokens que no son nuestro Escrow
-        if (strtolower($data['contract']) !== strtolower(env('ESCROW_CONTRACT'))) {
+        // Ignorar eventos que no son de nuestro contrato Escrow
+        if (strtolower($data['contract']) !== strtolower(env('ESCROW_CONTRACT')))
             return;
-        }
 
         $eventName = strtoupper($data['decoded']['name']);
         $isConfirmed = $data['confirmed'] ?? false;
 
-        // Idempotencia: tx_hash + eventName + estado de confirmación: permite que el flujo pase una vez por 'unconfirmed' y una vez por 'confirmed'
+        // Idempotencia: cada (eventName, tx_hash, confirmed/unconfirmed) se procesa exactamente una vez
         $statusSuffix = $isConfirmed ? 'confirmed' : 'unconfirmed';
-        $cacheKey = 'escrow_ev_proc_' . $eventName . '_' . $data['tx_hash'] . '_' . $statusSuffix;
+        $cacheKey = "escrow_ev_proc_{$eventName}_{$data['tx_hash']}_{$statusSuffix}";
         if (!Cache::add($cacheKey, true, now()->addDays(2))) {
             if (env("DEBUG_MODE", false))
-                Log::debug("🐞 ProcessContractActivity handle escaped by tx_processed ($statusSuffix): ", [
-                    "key" => $cacheKey
-                ]);
+                Log::debug("🐞 ProcessContractActivity escaped by idempotency ({$statusSuffix}):", ['key' => $cacheKey]);
             return;
         }
 
-        // --- Identificar el Bot siempre para poder usar el Tenant ---
+        // Identificar bot/tenant
         $bot = BehaviorService::cache('tenant_' . $data['tenant_code'], function () use ($data) {
             return TelegramBots::where('key', $data['tenant_code'])->first();
         });
         if (!$bot) {
             if (env("DEBUG_MODE", false))
-                Log::debug("🐞 ProcessContractActivity handle escaped by !bot: ", [
-                    "tenant_code" => $data['tenant_code'],
-                    "data" => $data,
-                ]);
+                Log::debug("🐞 ProcessContractActivity escaped by !bot:", ['tenant_code' => $data['tenant_code']]);
             return;
         }
         $bot->connectToThisTenant();
 
         $params = $data['decoded']['params'];
-        if (isset($params['tradeId'])) {
-            try {
-                $tradeId = $params['tradeId'];
-                $offer = Offers::on('tenant')->where('id', $tradeId)->first();
-                if (!$offer) {
-                    if (env("DEBUG_MODE", false))
-                        Log::debug("🐞 ProcessContractActivity handle escaped by !offer: ", [
-                            "tradeId" => $tradeId,
-                            "params" => $params,
-                        ]);
-                    return;
+        if (!isset($params['tradeId']))
+            return;
+
+        try {
+            $offer = Offers::on('tenant')->where('id', $params['tradeId'])->first();
+            if (!$offer) {
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 ProcessContractActivity escaped by !offer:", ['tradeId' => $params['tradeId']]);
+                return;
+            }
+
+            // 1. Registrar estado del evento en la oferta (no cambia status, Observer no dispara)
+            $offer->recordBlockchainEvent($eventName, $data['tx_hash'], $isConfirmed);
+
+            // 2. Limpieza de UX — segura en cualquier pass, pero solo ejecutamos en unconfirmed
+            //    para no reintentar borrar un mensaje ya eliminado
+            if (!$isConfirmed)
+                $this->handleUxCleanup($offer, $eventName, $bot, $params);
+
+            // 3. Pass UNCONFIRMED: notificación instantánea + retornar (no tocar status)
+            if (!$isConfirmed) {
+                $this->sendPendingNotification($offer, $eventName, $params, $bot);
+                return;
+            }
+
+            // 4. Pass CONFIRMED: actualizar estado canónico → dispara OfferObserver
+            $this->processConfirmedEvent($offer, $eventName, $params, $data);
+
+        } catch (\Exception $e) {
+            // Si falló en confirmed, liberar cache para permitir reintento
+            if ($isConfirmed)
+                Cache::forget($cacheKey);
+
+            Log::error("🆘 ProcessContractActivity handle:", [
+                "event" => $eventName,
+                "tx_hash" => $data['tx_hash'],
+                "message" => $e->getMessage(),
+            ]);
+        }
+    }
+
+    // =========================================================
+    // SECCIÓN 1: LIMPIEZA DE UX (solo en unconfirmed)
+    // =========================================================
+
+    /**
+     * Elimina mensajes de Telegram que ya no son relevantes cuando se detecta una TX
+     * (el mensaje de "Aplicando..." o "Recuperando...").
+     * Se ejecuta en el pass unconfirmed para que el usuario no vea el spinner colgado.
+     */
+    private function handleUxCleanup(Offers $offer, string $eventName, $bot, array $params): void
+    {
+        // TRADECREATED: borrar el mensaje de "⌛️ Aplicando a la oferta..."
+        if ($eventName === 'TRADECREATED') {
+            $applyData = $offer->data['apply'] ?? null;
+            if ($applyData && isset($applyData['message_id'], $applyData['user_id'])) {
+                try {
+                    DeleteTelegramMessage::dispatch(
+                        (string) $bot->token,
+                        (int) $applyData['user_id'],
+                        (int) $applyData['message_id']
+                    );
+                    // Limpiar para no reintentar en el pass confirmed
+                    $currentData = $offer->data;
+                    unset($currentData['apply']['message_id']);
+                    $offer->update(['data' => $currentData]);
+                } catch (\Exception $e) {
                 }
-
-                // --- MANEJO DE TRADECREATED (UNCONFIRMED & CONFIRMED) ---
-                if ($eventName === 'TRADECREATED') {
-                    // 1. Recuperar el message_id del proceso de aplicación (si existe)
-                    $applyData = $offer->data['apply'] ?? null;
-                    if (!$isConfirmed && $applyData && isset($applyData['message_id'])) {
-                        try {
-                            // El chat_id es el del comprador (quien inició el apply)
-                            $userId = $applyData['user_id'] ?? null;
-                            if ($userId) {
-                                DeleteTelegramMessage::dispatch(
-                                    (string) $bot->token,
-                                    (int) $userId,
-                                    (int) $applyData['message_id']
-                                );
-
-                                // Limpiamos el message_id de la DB para no intentar borrarlo dos veces
-                                $currentData = $offer->data;
-                                unset($currentData['apply']['message_id']);
-                                $offer->data = $currentData;
-                                $offer->save();
-                            }
-                        } catch (\Exception $e) {
-                        }
-                    }
-
-                    // Datos base de la actualización
-                    $updateData = [
-                        'seller_address' => strtolower($params['seller']),
-                        'buyer_address' => strtolower($params['buyer']),
-                        'updated_at' => now()
-                    ];
-
-                    if ($isConfirmed) {
-                        // Cuando llega confirmado, grabamos el hash y logueamos
-                        $updateData['tx_hash_deposit'] = $data['tx_hash'];
-
-                        Log::info("✅ Oferta {$offer->id} bloqueada en ESCROW (CONFIRMADO): ", [
-                            "tx_hash" => $data['tx_hash']
-                        ]);
-                    }
-
-                    // updateStatus disparará el Observer tanto en unconfirmed como en confirmed
-                    // El Observer debería ser inteligente para no repetir mensajes si ya se enviaron
-                    $offer->updateStatus('LOCKED', $updateData);
-
-
-                    return; // Terminamos aquí para TRADECREATED
-                }
-
-                // --- MANEJO DE TRADEEXPIRED (UNCONFIRMED & CONFIRMED) ---
-                if ($eventName === 'TRADEEXPIRED') {
-                    // 1. Limpieza de interfaz: Borrar el mensaje de "Recuperando..." si existe
-                    $recoverData = $offer->data['recover'] ?? null;
-                    if (!$isConfirmed && $recoverData && isset($recoverData['message_id'])) {
-                        try {
-                            // El chat_id es el del comprador (quien inició el recover)
-                            $userId = $recoverData['user_id'] ?? null;
-                            if ($userId) {
-                                DeleteTelegramMessage::dispatch(
-                                    (string) $bot->token,
-                                    (int) $userId,
-                                    (int) $recoverData['message_id']
-                                );
-                            }
-                        } catch (\Exception $e) {
-                        }
-                    }
-
-                    // 2. Actualizamos estado para disparar Observer (Mensajes a las 3 partes)
-                    $offer->updateStatus('EXPIRED', [
-                        'updated_at' => now()
-                    ]);
-
-                    return; // Terminamos aquí para TRADEEXPIRED
-                }
-
-                // --- RESTO DE EVENTOS (SOLO CONFIRMADOS) ---
-                if (!$isConfirmed)
-                    return;
-
-                switch ($eventName) {
-                    case 'TRADECANCELLED':
-                        // El vendedor canceló antes de que el comprador firmara
-                        $offer->updateStatus('CANCELLED', [
-                            'updated_at' => now()
-                        ]);
-                        break;
-                    case 'DISPUTEOPENED':
-                        $offer->updateStatus('DISPUTED', [
-                            'updated_at' => now()
-                        ]);
-                        break;
-                    case 'DISPUTERESOLVED':
-                        // El arbitro decidió un ganador
-                        $offer->updateStatus('SOLVED', [
-                            'winner_address' => $params['winner'],
-                            'tx_hash_release' => $data['tx_hash'],
-                            'updated_at' => now()
-                        ]);
-                        break;
-                    case 'TRADESIGNED':
-                        // Útil para avisar al otro: "¡Oye, ya firmaron, solo faltas tú!"
-                        $json = $offer->data;
-                        $json["signer"] = $params['signer'];
-                        $offer->update(['data' => $json]);
-                        $offer->updateStatus('SIGNED', [
-                            'updated_at' => now()
-                        ]);
-                        break;
-                    case 'TRADECLOSED':
-                        // Ambos firmaron y los fondos volaron al comprador
-                        $offer->updateStatus('COMPLETED', [
-                            'tx_hash_release' => $data['tx_hash'],
-                            'updated_at' => now()
-                        ]);
-                        break;
-
-                    default:
-                        break;
-                }
-
-            } catch (\Exception $e) {
-                if ($isConfirmed)
-                    Cache::forget($cacheKey);
-
-                Log::error("🆘 ProcessContractActivity handle Listener: ", [
-                    "message" => $e->getMessage()
-                ]);
             }
         }
+
+        // TRADEEXPIRED: borrar el mensaje de "⌛️ Recuperando fondos..."
+        if ($eventName === 'TRADEEXPIRED') {
+            $recoverData = $offer->data['recover'] ?? null;
+            if ($recoverData && isset($recoverData['message_id'], $recoverData['user_id'])) {
+                try {
+                    DeleteTelegramMessage::dispatch(
+                        (string) $bot->token,
+                        (int) $recoverData['user_id'],
+                        (int) $recoverData['message_id']
+                    );
+                } catch (\Exception $e) {
+                }
+            }
+        }
+    }
+
+    // =========================================================
+    // SECCIÓN 2: NOTIFICACIÓN INSTANTÁNEA (unconfirmed)
+    // Mensaje breve que informa que la TX fue detectada.
+    // No incluye instrucciones financieras (seguridad ante reorgs).
+    // =========================================================
+
+    private function sendPendingNotification(Offers $offer, string $eventName, array $params, $bot): void
+    {
+        $code = $offer->code;
+        $header = "⌛️ *" . Lang::get("zentrotraderbot::bot.offer.pending.title") . "*\n🆔 `{$code}`\n";
+
+        switch ($eventName) {
+            case 'TRADECREATED':
+                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.creating");
+                $seller = $params['seller'] ?? $offer->seller_address;
+                $buyer = $params['buyer'] ?? $offer->buyer_address;
+                $this->notifyByAddress($seller, $msg, $bot->token);
+                $this->notifyByAddress($buyer, $msg, $bot->token);
+                break;
+
+            case 'TRADECANCELLED':
+                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.cancelling");
+                $this->notifyByAddress($offer->seller_address, $msg, $bot->token);
+                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token);
+                break;
+
+            case 'TRADESIGNED':
+                $signer = $params['signer'] ?? null;
+                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.signing");
+                // Notificamos solo a quien firmó para confirmar que su TX está en la red
+                $this->notifyByAddress($signer ?: $offer->seller_address, $msg, $bot->token);
+                break;
+
+            case 'TRADECLOSED':
+                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.closing");
+                $this->notifyByAddress($offer->seller_address, $msg, $bot->token);
+                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token);
+                break;
+
+            case 'TRADEEXPIRED':
+                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.expiring");
+                // Notificamos al vendedor que inició la expiración
+                $userId = $offer->data['recover']['user_id'] ?? null;
+                if ($userId) {
+                    $suscriptor = Suscriptions::where('user_id', $userId)->first();
+                    if ($suscriptor)
+                        $this->notifyByAddress($suscriptor->data['wallet']['address'] ?? '', $msg, $bot->token);
+                }
+                break;
+
+            case 'DISPUTEOPENED':
+                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.dispute");
+                $this->notifyByAddress($offer->seller_address, $msg, $bot->token);
+                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token);
+                break;
+
+            case 'DISPUTERESOLVED':
+                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.resolving");
+                $this->notifyByAddress($offer->seller_address, $msg, $bot->token);
+                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token);
+                break;
+        }
+    }
+
+    // =========================================================
+    // SECCIÓN 3: PROCESADO CONFIRMADO
+    // Actualiza offer->status → dispara OfferObserver con mensaje completo.
+    // =========================================================
+
+    private function processConfirmedEvent(Offers $offer, string $eventName, array $params, array $data): void
+    {
+        switch ($eventName) {
+            case 'TRADECREATED':
+                $offer->updateStatus('LOCKED', [
+                    'seller_address' => strtolower($params['seller']),
+                    'buyer_address' => strtolower($params['buyer']),
+                    'tx_hash_deposit' => $data['tx_hash'],
+                    'updated_at' => now(),
+                ]);
+                Log::info("✅ Oferta {$offer->id} bloqueada en ESCROW (CONFIRMADO):", [
+                    'tx_hash' => $data['tx_hash'],
+                ]);
+                break;
+
+            case 'TRADECANCELLED':
+                $offer->updateStatus('CANCELLED', ['updated_at' => now()]);
+                break;
+
+            case 'DISPUTEOPENED':
+                $offer->updateStatus('DISPUTED', ['updated_at' => now()]);
+                break;
+
+            case 'DISPUTERESOLVED':
+                $offer->updateStatus('SOLVED', [
+                    'winner_address' => $params['winner'],
+                    'tx_hash_release' => $data['tx_hash'],
+                    'updated_at' => now(),
+                ]);
+                break;
+
+            case 'TRADESIGNED':
+                $currentData = $offer->data;
+                $currentData['signer'] = $params['signer'];
+                $offer->update(['data' => $currentData]);
+                $offer->updateStatus('SIGNED', ['updated_at' => now()]);
+                break;
+
+            case 'TRADECLOSED':
+                $offer->updateStatus('COMPLETED', [
+                    'tx_hash_release' => $data['tx_hash'],
+                    'updated_at' => now(),
+                ]);
+                break;
+
+            case 'TRADEEXPIRED':
+                $offer->updateStatus('EXPIRED', ['updated_at' => now()]);
+                break;
+        }
+    }
+
+    // =========================================================
+    // SECCIÓN 4: HELPERS
+    // =========================================================
+
+    /**
+     * Envía un mensaje de Telegram buscando al usuario por su dirección de wallet.
+     */
+    private function notifyByAddress(?string $address, string $text, string $token, array $menu = []): void
+    {
+        if (!$address)
+            return;
+
+        $suscriptor = Suscriptions::findByAddress($address);
+        if (!$suscriptor || !$suscriptor->user_id)
+            return;
+
+        $payload = [
+            'message' => [
+                'chat' => ['id' => $suscriptor->user_id],
+                'text' => $text,
+            ],
+        ];
+
+        if (!empty($menu))
+            $payload['message']['reply_markup'] = json_encode(['inline_keyboard' => $menu]);
+
+        TelegramController::sendMessage($payload, $token);
     }
 }

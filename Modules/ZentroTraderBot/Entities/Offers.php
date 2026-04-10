@@ -71,6 +71,47 @@ class Offers extends Model
         $this->update(array_merge(["status" => $status], $extra));
     }
 
+    /**
+     * Registra en data['blockchain_events'] el ciclo de vida de un evento on-chain.
+     * Persiste 'pending_at' en el primer pass (unconfirmed) y 'confirmed_at' en el segundo.
+     * No cambia offer->status, por lo que el Observer no dispara.
+     */
+    public function recordBlockchainEvent(string $eventName, string $txHash, bool $confirmed): void
+    {
+        $data  = $this->data ?? [];
+        $entry = $data['blockchain_events'][$eventName] ?? [];
+
+        if (!$confirmed) {
+            $entry = [
+                'tx_hash'      => $txHash,
+                'pending_at'   => now()->toISOString(),
+                'confirmed_at' => null,
+            ];
+        } else {
+            $entry['tx_hash']      = $txHash; // actualizar hash por si hubo reorg
+            $entry['confirmed_at'] = now()->toISOString();
+        }
+
+        $data['blockchain_events'][$eventName] = $entry;
+        $this->update(['data' => $data]);
+    }
+
+    /**
+     * True si el evento fue detectado como unconfirmed (ya notificamos "pending").
+     */
+    public function isEventPending(string $eventName): bool
+    {
+        return !empty($this->data['blockchain_events'][$eventName]['pending_at']);
+    }
+
+    /**
+     * True si el evento ya fue confirmado en la red.
+     */
+    public function isEventConfirmed(string $eventName): bool
+    {
+        return !empty($this->data['blockchain_events'][$eventName]['confirmed_at']);
+    }
+
     public function renderAsTelegramMessage($title = "", $owner = false, $stars = "")
     {
         $total = number_format(($this->amount * $this->price_per_usd), 2);
