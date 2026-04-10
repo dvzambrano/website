@@ -773,7 +773,7 @@ class OffersController extends Controller
             $userPrivateKey = decryptValue($seller->data['wallet']['private_key']);
 
             // Obtenemos la llave de la Tesorería para PAGAR el gas (Relayer)
-            $relayerKey = env('TRADER_BOT_KEY');
+            $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
 
             // Definimos un deadline para la firma (ej. 1 hora desde ahora)
             $deadline = time() + 3600;
@@ -975,7 +975,7 @@ class OffersController extends Controller
         $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
 
         $buyerKey = decryptValue($buyer->data['wallet']['private_key']);
-        $relayerKey = env('TRADER_BOT_KEY');
+        $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
         $deadline = time() + 3600;
 
         $this->updateStatus($bot, "⌛️ " . Lang::get("zentrotraderbot::bot.sign_offer.sending_proof"));
@@ -1040,7 +1040,7 @@ class OffersController extends Controller
         $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
 
         $signerKey = decryptValue($signer->data['wallet']['private_key']);
-        $relayerKey = env('TRADER_BOT_KEY');
+        $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
         $deadline = time() + 3600;
 
         $this->updateStatus($bot, "⌛️ " . Lang::get("zentrotraderbot::bot.sign_offer.confirming_receipt"));
@@ -1105,7 +1105,7 @@ class OffersController extends Controller
         $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
 
         $buyerKey = decryptValue($buyer->data['wallet']['private_key']);
-        $relayerKey = env('TRADER_BOT_KEY');
+        $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
         $deadline = time() + 3600;
 
         $this->updateStatus($bot, "⌛️ " . Lang::get("zentrotraderbot::bot.cancel_onchain.processing"));
