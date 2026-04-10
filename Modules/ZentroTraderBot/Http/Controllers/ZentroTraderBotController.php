@@ -502,7 +502,7 @@ class ZentroTraderBotController extends JsonsController
         $this->strategies["/comprobantoffer"] =
             function () use ($array) {
                 $controller = new OffersController();
-                $controller->comprobantoffer($this, $array["pieces"][1]);
+                $controller->comprobantOffer($this, $array["pieces"][1]);
                 return ["text" => ""];
             };
 

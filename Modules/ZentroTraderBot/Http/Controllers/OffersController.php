@@ -952,7 +952,7 @@ class OffersController extends Controller
      * Buyer confirms payment was sent and signs the trade on-chain.
      * The relayer pays gas; buyer signs off-chain only.
      */
-    public function comprobantoffer($bot, $code)
+    public function comprobantOffer($bot, $code)
     {
         $offer = Offers::findByCode($code);
         if (!$offer) {
