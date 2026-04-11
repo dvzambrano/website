@@ -315,14 +315,17 @@ class OfferObserver
 
         $response = TelegramController::sendMessage($payload, $token);
 
-        // Guardar el message_id del mensaje enviado para poder eliminarlo en el siguiente estado
+        // Guardar el message_id del mensaje enviado para poder eliminarlo en el siguiente estado.
+        // Se usa saveQuietly() para evitar re-disparar el Observer mientras syncOriginal() aún
+        // no ha sido invocado por el save() padre (evita recursión y spam de mensajes).
         if ($offer) {
             $arr = json_decode($response, true);
             $msgId = $arr['result']['message_id'] ?? null;
             if ($msgId && (int) $msgId > 0) {
                 $data = $offer->data ?? [];
                 $data['last_status_messages'][$telegramId] = (int) $msgId;
-                $offer->update(['data' => $data]);
+                $offer->data = $data;
+                $offer->saveQuietly();
             }
         }
     }
