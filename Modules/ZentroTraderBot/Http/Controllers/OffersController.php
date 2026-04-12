@@ -92,11 +92,13 @@ class OffersController extends Controller
 
             case 'STEP_AMOUNT':
                 // --- VALIDACIÓN DE BALANCE (Solo si es venta) ---
-                $balance = 0;
+                $balanceRaw = 0.0;
+                $balance    = '0';
                 if ($isSell) {
                     $walletCtrl = new TraderWalletController();
                     $suscriptor = Suscriptions::where('user_id', $userId)->first();
-                    $balance = number_format($walletCtrl->getBalance($suscriptor), 2);
+                    $balanceRaw = (float) $walletCtrl->getBalance($suscriptor);
+                    $balance    = number_format($balanceRaw, 2);
                 }
 
                 if ($text !== null && !in_array($text, ['/p2psell', '/p2pbuy'])) {
@@ -125,8 +127,8 @@ class OffersController extends Controller
                         ];
                     }
 
-                    // Validación de balance solo si es venta
-                    if ($isSell && $text > $balance) {
+                    // Validación de balance solo si es venta — comparar como floats
+                    if ($isSell && (float) $text > $balanceRaw) {
                         return [
                             "text" =>
                                 "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
