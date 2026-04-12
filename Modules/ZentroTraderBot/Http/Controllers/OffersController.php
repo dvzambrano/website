@@ -1669,8 +1669,9 @@ class OffersController extends Controller
 
             $offer = Offers::findByCode($code);
             if ($offer) {
-                $data               = $offer->data ?? [];
-                $data['evidence'][] = $fileId;
+                $data = $offer->data ?? [];
+                // Guardamos por ID de Telegram del remitente para que el arbitro sepa quien envio cada evidencia
+                $data['evidence'][(string) $userId][] = $fileId;
                 $offer->update(['data' => $data]);
             }
 
@@ -1735,7 +1736,14 @@ class OffersController extends Controller
                     ["contain" => true, "name" => "admin_level", "value" => [1, "1"]],
                 ], $botTenant->code);
 
+                // Reconstruir mapa senderId -> [fileIds] desde offer->data para incluir sesiones previas
+                $evidenceByUser = $offer->data['evidence'] ?? [];
+
+                // Asegurar que los fileIds de esta sesion esten incluidos (ya persistidos arriba)
+                // evidenceByUser ya tiene la estructura correcta tras el update anterior
+
                 foreach ($admins as $admin) {
+                    // Mensaje de cabecera
                     TelegramController::sendMessage([
                         "message" => [
                             "text" => "⚖️ *" . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notification_title") . "*\n"
@@ -1745,14 +1753,35 @@ class OffersController extends Controller
                         ],
                     ], $botTenant->token);
 
-                    foreach ($images as $fileId) {
-                        TelegramController::sendPhoto([
+                    // Enviar imagenes agrupadas por remitente
+                    foreach ($evidenceByUser as $senderId => $fileIds) {
+                        // Etiqueta del remitente
+                        TelegramController::sendMessage([
                             "message" => [
-                                "photo" => $fileId,
-                                "text"  => "",
-                                "chat"  => ["id" => $admin->user_id],
+                                "text" => "👤 ID: `{$senderId}`",
+                                "chat" => ["id" => $admin->user_id],
                             ],
                         ], $botTenant->token);
+
+                        if (count($fileIds) === 1) {
+                            TelegramController::sendPhoto([
+                                "message" => [
+                                    "photo" => $fileIds[0],
+                                    "text"  => "",
+                                    "chat"  => ["id" => $admin->user_id],
+                                ],
+                            ], $botTenant->token);
+                        } else {
+                            TelegramController::sendMediaGroup([
+                                "message" => [
+                                    "chat"  => ["id" => $admin->user_id],
+                                    "media" => array_map(
+                                        fn($fid) => ["type" => "photo", "media" => $fid],
+                                        $fileIds
+                                    ),
+                                ],
+                            ], $botTenant->token);
+                        }
                     }
                 }
             }
