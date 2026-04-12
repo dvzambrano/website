@@ -24,6 +24,7 @@ use Modules\Web3\Services\ConfigService;
 use Modules\Laravel\Services\DateService;
 use Carbon\Carbon;
 use Modules\Laravel\Services\TextService;
+use Modules\ZentroTraderBot\Jobs\UpdateOfferInChannel;
 
 class OffersController extends Controller
 {
@@ -588,6 +589,30 @@ class OffersController extends Controller
         }
     }
 
+    /**
+     * Edita el mensaje del canal quitando el boton "Aplicar" inmediatamente,
+     * para evitar que otro usuario aplique mientras se procesa la transaccion.
+     * Si falla silenciosamente: la logica de lock de Cache sigue protegiendo el flujo.
+     */
+    private function disableChannelApplyButton(Offers $offer, $botTenant): void
+    {
+        $messageId = $offer->data['channel']['message_id'] ?? null;
+        if (!$messageId) return;
+
+        try {
+            $messageData = $offer->getAsChannelMessage($botTenant->code);
+            TelegramController::editMessageText([
+                "message" => [
+                    "message_id"   => $messageId,
+                    "chat"         => ["id" => env("TRADER_BOT_CHANNEL")],
+                    "text"         => $messageData['message']['text'],
+                    "reply_markup" => json_encode(["inline_keyboard" => []]),
+                ],
+            ], $botTenant->token);
+        } catch (\Throwable $th) {
+        }
+    }
+
     public function applyForOffer($bot, $code)
     {
         // 1. Usamos el $code o $offer->id para que NADIE más pueda tocar esta oferta por 2 minutos
@@ -619,7 +644,11 @@ class OffersController extends Controller
         ];
         $offer->update(['data' => $currentData]);
 
-        // 3. Configuración de Red y Roles 
+        // Quitamos el botón del canal inmediatamente para que nadie más pueda aplicar
+        // mientras la transacción blockchain se está procesando.
+        $this->disableChannelApplyButton($offer, $bot->tenant);
+
+        // 3. Configuración de Red y Roles
         $network = ConfigService::getNetworks(env("BASE_NETWORK"));
         $tokenInfo = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
         $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
@@ -633,6 +662,7 @@ class OffersController extends Controller
 
         if (!$seller || !$buyer) {
             Cache::forget($lockKey);
+            UpdateOfferInChannel::dispatch($bot->tenant->key, $code);
             return false;
         }
 
@@ -686,6 +716,8 @@ class OffersController extends Controller
 
             if (!$txHash) {
                 $this->updateStatus($bot, "❌ " . Lang::get("zentrotraderbot::bot.apply_offer.no_hash"));
+                Cache::forget($lockKey);
+                UpdateOfferInChannel::dispatch($bot->tenant->key, $code);
                 return false;
             }
 
@@ -711,8 +743,9 @@ class OffersController extends Controller
                 return true;
             }
 
-            // Si es un error real, liberamos para permitir reintento
+            // Si es un error real, liberamos para permitir reintento y restauramos el boton
             Cache::forget($lockKey);
+            UpdateOfferInChannel::dispatch($bot->tenant->key, $code);
             $this->updateStatus($bot, "❌ *" . Lang::get("zentrotraderbot::bot.apply_offer.network_error") . "*\n" . $e->getMessage());
             return false;
         }
