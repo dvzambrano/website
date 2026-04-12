@@ -216,22 +216,22 @@ return [
         "pending" => [
             "title" => "Procesando transacción...",
             "creating_seller" => [
-                "line1" => "Alguien ha aplicado a tu oferta.",
-                "line2" => "Los fondos están siendo movidos desde tu cuenta al sistema de garantía.",
-                "line3" => "El proceso puede tardar entre 1 y 3 minutos. No necesitas hacer nada más; el bot te notificará cuando esté listo.",
+                "line1" => "Alguien ha aplicado a su oferta.",
+                "line2" => "Los fondos están siendo movidos desde su cuenta al sistema de garantía.",
+                "line3" => "El proceso puede tardar entre 1 y 3 minutos. No necesita hacer nada ahora; el bot le notificará sobre el siguiente paso.",
             ],
             "creating_buyer" => [
-                "line1" => "Tu solicitud de intercambio fue detectada en la red.",
-                "line2" => "Los fondos del vendedor están siendo bloqueados en el sistema de garantía para que puedas realizar el pago con confianza.",
-                "line3" => "El proceso puede tardar entre 1 y 3 minutos. No necesitas hacer nada más; el bot te notificará sobre el siguiente paso.",
+                "line1" => "Estamos procesando tu solicitud de intercambio.",
+                "line2" => "Los fondos del vendedor están siendo enviados al sistema de garantía para que pueda realizar el pago con confianza.",
+                "line3" => "El proceso puede tardar entre 1 y 3 minutos. No necesita hacer nada ahora; el bot le notificará sobre el siguiente paso.",
             ],
             "cancelling" => [
                 "line1" => "Se detectó tu cancelación en la red.",
                 "line2" => "Confirmando en breve...",
             ],
             "signing_proof" => [
-                "line1" => "Tu comprobante de pago fue enviado a la red.",
-                "line2" => "Ahora esperamos que el vendedor verifique la recepción y confirme. Te notificaremos de inmediato.",
+                "line1" => "Tu comprobante de pago fue enviado.",
+                "line2" => "Ahora esperamos que el vendedor verifique la recepción y confirme. No necesita hacer nada más por ahora; le notificaremos sobre el siguiente paso.",
             ],
             "signing_confirm" => [
                 "line1" => "Tu confirmación fue enviada a la red.",
@@ -244,8 +244,8 @@ return [
             ],
             "closing_seller" => [
                 "line1" => "¡Confirmaste exitosamente la recepción del pago!",
-                "line2" => "La transacción está siendo finalizada en la red.",
-                "line3" => "Puede tardar entre 1 y 3 minutos. Te notificaremos cuando los fondos sean acreditados.",
+                "line2" => "Estamos liberando los fondos a la contraparte.",
+                "line3" => "Esto puede tardar entre 1 y 3 minutos; por ahora nonecesita hacer nada más.",
             ],
             "expiring" => [
                 "line1" => "Se detectó la expiración del intercambio.",
@@ -382,10 +382,10 @@ return [
         "account_not_found" => "No se encontró tu cuenta.",
         "sending_proof" => "Enviando confirmación de pago...",
         "no_confirm_payment" => "No se pudo confirmar el pago.",
-        "proof_sent" => "Comprobante enviado. Esperando confirmación en la red...",
+        "proof_sent" => "Comprobante enviado. Notificaremos a la contraparte para su verificación...",
         "confirming_receipt" => "Confirmando recepción del pago...",
         "no_sign" => "No se pudo confirmar.",
-        "confirmation_sent" => "Confirmación enviada. Esperando confirmación en la red...",
+        "confirmation_sent" => "Confirmación enviada.",
         "error" => "Error:",
     ],
 
@@ -425,6 +425,10 @@ return [
         "thanks" => "Gracias por ayudar a la comunidad",
         "not_found_title" => "Que raro",
         "not_found" => "No he encontrado la oferta",
+        "comment_prompt" => "Si desea, escriba un comentario sobre su experiencia en este intercambio.",
+        "comment_skip" => "Omitir comentario",
+        "comment_saved" => "Su comentario ha sido guardado.",
+        "cancelled" => "Valoración cancelada.",
     ],
 
     // =========================================================
@@ -455,9 +459,9 @@ return [
         "invalid_content" => "Solo se aceptan imagenes. Por favor envie una foto o un archivo de imagen (JPG, PNG, etc.).",
         "cancelled" => "Ha cancelado el envio del comprobante.",
         "seller_notified" => "Su comprobante ha sido enviado. El vendedor debera confirmar la recepcion del pago.",
-        "seller_notification_title" => "El comprador ha enviado su comprobante de pago",
-        "seller_notification_body" => "El comprador afirma haber realizado el pago. Revise las imagenes adjuntas.",
-        "seller_notification_warning" => "No confirme la transaccion sin antes verificar manualmente en su cuenta bancaria o billetera que el dinero fue recibido. La evidencia visual no es suficiente.",
+        "seller_notification_title" => "Comprobante de pago",
+        "seller_notification_body" => "El comprador afirma haber realizado el pago.",
+        "seller_notification_warning" => "No confirme la transaccion sin antes verificar manualmente que el dinero fue recibido.",
     ],
 
     // =========================================================

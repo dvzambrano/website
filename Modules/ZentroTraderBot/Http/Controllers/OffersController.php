@@ -873,6 +873,149 @@ class OffersController extends Controller
         }
     }
 
+    // =========================================================
+    // RATING WIZARD — Paso de comentario opcional tras calificar
+    // =========================================================
+
+    /**
+     * Inicia el wizard de valoracion: guarda stars en cache y pide comentario opcional.
+     */
+    public function startRatingWizard($bot, $code, $stars)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer) {
+            $text = "🤔 *" . Lang::get("zentrotraderbot::bot.rate_offer.not_found_title") . "*\n"
+                . "_" . Lang::get("zentrotraderbot::bot.rate_offer.not_found") . "_\n\n"
+                . "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
+            $payload = [
+                "message" => [
+                    "text"       => $text,
+                    "chat"       => ["id" => $bot->actor->user_id],
+                    "message_id" => $bot->message["message_id"],
+                    "reply_markup" => json_encode(["inline_keyboard" => [
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                    ]]),
+                ],
+            ];
+            try {
+                TelegramController::editMessageText($payload, $bot->tenant->token);
+            } catch (\Throwable $th) {}
+            return;
+        }
+
+        $suscriptor = Suscriptions::findByAddress($offer->seller_address);
+        if ($suscriptor && $suscriptor->user_id == $bot->actor->user_id) {
+            $suscriptor = Suscriptions::findByAddress($offer->buyer_address);
+        }
+        if (!$suscriptor) {
+            return;
+        }
+
+        $userId   = $bot->actor->user_id;
+        $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
+
+        Cache::forever($cacheKey, [
+            'controller' => self::class,
+            'method'     => 'ratingWizard',
+            'step'       => 'COMMENT',
+            'data'       => [
+                'offer_code'      => $code,
+                'stars'           => $stars,
+                'rated_user_id'   => $suscriptor->user_id,
+            ],
+        ]);
+
+        // Editar el mensaje de los emojis para confirmar la seleccion y pedir comentario
+        $payload = [
+            "message" => [
+                "text" => "⭐ " . $stars . "\n\n"
+                    . "💬 " . Lang::get("zentrotraderbot::bot.rate_offer.comment_prompt"),
+                "chat"       => ["id" => $userId],
+                "message_id" => $bot->message["message_id"],
+                "reply_markup" => json_encode(["inline_keyboard" => [
+                    [["text" => "⏭ " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"]],
+                ]]),
+            ],
+        ];
+        try {
+            TelegramController::editMessageText($payload, $bot->tenant->token);
+        } catch (\Throwable $th) {}
+    }
+
+    /**
+     * Maneja el paso de comentario del wizard de valoracion.
+     * Acepta texto libre como comentario o "ratingskip" para omitirlo.
+     */
+    public function ratingWizard($bot)
+    {
+        $userId   = $bot->actor->user_id;
+        $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
+        $state    = Cache::get($cacheKey, []);
+
+        $code          = $state['data']['offer_code']    ?? null;
+        $stars         = $state['data']['stars']          ?? 0;
+        $ratedUserId   = $state['data']['rated_user_id']  ?? null;
+        $text          = $bot->message["text"] ?? "";
+        $isCallback    = isset($bot->callback_query) || ($bot->is_callback ?? false);
+
+        $comment = null;
+
+        if (str_contains(strtolower($text), 'ratingskip')) {
+            // Usuario omite el comentario
+            $comment = null;
+        } else {
+            // Cualquier texto libre se trata como comentario
+            $comment = trim($text) ?: null;
+        }
+
+        Cache::forget($cacheKey);
+
+        if ($ratedUserId) {
+            try {
+                $offer = Offers::findByCode($code);
+                OffersRatings::create([
+                    'offer_id'      => $offer ? $offer->id : null,
+                    'rater_user_id' => $userId,
+                    'rated_user_id' => $ratedUserId,
+                    'stars'         => $stars,
+                    'comment'       => $comment,
+                ]);
+                ProcessReputationUpdate::dispatch($ratedUserId, $stars, $bot->tenant->key);
+            } catch (\Throwable $th) {}
+        }
+
+        $successText = "✅ *" . Lang::get("zentrotraderbot::bot.rate_offer.success_title") . "*\n"
+            . "🙏 " . Lang::get("zentrotraderbot::bot.rate_offer.thanks") . "\n\n"
+            . "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
+
+        if ($isCallback) {
+            // El skip llega como callback: editamos el mensaje
+            $payload = [
+                "message" => [
+                    "text"       => $successText,
+                    "chat"       => ["id" => $userId],
+                    "message_id" => $bot->message["message_id"],
+                    "reply_markup" => json_encode(["inline_keyboard" => [
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                    ]]),
+                ],
+            ];
+            try {
+                TelegramController::editMessageText($payload, $bot->tenant->token);
+            } catch (\Throwable $th) {}
+            return ["text" => ""];
+        }
+
+        // El comentario llega como mensaje de texto: enviamos nueva respuesta
+        return [
+            "text"  => $successText,
+            "chat"  => ["id" => $userId],
+            "reply_markup" => json_encode(["inline_keyboard" => [
+                [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+            ]]),
+        ];
+    }
+
     public function getActiveOffers($suscriptor, $page = 1)
     {
 
@@ -1254,6 +1397,17 @@ class OffersController extends Controller
                 $offer->update(['data' => $data]);
             }
 
+            // Deduplicacion de album: si el usuario envio varias fotos a la vez
+            // (media_group_id identico), solo respondemos al primer webhook del grupo.
+            $mediaGroupId = $msg["media_group_id"] ?? null;
+            if ($mediaGroupId) {
+                $groupKey = "wizard_group_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
+                if (Cache::has($groupKey)) {
+                    return ["text" => ""];
+                }
+                Cache::put($groupKey, 1, now()->addSeconds(5));
+            }
+
             $count = count($state['data']['images']);
 
             return [
@@ -1468,6 +1622,17 @@ class OffersController extends Controller
                 $data               = $offer->data ?? [];
                 $data['evidence'][] = $fileId;
                 $offer->update(['data' => $data]);
+            }
+
+            // Deduplicacion de album: si el usuario envio varias fotos a la vez
+            // (media_group_id identico), solo respondemos al primer webhook del grupo.
+            $mediaGroupId = $msg["media_group_id"] ?? null;
+            if ($mediaGroupId) {
+                $groupKey = "wizard_group_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
+                if (Cache::has($groupKey)) {
+                    return ["text" => ""];
+                }
+                Cache::put($groupKey, 1, now()->addSeconds(5));
             }
 
             $count = count($state['data']['images']);
