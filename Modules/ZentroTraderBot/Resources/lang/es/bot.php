@@ -434,6 +434,44 @@ return [
     ],
 
     // =========================================================
+    // PROOF WIZARD — Asistente de envio de comprobante
+    // =========================================================
+
+    "proof_wizard" => [
+        "title" => "Enviar Comprobante de Pago",
+        "instructions" => "Envie la imagen de su comprobante de pago.",
+        "image_received" => "Imagen recibida. Lleva :count en total.",
+        "ask_more" => "Desea enviar alguna imagen mas?",
+        "yes_more" => "Si, enviar otra",
+        "no_done" => "No, eso es todo",
+        "no_images" => "No ha enviado ninguna imagen. Por favor envie al menos una imagen.",
+        "invalid_content" => "Solo se aceptan imagenes. Por favor envie una foto o un archivo de imagen (JPG, PNG, etc.).",
+        "cancelled" => "Ha cancelado el envio del comprobante.",
+        "seller_notified" => "Su comprobante ha sido enviado. El vendedor debera confirmar la recepcion del pago.",
+        "seller_notification_title" => "El comprador ha enviado su comprobante de pago",
+        "seller_notification_body" => "Revise las imagenes adjuntas. Si ha recibido el pago, confirme la transaccion.",
+    ],
+
+    // =========================================================
+    // EVIDENCE WIZARD — Asistente de envio de evidencias
+    // =========================================================
+
+    "evidence_wizard" => [
+        "title" => "Enviar Evidencias del Intercambio",
+        "instructions" => "Envie las imagenes de sus evidencias del intercambio.",
+        "image_received" => "Imagen recibida. Lleva :count en total.",
+        "ask_more" => "Desea enviar alguna imagen mas?",
+        "yes_more" => "Si, enviar otra",
+        "no_done" => "No, eso es todo",
+        "no_images" => "No ha enviado ninguna imagen. Por favor envie al menos una imagen.",
+        "invalid_content" => "Solo se aceptan imagenes. Por favor envie una foto o un archivo de imagen (JPG, PNG, etc.).",
+        "cancelled" => "Ha cancelado el envio de evidencias.",
+        "arbiter_notified" => "Sus evidencias han sido enviadas al equipo de arbitraje para su revision.",
+        "arbiter_notification_title" => "Nuevo envio de evidencias en disputa",
+        "arbiter_notification_body" => "El usuario ha enviado evidencias para la revision del caso. Vea las imagenes adjuntas.",
+    ],
+
+    // =========================================================
     // ACTIVE OFFERS — Lista de ofertas activas
     // =========================================================
 

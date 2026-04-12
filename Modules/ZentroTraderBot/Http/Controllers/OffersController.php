@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Log;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Jobs\ProcessReputationUpdate;
 use Modules\Web3\Http\Controllers\EscrowController;
+use Modules\TelegramBot\Entities\Actors;
+use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\Web3\Traits\BlockchainTools;
 use Modules\Web3\Services\ConfigService;
 use Modules\Laravel\Services\DateService;
@@ -1141,6 +1143,418 @@ class OffersController extends Controller
             $this->updateStatus($bot, "❌ *" . Lang::get("zentrotraderbot::bot.cancel_onchain.error") . "*\n" . $e->getMessage());
             return false;
         }
+    }
+
+    // =========================================================
+    // PROOF WIZARD — Asistente de envio de comprobante de pago
+    // =========================================================
+
+    /**
+     * Inicia el asistente de comprobante: reemplaza el mensaje del boton por
+     * el primer paso del wizard y almacena el estado en cache.
+     */
+    public function startProofWizard($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer || !in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED'])) {
+            $this->updateStatus($bot, "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.not_found"));
+            return ["text" => ""];
+        }
+
+        $userId = $bot->actor->user_id;
+        $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
+
+        Cache::forever($cacheKey, [
+            'controller' => self::class,
+            'method'     => 'proofWizard',
+            'step'       => 'COLLECTING',
+            'data'       => [
+                'offer_code' => $code,
+                'images'     => [],
+            ],
+        ]);
+
+        return [
+            "text" => "🧾 *" . Lang::get("zentrotraderbot::bot.proof_wizard.title") . "*\n"
+                . "🆔 `{$offer->code}`\n\n"
+                . "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+            "chat"         => ["id" => $userId],
+            "editprevious" => 1,
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]],
+                ],
+            ]),
+        ];
+    }
+
+    /**
+     * Paso repetido del asistente de comprobante: recibe fotos, valida el contenido,
+     * pregunta si hay mas, y al finalizar notifica al vendedor y ejecuta la firma on-chain.
+     */
+    public function proofWizard($bot)
+    {
+        $userId     = $bot->actor->user_id;
+        $cacheKey   = "wizard_{$bot->tenant->key}_{$userId}";
+        $state      = Cache::get($cacheKey, []);
+        $code       = $state['data']['offer_code'] ?? null;
+        $text       = $bot->message["text"] ?? "";
+        $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
+
+        $cancelBtn  = [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
+        $backBtn    = [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]];
+
+        // ── Cancelacion ──────────────────────────────────────────────────────────
+        if ($text === '/wizardcancel') {
+            Cache::forget($cacheKey);
+            return [
+                "text"         => "❌ " . Lang::get("zentrotraderbot::bot.proof_wizard.cancelled"),
+                "chat"         => ["id" => $userId],
+                "editprevious" => $isCallback ? 1 : 0,
+                "reply_markup" => json_encode(["inline_keyboard" => [$backBtn]]),
+            ];
+        }
+
+        // ── Deteccion del tipo de contenido recibido ─────────────────────────────
+        $msg           = request("message") ?? [];
+        $hasPhoto      = isset($msg["photo"]);
+        $isImageDoc    = isset($msg["document"])
+            && str_starts_with($msg["document"]["mime_type"] ?? "", "image/");
+        $isValidImage  = $hasPhoto || $isImageDoc;
+        $isOtherMedia  = !$isValidImage && (
+            isset($msg["document"]) ||        // documento no-imagen
+            isset($msg["video"])    ||
+            isset($msg["audio"])    ||
+            isset($msg["voice"])    ||
+            isset($msg["sticker"])  ||
+            isset($msg["animation"]) ||
+            isset($msg["video_note"]) ||
+            isset($msg["contact"])  ||
+            isset($msg["location"]) ||
+            isset($msg["poll"])     ||
+            isset($msg["dice"])
+        );
+
+        // ── Imagen valida (foto comprimida o documento-imagen) ───────────────────
+        if ($isValidImage) {
+            $fileId = $hasPhoto
+                ? end($msg["photo"])["file_id"]
+                : $msg["document"]["file_id"];
+
+            $state['data']['images'][] = $fileId;
+            Cache::forever($cacheKey, $state);
+
+            $offer = Offers::findByCode($code);
+            if ($offer) {
+                $data             = $offer->data ?? [];
+                $data['proofs'][] = $fileId;
+                $offer->update(['data' => $data]);
+            }
+
+            $count = count($state['data']['images']);
+
+            return [
+                "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => $count]) . "\n\n"
+                    . "❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more"),
+                "chat"         => ["id" => $userId],
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [[
+                        ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.yes_more"), "callback_data" => "proofmore {$code}"],
+                        ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.no_done"),  "callback_data" => "proofdone {$code}"],
+                    ]],
+                ]),
+            ];
+        }
+
+        // ── Contenido invalido (video, audio, sticker, doc no-imagen, etc.) ──────
+        if ($isOtherMedia) {
+            return [
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n\n"
+                    . "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+                "chat"         => ["id" => $userId],
+                "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
+            ];
+        }
+
+        // ── Boton "No, eso es todo" ───────────────────────────────────────────────
+        if (str_contains(strtolower($text), 'proofdone')) {
+            $images = $state['data']['images'] ?? [];
+
+            if (empty($images)) {
+                return [
+                    "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.no_images") . "\n\n"
+                        . "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+                    "chat"         => ["id" => $userId],
+                    "editprevious" => 1,
+                    "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
+                ];
+            }
+
+            Cache::forget($cacheKey);
+
+            // Notificar al vendedor con las imagenes del comprobante
+            $offer = Offers::findByCode($code);
+            if ($offer) {
+                $botTenant = app('active_bot');
+                $seller    = Suscriptions::findByAddress($offer->seller_address);
+                if ($seller && $seller->user_id) {
+                    TelegramController::sendMessage([
+                        "message" => [
+                            "text" => "📩 *" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_title") . "*\n"
+                                . "🆔 `{$offer->code}`\n\n"
+                                . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_body"),
+                            "chat" => ["id" => $seller->user_id],
+                        ],
+                    ], $botTenant->token);
+
+                    foreach ($images as $fileId) {
+                        TelegramController::sendPhoto([
+                            "message" => [
+                                "photo" => $fileId,
+                                "text"  => "",
+                                "chat"  => ["id" => $seller->user_id],
+                            ],
+                        ], $botTenant->token);
+                    }
+                }
+            }
+
+            // Ejecutar la firma on-chain
+            $this->comprobantOffer($bot, $code);
+
+            return ["text" => ""];
+        }
+
+        // ── Texto inesperado (no es comando reconocido del wizard) ────────────────
+        $isRecognizedCommand = empty($text)
+            || str_contains(strtolower($text), 'proofmore')
+            || str_contains(strtolower($text), 'proofdone');
+
+        if (!empty($text) && !$isRecognizedCommand) {
+            return [
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n\n"
+                    . "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+                "chat"         => ["id" => $userId],
+                "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
+            ];
+        }
+
+        // ── Boton "Si, enviar otra" o estado inicial (pedir imagen) ──────────────
+        return [
+            "text"         => "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+            "chat"         => ["id" => $userId],
+            "editprevious" => str_contains(strtolower($text), 'proofmore') ? 1 : 0,
+            "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
+        ];
+    }
+
+    // =========================================================
+    // EVIDENCE WIZARD — Asistente de envio de evidencias en disputa
+    // =========================================================
+
+    /**
+     * Inicia el asistente de evidencias: reemplaza el mensaje del boton por
+     * el primer paso del wizard y almacena el estado en cache.
+     */
+    public function startEvidenceWizard($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer) {
+            $this->updateStatus($bot, "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.not_found"));
+            return ["text" => ""];
+        }
+
+        $userId   = $bot->actor->user_id;
+        $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
+
+        Cache::forever($cacheKey, [
+            'controller' => self::class,
+            'method'     => 'evidenceWizard',
+            'step'       => 'COLLECTING',
+            'data'       => [
+                'offer_code' => $code,
+                'images'     => [],
+            ],
+        ]);
+
+        return [
+            "text" => "🧾 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
+                . "🆔 `{$offer->code}`\n\n"
+                . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+            "chat"         => ["id" => $userId],
+            "editprevious" => 1,
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]],
+                ],
+            ]),
+        ];
+    }
+
+    /**
+     * Paso repetido del asistente de evidencias: recibe fotos, valida el contenido,
+     * pregunta si hay mas, y al finalizar notifica al arbitro con todas las imagenes recopiladas.
+     */
+    public function evidenceWizard($bot)
+    {
+        $userId     = $bot->actor->user_id;
+        $cacheKey   = "wizard_{$bot->tenant->key}_{$userId}";
+        $state      = Cache::get($cacheKey, []);
+        $code       = $state['data']['offer_code'] ?? null;
+        $text       = $bot->message["text"] ?? "";
+        $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
+
+        $cancelBtn  = [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
+        $backBtn    = [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]];
+
+        // ── Cancelacion ──────────────────────────────────────────────────────────
+        if ($text === '/wizardcancel') {
+            Cache::forget($cacheKey);
+            return [
+                "text"         => "❌ " . Lang::get("zentrotraderbot::bot.evidence_wizard.cancelled"),
+                "chat"         => ["id" => $userId],
+                "editprevious" => $isCallback ? 1 : 0,
+                "reply_markup" => json_encode(["inline_keyboard" => [$backBtn]]),
+            ];
+        }
+
+        // ── Deteccion del tipo de contenido recibido ─────────────────────────────
+        $msg          = request("message") ?? [];
+        $hasPhoto     = isset($msg["photo"]);
+        $isImageDoc   = isset($msg["document"])
+            && str_starts_with($msg["document"]["mime_type"] ?? "", "image/");
+        $isValidImage = $hasPhoto || $isImageDoc;
+        $isOtherMedia = !$isValidImage && (
+            isset($msg["document"]) ||        // documento no-imagen
+            isset($msg["video"])    ||
+            isset($msg["audio"])    ||
+            isset($msg["voice"])    ||
+            isset($msg["sticker"])  ||
+            isset($msg["animation"]) ||
+            isset($msg["video_note"]) ||
+            isset($msg["contact"])  ||
+            isset($msg["location"]) ||
+            isset($msg["poll"])     ||
+            isset($msg["dice"])
+        );
+
+        // ── Imagen valida (foto comprimida o documento-imagen) ───────────────────
+        if ($isValidImage) {
+            $fileId = $hasPhoto
+                ? end($msg["photo"])["file_id"]
+                : $msg["document"]["file_id"];
+
+            $state['data']['images'][] = $fileId;
+            Cache::forever($cacheKey, $state);
+
+            $offer = Offers::findByCode($code);
+            if ($offer) {
+                $data               = $offer->data ?? [];
+                $data['evidence'][] = $fileId;
+                $offer->update(['data' => $data]);
+            }
+
+            $count = count($state['data']['images']);
+
+            return [
+                "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => $count]) . "\n\n"
+                    . "❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more"),
+                "chat"         => ["id" => $userId],
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [[
+                        ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "evimore {$code}"],
+                        ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"),  "callback_data" => "evidone {$code}"],
+                    ]],
+                ]),
+            ];
+        }
+
+        // ── Contenido invalido (video, audio, sticker, doc no-imagen, etc.) ──────
+        if ($isOtherMedia) {
+            return [
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n\n"
+                    . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "chat"         => ["id" => $userId],
+                "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
+            ];
+        }
+
+        // ── Boton "No, eso es todo" ───────────────────────────────────────────────
+        if (str_contains(strtolower($text), 'evidone')) {
+            $images = $state['data']['images'] ?? [];
+
+            if (empty($images)) {
+                return [
+                    "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.no_images") . "\n\n"
+                        . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                    "chat"         => ["id" => $userId],
+                    "editprevious" => 1,
+                    "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
+                ];
+            }
+
+            Cache::forget($cacheKey);
+
+            // Notificar a los administradores/arbitros con las evidencias
+            $offer = Offers::findByCode($code);
+            if ($offer) {
+                $botTenant        = app('active_bot');
+                $actorsController = new ActorsController();
+                $admins           = $actorsController->getData(Actors::class, [
+                    ["contain" => true, "name" => "admin_level", "value" => [1, "1"]],
+                ], $botTenant->code);
+
+                foreach ($admins as $admin) {
+                    TelegramController::sendMessage([
+                        "message" => [
+                            "text" => "⚖️ *" . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notification_title") . "*\n"
+                                . "🆔 `{$offer->code}`\n\n"
+                                . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notification_body"),
+                            "chat" => ["id" => $admin->user_id],
+                        ],
+                    ], $botTenant->token);
+
+                    foreach ($images as $fileId) {
+                        TelegramController::sendPhoto([
+                            "message" => [
+                                "photo" => $fileId,
+                                "text"  => "",
+                                "chat"  => ["id" => $admin->user_id],
+                            ],
+                        ], $botTenant->token);
+                    }
+                }
+            }
+
+            return [
+                "text"         => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notified"),
+                "chat"         => ["id" => $userId],
+                "editprevious" => 1,
+                "reply_markup" => json_encode(["inline_keyboard" => [$backBtn]]),
+            ];
+        }
+
+        // ── Texto inesperado (no es comando reconocido del wizard) ────────────────
+        $isRecognizedCommand = empty($text)
+            || str_contains(strtolower($text), 'evimore')
+            || str_contains(strtolower($text), 'evidone');
+
+        if (!empty($text) && !$isRecognizedCommand) {
+            return [
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n\n"
+                    . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "chat"         => ["id" => $userId],
+                "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
+            ];
+        }
+
+        // ── Boton "Si, enviar otra" o estado inicial (pedir imagen) ──────────────
+        return [
+            "text"         => "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+            "chat"         => ["id" => $userId],
+            "editprevious" => str_contains(strtolower($text), 'evimore') ? 1 : 0,
+            "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
+        ];
     }
 
     /**
