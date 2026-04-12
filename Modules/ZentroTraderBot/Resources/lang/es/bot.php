@@ -215,9 +215,15 @@ return [
         ],
         "pending" => [
             "title" => "Procesando transacción...",
-            "creating" => [
-                "line1" => "Tu transacción de bloqueo fue detectada en la red.",
-                "line2" => "La red Polygon puede tardar entre 1 y 3 minutos en confirmarla. No cierres el bot; te avisaremos en cuanto esté lista.",
+            "creating_seller" => [
+                "line1" => "Alguien ha aplicado a tu oferta.",
+                "line2" => "Los fondos están siendo movidos desde tu cuenta al sistema de garantía.",
+                "line3" => "El proceso puede tardar entre 1 y 3 minutos. No necesitas hacer nada más; el bot te notificará cuando esté listo.",
+            ],
+            "creating_buyer" => [
+                "line1" => "Tu solicitud de intercambio fue detectada en la red.",
+                "line2" => "Los fondos del vendedor están siendo bloqueados en el sistema de garantía para que puedas realizar el pago con confianza.",
+                "line3" => "El proceso puede tardar entre 1 y 3 minutos. No necesitas hacer nada más; el bot te notificará sobre el siguiente paso.",
             ],
             "cancelling" => [
                 "line1" => "Se detectó tu cancelación en la red.",

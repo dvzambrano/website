@@ -195,11 +195,18 @@ class ProcessContractActivity
 
         switch ($eventName) {
             case 'TRADECREATED':
-                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.creating.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.creating.line2");
                 $seller = $params['seller'] ?? $offer->seller_address;
-                $buyer = $params['buyer'] ?? $offer->buyer_address;
-                $this->notifyByAddress($seller, $msg, $bot->token, [], $offer);
-                $this->notifyByAddress($buyer, $msg, $bot->token, [], $offer);
+                $buyer  = $params['buyer']  ?? $offer->buyer_address;
+                $msgSeller = $header
+                    . Lang::get("zentrotraderbot::bot.offer.pending.creating_seller.line1") . "\n"
+                    . Lang::get("zentrotraderbot::bot.offer.pending.creating_seller.line2") . "\n"
+                    . Lang::get("zentrotraderbot::bot.offer.pending.creating_seller.line3");
+                $msgBuyer = $header
+                    . Lang::get("zentrotraderbot::bot.offer.pending.creating_buyer.line1") . "\n"
+                    . Lang::get("zentrotraderbot::bot.offer.pending.creating_buyer.line2") . "\n"
+                    . Lang::get("zentrotraderbot::bot.offer.pending.creating_buyer.line3");
+                $this->notifyByAddress($seller, $msgSeller, $bot->token, [], $offer);
+                $this->notifyByAddress($buyer,  $msgBuyer,  $bot->token, [], $offer);
                 break;
 
             case 'TRADECANCELLED':
