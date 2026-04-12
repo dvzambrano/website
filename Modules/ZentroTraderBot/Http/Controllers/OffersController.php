@@ -1174,12 +1174,15 @@ class OffersController extends Controller
             ],
         ]);
 
+        // Editar el mensaje del boton para confirmarlo y eliminar el boton
+        $this->updateStatus($bot, "⏳ " . Lang::get("zentrotraderbot::bot.proof_wizard.wizard_started"));
+
+        // Enviar nuevo mensaje independiente con las instrucciones del wizard
         return [
             "text" => "🧾 *" . Lang::get("zentrotraderbot::bot.proof_wizard.title") . "*\n"
                 . "🆔 `{$offer->code}`\n\n"
                 . "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
             "chat"         => ["id" => $userId],
-            "editprevious" => 1,
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]],
@@ -1298,24 +1301,37 @@ class OffersController extends Controller
                 $botTenant = app('active_bot');
                 $seller    = Suscriptions::findByAddress($offer->seller_address);
                 if ($seller && $seller->user_id) {
-                    TelegramController::sendMessage([
-                        "message" => [
-                            "text" => "📩 *" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_title") . "*\n"
-                                . "🆔 `{$offer->code}`\n\n"
-                                . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_body"),
-                            "chat" => ["id" => $seller->user_id],
-                        ],
-                    ], $botTenant->token);
-
-                    foreach ($images as $fileId) {
+                    // 1. Primero las imagenes: grupo si son varias, foto individual si es una sola
+                    if (count($images) === 1) {
                         TelegramController::sendPhoto([
                             "message" => [
-                                "photo" => $fileId,
+                                "photo" => $images[0],
                                 "text"  => "",
                                 "chat"  => ["id" => $seller->user_id],
                             ],
                         ], $botTenant->token);
+                    } else {
+                        TelegramController::sendMediaGroup([
+                            "message" => [
+                                "chat"  => ["id" => $seller->user_id],
+                                "media" => array_map(
+                                    fn($fid) => ["type" => "photo", "media" => $fid],
+                                    $images
+                                ),
+                            ],
+                        ], $botTenant->token);
                     }
+
+                    // 2. Luego el mensaje con el contexto y la advertencia de seguridad
+                    TelegramController::sendMessage([
+                        "message" => [
+                            "text" => "📩 *" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_title") . "*\n"
+                                . "🆔 `{$offer->code}`\n\n"
+                                . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_body") . "\n\n"
+                                . "🚨 *" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_warning") . "*",
+                            "chat" => ["id" => $seller->user_id],
+                        ],
+                    ], $botTenant->token);
                 }
             }
 

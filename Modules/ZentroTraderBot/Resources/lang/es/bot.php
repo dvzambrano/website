@@ -445,7 +445,8 @@ return [
 
     "proof_wizard" => [
         "title" => "Enviar Comprobante de Pago",
-        "instructions" => "Envie la imagen de su comprobante de pago.",
+        "wizard_started" => "Asistente de comprobante iniciado. Envie su imagen cuando este listo.",
+        "instructions" => "Envie la imagen de su comprobante de pago. Puede enviar varias, una a la vez.",
         "image_received" => "Imagen recibida. Lleva :count en total.",
         "ask_more" => "Desea enviar alguna imagen mas?",
         "yes_more" => "Si, enviar otra",
@@ -455,7 +456,8 @@ return [
         "cancelled" => "Ha cancelado el envio del comprobante.",
         "seller_notified" => "Su comprobante ha sido enviado. El vendedor debera confirmar la recepcion del pago.",
         "seller_notification_title" => "El comprador ha enviado su comprobante de pago",
-        "seller_notification_body" => "Revise las imagenes adjuntas. Si ha recibido el pago, confirme la transaccion.",
+        "seller_notification_body" => "El comprador afirma haber realizado el pago. Revise las imagenes adjuntas.",
+        "seller_notification_warning" => "No confirme la transaccion sin antes verificar manualmente en su cuenta bancaria o billetera que el dinero fue recibido. La evidencia visual no es suficiente.",
     ],
 
     // =========================================================
