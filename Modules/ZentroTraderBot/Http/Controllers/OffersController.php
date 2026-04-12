@@ -25,6 +25,7 @@ use Modules\Laravel\Services\DateService;
 use Carbon\Carbon;
 use Modules\Laravel\Services\TextService;
 use Modules\ZentroTraderBot\Jobs\UpdateOfferInChannel;
+use Modules\ZentroTraderBot\Jobs\SendRecoverReminder;
 
 class OffersController extends Controller
 {
@@ -788,8 +789,22 @@ class OffersController extends Controller
         $timeoutAt = (int) $blockchainTrade['createdAt'] + (int) $status["tradeTimeout"];
 
         if ($now < $timeoutAt) {
-            $minutes = ceil(($timeoutAt - $now) / 60);
-            $this->updateStatus($bot, "🚫 " . Lang::get("zentrotraderbot::bot.recover_offer.wait", ['minutes' => $minutes]));
+            $secondsLeft = $timeoutAt - $now;
+            $minutes     = ceil($secondsLeft / 60);
+
+            $this->updateStatus(
+                $bot,
+                "🚫 " . Lang::get("zentrotraderbot::bot.recover_offer.wait", ['minutes' => $minutes]) . "\n\n"
+                    . "🔔 " . Lang::get("zentrotraderbot::bot.recover_offer.wait_scheduled")
+            );
+
+            // Programar el recordatorio para cuando expire el plazo exactamente
+            SendRecoverReminder::dispatch(
+                $bot->tenant->key,
+                $code,
+                $bot->actor->user_id
+            )->delay(now()->addSeconds($secondsLeft));
+
             return false;
         }
 

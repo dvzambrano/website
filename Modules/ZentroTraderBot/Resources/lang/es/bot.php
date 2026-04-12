@@ -365,7 +365,11 @@ return [
     "recover_offer" => [
         "checking" => "Verificando condiciones de recuperación...",
         "not_found_blockchain" => "No se encontró el intercambio en la red.",
-        "wait" => "Aún no puedes reclamar: Debes esperar :minutes minutos.",
+        "wait" => "Aún no puedes reclamar. Faltan :minutes minutos para que expire el plazo del comprador.",
+        "wait_scheduled" => "Te enviaremos un aviso cuando puedas iniciar la recuperación de tus fondos.",
+        "ready_title" => "Ya puedes reclamar",
+        "ready_body" => "El comprador no completó el pago en el tiempo establecido. Puedes iniciar la recuperación de tus fondos ahora.",
+        "ready_button" => "Reclamar fondos ahora",
         "requesting" => "Solicitando devolución sin gas...",
         "success" => "Fondos en revision. El intercambio ha sido cancelado por expiración: un árbitro revisará que no haya pendientes y sus :amount USD serán devueltos a su cuenta.",
         "rejected" => "La red rechazó la solicitud de expiración.",
