@@ -215,15 +215,44 @@ return [
         ],
         "pending" => [
             "title" => "Procesando transacción...",
-            "creating" => "Tu transacción de bloqueo fue detectada en la red.\n_La red Polygon puede tardar entre 1 y 3 minutos en confirmarla. No cierres el bot; te avisaremos en cuanto esté lista._",
-            "cancelling" => "Se detectó tu cancelación en la red.\n_Confirmando en breve..._",
-            "signing_proof" => "Tu comprobante de pago fue enviado a la red.\n_Ahora esperamos que el vendedor verifique la recepción y confirme. Te notificaremos de inmediato._",
-            "signing_confirm" => "Tu confirmación fue enviada a la red.\n_Estamos cerrando el intercambio. Puede tardar 1 a 3 minutos. Te avisaremos cuando esté listo._",
-            "closing_buyer" => "¡El vendedor confirmó la recepción de tu pago!\nLos fondos están siendo liberados hacia tu cuenta.\n_Puede tardar entre 1 y 3 minutos. No necesitas hacer nada más._",
-            "closing_seller" => "¡Confirmaste exitosamente la recepción del pago!\nLa transacción está siendo finalizada en la red.\n_Puede tardar entre 1 y 3 minutos. Te notificaremos cuando los fondos sean acreditados._",
-            "expiring" => "Se detectó la expiración del intercambio.\n_Confirmando en breve..._",
-            "dispute" => "Se detectó la apertura de disputa.\n_Confirmando en breve..._",
-            "resolving" => "Se detectó la resolución del árbitro.\n_Confirmando en breve..._",
+            "creating" => [
+                "line1" => "Tu transacción de bloqueo fue detectada en la red.",
+                "line2" => "La red Polygon puede tardar entre 1 y 3 minutos en confirmarla. No cierres el bot; te avisaremos en cuanto esté lista.",
+            ],
+            "cancelling" => [
+                "line1" => "Se detectó tu cancelación en la red.",
+                "line2" => "Confirmando en breve...",
+            ],
+            "signing_proof" => [
+                "line1" => "Tu comprobante de pago fue enviado a la red.",
+                "line2" => "Ahora esperamos que el vendedor verifique la recepción y confirme. Te notificaremos de inmediato.",
+            ],
+            "signing_confirm" => [
+                "line1" => "Tu confirmación fue enviada a la red.",
+                "line2" => "Estamos cerrando el intercambio. Puede tardar 1 a 3 minutos. Te avisaremos cuando esté listo.",
+            ],
+            "closing_buyer" => [
+                "line1" => "¡El vendedor confirmó la recepción de tu pago!",
+                "line2" => "Los fondos están siendo liberados hacia tu cuenta.",
+                "line3" => "Puede tardar entre 1 y 3 minutos. No necesitas hacer nada más.",
+            ],
+            "closing_seller" => [
+                "line1" => "¡Confirmaste exitosamente la recepción del pago!",
+                "line2" => "La transacción está siendo finalizada en la red.",
+                "line3" => "Puede tardar entre 1 y 3 minutos. Te notificaremos cuando los fondos sean acreditados.",
+            ],
+            "expiring" => [
+                "line1" => "Se detectó la expiración del intercambio.",
+                "line2" => "Confirmando en breve...",
+            ],
+            "dispute" => [
+                "line1" => "Se detectó la apertura de disputa.",
+                "line2" => "Confirmando en breve...",
+            ],
+            "resolving" => [
+                "line1" => "Se detectó la resolución del árbitro.",
+                "line2" => "Confirmando en breve...",
+            ],
         ],
     ],
 
