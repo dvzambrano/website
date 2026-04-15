@@ -34,7 +34,7 @@ class SecurityService
         return $hash;
     }
 
-    public static function derivePassword($service, $seed)
+    public static function derivePassword($service, $seed, $length = 16)
     {
         // 1. Normalización inmediata
         $service = strtolower(trim($service));
@@ -57,7 +57,7 @@ class SecurityService
         $pass .= $digits[ord($entropy[2]) % strlen($digits)];
         $pass .= $symbols[ord($entropy[3]) % strlen($symbols)];
 
-        for ($i = 4; $i < 16; $i++) {
+        for ($i = 4; $i < $length; $i++) {
             $pass .= $all[ord($entropy[$i]) % strlen($all)];
         }
 
