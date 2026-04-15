@@ -50,6 +50,8 @@ class SecurityService
      */
     public static function derivePassword(string $service, string $seed, int $length = 16): string
     {
+        $service = trim(strtolower($service));
+
         // Generamos el hash determinista: mismo input → mismo output siempre
         $hash = hash_hmac('sha256', strtolower($service), $seed, true);
 
