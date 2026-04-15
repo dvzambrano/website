@@ -36,18 +36,21 @@ class SecurityService
 
     public static function derivePassword($service, $seed)
     {
+        // 1. Normalización inmediata
+        $service = strtolower(trim($service));
+
         $upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
         $lower = "abcdefghjkmnpqrstuvwxyz";
         $digits = "23456789";
         $symbols = "!@#$%^&*-_+=?";
         $all = $upper . $lower . $digits . $symbols;
 
-        // Generar entropía (96 bytes en total)
-        $h256 = hash_hmac('sha256', strtolower($service), $seed, true);
+        // 2. Generar entropía (Usando el mismo service para ambos)
+        $h256 = hash_hmac('sha256', $service, $seed, true);
         $h512 = hash_hmac('sha512', $service . ':v1', $seed, true);
         $entropy = $h256 . $h512;
 
-        // 1. Construir base de 16 caracteres
+        // 3. Construcción base
         $pass = "";
         $pass .= $upper[ord($entropy[0]) % strlen($upper)];
         $pass .= $lower[ord($entropy[1]) % strlen($lower)];
@@ -58,11 +61,11 @@ class SecurityService
             $pass .= $all[ord($entropy[$i]) % strlen($all)];
         }
 
-        // 2. Shuffle manual determinista (Fisher-Yates usando los bytes del hash)
-        // Empezamos a usar bytes desde la posición 20 para no repetir los del inicio
+        // 4. Shuffle manual (Fisher-Yates)
         $chars = str_split($pass);
         $bytePos = 20;
-        for ($i = count($chars) - 1; $i > 0; $i--) {
+        for ($i = 15; $i > 0; $i--) {
+            // Usamos el byte para decidir la posición j
             $j = ord($entropy[$bytePos++]) % ($i + 1);
             $tmp = $chars[$i];
             $chars[$i] = $chars[$j];
