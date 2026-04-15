@@ -53,6 +53,8 @@ use Modules\ZentroTraderBot\Http\Controllers\RampController;
 use Modules\Laravel\Http\Controllers\TestController as BaseController;
 use Modules\Laravel\Services\ConfigService;
 
+use Modules\ZentroOwnerBot\Services\SecurityService;
+
 class CustomTestController extends BaseController
 {
     private $GutoTradeTestBot;
@@ -73,6 +75,15 @@ class CustomTestController extends BaseController
         ]);
     }
 
+
+
+    public function testPassword()
+    {
+        $mio = SecurityService::generateHash("1", "1", 20);
+        $nuevo = SecurityService::derivePassword("1", "1");
+
+        dd($mio, $nuevo);
+    }
 
 
     public function testNetworks()

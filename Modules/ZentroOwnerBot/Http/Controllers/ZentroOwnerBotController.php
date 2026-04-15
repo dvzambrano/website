@@ -48,6 +48,18 @@ class ZentroOwnerBotController extends JsonsController
                 );
             };
 
+        $this->strategies["/h"] = function () use ($array) {
+            $key = strtolower($array["message"]);
+            $hash = SecurityService::derivePassword($key, $this->actor->user_id, 20);
+            return array(
+                "text" =>
+                    "🔐 *" . strtoupper($key) . " hash:*\n" .
+                    "`{$hash}`\n" .
+                    "_" . Lang::choice("zentroownerbot::bot.prompts.password.warning", ZentroOwnerBotController::$AUTODESTROY_TIME_IN_MINS, ['count' => ZentroOwnerBotController::$AUTODESTROY_TIME_IN_MINS]) . "_",
+                "autodestroy" => ZentroOwnerBotController::$AUTODESTROY_TIME_IN_MINS,
+            );
+        };
+
         $this->strategies["/f"] =
             function () use ($array) {
                 return array(
