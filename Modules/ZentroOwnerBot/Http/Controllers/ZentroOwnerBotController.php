@@ -6,7 +6,7 @@ use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\TelegramBot\Traits\UsesTelegramBot;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\ZentroOwnerBot\Services\SecurityService;
 use Illuminate\Support\Facades\Lang;
 
 use Modules\Laravel\Entities\sfSecurity;
@@ -38,7 +38,7 @@ class ZentroOwnerBotController extends JsonsController
                 $key = strtolower($array["message"]);
                 $demo = false;
                 //$demo = isset($request["demo"]);
-                $hash = $this->generateHash($this->actor->user_id, $key, 20, $demo);
+                $hash = SecurityService::generateHash($this->actor->user_id, $key, 20, $demo);
                 return array(
                     "text" =>
                         "🔐 *" . strtoupper($key) . " hash:*\n" .
@@ -228,35 +228,6 @@ class ZentroOwnerBotController extends JsonsController
         }
 
         return $iniciales;
-    }
-
-    private function generateHash($text, $key, $length = false, $debug = false)
-    {
-        $key = strtolower($key);
-        if ($debug) {
-            echo $text . "\n" . $key . "\n";
-        }
-        $hash = hash_hmac('sha256', $text, $key);
-        if ($length) {
-            if ($length > 64) {
-                $length = 64;
-            }
-            $hash = substr($hash, 0, $length);
-        }
-        // Convertir la primera letra del hash a mayúscula (si existe)
-        $hash = preg_replace_callback(
-            '/[a-z]/', // Busca la primera letra minúscula
-            function ($matches) {
-                return strtoupper($matches[0]); // Convierte a mayúscula
-            },
-            $hash,
-            1// Solo la primera ocurrencia
-        );
-        if ($debug) {
-            die($hash);
-        }
-
-        return $hash;
     }
 
     public function generateZentroLicence($request)
