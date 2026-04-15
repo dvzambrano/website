@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,5 +18,7 @@ Route::prefix('ZentroOwnerBot')->group(function () {
 });
 
 Route::prefix('webhook')->group(function () {
-    Route::post('/generator', 'ServicesController@processWebhook')->name('generator-webhook');
+    Route::post('/generator', 'ServicesController@processWebhook')
+        ->withoutMiddleware([VerifyCsrfToken::class]);
+
 });
