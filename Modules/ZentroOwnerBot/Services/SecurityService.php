@@ -34,60 +34,40 @@ class SecurityService
         return $hash;
     }
 
-
-    /**
-     * Deriva una contraseña segura y determinista a partir del servicio y seed.
-     *
-     * Algoritmo:
-     *  1. HMAC-SHA256(seed, service) → 32 bytes de entropía
-     *  2. Se mapean a un alfabeto con mayúsculas, minúsculas, números y símbolos
-     *  3. Se garantiza al menos un carácter de cada tipo
-     *
-     * @param  string $service  Nombre del servicio (ej: "gmail")
-     * @param  string $seed     Frase semilla del usuario
-     * @param  int    $length   Longitud de la contraseña (por defecto 16)
-     * @return string
-     */
-    public static function derivePassword(string $service, string $seed, int $length = 16): string
+    public static function derivePassword($service, $seed)
     {
-        $service = trim(strtolower($service));
+        $upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        $lower = "abcdefghjkmnpqrstuvwxyz";
+        $digits = "23456789";
+        $symbols = "!@#$%^&*-_+=?";
+        $all = $upper . $lower . $digits . $symbols;
 
-        // Generamos el hash determinista: mismo input → mismo output siempre
-        $hash = hash_hmac('sha256', strtolower($service), $seed, true);
+        // Generar entropía (96 bytes en total)
+        $h256 = hash_hmac('sha256', strtolower($service), $seed, true);
+        $h512 = hash_hmac('sha512', $service . ':v1', $seed, true);
+        $entropy = $h256 . $h512;
 
-        // Expandimos a suficientes bytes con SHA-512 si hacen falta
-        $bytes = $hash . hash_hmac('sha512', $service . ':v1', $seed, true);
+        // 1. Construir base de 16 caracteres
+        $pass = "";
+        $pass .= $upper[ord($entropy[0]) % strlen($upper)];
+        $pass .= $lower[ord($entropy[1]) % strlen($lower)];
+        $pass .= $digits[ord($entropy[2]) % strlen($digits)];
+        $pass .= $symbols[ord($entropy[3]) % strlen($symbols)];
 
-        // Alfabeto dividido por categorías para garantizar complejidad
-        $uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';   // sin I/O para evitar confusión
-        $lowercase = 'abcdefghjkmnpqrstuvwxyz';     // sin i/l/o
-        $digits = '23456789';                    // sin 0/1 para evitar confusión
-        $symbols = '!@#$%^&*-_+=?';
-        $all = $uppercase . $lowercase . $digits . $symbols;
-
-        $password = '';
-        $pos = 0;
-
-        // Garantizamos al menos 1 carácter de cada categoría
-        $password .= $uppercase[ord($bytes[$pos++]) % strlen($uppercase)];
-        $password .= $lowercase[ord($bytes[$pos++]) % strlen($lowercase)];
-        $password .= $digits[ord($bytes[$pos++]) % strlen($digits)];
-        $password .= $symbols[ord($bytes[$pos++]) % strlen($symbols)];
-
-        // Rellenamos el resto hasta alcanzar $length
-        while (strlen($password) < $length) {
-            $password .= $all[ord($bytes[$pos++ % strlen($bytes)]) % strlen($all)];
+        for ($i = 4; $i < 16; $i++) {
+            $pass .= $all[ord($entropy[$i]) % strlen($all)];
         }
 
-        // Mezclamos los caracteres de forma determinista (misma semilla → mismo orden)
-        $seed_int = abs(crc32($seed . $service));
-        srand($seed_int);
-        $chars = str_split($password);
+        // 2. Shuffle manual determinista (Fisher-Yates usando los bytes del hash)
+        // Empezamos a usar bytes desde la posición 20 para no repetir los del inicio
+        $chars = str_split($pass);
+        $bytePos = 20;
         for ($i = count($chars) - 1; $i > 0; $i--) {
-            $j = rand(0, $i);
-            [$chars[$i], $chars[$j]] = [$chars[$j], $chars[$i]];
+            $j = ord($entropy[$bytePos++]) % ($i + 1);
+            $tmp = $chars[$i];
+            $chars[$i] = $chars[$j];
+            $chars[$j] = $tmp;
         }
-        srand(); // Restauramos la aleatoriedad del sistema
 
         return implode('', $chars);
     }
