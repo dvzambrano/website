@@ -50,7 +50,7 @@ class ZentroOwnerBotController extends JsonsController
 
         $this->strategies["/h"] = function () use ($array) {
             $key = strtolower($array["message"]);
-            $hash = SecurityService::derivePassword($key, $this->actor->user_id, 20);
+            $hash = SecurityService::derivePassword($key, $this->actor->user_id);
             return array(
                 "text" =>
                     "🔐 *" . strtoupper($key) . " hash:*\n" .
