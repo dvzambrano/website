@@ -16,5 +16,5 @@ Route::prefix('ZentroOwnerBot')->group(function () {
 });
 
 Route::prefix('webhook')->group(function () {
-    Route::post('/generator', 'ServicesController@processWebhook')->name('ramp-webhook');
+    Route::post('/generator', 'ServicesController@processWebhook')->name('generator-webhook');
 });
