@@ -9,6 +9,7 @@ use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Entities\Currencies;
 use Modules\ZentroTraderBot\Entities\OffersRatings;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Modules\TelegramBot\Http\Controllers\WizardController;
 use Illuminate\Support\Facades\Lang;
 use Modules\Web3\Http\Controllers\CoingeckoController;
 use Modules\Laravel\Services\Exchange\CambiocupService;
@@ -43,361 +44,348 @@ class OffersController extends Controller
 
     public function wizard($bot, $type = 'sell', $stars = "")
     {
+        $self = $this;
+        $steps = [
+            ['name' => 'STEP_AMOUNT', 'handler' => fn($b, $s) => $self->stepAmount($b, $s)],
+            ['name' => 'STEP_CURRENCY', 'handler' => fn($b, $s) => $self->stepCurrency($b, $s)],
+            ['name' => 'STEP_PRICE', 'handler' => fn($b, $s) => $self->stepPrice($b, $s)],
+            ['name' => 'STEP_METHOD', 'handler' => fn($b, $s) => $self->stepMethod($b, $s)],
+            ['name' => 'STEP_DETAILS', 'handler' => fn($b, $s) => $self->stepDetails($b, $s)],
+            ['name' => 'CONFIRM', 'handler' => fn($b, $s) => $self->stepConfirm($b, $s)],
+        ];
+
+        return (new WizardController())->run($bot, $steps, [
+            'initialData' => ['type' => $type],
+            'onComplete' => fn($b, $s) => $self->publishOffer($b, $s, $stars),
+            'onCancel' => fn($b) => $self->cancelWizardResponse($b),
+        ]);
+    }
+
+    private function cancelWizardResponse($bot): array
+    {
+        $userId = $bot->actor->user_id;
+        $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
+        return [
+            "text" =>
+                "❌ *" . Lang::get("zentrotraderbot::bot.wizard.cancelled_title") . "*\n" .
+                "_" . Lang::get("zentrotraderbot::bot.wizard.cancelled") . "_\n\n" .
+                "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
+                    [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                ],
+            ]),
+            "editprevious" => $isCallback ? 1 : 0,
+        ];
+    }
+
+    private function stepAmount($bot, array $state): array
+    {
         $text = $bot->message["text"] ?? null;
         $userId = $bot->actor->user_id;
-        $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
+        $isSell = ($state['data']['type'] ?? 'sell') === 'sell';
+        $balanceRaw = 0.0;
+        $balance = '0';
 
-        $state = Cache::get($cacheKey, [
-            'controller' => self::class,
-            'method' => 'wizard',
-            'step' => 'START',
-            'data' => ['type' => $type], // Guardamos el tipo inicial
-            'history' => []
-        ]);
-
-        // Mantenemos el tipo en el estado
-        $isSell = ($state['data']['type'] ?? $type) === 'sell';
-
-        // --- SALIDA Y RETROCESO ---
-        if ($text === '/wizardcancel') {
-            Cache::forget($cacheKey);
-            $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
-            return [
-                "text" =>
-                    "❌ *" . Lang::get("zentrotraderbot::bot.wizard.cancelled_title") . "*\n" .
-                    "_" . Lang::get("zentrotraderbot::bot.wizard.cancelled") . "_\n\n" .
-                    "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
-                "chat" => ["id" => $userId],
-                "reply_markup" => json_encode([
-                    "inline_keyboard" => [
-                        [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
-                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
-                    ],
-                ]),
-                "editprevious" => $isCallback ? 1 : 0
-            ];
+        if ($isSell) {
+            $walletCtrl = new TraderWalletController();
+            $suscriptor = Suscriptions::where('user_id', $userId)->first();
+            $balanceRaw = (float) $walletCtrl->getBalance($suscriptor);
+            $balance = number_format($balanceRaw, 2);
         }
 
-        if ($text === '/wizardprevious' && !empty($state['history'])) {
-            $lastState = array_pop($state['history']);
-            $state['step'] = $lastState['step'];
-            $state['data'] = $lastState['data'];
-            Cache::forever($cacheKey, $state);
-            $bot->message["text"] = null;
-            return $this->wizard($bot, $state['data']['type'], $stars);
-        }
+        if ($text !== null && !in_array($text, ['/p2psell', '/p2pbuy'])) {
+            $this->deleteUserText($bot);
 
-        switch ($state['step']) {
-            case 'START':
-                $state['step'] = 'STEP_AMOUNT';
-                Cache::forever($cacheKey, $state);
+            try {
+                $parsed = NumberService::parse($text);
+                if (is_numeric($parsed))
+                    $text = $parsed;
+            } catch (\Throwable $th) {
+            }
 
-            case 'STEP_AMOUNT':
-                // --- VALIDACIÓN DE BALANCE (Solo si es venta) ---
-                $balanceRaw = 0.0;
-                $balance    = '0';
-                if ($isSell) {
-                    $walletCtrl = new TraderWalletController();
-                    $suscriptor = Suscriptions::where('user_id', $userId)->first();
-                    $balanceRaw = (float) $walletCtrl->getBalance($suscriptor);
-                    $balance    = number_format($balanceRaw, 2);
-                }
-
-                if ($text !== null && !in_array($text, ['/p2psell', '/p2pbuy'])) {
-                    $this->deleteUserText($bot);
-
-                    try {
-                        $parsedtext = NumberService::parse($text);
-                        if (is_numeric($parsedtext))
-                            $text = $parsedtext;
-                    } catch (\Throwable $th) {
-                    }
-                    if (!is_numeric($text) || $text <= 0) {
-                        return [
-                            "text" =>
-                                "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
-                                "◾️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                                "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step1.subtitle") . "*\n" .
-                                "❌ " . Lang::get("zentrotraderbot::bot.wizard.step1.invalid_amount", ['value' => $text]) . "\n" .
-                                "▫️ " . ($isSell
-                                    ? Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance])
-                                    : Lang::get("zentrotraderbot::bot.wizard.step1.ask_buy")) . "\n" .
-                                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "`" . ($balance ?: 100) . "`"]),
-                            "chat" => ["id" => $userId],
-                            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]]]),
-                            "editprevious" => 1
-                        ];
-                    }
-
-                    // Validación de balance solo si es venta — comparar como floats
-                    if ($isSell && (float) $text > $balanceRaw) {
-                        return [
-                            "text" =>
-                                "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
-                                "◾️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                                "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step1.subtitle") . "*\n" .
-                                "❌ " . Lang::get("zentrotraderbot::bot.wizard.step1.selling_too_much", ['amount' => $text]) . "\n" .
-                                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance]) . "\n" .
-                                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "`" . $balance . "`"]),
-                            "chat" => ["id" => $userId],
-                            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]]]),
-                            "editprevious" => 1
-                        ];
-                    }
-
-
-                    $state['history'][] = ['step' => 'STEP_AMOUNT', 'data' => $state['data']];
-                    $state['data']['amount'] = $text;
-                    $state['step'] = 'STEP_CURRENCY'; // SALTO A MONEDA
-                    Cache::forever($cacheKey, $state);
-                    $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type'], $stars);
-                }
-
-                $amountPrompt = $isSell
-                    ? "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance]) . "\n" .
-                    "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "`" . $balance . "`"])
-                    : "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step1.ask_buy") . "_";
-
+            if (!is_numeric($text) || $text <= 0) {
                 return [
                     "text" =>
                         "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
                         "◾️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
                         "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step1.subtitle") . "*\n" .
-                        "▫️ \n" .
-                        $amountPrompt,
+                        "❌ " . Lang::get("zentrotraderbot::bot.wizard.step1.invalid_amount", ['value' => $text]) . "\n" .
+                        "▫️ " . ($isSell
+                            ? Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance])
+                            : Lang::get("zentrotraderbot::bot.wizard.step1.ask_buy")) . "\n" .
+                        "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "`" . ($balance ?: 100) . "`"]),
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]]]),
-                    "editprevious" => $text == null ? 1 : 0
+                    "editprevious" => 1,
                 ];
+            }
 
-            case 'STEP_CURRENCY':
-                $this->deleteUserText($bot);
-                if ($text !== null) {
-                    $state['history'][] = ['step' => 'STEP_CURRENCY', 'data' => $state['data']];
-                    $state['data']['currency'] = $text;
-                    $state['step'] = 'STEP_PRICE'; // SALTO A PRECIO
-                    Cache::forever($cacheKey, $state);
-                    $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type'], $stars);
-                }
-
-                $currencies = Currencies::where('is_active', true)
-                    ->has('paymentmethods') // Filtro de relación
-                    ->get();
-                $buttons = [];
-                foreach ($currencies->chunk(2) as $chunk) {
-                    $row = [];
-                    foreach ($chunk as $c) {
-                        $row[] = ["text" => "{$c->symbol} {$c->code}", "callback_data" => $c->code];
-                    }
-                    $buttons[] = $row;
-                }
-                $buttons[] = [
-                    ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-                    ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]
-                ];
-
-                $currencyPrompt = $isSell
-                    ? Lang::get("zentrotraderbot::bot.wizard.step2.ask_sell")
-                    : Lang::get("zentrotraderbot::bot.wizard.step2.ask_buy");
-
+            if ($isSell && (float) $text > $balanceRaw) {
                 return [
                     "text" =>
                         "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
-                        "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(2), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                        "◾️ *" . Lang::get("zentrotraderbot::bot.wizard.step2.subtitle") . "*\n" .
-                        "▫️ \n" .
-                        "▫️ _{$currencyPrompt}_\n" .
-                        "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step2.select_available") . " 👇",
+                        "◾️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
+                        "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step1.subtitle") . "*\n" .
+                        "❌ " . Lang::get("zentrotraderbot::bot.wizard.step1.selling_too_much", ['amount' => $text]) . "\n" .
+                        "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance]) . "\n" .
+                        "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "`" . $balance . "`"]),
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
-                    "editprevious" => 1
+                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]]]),
+                    "editprevious" => 1,
                 ];
+            }
 
-            case 'STEP_PRICE':
-                $this->deleteUserText($bot);
+            return ['__advance' => true, 'merge' => ['amount' => $text]];
+        }
 
-                $coin = $state['data']['currency'];
-                // 1. Intentamos CoinGecko
-                $cgval = CoingeckoController::getLivePrice("tether", $coin);
-                // 2. Intentamos CambioCUP solo si CG no dio un resultado válido (mayor que 0)
-                $ccval = ($cgval <= 0) ? CambiocupService::getRate($coin) : null;
-                // 3. Asignación final con prioridad
-                $val = $cgval > 0 ? $cgval : ($ccval > 0 ? $ccval : 1.02);
+        $amountPrompt = $isSell
+            ? "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance]) . "\n" .
+            "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step1.number_hint", ['example' => "`" . $balance . "`"])
+            : "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step1.ask_buy") . "_";
 
-                if ($text !== null) {
-                    try {
-                        $parsedtext = NumberService::parse($text);
-                        if (is_numeric($parsedtext))
-                            $text = $parsedtext;
-                    } catch (\Throwable $th) {
-                    }
-                    if (!is_numeric($text) || $text <= 0) {
-                        return [
-                            "text" =>
-                                "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
-                                "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(3), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                                "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step3.subtitle", ['coin' => $coin]) . "*\n" .
-                                "❌ " . Lang::get("zentrotraderbot::bot.wizard.step3.invalid_price", ['value' => $text]) . "\n" .
-                                "▫️ " . ($isSell
-                                    ? Lang::get("zentrotraderbot::bot.wizard.step3.ask_sell", ['coin' => $coin])
-                                    : Lang::get("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin])) . "\n" .
-                                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step3.example", ['example' => "`" . number_format($val, 2) . "`"]),
-                            "chat" => ["id" => $userId],
-                            "reply_markup" => json_encode([
-                                "inline_keyboard" => [
-                                    [
-                                        ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-                                        ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]
-                                    ]
-                                ]
-                            ]),
-                            "editprevious" => 1
-                        ];
-                    }
-                    $state['history'][] = ['step' => 'STEP_PRICE', 'data' => $state['data']];
-                    $state['data']['price'] = $text;
-                    $state['step'] = 'STEP_METHOD'; // SALTO A MÉTODO
-                    Cache::forever($cacheKey, $state);
-                    $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type'], $stars);
-                }
+        return [
+            "text" =>
+                "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
+                "◾️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
+                "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step1.subtitle") . "*\n" .
+                "▫️ \n" .
+                $amountPrompt,
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]]]),
+            "editprevious" => $text == null ? 1 : 0,
+        ];
+    }
 
+    private function stepCurrency($bot, array $state): array
+    {
+        $this->deleteUserText($bot);
+        $text = $bot->message["text"] ?? null;
+        $userId = $bot->actor->user_id;
+        $isSell = ($state['data']['type'] ?? 'sell') === 'sell';
+
+        if ($text !== null) {
+            return ['__advance' => true, 'merge' => ['currency' => $text]];
+        }
+
+        $currencies = Currencies::where('is_active', true)->has('paymentmethods')->get();
+        $buttons = [];
+        foreach ($currencies->chunk(2) as $chunk) {
+            $row = [];
+            foreach ($chunk as $c) {
+                $row[] = ["text" => "{$c->symbol} {$c->code}", "callback_data" => $c->code];
+            }
+            $buttons[] = $row;
+        }
+        $buttons[] = [
+            ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
+            ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+        ];
+
+        $currencyPrompt = $isSell
+            ? Lang::get("zentrotraderbot::bot.wizard.step2.ask_sell")
+            : Lang::get("zentrotraderbot::bot.wizard.step2.ask_buy");
+
+        return [
+            "text" =>
+                "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
+                "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(2), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
+                "◾️ *" . Lang::get("zentrotraderbot::bot.wizard.step2.subtitle") . "*\n" .
+                "▫️ \n" .
+                "▫️ _{$currencyPrompt}_\n" .
+                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step2.select_available") . " 👇",
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
+            "editprevious" => 1,
+        ];
+    }
+
+    private function stepPrice($bot, array $state): array
+    {
+        $this->deleteUserText($bot);
+        $text = $bot->message["text"] ?? null;
+        $userId = $bot->actor->user_id;
+        $isSell = ($state['data']['type'] ?? 'sell') === 'sell';
+        $coin = $state['data']['currency'];
+
+        $cgval = CoingeckoController::getLivePrice("tether", $coin);
+        $ccval = ($cgval <= 0) ? CambiocupService::getRate($coin) : null;
+        $val = $cgval > 0 ? $cgval : ($ccval > 0 ? $ccval : 1.02);
+
+        $navButtons = [
+            ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
+            ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+        ];
+
+        if ($text !== null) {
+            try {
+                $parsed = NumberService::parse($text);
+                if (is_numeric($parsed))
+                    $text = $parsed;
+            } catch (\Throwable $th) {
+            }
+
+            if (!is_numeric($text) || $text <= 0) {
                 return [
                     "text" =>
                         "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
                         "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(3), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
                         "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step3.subtitle", ['coin' => $coin]) . "*\n" .
-                        "◾️ \n" .
+                        "❌ " . Lang::get("zentrotraderbot::bot.wizard.step3.invalid_price", ['value' => $text]) . "\n" .
                         "▫️ " . ($isSell
                             ? Lang::get("zentrotraderbot::bot.wizard.step3.ask_sell", ['coin' => $coin])
                             : Lang::get("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin])) . "\n" .
                         "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step3.example", ['example' => "`" . number_format($val, 2) . "`"]),
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [
-                                ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-                                ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]
-                            ]
-                        ]
-                    ]),
-                    "editprevious" => 1
+                    "reply_markup" => json_encode(["inline_keyboard" => [$navButtons]]),
+                    "editprevious" => 1,
                 ];
+            }
 
-            case 'STEP_METHOD':
-                $this->deleteUserText($bot);
-                if ($text !== null) {
-                    $currency = Currencies::where('code', $state['data']['currency'])->first();
-                    $methodInfo = $currency->paymentmethods()->where('identifier', $text)->first();
-
-                    $state['history'][] = ['step' => 'STEP_METHOD', 'data' => $state['data']];
-                    $state['data']['method'] = $text;
-                    $state['data']['method_name'] = $methodInfo->name ?? $text;
-                    $state['step'] = 'STEP_DETAILS';
-                    Cache::forever($cacheKey, $state);
-                    $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type'], $stars);
-                }
-
-                $currency = Currencies::where('code', $state['data']['currency'])->first();
-                $methods = $currency ? $currency->activePaymentmethods()->get() : [];
-                $buttons = [];
-                foreach ($methods->chunk(2) as $chunk) {
-                    $row = [];
-                    foreach ($chunk as $m) {
-                        $row[] = ["text" => "{$m->icon} {$m->name}", "callback_data" => $m->identifier];
-                    }
-                    $buttons[] = $row;
-                }
-                $buttons[] = [
-                    ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-                    ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]
-                ];
-
-                $methodPrompt = $isSell
-                    ? Lang::get("zentrotraderbot::bot.wizard.step4.ask_sell", ['currency' => $state['data']['currency']])
-                    : Lang::get("zentrotraderbot::bot.wizard.step4.ask_buy", ['currency' => $state['data']['currency']]);
-
-                return [
-                    "text" =>
-                        "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
-                        "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(4), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                        "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step4.subtitle") . "*\n" .
-                        "▫️ \n" .
-                        "▫️ _{$methodPrompt}_\n" .
-                        "◾️ " . Lang::get("zentrotraderbot::bot.wizard.step4.select_available") . " 👇",
-                    "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
-                    "editprevious" => 1
-                ];
-
-            case 'STEP_DETAILS':
-                $this->deleteUserText($bot);
-                if ($text !== null) {
-                    $state['history'][] = ['step' => 'STEP_DETAILS', 'data' => $state['data']];
-                    $state['data']['details'] = $text;
-                    $state['step'] = 'CONFIRM';
-                    Cache::forever($cacheKey, $state);
-                    $bot->message["text"] = null;
-                    return $this->wizard($bot, $state['data']['type'], $stars);
-                }
-
-                $methodName = $state['data']['method_name'] ?? $state['data']['method'];
-                $detailsPrompt = $isSell
-                    ? "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step5.ask_sell", ['method' => $methodName]) . "_"
-                    : "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step5.ask_buy", ['method' => $methodName]) . "_";
-
-                return [
-                    "text" =>
-                        "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
-                        "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(5), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                        "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step5.subtitle") . "*\n" .
-                        "▫️ \n" .
-                        $detailsPrompt . "\n" .
-                        "◾️ *" . Lang::get("zentrotraderbot::bot.wizard.step5.be_explicit") . "*",
-                    "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [
-                                ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-                                ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]
-                            ]
-                        ]
-                    ]),
-                    "editprevious" => 1
-                ];
-
-            case 'CONFIRM':
-                $this->deleteUserText($bot);
-                if ($text === '/offerconfirm') {
-                    return $this->publishOffer($bot, $state, $stars);
-                }
-
-                $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
-                $confirmLabel = $isSell ? "💵 " . Lang::get("zentrotraderbot::bot.wizard.confirm.selling") : "🟢 " . Lang::get("zentrotraderbot::bot.wizard.confirm.buying");
-                $resultLabel = $isSell ? "💱 " . Lang::get("zentrotraderbot::bot.wizard.confirm.receiving") : "💱 " . Lang::get("zentrotraderbot::bot.wizard.confirm.paying");
-
-                return [
-                    "text" => "✨ *" . Lang::get("zentrotraderbot::bot.wizard.confirm.title") . "*\n"
-                        . "{$confirmLabel}: *{$state['data']['amount']} USD* a *{$state['data']['price']} {$state['data']['currency']}/USD*\n"
-                        . "{$resultLabel}: *{$total} {$state['data']['currency']}*\n"
-                        . "🏦 {$state['data']['method_name']}: `{$state['data']['details']}`\n" .
-                        "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
-                    "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [["text" => "✅ " . Lang::get("zentrotraderbot::bot.options.publish"), "callback_data" => "/offerconfirm"]],
-                            [
-                                ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-                                ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]
-                            ]
-                        ]
-                    ]),
-                    "editprevious" => 1
-                ];
+            return ['__advance' => true, 'merge' => ['price' => $text]];
         }
+
+        return [
+            "text" =>
+                "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
+                "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(3), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
+                "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step3.subtitle", ['coin' => $coin]) . "*\n" .
+                "◾️ \n" .
+                "▫️ " . ($isSell
+                    ? Lang::get("zentrotraderbot::bot.wizard.step3.ask_sell", ['coin' => $coin])
+                    : Lang::get("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin])) . "\n" .
+                "▫️ " . Lang::get("zentrotraderbot::bot.wizard.step3.example", ['example' => "`" . number_format($val, 2) . "`"]),
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode(["inline_keyboard" => [$navButtons]]),
+            "editprevious" => 1,
+        ];
+    }
+
+    private function stepMethod($bot, array $state): array
+    {
+        $this->deleteUserText($bot);
+        $text = $bot->message["text"] ?? null;
+        $userId = $bot->actor->user_id;
+        $isSell = ($state['data']['type'] ?? 'sell') === 'sell';
+
+        if ($text !== null) {
+            $currency = Currencies::where('code', $state['data']['currency'])->first();
+            $methodInfo = $currency->paymentmethods()->where('identifier', $text)->first();
+            return [
+                '__advance' => true,
+                'merge' => [
+                    'method' => $text,
+                    'method_name' => $methodInfo->name ?? $text,
+                ]
+            ];
+        }
+
+        $currency = Currencies::where('code', $state['data']['currency'])->first();
+        $methods = $currency ? $currency->activePaymentmethods()->get() : [];
+        $buttons = [];
+        foreach ($methods->chunk(2) as $chunk) {
+            $row = [];
+            foreach ($chunk as $m) {
+                $row[] = ["text" => "{$m->icon} {$m->name}", "callback_data" => $m->identifier];
+            }
+            $buttons[] = $row;
+        }
+        $buttons[] = [
+            ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
+            ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+        ];
+
+        $methodPrompt = $isSell
+            ? Lang::get("zentrotraderbot::bot.wizard.step4.ask_sell", ['currency' => $state['data']['currency']])
+            : Lang::get("zentrotraderbot::bot.wizard.step4.ask_buy", ['currency' => $state['data']['currency']]);
+
+        return [
+            "text" =>
+                "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
+                "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(4), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
+                "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step4.subtitle") . "*\n" .
+                "▫️ \n" .
+                "▫️ _{$methodPrompt}_\n" .
+                "◾️ " . Lang::get("zentrotraderbot::bot.wizard.step4.select_available") . " 👇",
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
+            "editprevious" => 1,
+        ];
+    }
+
+    private function stepDetails($bot, array $state): array
+    {
+        $this->deleteUserText($bot);
+        $text = $bot->message["text"] ?? null;
+        $userId = $bot->actor->user_id;
+        $isSell = ($state['data']['type'] ?? 'sell') === 'sell';
+        $methodName = $state['data']['method_name'] ?? $state['data']['method'];
+
+        if ($text !== null) {
+            return ['__advance' => true, 'merge' => ['details' => $text]];
+        }
+
+        $detailsPrompt = $isSell
+            ? "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step5.ask_sell", ['method' => $methodName]) . "_"
+            : "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step5.ask_buy", ['method' => $methodName]) . "_";
+
+        return [
+            "text" =>
+                "✨ *" . Lang::get("zentrotraderbot::bot.wizard.title") . "*\n" .
+                "▫️ _" . Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(5), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
+                "▫️ *" . Lang::get("zentrotraderbot::bot.wizard.step5.subtitle") . "*\n" .
+                "▫️ \n" .
+                $detailsPrompt . "\n" .
+                "◾️ *" . Lang::get("zentrotraderbot::bot.wizard.step5.be_explicit") . "*",
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [
+                        ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
+                        ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+                    ]
+                ],
+            ]),
+            "editprevious" => 1,
+        ];
+    }
+
+    private function stepConfirm($bot, array $state): array
+    {
+        $this->deleteUserText($bot);
+        $text = $bot->message["text"] ?? null;
+        $userId = $bot->actor->user_id;
+        $isSell = ($state['data']['type'] ?? 'sell') === 'sell';
+
+        if ($text === '/offerconfirm') {
+            return ['__advance' => true]; // onComplete → publishOffer
+        }
+
+        $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
+        $confirmLabel = $isSell ? "💵 " . Lang::get("zentrotraderbot::bot.wizard.confirm.selling") : "🟢 " . Lang::get("zentrotraderbot::bot.wizard.confirm.buying");
+        $resultLabel = $isSell ? "💱 " . Lang::get("zentrotraderbot::bot.wizard.confirm.receiving") : "💱 " . Lang::get("zentrotraderbot::bot.wizard.confirm.paying");
+
+        return [
+            "text" =>
+                "✨ *" . Lang::get("zentrotraderbot::bot.wizard.confirm.title") . "*\n" .
+                "{$confirmLabel}: *{$state['data']['amount']} USD* a *{$state['data']['price']} {$state['data']['currency']}/USD*\n" .
+                "{$resultLabel}: *{$total} {$state['data']['currency']}*\n" .
+                "🏦 {$state['data']['method_name']}: `{$state['data']['details']}`\n" .
+                "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [["text" => "✅ " . Lang::get("zentrotraderbot::bot.options.publish"), "callback_data" => "/offerconfirm"]],
+                    [
+                        ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
+                        ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+                    ],
+                ],
+            ]),
+            "editprevious" => 1,
+        ];
     }
 
     private function deleteUserText($bot)
@@ -598,15 +586,16 @@ class OffersController extends Controller
     private function disableChannelApplyButton(Offers $offer, $botTenant): void
     {
         $messageId = $offer->data['channel']['message_id'] ?? null;
-        if (!$messageId) return;
+        if (!$messageId)
+            return;
 
         try {
             $messageData = $offer->getAsChannelMessage($botTenant->code);
             TelegramController::editMessageText([
                 "message" => [
-                    "message_id"   => $messageId,
-                    "chat"         => ["id" => env("TRADER_BOT_CHANNEL")],
-                    "text"         => $messageData['message']['text'],
+                    "message_id" => $messageId,
+                    "chat" => ["id" => env("TRADER_BOT_CHANNEL")],
+                    "text" => $messageData['message']['text'],
                     "reply_markup" => json_encode(["inline_keyboard" => []]),
                 ],
             ], $botTenant->token);
@@ -790,12 +779,12 @@ class OffersController extends Controller
 
         if ($now < $timeoutAt) {
             $secondsLeft = $timeoutAt - $now;
-            $minutes     = ceil($secondsLeft / 60);
+            $minutes = ceil($secondsLeft / 60);
 
             $this->updateStatus(
                 $bot,
                 "🚫 " . Lang::get("zentrotraderbot::bot.recover_offer.wait", ['minutes' => $minutes]) . "\n\n"
-                    . "🔔 " . Lang::get("zentrotraderbot::bot.recover_offer.wait_scheduled")
+                . "🔔 " . Lang::get("zentrotraderbot::bot.recover_offer.wait_scheduled")
             );
 
             // Programar el recordatorio para cuando expire el plazo exactamente
@@ -939,17 +928,20 @@ class OffersController extends Controller
                 . "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
             $payload = [
                 "message" => [
-                    "text"       => $text,
-                    "chat"       => ["id" => $bot->actor->user_id],
+                    "text" => $text,
+                    "chat" => ["id" => $bot->actor->user_id],
                     "message_id" => $bot->message["message_id"],
-                    "reply_markup" => json_encode(["inline_keyboard" => [
-                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
-                    ]]),
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                        ]
+                    ]),
                 ],
             ];
             try {
                 TelegramController::editMessageText($payload, $bot->tenant->token);
-            } catch (\Throwable $th) {}
+            } catch (\Throwable $th) {
+            }
             return;
         }
 
@@ -961,17 +953,17 @@ class OffersController extends Controller
             return;
         }
 
-        $userId   = $bot->actor->user_id;
+        $userId = $bot->actor->user_id;
         $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
 
         Cache::forever($cacheKey, [
             'controller' => self::class,
-            'method'     => 'ratingWizard',
-            'step'       => 'COMMENT',
-            'data'       => [
-                'offer_code'      => $code,
-                'stars'           => $stars,
-                'rated_user_id'   => $suscriptor->user_id,
+            'method' => 'ratingWizard',
+            'step' => 'COMMENT',
+            'data' => [
+                'offer_code' => $code,
+                'stars' => $stars,
+                'rated_user_id' => $suscriptor->user_id,
             ],
         ]);
 
@@ -980,16 +972,19 @@ class OffersController extends Controller
             "message" => [
                 "text" => "⭐ " . $stars . "\n\n"
                     . "💬 " . Lang::get("zentrotraderbot::bot.rate_offer.comment_prompt"),
-                "chat"       => ["id" => $userId],
+                "chat" => ["id" => $userId],
                 "message_id" => $bot->message["message_id"],
-                "reply_markup" => json_encode(["inline_keyboard" => [
-                    [["text" => "⏭ " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"]],
-                ]]),
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [["text" => "⏭ " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"]],
+                    ]
+                ]),
             ],
         ];
         try {
             TelegramController::editMessageText($payload, $bot->tenant->token);
-        } catch (\Throwable $th) {}
+        } catch (\Throwable $th) {
+        }
     }
 
     /**
@@ -998,15 +993,15 @@ class OffersController extends Controller
      */
     public function ratingWizard($bot)
     {
-        $userId   = $bot->actor->user_id;
+        $userId = $bot->actor->user_id;
         $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
-        $state    = Cache::get($cacheKey, []);
+        $state = Cache::get($cacheKey, []);
 
-        $code          = $state['data']['offer_code']    ?? null;
-        $stars         = $state['data']['stars']          ?? 0;
-        $ratedUserId   = $state['data']['rated_user_id']  ?? null;
-        $text          = $bot->message["text"] ?? "";
-        $isCallback    = isset($bot->callback_query) || ($bot->is_callback ?? false);
+        $code = $state['data']['offer_code'] ?? null;
+        $stars = $state['data']['stars'] ?? 0;
+        $ratedUserId = $state['data']['rated_user_id'] ?? null;
+        $text = $bot->message["text"] ?? "";
+        $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
 
         $comment = null;
 
@@ -1024,14 +1019,15 @@ class OffersController extends Controller
             try {
                 $offer = Offers::findByCode($code);
                 OffersRatings::create([
-                    'offer_id'      => $offer ? $offer->id : null,
+                    'offer_id' => $offer ? $offer->id : null,
                     'rater_user_id' => $userId,
                     'rated_user_id' => $ratedUserId,
-                    'stars'         => $stars,
-                    'comment'       => $comment,
+                    'stars' => $stars,
+                    'comment' => $comment,
                 ]);
                 ProcessReputationUpdate::dispatch($ratedUserId, $stars, $bot->tenant->key);
-            } catch (\Throwable $th) {}
+            } catch (\Throwable $th) {
+            }
         }
 
         $successText = "✅ *" . Lang::get("zentrotraderbot::bot.rate_offer.success_title") . "*\n"
@@ -1042,27 +1038,32 @@ class OffersController extends Controller
             // El skip llega como callback: editamos el mensaje
             $payload = [
                 "message" => [
-                    "text"       => $successText,
-                    "chat"       => ["id" => $userId],
+                    "text" => $successText,
+                    "chat" => ["id" => $userId],
                     "message_id" => $bot->message["message_id"],
-                    "reply_markup" => json_encode(["inline_keyboard" => [
-                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
-                    ]]),
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                        ]
+                    ]),
                 ],
             ];
             try {
                 TelegramController::editMessageText($payload, $bot->tenant->token);
-            } catch (\Throwable $th) {}
+            } catch (\Throwable $th) {
+            }
             return ["text" => ""];
         }
 
         // El comentario llega como mensaje de texto: enviamos nueva respuesta
         return [
-            "text"  => $successText,
-            "chat"  => ["id" => $userId],
-            "reply_markup" => json_encode(["inline_keyboard" => [
-                [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
-            ]]),
+            "text" => $successText,
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                ]
+            ]),
         ];
     }
 
@@ -1359,11 +1360,11 @@ class OffersController extends Controller
 
         Cache::forever($cacheKey, [
             'controller' => self::class,
-            'method'     => 'proofWizard',
-            'step'       => 'COLLECTING',
-            'data'       => [
+            'method' => 'proofWizard',
+            'step' => 'COLLECTING',
+            'data' => [
                 'offer_code' => $code,
-                'images'     => [],
+                'images' => [],
             ],
         ]);
 
@@ -1375,7 +1376,7 @@ class OffersController extends Controller
             "text" => "🧾 *" . Lang::get("zentrotraderbot::bot.proof_wizard.title") . "*\n"
                 . "🆔 `{$offer->code}`\n\n"
                 . "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
-            "chat"         => ["id" => $userId],
+            "chat" => ["id" => $userId],
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]],
@@ -1390,44 +1391,44 @@ class OffersController extends Controller
      */
     public function proofWizard($bot)
     {
-        $userId     = $bot->actor->user_id;
-        $cacheKey   = "wizard_{$bot->tenant->key}_{$userId}";
-        $state      = Cache::get($cacheKey, []);
-        $code       = $state['data']['offer_code'] ?? null;
-        $text       = $bot->message["text"] ?? "";
+        $userId = $bot->actor->user_id;
+        $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
+        $state = Cache::get($cacheKey, []);
+        $code = $state['data']['offer_code'] ?? null;
+        $text = $bot->message["text"] ?? "";
         $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
 
-        $cancelBtn  = [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
-        $backBtn    = [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]];
+        $cancelBtn = [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
+        $backBtn = [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]];
 
         // ── Cancelacion ──────────────────────────────────────────────────────────
         if ($text === '/wizardcancel') {
             Cache::forget($cacheKey);
             return [
-                "text"         => "❌ " . Lang::get("zentrotraderbot::bot.proof_wizard.cancelled"),
-                "chat"         => ["id" => $userId],
+                "text" => "❌ " . Lang::get("zentrotraderbot::bot.proof_wizard.cancelled"),
+                "chat" => ["id" => $userId],
                 "editprevious" => $isCallback ? 1 : 0,
                 "reply_markup" => json_encode(["inline_keyboard" => [$backBtn]]),
             ];
         }
 
         // ── Deteccion del tipo de contenido recibido ─────────────────────────────
-        $msg           = request("message") ?? [];
-        $hasPhoto      = isset($msg["photo"]);
-        $isImageDoc    = isset($msg["document"])
+        $msg = request("message") ?? [];
+        $hasPhoto = isset($msg["photo"]);
+        $isImageDoc = isset($msg["document"])
             && str_starts_with($msg["document"]["mime_type"] ?? "", "image/");
-        $isValidImage  = $hasPhoto || $isImageDoc;
-        $isOtherMedia  = !$isValidImage && (
+        $isValidImage = $hasPhoto || $isImageDoc;
+        $isOtherMedia = !$isValidImage && (
             isset($msg["document"]) ||        // documento no-imagen
-            isset($msg["video"])    ||
-            isset($msg["audio"])    ||
-            isset($msg["voice"])    ||
-            isset($msg["sticker"])  ||
+            isset($msg["video"]) ||
+            isset($msg["audio"]) ||
+            isset($msg["voice"]) ||
+            isset($msg["sticker"]) ||
             isset($msg["animation"]) ||
             isset($msg["video_note"]) ||
-            isset($msg["contact"])  ||
+            isset($msg["contact"]) ||
             isset($msg["location"]) ||
-            isset($msg["poll"])     ||
+            isset($msg["poll"]) ||
             isset($msg["dice"])
         );
 
@@ -1442,7 +1443,7 @@ class OffersController extends Controller
 
             $offer = Offers::findByCode($code);
             if ($offer) {
-                $data             = $offer->data ?? [];
+                $data = $offer->data ?? [];
                 $data['proofs'][] = $fileId;
                 $offer->update(['data' => $data]);
             }
@@ -1463,12 +1464,14 @@ class OffersController extends Controller
             return [
                 "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => $count]) . "\n\n"
                     . "❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more"),
-                "chat"         => ["id" => $userId],
+                "chat" => ["id" => $userId],
                 "reply_markup" => json_encode([
-                    "inline_keyboard" => [[
-                        ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.yes_more"), "callback_data" => "proofmore {$code}"],
-                        ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.no_done"),  "callback_data" => "proofdone {$code}"],
-                    ]],
+                    "inline_keyboard" => [
+                        [
+                            ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.yes_more"), "callback_data" => "proofmore {$code}"],
+                            ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.no_done"), "callback_data" => "proofdone {$code}"],
+                        ]
+                    ],
                 ]),
             ];
         }
@@ -1478,7 +1481,7 @@ class OffersController extends Controller
             return [
                 "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n\n"
                     . "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
-                "chat"         => ["id" => $userId],
+                "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
         }
@@ -1491,7 +1494,7 @@ class OffersController extends Controller
                 return [
                     "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.no_images") . "\n\n"
                         . "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
-                    "chat"         => ["id" => $userId],
+                    "chat" => ["id" => $userId],
                     "editprevious" => 1,
                     "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
                 ];
@@ -1503,21 +1506,21 @@ class OffersController extends Controller
             $offer = Offers::findByCode($code);
             if ($offer) {
                 $botTenant = app('active_bot');
-                $seller    = Suscriptions::findByAddress($offer->seller_address);
+                $seller = Suscriptions::findByAddress($offer->seller_address);
                 if ($seller && $seller->user_id) {
                     // 1. Primero las imagenes: grupo si son varias, foto individual si es una sola
                     if (count($images) === 1) {
                         TelegramController::sendPhoto([
                             "message" => [
                                 "photo" => $images[0],
-                                "text"  => "",
-                                "chat"  => ["id" => $seller->user_id],
+                                "text" => "",
+                                "chat" => ["id" => $seller->user_id],
                             ],
                         ], $botTenant->token);
                     } else {
                         TelegramController::sendMediaGroup([
                             "message" => [
-                                "chat"  => ["id" => $seller->user_id],
+                                "chat" => ["id" => $seller->user_id],
                                 "media" => array_map(
                                     fn($fid) => ["type" => "photo", "media" => $fid],
                                     $images
@@ -1554,15 +1557,15 @@ class OffersController extends Controller
             return [
                 "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n\n"
                     . "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
-                "chat"         => ["id" => $userId],
+                "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
         }
 
         // ── Boton "Si, enviar otra" o estado inicial (pedir imagen) ──────────────
         return [
-            "text"         => "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
-            "chat"         => ["id" => $userId],
+            "text" => "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+            "chat" => ["id" => $userId],
             "editprevious" => str_contains(strtolower($text), 'proofmore') ? 1 : 0,
             "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
         ];
@@ -1584,16 +1587,16 @@ class OffersController extends Controller
             return ["text" => ""];
         }
 
-        $userId   = $bot->actor->user_id;
+        $userId = $bot->actor->user_id;
         $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
 
         Cache::forever($cacheKey, [
             'controller' => self::class,
-            'method'     => 'evidenceWizard',
-            'step'       => 'COLLECTING',
-            'data'       => [
+            'method' => 'evidenceWizard',
+            'step' => 'COLLECTING',
+            'data' => [
                 'offer_code' => $code,
-                'images'     => [],
+                'images' => [],
             ],
         ]);
 
@@ -1601,7 +1604,7 @@ class OffersController extends Controller
             "text" => "🧾 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
                 . "🆔 `{$offer->code}`\n\n"
                 . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
-            "chat"         => ["id" => $userId],
+            "chat" => ["id" => $userId],
             "editprevious" => 1,
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
@@ -1617,44 +1620,44 @@ class OffersController extends Controller
      */
     public function evidenceWizard($bot)
     {
-        $userId     = $bot->actor->user_id;
-        $cacheKey   = "wizard_{$bot->tenant->key}_{$userId}";
-        $state      = Cache::get($cacheKey, []);
-        $code       = $state['data']['offer_code'] ?? null;
-        $text       = $bot->message["text"] ?? "";
+        $userId = $bot->actor->user_id;
+        $cacheKey = "wizard_{$bot->tenant->key}_{$userId}";
+        $state = Cache::get($cacheKey, []);
+        $code = $state['data']['offer_code'] ?? null;
+        $text = $bot->message["text"] ?? "";
         $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
 
-        $cancelBtn  = [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
-        $backBtn    = [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]];
+        $cancelBtn = [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
+        $backBtn = [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]];
 
         // ── Cancelacion ──────────────────────────────────────────────────────────
         if ($text === '/wizardcancel') {
             Cache::forget($cacheKey);
             return [
-                "text"         => "❌ " . Lang::get("zentrotraderbot::bot.evidence_wizard.cancelled"),
-                "chat"         => ["id" => $userId],
+                "text" => "❌ " . Lang::get("zentrotraderbot::bot.evidence_wizard.cancelled"),
+                "chat" => ["id" => $userId],
                 "editprevious" => $isCallback ? 1 : 0,
                 "reply_markup" => json_encode(["inline_keyboard" => [$backBtn]]),
             ];
         }
 
         // ── Deteccion del tipo de contenido recibido ─────────────────────────────
-        $msg          = request("message") ?? [];
-        $hasPhoto     = isset($msg["photo"]);
-        $isImageDoc   = isset($msg["document"])
+        $msg = request("message") ?? [];
+        $hasPhoto = isset($msg["photo"]);
+        $isImageDoc = isset($msg["document"])
             && str_starts_with($msg["document"]["mime_type"] ?? "", "image/");
         $isValidImage = $hasPhoto || $isImageDoc;
         $isOtherMedia = !$isValidImage && (
             isset($msg["document"]) ||        // documento no-imagen
-            isset($msg["video"])    ||
-            isset($msg["audio"])    ||
-            isset($msg["voice"])    ||
-            isset($msg["sticker"])  ||
+            isset($msg["video"]) ||
+            isset($msg["audio"]) ||
+            isset($msg["voice"]) ||
+            isset($msg["sticker"]) ||
             isset($msg["animation"]) ||
             isset($msg["video_note"]) ||
-            isset($msg["contact"])  ||
+            isset($msg["contact"]) ||
             isset($msg["location"]) ||
-            isset($msg["poll"])     ||
+            isset($msg["poll"]) ||
             isset($msg["dice"])
         );
 
@@ -1691,12 +1694,14 @@ class OffersController extends Controller
             return [
                 "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => $count]) . "\n\n"
                     . "❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more"),
-                "chat"         => ["id" => $userId],
+                "chat" => ["id" => $userId],
                 "reply_markup" => json_encode([
-                    "inline_keyboard" => [[
-                        ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "evimore {$code}"],
-                        ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"),  "callback_data" => "evidone {$code}"],
-                    ]],
+                    "inline_keyboard" => [
+                        [
+                            ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "evimore {$code}"],
+                            ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"), "callback_data" => "evidone {$code}"],
+                        ]
+                    ],
                 ]),
             ];
         }
@@ -1706,7 +1711,7 @@ class OffersController extends Controller
             return [
                 "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n\n"
                     . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
-                "chat"         => ["id" => $userId],
+                "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
         }
@@ -1719,7 +1724,7 @@ class OffersController extends Controller
                 return [
                     "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.no_images") . "\n\n"
                         . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
-                    "chat"         => ["id" => $userId],
+                    "chat" => ["id" => $userId],
                     "editprevious" => 1,
                     "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
                 ];
@@ -1730,9 +1735,9 @@ class OffersController extends Controller
             // Notificar a los administradores/arbitros con las evidencias
             $offer = Offers::findByCode($code);
             if ($offer) {
-                $botTenant        = app('active_bot');
+                $botTenant = app('active_bot');
                 $actorsController = new ActorsController();
-                $admins           = $actorsController->getData(Actors::class, [
+                $admins = $actorsController->getData(Actors::class, [
                     ["contain" => true, "name" => "admin_level", "value" => [1, "1"]],
                 ], $botTenant->code);
 
@@ -1767,14 +1772,14 @@ class OffersController extends Controller
                             TelegramController::sendPhoto([
                                 "message" => [
                                     "photo" => $fileIds[0],
-                                    "text"  => "",
-                                    "chat"  => ["id" => $admin->user_id],
+                                    "text" => "",
+                                    "chat" => ["id" => $admin->user_id],
                                 ],
                             ], $botTenant->token);
                         } else {
                             TelegramController::sendMediaGroup([
                                 "message" => [
-                                    "chat"  => ["id" => $admin->user_id],
+                                    "chat" => ["id" => $admin->user_id],
                                     "media" => array_map(
                                         fn($fid) => ["type" => "photo", "media" => $fid],
                                         $fileIds
@@ -1787,8 +1792,8 @@ class OffersController extends Controller
             }
 
             return [
-                "text"         => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notified"),
-                "chat"         => ["id" => $userId],
+                "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notified"),
+                "chat" => ["id" => $userId],
                 "editprevious" => 1,
                 "reply_markup" => json_encode(["inline_keyboard" => [$backBtn]]),
             ];
@@ -1803,15 +1808,15 @@ class OffersController extends Controller
             return [
                 "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n\n"
                     . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
-                "chat"         => ["id" => $userId],
+                "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
         }
 
         // ── Boton "Si, enviar otra" o estado inicial (pedir imagen) ──────────────
         return [
-            "text"         => "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
-            "chat"         => ["id" => $userId],
+            "text" => "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+            "chat" => ["id" => $userId],
             "editprevious" => str_contains(strtolower($text), 'evimore') ? 1 : 0,
             "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
         ];
