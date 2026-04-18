@@ -448,10 +448,7 @@ class ZentroTraderBotController extends JsonsController
         $this->strategies["/rateoffer"] =
             function () use ($array) {
                 $controller = new OffersController();
-                $controller->startRatingWizard($this, $array["pieces"][1], $array["pieces"][2]);
-                return [
-                    "text" => "",
-                ];
+                return $controller->startRatingWizard($this, $array["pieces"][1], $array["pieces"][2]);
             };
 
         $this->strategies["/recoveroffer"] =
