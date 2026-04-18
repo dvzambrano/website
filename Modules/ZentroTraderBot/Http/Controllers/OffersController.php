@@ -27,6 +27,7 @@ use Carbon\Carbon;
 use Modules\Laravel\Services\TextService;
 use Modules\ZentroTraderBot\Jobs\UpdateOfferInChannel;
 use Modules\ZentroTraderBot\Jobs\SendRecoverReminder;
+use Modules\ZentroTraderBot\Jobs\ProcessProofSigning;
 
 class OffersController extends Controller
 {
@@ -1460,8 +1461,16 @@ class OffersController extends Controller
             }
         }
 
-        $this->comprobantOffer($bot, $code);
-        return ["text" => ""];
+        ProcessProofSigning::dispatch(
+            $bot->tenant->key,
+            $code,
+            $bot->actor->user_id
+        );
+
+        return [
+            "text" => "✅ *" . Lang::get("zentrotraderbot::bot.sign_offer.proof_sent") . "*",
+            "chat" => ["id" => $bot->actor->user_id],
+        ];
     }
 
     // =========================================================

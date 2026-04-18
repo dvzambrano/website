@@ -233,6 +233,11 @@ return [
                 "line1" => "Tu comprobante de pago fue enviado.",
                 "line2" => "Ahora esperamos que el vendedor verifique la recepción y confirme. No necesita hacer nada más por ahora; le notificaremos sobre el siguiente paso.",
             ],
+            "signing_proof_seller" => [
+                "title" => "El comprador ha enviado su comprobante de pago",
+                "line1" => "Revisa tu cuenta bancaria o billetera para verificar que el pago fue recibido.",
+                "line2" => "Cuando hayas confirmado la recepción, presiona el botón para liberar los fondos del escrow.",
+            ],
             "signing_confirm" => [
                 "line1" => "Tu confirmación fue enviada a la red.",
                 "line2" => "Estamos cerrando el intercambio. Puede tardar 1 a 3 minutos. Te avisaremos cuando esté listo.",

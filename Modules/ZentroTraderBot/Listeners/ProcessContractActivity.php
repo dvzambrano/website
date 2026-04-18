@@ -221,8 +221,18 @@ class ProcessContractActivity
                 $signerIsBuyer = $signer && strtolower($signer) === strtolower($offer->buyer_address ?? '');
                 if ($signerIsBuyer) {
                     // El comprador envió su comprobante → le confirmamos y le explicamos que espera al vendedor
-                    $msg = $header . "✅ " . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.line2");
-                    $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer);
+                    $msgBuyer = $header . "✅ " . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.line2");
+                    $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, [], $offer);
+
+                    // Notificar al vendedor inmediatamente con el botón de confirmar.
+                    // La TX del comprador está en mempool y llegará confirmada en segundos;
+                    // el vendedor ya puede revisar su cuenta y confirmar la recepción.
+                    $msgSeller = $header
+                        . "📩 *" . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof_seller.title") . "*\n"
+                        . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof_seller.line1") . "\n"
+                        . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof_seller.line2");
+                    $confirmMenu = [[["text" => "✅ " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"]]];
+                    $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $confirmMenu, $offer);
                 } else {
                     // El vendedor confirmó la recepción → le indicamos que la TX se está cerrando
                     $msg = $header . "✅ " . Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm.line2");
