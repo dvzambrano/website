@@ -55,9 +55,11 @@ class OffersController extends Controller
         ];
 
         return (new WizardController())->run($bot, $steps, [
+            'controller'  => self::class,
+            'method'      => 'wizard',
             'initialData' => ['type' => $type],
-            'onComplete' => fn($b, $s) => $self->publishOffer($b, $s, $stars),
-            'onCancel' => fn($b) => $self->cancelWizardResponse($b),
+            'onComplete'  => fn($b, $s) => $self->publishOffer($b, $s, $stars),
+            'onCancel'    => fn($b) => $self->cancelWizardResponse($b),
         ]);
     }
 

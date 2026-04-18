@@ -18,6 +18,8 @@ class WizardController extends Controller
      *   - Return a response array (with 'text' key) to display a prompt or error
      *
      * @param array $options
+     *   - controller   (string)   FQCN of the calling controller — required for routing
+     *   - method       (string)   Method name of the calling entry point — required for routing
      *   - initialData  (array)    Initial state data merged into wizard start
      *   - cachePrefix  (string)   Cache key prefix, default 'wizard'
      *   - onComplete   (callable) fn($bot, $state): mixed — called after last step advances
@@ -33,9 +35,11 @@ class WizardController extends Controller
         $cacheKey = "{$prefix}_{$bot->tenant->key}_{$userId}";
 
         $state = Cache::get($cacheKey, [
-            'step' => 'START',
-            'data' => $options['initialData'] ?? [],
-            'history' => [],
+            'controller' => $options['controller'] ?? null,
+            'method'     => $options['method'] ?? null,
+            'step'       => 'START',
+            'data'       => $options['initialData'] ?? [],
+            'history'    => [],
         ]);
 
         // --- CANCEL ---
