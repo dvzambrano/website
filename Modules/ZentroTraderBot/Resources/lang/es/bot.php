@@ -250,7 +250,7 @@ return [
             "closing_seller" => [
                 "line1" => "¡Confirmaste exitosamente la recepción del pago!",
                 "line2" => "Estamos liberando los fondos a la contraparte.",
-                "line3" => "Esto puede tardar entre 1 y 3 minutos; por ahora nonecesita hacer nada más.",
+                "line3" => "Esto puede tardar entre 1 y 3 minutos; por ahora no necesita hacer nada más.",
             ],
             "expiring" => [
                 "line1" => "Se detectó la expiración del intercambio.",

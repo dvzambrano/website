@@ -4,6 +4,7 @@ namespace Modules\ZentroTraderBot\Http\Controllers;
 
 use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Entities\Currencies;
@@ -1371,34 +1372,32 @@ class OffersController extends Controller
         // ── Imagen valida ────────────────────────────────────────────────────────
         if ($isValidImage) {
             $fileId = $hasPhoto ? end($msg['photo'])['file_id'] : $msg['document']['file_id'];
-            $images = $state['data']['images'];
-            $images[] = $fileId;
 
+            // Atomic DB append con lock para evitar race condition entre webhooks simultaneos de album
+            $currentImages = [];
             $offer = Offers::findByCode($code);
             if ($offer) {
-                $data = $offer->data ?? [];
-                $data['proofs'][$userId][] = $fileId;
-                $offer->update(['data' => $data]);
-            }
-
-            // Deduplicacion de album: fotos subsiguientes editan el mensaje anterior para mostrar el conteo real
-            $mediaGroupId = $msg['media_group_id'] ?? null;
-            $isAlbumDuplicate = false;
-            if ($mediaGroupId) {
-                $groupKey = "wizard_group_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
-                if (Cache::has($groupKey)) {
-                    $isAlbumDuplicate = true;
-                }
-                Cache::put($groupKey, 1, now()->addSeconds(5));
+                DB::transaction(function () use ($offer, $userId, $fileId, &$currentImages) {
+                    $locked = Offers::lockForUpdate()->find($offer->id);
+                    $data   = $locked->data ?? [];
+                    $proofs = $data['proofs'][$userId] ?? [];
+                    if (!in_array($fileId, $proofs)) {
+                        $proofs[] = $fileId;
+                    }
+                    $data['proofs'][$userId] = $proofs;
+                    $locked->update(['data' => $data]);
+                    $currentImages = $proofs;
+                });
+            } else {
+                $currentImages = array_unique(array_merge($state['data']['images'] ?? [], [$fileId]));
             }
 
             return [
                 '__update' => true,
-                'merge' => ['images' => $images],
+                'merge' => ['images' => $currentImages],
                 'response' => [
-                    "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($images)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more"),
+                    "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($currentImages)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more"),
                     "chat" => ["id" => $userId],
-                    "editprevious" => $isAlbumDuplicate ? 1 : 0,
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [
@@ -1447,7 +1446,6 @@ class OffersController extends Controller
         return [
             "text" => "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
             "chat" => ["id" => $userId],
-            "editprevious" => str_contains(strtolower($text), 'proofmore') ? 1 : 0,
             "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
         ];
     }
@@ -1537,34 +1535,32 @@ class OffersController extends Controller
         // ── Imagen valida ────────────────────────────────────────────────────────
         if ($isValidImage) {
             $fileId = $hasPhoto ? end($msg['photo'])['file_id'] : $msg['document']['file_id'];
-            $images = $state['data']['images'];
-            $images[] = $fileId;
 
+            // Atomic DB append con lock
+            $currentImages = [];
             $offer = Offers::findByCode($code);
             if ($offer) {
-                $data = $offer->data ?? [];
-                $data['evidence'][(string) $userId][] = $fileId;
-                $offer->update(['data' => $data]);
-            }
-
-            // Deduplicacion de album: fotos subsiguientes editan el mensaje anterior para mostrar el conteo real
-            $mediaGroupId = $msg['media_group_id'] ?? null;
-            $isAlbumDuplicate = false;
-            if ($mediaGroupId) {
-                $groupKey = "wizard_group_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
-                if (Cache::has($groupKey)) {
-                    $isAlbumDuplicate = true;
-                }
-                Cache::put($groupKey, 1, now()->addSeconds(5));
+                DB::transaction(function () use ($offer, $userId, $fileId, &$currentImages) {
+                    $locked = Offers::lockForUpdate()->find($offer->id);
+                    $data   = $locked->data ?? [];
+                    $proofs = $data['evidence'][(string) $userId] ?? [];
+                    if (!in_array($fileId, $proofs)) {
+                        $proofs[] = $fileId;
+                    }
+                    $data['evidence'][(string) $userId] = $proofs;
+                    $locked->update(['data' => $data]);
+                    $currentImages = $proofs;
+                });
+            } else {
+                $currentImages = array_unique(array_merge($state['data']['images'] ?? [], [$fileId]));
             }
 
             return [
                 '__update' => true,
-                'merge' => ['images' => $images],
+                'merge' => ['images' => $currentImages],
                 'response' => [
-                    "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($images)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more"),
+                    "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more"),
                     "chat" => ["id" => $userId],
-                    "editprevious" => $isAlbumDuplicate ? 1 : 0,
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [
@@ -1616,7 +1612,6 @@ class OffersController extends Controller
                 . ($offer ? "🆔 `{$offer->code}`\n\n" : "")
                 . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
             "chat" => ["id" => $userId],
-            "editprevious" => 1,
             "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
         ];
     }
