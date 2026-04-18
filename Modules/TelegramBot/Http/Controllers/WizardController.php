@@ -92,6 +92,14 @@ class WizardController extends Controller
         // --- Execute step handler ---
         $result = ($steps[$currentStepIndex]['handler'])($bot, $state);
 
+        // Handler signals "update state, stay on this step"
+        // Return: ['__update' => true, 'merge' => [...], 'response' => [...telegram msg...]]
+        if (is_array($result) && ($result['__update'] ?? false)) {
+            $state['data'] = array_merge($state['data'], $result['merge'] ?? []);
+            Cache::forever($cacheKey, $state);
+            return $result['response'] ?? null;
+        }
+
         // Handler signals advance
         if (is_array($result) && ($result['__advance'] ?? false)) {
             $state['data'] = array_merge($state['data'], $result['merge'] ?? []);
