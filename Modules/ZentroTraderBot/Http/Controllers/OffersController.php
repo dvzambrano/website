@@ -947,7 +947,12 @@ class OffersController extends Controller
         if (!$suscriptor)
             return;
 
-        $bot->message['text'] = null; // primer render: mostrar prompt, no tratar el callback_data como input
+        // Confirmar la selección editando el mensaje de emojis (quita los botones)
+        $emojiMap = ['1' => '😡', '2' => '😟', '3' => '😐', '4' => '🙂', '5' => '🤩'];
+        $selectedEmoji = $emojiMap[(string) $stars] ?? '⭐';
+        $this->updateStatus($bot, "{$selectedEmoji} " . Lang::get("zentrotraderbot::bot.rate_offer.selected", ['stars' => $stars]));
+
+        $bot->message['text'] = null;
         return $this->runRatingWizard($bot, [
             'offer_code' => $code,
             'stars' => $stars,
@@ -992,10 +997,12 @@ class OffersController extends Controller
         }
 
         return [
-            "text" => "⭐ " . $stars . "\n\n💬 " . Lang::get("zentrotraderbot::bot.rate_offer.comment_prompt"),
-            "chat" => ["id" => $userId],
-            "editprevious" => 1,
-            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⏭ " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"]]]]),
+            "text"         => "⭐ " . $stars . "/5\n\n💬 " . Lang::get("zentrotraderbot::bot.rate_offer.comment_prompt"),
+            "chat"         => ["id" => $userId],
+            "reply_markup" => json_encode(["inline_keyboard" => [[
+                ["text" => "⏭ " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"],
+                ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+            ]]]),
         ];
     }
 
