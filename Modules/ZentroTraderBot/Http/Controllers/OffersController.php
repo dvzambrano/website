@@ -29,6 +29,7 @@ use Modules\Laravel\Services\TextService;
 use Modules\ZentroTraderBot\Jobs\UpdateOfferInChannel;
 use Modules\ZentroTraderBot\Jobs\SendRecoverReminder;
 use Modules\ZentroTraderBot\Jobs\ProcessProofSigning;
+use Modules\ZentroTraderBot\Jobs\SendAlbumImageCount;
 
 class OffersController extends Controller
 {
@@ -1375,6 +1376,7 @@ class OffersController extends Controller
 
             // Atomic DB append con lock para evitar race condition entre webhooks simultaneos de album
             $currentImages = [];
+            $mediaGroupId  = $msg['media_group_id'] ?? null;
             $offer = Offers::findByCode($code);
             if ($offer) {
                 DB::transaction(function () use ($offer, $userId, $fileId, &$currentImages) {
@@ -1390,6 +1392,19 @@ class OffersController extends Controller
                 });
             } else {
                 $currentImages = array_unique(array_merge($state['data']['images'] ?? [], [$fileId]));
+            }
+
+            // Album: respuesta silenciosa + job unico que envia 1 mensaje con el conteo final tras 2s
+            if ($mediaGroupId) {
+                SendAlbumImageCount::dispatch(
+                    $bot->tenant->key, $code, $userId, $mediaGroupId,
+                    'proofs', 'proofmore', 'proofdone', 'zentrotraderbot::bot.proof_wizard'
+                )->delay(now()->addSeconds(2));
+                return [
+                    '__update' => true,
+                    'merge'    => ['images' => $currentImages],
+                    'response' => ['text' => '', 'chat' => ['id' => $userId]],
+                ];
             }
 
             return [
@@ -1538,6 +1553,7 @@ class OffersController extends Controller
 
             // Atomic DB append con lock
             $currentImages = [];
+            $mediaGroupId  = $msg['media_group_id'] ?? null;
             $offer = Offers::findByCode($code);
             if ($offer) {
                 DB::transaction(function () use ($offer, $userId, $fileId, &$currentImages) {
@@ -1553,6 +1569,19 @@ class OffersController extends Controller
                 });
             } else {
                 $currentImages = array_unique(array_merge($state['data']['images'] ?? [], [$fileId]));
+            }
+
+            // Album: respuesta silenciosa + job unico que envia 1 mensaje con el conteo final tras 2s
+            if ($mediaGroupId) {
+                SendAlbumImageCount::dispatch(
+                    $bot->tenant->key, $code, $userId, $mediaGroupId,
+                    'evidence', 'evimore', 'evidone', 'zentrotraderbot::bot.evidence_wizard'
+                )->delay(now()->addSeconds(2));
+                return [
+                    '__update' => true,
+                    'merge'    => ['images' => $currentImages],
+                    'response' => ['text' => '', 'chat' => ['id' => $userId]],
+                ];
             }
 
             return [
