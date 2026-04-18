@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Entities\Actors;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
+use Modules\ZentroTraderBot\Jobs\SendRecoverReminder;
 
 class OfferObserver
 {
@@ -79,7 +80,7 @@ class OfferObserver
                     $offer
                 );
 
-                // Mensaje al VENDEDOR
+                // Mensaje al VENDEDOR — sin botón de reclamar; se envía via job cuando expire el plazo
                 $text = "🛡 *" . Lang::get("zentrotraderbot::bot.offer.locked.title") . "*\n"
                     . "🆔 `{$offer->code}`\n"
                     . "🔒 " . Lang::get("zentrotraderbot::bot.offer.locked.seller.funds_blocked", ['amount' => $amount]) . "\n\n"
@@ -88,15 +89,14 @@ class OfferObserver
                     . "📋 _" . Lang::get("zentrotraderbot::bot.offer.locked.seller.then_proof") . "_\n\n"
                     . "🚨 *" . Lang::get("zentrotraderbot::bot.offer.locked.seller.never_confirm", ['price' => $price, 'currency' => $offer->currency]) . "*";
 
-                $this->notifyByAddress(
-                    $offer->seller_address,
-                    $text,
-                    $bot->token,
-                    [
-                        [["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.options.recover_not_paid", ['time' => $diff["legible"]]), "callback_data" => "/recoveroffer {$offer->code}"]],
-                    ],
-                    $offer
-                );
+                $this->notifyByAddress($offer->seller_address, $text, $bot->token, [], $offer);
+
+                // Despachar recordatorio con el botón de reclamar para cuando expire el plazo
+                $sellerSub = Suscriptions::findByAddress($offer->seller_address);
+                if ($sellerSub && $sellerSub->user_id) {
+                    SendRecoverReminder::dispatch($bot->key, $offer->code, (int) $sellerSub->user_id)
+                        ->delay(now()->addSeconds($status["tradeTimeout"]));
+                }
                 break;
 
             case 'COMPLETED':
@@ -207,24 +207,23 @@ class OfferObserver
                 break;
 
             case 'SIGNED':
-                $json    = $offer->data;
-                $pending = $offer->seller_address;
-                // Seller is pending: confirm they received the payment
-                $menu = [[["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"]]];
+                $json   = $offer->data;
+                $signer = strtolower($json['signer'] ?? '');
 
-                if (strtolower($json["signer"]) == strtolower($offer->seller_address)) {
-                    $pending = $offer->buyer_address;
-                    // Buyer is pending: confirm they sent the payment
-                    $menu = [[["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer {$offer->code}"]]];
+                // Si quien firmó fue el COMPRADOR, el vendedor ya recibió el botón de confirmar
+                // en el pass unconfirmed de TRADESIGNED. No duplicamos el mensaje.
+                if ($signer !== strtolower($offer->seller_address)) {
+                    break;
                 }
 
+                // Si quien firmó fue el VENDEDOR, el comprador aún necesita enviar su comprobante
                 $text = "⚠️ *" . Lang::get("zentrotraderbot::bot.offer.signed.pending_title") . "*\n"
                     . "🆔 `{$offer->code}`\n"
                     . "👍 " . Lang::get("zentrotraderbot::bot.offer.signed.counterpart_confirmed") . "\n\n"
                     . "☑️ *" . Lang::get("zentrotraderbot::bot.offer.signed.proceed_confirm") . "*\n"
                     . "⏳ _" . Lang::get("zentrotraderbot::bot.offer.signed.waiting") . "_";
-
-                $this->notifyByAddress($pending, $text, $bot->token, $menu, $offer);
+                $menu = [[["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer {$offer->code}"]]];
+                $this->notifyByAddress($offer->buyer_address, $text, $bot->token, $menu, $offer);
                 break;
 
             case 'SOLVED':

@@ -947,11 +947,6 @@ class OffersController extends Controller
         if (!$suscriptor)
             return;
 
-        // Confirmar la selección editando el mensaje de emojis (quita los botones)
-        $emojiMap = ['1' => '😡', '2' => '😟', '3' => '😐', '4' => '🙂', '5' => '🤩'];
-        $selectedEmoji = $emojiMap[(string) $stars] ?? '⭐';
-        $this->updateStatus($bot, "{$selectedEmoji} " . Lang::get("zentrotraderbot::bot.rate_offer.selected", ['stars' => $stars]));
-
         $bot->message['text'] = null;
         return $this->runRatingWizard($bot, [
             'offer_code' => $code,
@@ -1001,7 +996,6 @@ class OffersController extends Controller
             "chat"         => ["id" => $userId],
             "reply_markup" => json_encode(["inline_keyboard" => [[
                 ["text" => "⏭ " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"],
-                ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
             ]]]),
         ];
     }
@@ -1328,8 +1322,6 @@ class OffersController extends Controller
             return ["text" => ""];
         }
 
-        $this->updateStatus($bot, "⏳ " . Lang::get("zentrotraderbot::bot.proof_wizard.wizard_started"));
-
         $bot->message['text'] = null;
         return $this->runProofWizard($bot, ['offer_code' => $code, 'images' => []]);
     }
@@ -1389,12 +1381,13 @@ class OffersController extends Controller
                 $offer->update(['data' => $data]);
             }
 
-            // Deduplicacion de album
+            // Deduplicacion de album: fotos subsiguientes editan el mensaje anterior para mostrar el conteo real
             $mediaGroupId = $msg['media_group_id'] ?? null;
+            $isAlbumDuplicate = false;
             if ($mediaGroupId) {
                 $groupKey = "wizard_group_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
                 if (Cache::has($groupKey)) {
-                    return ['__update' => true, 'merge' => ['images' => $images], 'response' => ["text" => ""]];
+                    $isAlbumDuplicate = true;
                 }
                 Cache::put($groupKey, 1, now()->addSeconds(5));
             }
@@ -1405,6 +1398,7 @@ class OffersController extends Controller
                 'response' => [
                     "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($images)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more"),
                     "chat" => ["id" => $userId],
+                    "editprevious" => $isAlbumDuplicate ? 1 : 0,
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [
@@ -1465,21 +1459,9 @@ class OffersController extends Controller
 
         $offer = Offers::findByCode($code);
         if ($offer) {
-            $botTenant = app('active_bot');
-            $seller = Suscriptions::findByAddress($offer->seller_address);
-            if ($seller && $seller->user_id) {
-                if (count($images) === 1) {
-                    TelegramController::sendPhoto(["message" => ["photo" => $images[0], "text" => "", "chat" => ["id" => $seller->user_id]]], $botTenant->token);
-                } else {
-                    TelegramController::sendMediaGroup(["message" => ["chat" => ["id" => $seller->user_id], "media" => array_map(fn($fid) => ["type" => "photo", "media" => $fid], $images)]], $botTenant->token);
-                }
-                TelegramController::sendMessage([
-                    "message" => [
-                        "text" => "📩 *" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_title") . "*\n🆔 `{$offer->code}`\n\n" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_body") . "\n\n🚨 *" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_warning") . "*",
-                        "chat" => ["id" => $seller->user_id],
-                    ]
-                ], $botTenant->token);
-            }
+            // Las imágenes y el botón de confirmar al vendedor se envían desde
+            // ProcessContractActivity::sendPendingNotification cuando Moralis detecta
+            // la TX en mempool (TRADESIGNED unconfirmed). Nada que hacer aquí.
         }
 
         ProcessProofSigning::dispatch(
@@ -1565,12 +1547,13 @@ class OffersController extends Controller
                 $offer->update(['data' => $data]);
             }
 
-            // Deduplicacion de album
+            // Deduplicacion de album: fotos subsiguientes editan el mensaje anterior para mostrar el conteo real
             $mediaGroupId = $msg['media_group_id'] ?? null;
+            $isAlbumDuplicate = false;
             if ($mediaGroupId) {
                 $groupKey = "wizard_group_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
                 if (Cache::has($groupKey)) {
-                    return ['__update' => true, 'merge' => ['images' => $images], 'response' => ["text" => ""]];
+                    $isAlbumDuplicate = true;
                 }
                 Cache::put($groupKey, 1, now()->addSeconds(5));
             }
@@ -1581,6 +1564,7 @@ class OffersController extends Controller
                 'response' => [
                     "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($images)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more"),
                     "chat" => ["id" => $userId],
+                    "editprevious" => $isAlbumDuplicate ? 1 : 0,
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [

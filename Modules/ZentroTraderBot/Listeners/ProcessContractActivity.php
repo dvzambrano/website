@@ -147,17 +147,16 @@ class ProcessContractActivity
      */
     private function handleUxCleanup(Offers $offer, string $eventName, $bot, array $params): void
     {
-        // TRADECREATED: borrar el mensaje de "⌛️ Aplicando a la oferta..."
+        // TRADECREATED: borrar el mensaje de "⌛️ Aplicando a la oferta..." de forma síncrona
+        // para que desaparezca antes de que aparezca el mensaje de "Procesando...".
         if ($eventName === 'TRADECREATED') {
             $applyData = $offer->data['apply'] ?? null;
             if ($applyData && isset($applyData['message_id'], $applyData['user_id'])) {
                 try {
-                    DeleteTelegramMessage::dispatch(
-                        (string) $bot->token,
-                        (int) $applyData['user_id'],
-                        (int) $applyData['message_id']
+                    TelegramController::deleteMessage(
+                        ['message' => ['id' => (int) $applyData['message_id'], 'chat' => ['id' => (int) $applyData['user_id']]]],
+                        (string) $bot->token
                     );
-                    // Limpiar para no reintentar en el pass confirmed
                     $currentData = $offer->data;
                     unset($currentData['apply']['message_id']);
                     $offer->update(['data' => $currentData]);
@@ -217,16 +216,27 @@ class ProcessContractActivity
 
             case 'TRADESIGNED':
                 $signer = $params['signer'] ?? null;
-                // Determinar si quien firma es el comprador o el vendedor para contextualizar el mensaje
                 $signerIsBuyer = $signer && strtolower($signer) === strtolower($offer->buyer_address ?? '');
                 if ($signerIsBuyer) {
-                    // El comprador envió su comprobante → le confirmamos y le explicamos que espera al vendedor
+                    // Notificar al comprador
                     $msgBuyer = $header . "✅ " . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.line2");
                     $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, [], $offer);
 
-                    // Notificar al vendedor inmediatamente con el botón de confirmar.
-                    // La TX del comprador está en mempool y llegará confirmada en segundos;
-                    // el vendedor ya puede revisar su cuenta y confirmar la recepción.
+                    // Enviar fotos de comprobante al vendedor (si las hay) antes del mensaje con botón
+                    $sellerSub = Suscriptions::findByAddress($offer->seller_address);
+                    $buyerSub  = Suscriptions::findByAddress($offer->buyer_address);
+                    if ($sellerSub && $sellerSub->user_id && $buyerSub) {
+                        $proofImages = $offer->data['proofs'][$buyerSub->user_id] ?? [];
+                        if (!empty($proofImages)) {
+                            if (count($proofImages) === 1) {
+                                TelegramController::sendPhoto(["message" => ["photo" => $proofImages[0], "text" => "", "chat" => ["id" => $sellerSub->user_id]]], $bot->token);
+                            } else {
+                                TelegramController::sendMediaGroup(["message" => ["chat" => ["id" => $sellerSub->user_id], "media" => array_map(fn($fid) => ["type" => "photo", "media" => $fid], $proofImages)]], $bot->token);
+                            }
+                        }
+                    }
+
+                    // Mensaje al vendedor con botón de confirmar
                     $msgSeller = $header
                         . "📩 *" . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof_seller.title") . "*\n"
                         . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof_seller.line1") . "\n"
@@ -234,7 +244,6 @@ class ProcessContractActivity
                     $confirmMenu = [[["text" => "✅ " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"]]];
                     $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $confirmMenu, $offer);
                 } else {
-                    // El vendedor confirmó la recepción → le indicamos que la TX se está cerrando
                     $msg = $header . "✅ " . Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm.line2");
                     $this->notifyByAddress($signer ?: $offer->seller_address, $msg, $bot->token, [], $offer);
                 }
