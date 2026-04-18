@@ -928,12 +928,15 @@ class OffersController extends Controller
                     "text" => "🤔 *" . Lang::get("zentrotraderbot::bot.rate_offer.not_found_title") . "*\n"
                         . "_" . Lang::get("zentrotraderbot::bot.rate_offer.not_found") . "_\n\n"
                         . "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
-                    "chat"         => ["id" => $bot->actor->user_id],
-                    "message_id"   => $bot->message["message_id"],
+                    "chat" => ["id" => $bot->actor->user_id],
+                    "message_id" => $bot->message["message_id"],
                     "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
                 ],
             ];
-            try { TelegramController::editMessageText($payload, $bot->tenant->token); } catch (\Throwable $th) {}
+            try {
+                TelegramController::editMessageText($payload, $bot->tenant->token);
+            } catch (\Throwable $th) {
+            }
             return;
         }
 
@@ -941,12 +944,13 @@ class OffersController extends Controller
         if ($suscriptor && $suscriptor->user_id == $bot->actor->user_id) {
             $suscriptor = Suscriptions::findByAddress($offer->buyer_address);
         }
-        if (!$suscriptor) return;
+        if (!$suscriptor)
+            return;
 
         $bot->message['text'] = null; // primer render: mostrar prompt, no tratar el callback_data como input
         return $this->runRatingWizard($bot, [
-            'offer_code'    => $code,
-            'stars'         => $stars,
+            'offer_code' => $code,
+            'stars' => $stars,
             'rated_user_id' => $suscriptor->user_id,
         ]);
     }
@@ -962,13 +966,13 @@ class OffersController extends Controller
         return (new WizardController())->run($bot, [
             ['name' => 'COMMENT', 'handler' => fn($b, $s) => $self->stepRatingComment($b, $s)],
         ], [
-            'controller'  => self::class,
-            'method'      => 'ratingWizard',
+            'controller' => self::class,
+            'method' => 'ratingWizard',
             'initialData' => $initialData,
-            'onComplete'  => fn($b, $s) => $self->completeRating($b, $s),
-            'onCancel'    => fn($b) => [
-                "text"         => "❌ " . Lang::get("zentrotraderbot::bot.rate_offer.cancelled"),
-                "chat"         => ["id" => $b->actor->user_id],
+            'onComplete' => fn($b, $s) => $self->completeRating($b, $s),
+            'onCancel' => fn($b) => [
+                "text" => "❌ " . Lang::get("zentrotraderbot::bot.rate_offer.cancelled"),
+                "chat" => ["id" => $b->actor->user_id],
                 "editprevious" => (isset($b->callback_query) || ($b->is_callback ?? false)) ? 1 : 0,
                 "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
             ],
@@ -977,10 +981,10 @@ class OffersController extends Controller
 
     private function stepRatingComment($bot, array $state): array
     {
-        $text   = $bot->message['text'] ?? '';
+        $text = $bot->message['text'] ?? '';
         $userId = $bot->actor->user_id;
-        $code   = $state['data']['offer_code'];
-        $stars  = $state['data']['stars'];
+        $code = $state['data']['offer_code'];
+        $stars = $state['data']['stars'];
 
         if ($text !== '') {
             $comment = str_contains(strtolower($text), 'ratingskip') ? null : (trim($text) ?: null);
@@ -988,8 +992,8 @@ class OffersController extends Controller
         }
 
         return [
-            "text"         => "⭐ " . $stars . "\n\n💬 " . Lang::get("zentrotraderbot::bot.rate_offer.comment_prompt"),
-            "chat"         => ["id" => $userId],
+            "text" => "⭐ " . $stars . "\n\n💬 " . Lang::get("zentrotraderbot::bot.rate_offer.comment_prompt"),
+            "chat" => ["id" => $userId],
             "editprevious" => 1,
             "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "⏭ " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"]]]]),
         ];
@@ -997,22 +1001,23 @@ class OffersController extends Controller
 
     private function completeRating($bot, array $state): array
     {
-        $userId      = $bot->actor->user_id;
+        $userId = $bot->actor->user_id;
         $ratedUserId = $state['data']['rated_user_id'] ?? null;
-        $isCallback  = isset($bot->callback_query) || ($bot->is_callback ?? false);
+        $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
 
         if ($ratedUserId) {
             try {
                 $offer = Offers::findByCode($state['data']['offer_code']);
                 OffersRatings::create([
-                    'offer_id'      => $offer ? $offer->id : null,
+                    'offer_id' => $offer ? $offer->id : null,
                     'rater_user_id' => $userId,
                     'rated_user_id' => $ratedUserId,
-                    'stars'         => $state['data']['stars'],
-                    'comment'       => $state['data']['comment'] ?? null,
+                    'stars' => $state['data']['stars'],
+                    'comment' => $state['data']['comment'] ?? null,
                 ]);
                 ProcessReputationUpdate::dispatch($ratedUserId, $state['data']['stars'], $bot->tenant->key);
-            } catch (\Throwable $th) {}
+            } catch (\Throwable $th) {
+            }
         }
 
         $successText = "✅ *" . Lang::get("zentrotraderbot::bot.rate_offer.success_title") . "*\n"
@@ -1022,7 +1027,10 @@ class OffersController extends Controller
 
         if ($isCallback) {
             $payload = ["message" => ["text" => $successText, "chat" => ["id" => $userId], "message_id" => $bot->message["message_id"], "reply_markup" => $menu]];
-            try { TelegramController::editMessageText($payload, $bot->tenant->token); } catch (\Throwable $th) {}
+            try {
+                TelegramController::editMessageText($payload, $bot->tenant->token);
+            } catch (\Throwable $th) {
+            }
             return ["text" => ""];
         }
 
@@ -1330,13 +1338,13 @@ class OffersController extends Controller
         return (new WizardController())->run($bot, [
             ['name' => 'COLLECTING', 'handler' => fn($b, $s) => $self->stepProofCollecting($b, $s)],
         ], [
-            'controller'  => self::class,
-            'method'      => 'proofWizard',
+            'controller' => self::class,
+            'method' => 'proofWizard',
             'initialData' => $initialData,
-            'onComplete'  => fn($b, $s) => $self->completeProof($b, $s),
-            'onCancel'    => fn($b) => [
-                "text"         => "❌ " . Lang::get("zentrotraderbot::bot.proof_wizard.cancelled"),
-                "chat"         => ["id" => $b->actor->user_id],
+            'onComplete' => fn($b, $s) => $self->completeProof($b, $s),
+            'onCancel' => fn($b) => [
+                "text" => "❌ " . Lang::get("zentrotraderbot::bot.proof_wizard.cancelled"),
+                "chat" => ["id" => $b->actor->user_id],
                 "editprevious" => (isset($b->callback_query) || ($b->is_callback ?? false)) ? 1 : 0,
                 "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
             ],
@@ -1345,20 +1353,20 @@ class OffersController extends Controller
 
     private function stepProofCollecting($bot, array $state): array
     {
-        $text      = $bot->message['text'] ?? '';
-        $userId    = $bot->actor->user_id;
-        $code      = $state['data']['offer_code'];
+        $text = $bot->message['text'] ?? '';
+        $userId = $bot->actor->user_id;
+        $code = $state['data']['offer_code'];
         $cancelBtn = [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
 
-        $msg         = request('message') ?? [];
-        $hasPhoto    = isset($msg['photo']);
-        $isImageDoc  = isset($msg['document']) && str_starts_with($msg['document']['mime_type'] ?? '', 'image/');
+        $msg = request('message') ?? [];
+        $hasPhoto = isset($msg['photo']);
+        $isImageDoc = isset($msg['document']) && str_starts_with($msg['document']['mime_type'] ?? '', 'image/');
         $isValidImage = $hasPhoto || $isImageDoc;
         $isOtherMedia = !$isValidImage && (
             isset($msg['document']) || isset($msg['video']) || isset($msg['audio']) ||
-            isset($msg['voice'])    || isset($msg['sticker']) || isset($msg['animation']) ||
+            isset($msg['voice']) || isset($msg['sticker']) || isset($msg['animation']) ||
             isset($msg['video_note']) || isset($msg['contact']) || isset($msg['location']) ||
-            isset($msg['poll'])     || isset($msg['dice'])
+            isset($msg['poll']) || isset($msg['dice'])
         );
 
         // ── Imagen valida ────────────────────────────────────────────────────────
@@ -1386,14 +1394,18 @@ class OffersController extends Controller
 
             return [
                 '__update' => true,
-                'merge'    => ['images' => $images],
+                'merge' => ['images' => $images],
                 'response' => [
-                    "text"         => "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($images)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more"),
-                    "chat"         => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => [[
-                        ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.yes_more"), "callback_data" => "proofmore {$code}"],
-                        ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.no_done"),  "callback_data" => "proofdone {$code}"],
-                    ]]]),
+                    "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($images)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more"),
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [
+                                ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.yes_more"), "callback_data" => "proofmore {$code}"],
+                                ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.no_done"), "callback_data" => "proofdone {$code}"],
+                            ]
+                        ]
+                    ]),
                 ],
             ];
         }
@@ -1401,8 +1413,8 @@ class OffersController extends Controller
         // ── Contenido invalido ────────────────────────────────────────────────────
         if ($isOtherMedia) {
             return [
-                "text"         => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
-                "chat"         => ["id" => $userId],
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+                "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
         }
@@ -1411,8 +1423,8 @@ class OffersController extends Controller
         if (str_contains(strtolower($text), 'proofdone')) {
             if (empty($state['data']['images'])) {
                 return [
-                    "text"         => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.no_images") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
-                    "chat"         => ["id" => $userId],
+                    "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.no_images") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+                    "chat" => ["id" => $userId],
                     "editprevious" => 1,
                     "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
                 ];
@@ -1424,16 +1436,16 @@ class OffersController extends Controller
         $isKnown = empty($text) || str_contains(strtolower($text), 'proofmore') || str_contains(strtolower($text), 'proofdone');
         if (!empty($text) && !$isKnown) {
             return [
-                "text"         => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
-                "chat"         => ["id" => $userId],
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+                "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
         }
 
         // ── Prompt inicial o "Sí, enviar otra" ───────────────────────────────────
         return [
-            "text"         => "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
-            "chat"         => ["id" => $userId],
+            "text" => "📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+            "chat" => ["id" => $userId],
             "editprevious" => str_contains(strtolower($text), 'proofmore') ? 1 : 0,
             "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
         ];
@@ -1441,23 +1453,25 @@ class OffersController extends Controller
 
     private function completeProof($bot, array $state): array
     {
-        $code   = $state['data']['offer_code'];
+        $code = $state['data']['offer_code'];
         $images = $state['data']['images'] ?? [];
 
         $offer = Offers::findByCode($code);
         if ($offer) {
             $botTenant = app('active_bot');
-            $seller    = Suscriptions::findByAddress($offer->seller_address);
+            $seller = Suscriptions::findByAddress($offer->seller_address);
             if ($seller && $seller->user_id) {
                 if (count($images) === 1) {
                     TelegramController::sendPhoto(["message" => ["photo" => $images[0], "text" => "", "chat" => ["id" => $seller->user_id]]], $botTenant->token);
                 } else {
                     TelegramController::sendMediaGroup(["message" => ["chat" => ["id" => $seller->user_id], "media" => array_map(fn($fid) => ["type" => "photo", "media" => $fid], $images)]], $botTenant->token);
                 }
-                TelegramController::sendMessage(["message" => [
-                    "text" => "📩 *" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_title") . "*\n🆔 `{$offer->code}`\n\n" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_body") . "\n\n🚨 *" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_warning") . "*",
-                    "chat" => ["id" => $seller->user_id],
-                ]], $botTenant->token);
+                TelegramController::sendMessage([
+                    "message" => [
+                        "text" => "📩 *" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_title") . "*\n🆔 `{$offer->code}`\n\n" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_body") . "\n\n🚨 *" . Lang::get("zentrotraderbot::bot.proof_wizard.seller_notification_warning") . "*",
+                        "chat" => ["id" => $seller->user_id],
+                    ]
+                ], $botTenant->token);
             }
         }
 
@@ -1500,13 +1514,13 @@ class OffersController extends Controller
         return (new WizardController())->run($bot, [
             ['name' => 'COLLECTING', 'handler' => fn($b, $s) => $self->stepEvidenceCollecting($b, $s)],
         ], [
-            'controller'  => self::class,
-            'method'      => 'evidenceWizard',
+            'controller' => self::class,
+            'method' => 'evidenceWizard',
             'initialData' => $initialData,
-            'onComplete'  => fn($b, $s) => $self->completeEvidence($b, $s),
-            'onCancel'    => fn($b) => [
-                "text"         => "❌ " . Lang::get("zentrotraderbot::bot.evidence_wizard.cancelled"),
-                "chat"         => ["id" => $b->actor->user_id],
+            'onComplete' => fn($b, $s) => $self->completeEvidence($b, $s),
+            'onCancel' => fn($b) => [
+                "text" => "❌ " . Lang::get("zentrotraderbot::bot.evidence_wizard.cancelled"),
+                "chat" => ["id" => $b->actor->user_id],
                 "editprevious" => (isset($b->callback_query) || ($b->is_callback ?? false)) ? 1 : 0,
                 "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
             ],
@@ -1515,20 +1529,20 @@ class OffersController extends Controller
 
     private function stepEvidenceCollecting($bot, array $state): array
     {
-        $text      = $bot->message['text'] ?? '';
-        $userId    = $bot->actor->user_id;
-        $code      = $state['data']['offer_code'];
+        $text = $bot->message['text'] ?? '';
+        $userId = $bot->actor->user_id;
+        $code = $state['data']['offer_code'];
         $cancelBtn = [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
 
-        $msg          = request('message') ?? [];
-        $hasPhoto     = isset($msg['photo']);
-        $isImageDoc   = isset($msg['document']) && str_starts_with($msg['document']['mime_type'] ?? '', 'image/');
+        $msg = request('message') ?? [];
+        $hasPhoto = isset($msg['photo']);
+        $isImageDoc = isset($msg['document']) && str_starts_with($msg['document']['mime_type'] ?? '', 'image/');
         $isValidImage = $hasPhoto || $isImageDoc;
         $isOtherMedia = !$isValidImage && (
             isset($msg['document']) || isset($msg['video']) || isset($msg['audio']) ||
-            isset($msg['voice'])    || isset($msg['sticker']) || isset($msg['animation']) ||
+            isset($msg['voice']) || isset($msg['sticker']) || isset($msg['animation']) ||
             isset($msg['video_note']) || isset($msg['contact']) || isset($msg['location']) ||
-            isset($msg['poll'])     || isset($msg['dice'])
+            isset($msg['poll']) || isset($msg['dice'])
         );
 
         // ── Imagen valida ────────────────────────────────────────────────────────
@@ -1556,14 +1570,18 @@ class OffersController extends Controller
 
             return [
                 '__update' => true,
-                'merge'    => ['images' => $images],
+                'merge' => ['images' => $images],
                 'response' => [
-                    "text"         => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($images)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more"),
-                    "chat"         => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => [[
-                        ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "evimore {$code}"],
-                        ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"),  "callback_data" => "evidone {$code}"],
-                    ]]]),
+                    "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($images)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more"),
+                    "chat" => ["id" => $userId],
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [
+                                ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "evimore {$code}"],
+                                ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"), "callback_data" => "evidone {$code}"],
+                            ]
+                        ]
+                    ]),
                 ],
             ];
         }
@@ -1571,8 +1589,8 @@ class OffersController extends Controller
         // ── Contenido invalido ────────────────────────────────────────────────────
         if ($isOtherMedia) {
             return [
-                "text"         => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
-                "chat"         => ["id" => $userId],
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
         }
@@ -1581,8 +1599,8 @@ class OffersController extends Controller
         if (str_contains(strtolower($text), 'evidone')) {
             if (empty($state['data']['images'])) {
                 return [
-                    "text"         => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.no_images") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
-                    "chat"         => ["id" => $userId],
+                    "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.no_images") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                    "chat" => ["id" => $userId],
                     "editprevious" => 1,
                     "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
                 ];
@@ -1594,8 +1612,8 @@ class OffersController extends Controller
         $isKnown = empty($text) || str_contains(strtolower($text), 'evimore') || str_contains(strtolower($text), 'evidone');
         if (!empty($text) && !$isKnown) {
             return [
-                "text"         => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
-                "chat"         => ["id" => $userId],
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
         }
@@ -1603,10 +1621,10 @@ class OffersController extends Controller
         // ── Prompt inicial o "Sí, enviar otra" ───────────────────────────────────
         $offer = Offers::findByCode($code);
         return [
-            "text"         => "🧾 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
+            "text" => "🧾 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
                 . ($offer ? "🆔 `{$offer->code}`\n\n" : "")
                 . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
-            "chat"         => ["id" => $userId],
+            "chat" => ["id" => $userId],
             "editprevious" => 1,
             "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
         ];
@@ -1614,24 +1632,26 @@ class OffersController extends Controller
 
     private function completeEvidence($bot, array $state): array
     {
-        $code   = $state['data']['offer_code'];
+        $code = $state['data']['offer_code'];
         $userId = $bot->actor->user_id;
 
         $offer = Offers::findByCode($code);
         if ($offer) {
-            $botTenant      = app('active_bot');
+            $botTenant = app('active_bot');
             $actorsController = new ActorsController();
-            $admins         = $actorsController->getData(Actors::class, [
+            $admins = $actorsController->getData(Actors::class, [
                 ["contain" => true, "name" => "admin_level", "value" => [1, "1"]],
             ], $botTenant->code);
 
             $evidenceByUser = $offer->data['evidence'] ?? [];
 
             foreach ($admins as $admin) {
-                TelegramController::sendMessage(["message" => [
-                    "text" => "⚖️ *" . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notification_title") . "*\n🆔 `{$offer->code}`\n\n" . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notification_body"),
-                    "chat" => ["id" => $admin->user_id],
-                ]], $botTenant->token);
+                TelegramController::sendMessage([
+                    "message" => [
+                        "text" => "⚖️ *" . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notification_title") . "*\n🆔 `{$offer->code}`\n\n" . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notification_body"),
+                        "chat" => ["id" => $admin->user_id],
+                    ]
+                ], $botTenant->token);
 
                 foreach ($evidenceByUser as $senderId => $fileIds) {
                     TelegramController::sendMessage(["message" => ["text" => "👤 ID: `{$senderId}`", "chat" => ["id" => $admin->user_id]]], $botTenant->token);
@@ -1645,8 +1665,8 @@ class OffersController extends Controller
         }
 
         return [
-            "text"         => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notified"),
-            "chat"         => ["id" => $userId],
+            "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notified"),
+            "chat" => ["id" => $userId],
             "editprevious" => 1,
             "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
         ];
