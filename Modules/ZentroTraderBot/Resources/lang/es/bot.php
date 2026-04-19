@@ -190,6 +190,7 @@ return [
         "cancelled" => [
             "title" => "Oferta Cancelada",
             "cancelled_by_buyer" => "La Oferta ha sido cancelada por el comprador.",
+            "cancelled_by_self" => "Ud ha cancelado la aplicación a la Oferta.",
             "funds_returned" => "Se han devuelto :amount USD a su cuenta.",
         ],
         "signed" => [

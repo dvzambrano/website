@@ -192,18 +192,7 @@ class OfferObserver
                 break;
 
             case 'CANCELLED':
-                $text = "❌ *" . Lang::get("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
-                    . "🆔 `{$offer->code}`\n\n"
-                    . "👉 _" . Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_buyer") . "_\n"
-                    . "💵 " . Lang::get("zentrotraderbot::bot.offer.cancelled.funds_returned", ['amount' => $amount]);
-
-                $this->notifyByAddress(
-                    $offer->seller_address,
-                    $text,
-                    $bot->token,
-                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
-                    $offer
-                );
+                // Notifications sent in the unconfirmed pass (ProcessContractActivity::sendPendingNotification)
                 break;
 
             case 'SIGNED':

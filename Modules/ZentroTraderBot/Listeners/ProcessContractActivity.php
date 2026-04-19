@@ -209,9 +209,20 @@ class ProcessContractActivity
                 break;
 
             case 'TRADECANCELLED':
-                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.cancelling.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.cancelling.line2");
-                $this->notifyByAddress($offer->seller_address, $msg, $bot->token, [], $offer);
-                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer);
+                $amount = number_format($offer->amount, 2);
+                $cancelMenu = [
+                    [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
+                    [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                ];
+                $msgBuyer = "❌ *" . Lang::get("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
+                    . "🆔 `{$code}`\n\n"
+                    . "👉 _" . Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_self") . "_";
+                $msgSeller = "❌ *" . Lang::get("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
+                    . "🆔 `{$code}`\n\n"
+                    . "👉 _" . Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_buyer") . "_\n"
+                    . "💵 " . Lang::get("zentrotraderbot::bot.offer.cancelled.funds_returned", ['amount' => $amount]);
+                $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, $cancelMenu, $offer);
+                $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $cancelMenu, $offer);
                 break;
 
             case 'TRADESIGNED':
