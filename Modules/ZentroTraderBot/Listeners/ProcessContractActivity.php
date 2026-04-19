@@ -195,7 +195,7 @@ class ProcessContractActivity
         switch ($eventName) {
             case 'TRADECREATED':
                 $seller = $params['seller'] ?? $offer->seller_address;
-                $buyer  = $params['buyer']  ?? $offer->buyer_address;
+                $buyer = $params['buyer'] ?? $offer->buyer_address;
                 $msgSeller = $header
                     . Lang::get("zentrotraderbot::bot.offer.pending.creating_seller.line1") . "\n"
                     . Lang::get("zentrotraderbot::bot.offer.pending.creating_seller.line2") . "\n"
@@ -205,7 +205,7 @@ class ProcessContractActivity
                     . Lang::get("zentrotraderbot::bot.offer.pending.creating_buyer.line2") . "\n"
                     . Lang::get("zentrotraderbot::bot.offer.pending.creating_buyer.line3");
                 $this->notifyByAddress($seller, $msgSeller, $bot->token, [], $offer);
-                $this->notifyByAddress($buyer,  $msgBuyer,  $bot->token, [], $offer);
+                $this->notifyByAddress($buyer, $msgBuyer, $bot->token, [], $offer);
                 break;
 
             case 'TRADECANCELLED':
@@ -214,13 +214,15 @@ class ProcessContractActivity
                     [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
                     [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
                 ];
-                $msgBuyer = "❌ *" . Lang::get("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
-                    . "🆔 `{$code}`\n\n"
-                    . "👉 _" . Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_self") . "_";
-                $msgSeller = "❌ *" . Lang::get("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
-                    . "🆔 `{$code}`\n\n"
-                    . "👉 _" . Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_buyer") . "_\n"
-                    . "💵 " . Lang::get("zentrotraderbot::bot.offer.cancelled.funds_returned", ['amount' => $amount]);
+                $msgBuyer = "✅ *" . Lang::get("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
+                    . "🆔 `{$code}`\n"
+                    . "📴 " . Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_self") . "\n\n"
+                    . "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
+                $msgSeller = "📴 *" . Lang::get("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
+                    . "🆔 `{$code}`\n"
+                    . "👉 " . Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_buyer") . "\n\n"
+                    . "💵 " . Lang::get("zentrotraderbot::bot.offer.cancelled.funds_returned", ['amount' => $amount])
+                    . "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
                 $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, $cancelMenu, $offer);
                 $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $cancelMenu, $offer);
                 break;
@@ -235,7 +237,7 @@ class ProcessContractActivity
 
                     // Enviar fotos de comprobante al vendedor (si las hay) antes del mensaje con botón
                     $sellerSub = Suscriptions::findByAddress($offer->seller_address);
-                    $buyerSub  = Suscriptions::findByAddress($offer->buyer_address);
+                    $buyerSub = Suscriptions::findByAddress($offer->buyer_address);
                     if ($sellerSub && $sellerSub->user_id && $buyerSub) {
                         $proofImages = $offer->data['proofs'][$buyerSub->user_id] ?? [];
                         if (!empty($proofImages)) {
