@@ -266,8 +266,14 @@ class ProcessContractActivity
                 break;
 
             case 'TRADECLOSED':
-                $msgBuyer = $header . "🎉 " . Lang::get("zentrotraderbot::bot.offer.pending.closing_buyer.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.closing_buyer.line2") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.closing_buyer.line3");
-                $msgSeller = $header . "🎉 " . Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line2") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line3");
+                $msgBuyer = "🎉 *" . Lang::get("zentrotraderbot::bot.offer.pending.closing_buyer.line1")
+                    . "*\n🆔 `{$code}`\n"
+                    . "🔐 " . Lang::get("zentrotraderbot::bot.offer.pending.closing_buyer.line2") . "\n\n"
+                    . "⏱️ _" . Lang::get("zentrotraderbot::bot.offer.pending.closing_buyer.line3") . "_";
+                $msgSeller = "🎉 *" . Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line1")
+                    . "*\n🆔 `{$code}`\n"
+                    . "🔐 " . Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line2") . "\n\n"
+                    . "⏱️ _" . Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line3") . "_";
                 $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, [], $offer);
                 $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, [], $offer);
                 break;
