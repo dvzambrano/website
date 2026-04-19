@@ -217,14 +217,14 @@ return [
         "pending" => [
             "title" => "Procesando transacción...",
             "creating_seller" => [
-                "line1" => "Alguien ha aplicado a su oferta.",
-                "line2" => "Los fondos están siendo movidos desde su cuenta al sistema de garantía.",
-                "line3" => "El proceso puede tardar entre 1 y 3 minutos. No necesita hacer nada ahora; el bot le notificará sobre el siguiente paso.",
+                "title" => "Alguien ha aplicado a su oferta.",
+                "line1" => "Los fondos están siendo movidos desde su cuenta al sistema de garantía.",
+                "line2" => "El proceso puede tardar entre 1 y 3 minutos: le notificaremos en breve sobre el siguiente paso.",
             ],
             "creating_buyer" => [
-                "line1" => "Estamos procesando tu solicitud de intercambio.",
-                "line2" => "Los fondos del vendedor están siendo enviados al sistema de garantía para que pueda realizar el pago con confianza.",
-                "line3" => "El proceso puede tardar entre 1 y 3 minutos. No necesita hacer nada ahora; el bot le notificará sobre el siguiente paso.",
+                "title" => "Procesando tu solicitud de intercambio.",
+                "line1" => "Los fondos del vendedor están siendo enviados al sistema de garantía para que pueda realizar el pago con confianza.",
+                "line2" => "El proceso puede tardar entre 1 y 3 minutos: le notificaremos en breve sobre el siguiente paso.",
             ],
             "cancelling" => [
                 "line1" => "Se detectó tu cancelación en la red.",
