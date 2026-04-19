@@ -468,7 +468,7 @@ return [
         "yes_more" => "Si, enviar otra",
         "no_done" => "No, eso es todo",
         "no_images" => "No ha enviado ninguna imagen. Por favor envie al menos una imagen.",
-        "invalid_content" => "Solo se aceptan imagenes. Por favor envie una foto o un archivo de imagen (JPG, PNG, etc.).",
+        "invalid_content" => "Solo se aceptan imagenes.",
         "cancelled" => "Ha cancelado el envio del comprobante.",
         "seller_notified" => "Su comprobante ha sido enviado. El vendedor debera confirmar la recepcion del pago.",
         "seller_notification_title" => "Comprobante de pago",

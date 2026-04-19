@@ -1457,7 +1457,7 @@ class OffersController extends Controller
         // ── Contenido invalido ────────────────────────────────────────────────────
         if ($isOtherMedia) {
             return [
-                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
@@ -1480,7 +1480,7 @@ class OffersController extends Controller
         $isKnown = empty($text) || str_contains(strtolower($text), 'proofmore') || str_contains(strtolower($text), 'proofdone');
         if (!empty($text) && !$isKnown) {
             return [
-                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n📸 " . Lang::get("zentrotraderbot::bot.proof_wizard.instructions"),
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
@@ -1657,7 +1657,7 @@ class OffersController extends Controller
         // ── Contenido invalido ────────────────────────────────────────────────────
         if ($isOtherMedia) {
             return [
-                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
@@ -1680,7 +1680,7 @@ class OffersController extends Controller
         $isKnown = empty($text) || str_contains(strtolower($text), 'evimore') || str_contains(strtolower($text), 'evidone');
         if (!empty($text) && !$isKnown) {
             return [
-                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
