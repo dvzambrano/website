@@ -462,7 +462,7 @@ return [
     "proof_wizard" => [
         "title" => "Enviar Comprobante de Pago",
         "wizard_started" => "Asistente de comprobante iniciado. Envie su imagen cuando este listo.",
-        "instructions" => "Envie la imagen de su comprobante de pago. Puede enviar varias, una a la vez.",
+        "instructions" => "Envie al menos una imagen de su comprobante de pago",
         "image_received" => "Imagen recibida. Lleva :count en total.",
         "ask_more" => "Desea enviar alguna imagen mas?",
         "yes_more" => "Si, enviar otra",
