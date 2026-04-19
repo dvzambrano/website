@@ -483,8 +483,8 @@ return [
     "evidence_wizard" => [
         "title" => "Enviar Evidencias del Intercambio",
         "instructions" => "Envie las imagenes de sus evidencias del intercambio.",
-        "image_received" => "Imagen recibida. Lleva :count en total.",
-        "ask_more" => "Desea enviar alguna imagen mas?",
+        "image_received" => "Imagen recibida: :count en total.",
+        "ask_more" => "¿Desea enviar alguna más?",
         "yes_more" => "Si, enviar otra",
         "no_done" => "No, eso es todo",
         "no_images" => "No ha enviado ninguna imagen. Por favor envie al menos una imagen.",

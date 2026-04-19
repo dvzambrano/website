@@ -1398,7 +1398,7 @@ class OffersController extends Controller
             }
 
             $msgText = "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($currentImages)])
-                . "\n\n❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more");
+                . "\n🤔 " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more");
             $buttons = json_encode([
                 "inline_keyboard" => [
                     [
@@ -1601,7 +1601,7 @@ class OffersController extends Controller
             }
 
             $msgText = "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)])
-                . "\n\n❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more");
+                . "\n🤔 " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more");
             $buttons = json_encode([
                 "inline_keyboard" => [
                     [
