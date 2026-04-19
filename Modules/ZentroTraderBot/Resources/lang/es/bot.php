@@ -227,20 +227,21 @@ return [
                 "line2" => "El proceso puede tardar entre 1 y 3 minutos: le notificaremos en breve sobre el siguiente paso.",
             ],
             "cancelling" => [
-                "line1" => "Se detectó tu cancelación en la red.",
+                "line1" => "Se detectó tu cancelación.",
                 "line2" => "Confirmando en breve...",
             ],
             "signing_proof" => [
-                "line1" => "Tu comprobante de pago fue enviado.",
-                "line2" => "Ahora esperamos que el vendedor verifique la recepción y confirme. No necesita hacer nada más por ahora; le notificaremos sobre el siguiente paso.",
+                "title" => "Tu comprobante de pago fue enviado.",
+                "line1" => "Ahora esperamos que el vendedor confirme la recepción.",
+                "line2" => "No necesita hacer nada más por ahora; le notificaremos sobre el siguiente paso.",
             ],
             "signing_proof_seller" => [
                 "title" => "El comprador ha enviado su comprobante de pago",
-                "line1" => "Revisa tu cuenta bancaria o billetera para verificar que el pago fue recibido.",
-                "line2" => "Cuando hayas confirmado la recepción, presiona el botón para liberar los fondos del escrow.",
+                "line1" => "Revisa tu cuenta bancaria para verificar que el pago fue recibido.",
+                "line2" => "SOLO CUANDO HAYAS CONFIRMADO la recepción, presiona el botón para liberar los fondos.",
             ],
             "signing_confirm" => [
-                "line1" => "Tu confirmación fue enviada a la red.",
+                "line1" => "Tu confirmación fue enviada.",
                 "line2" => "Estamos cerrando el intercambio. Puede tardar 1 a 3 minutos. Te avisaremos cuando esté listo.",
             ],
             "closing_buyer" => [
@@ -370,7 +371,7 @@ return [
 
     "recover_offer" => [
         "checking" => "Verificando condiciones de recuperación...",
-        "not_found_blockchain" => "No se encontró el intercambio en la red.",
+        "not_found_blockchain" => "No se encontró el intercambio.",
         "wait" => "Aún no puedes reclamar. Faltan :minutes minutos para que expire el plazo del comprador.",
         "wait_scheduled" => "Te enviaremos un aviso cuando puedas iniciar la recuperación de tus fondos.",
         "ready_title" => "Ya puedes reclamar",
@@ -392,7 +393,7 @@ return [
         "account_not_found" => "No se encontró tu cuenta.",
         "sending_proof" => "Enviando confirmación de pago...",
         "no_confirm_payment" => "No se pudo confirmar el pago.",
-        "proof_sent" => "Comprobante enviado. Notificaremos a la contraparte para su verificación...",
+        "proof_sent" => "Comprobante enviado.",
         "confirming_receipt" => "Confirmando recepción del pago...",
         "no_sign" => "No se pudo confirmar.",
         "confirmation_sent" => "Confirmación enviada.",

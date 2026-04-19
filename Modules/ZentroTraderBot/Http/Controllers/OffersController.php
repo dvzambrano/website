@@ -993,11 +993,15 @@ class OffersController extends Controller
         }
 
         return [
-            "text"         => "⭐ " . $stars . "/5\n\n💬 " . Lang::get("zentrotraderbot::bot.rate_offer.comment_prompt"),
-            "chat"         => ["id" => $userId],
-            "reply_markup" => json_encode(["inline_keyboard" => [[
-                ["text" => "⏭ " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"],
-            ]]]),
+            "text" => "⭐ " . $stars . "/5\n\n💬 " . Lang::get("zentrotraderbot::bot.rate_offer.comment_prompt"),
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [
+                        ["text" => "⏭ " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"],
+                    ]
+                ]
+            ]),
         ];
     }
 
@@ -1168,12 +1172,12 @@ class OffersController extends Controller
                 return false;
             }
 
-            $this->updateStatus($bot, "✅ *" . Lang::get("zentrotraderbot::bot.sign_offer.proof_sent") . "*");
+            $this->updateStatus($bot, "✅ " . Lang::get("zentrotraderbot::bot.sign_offer.proof_sent"));
             return $txHash;
 
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'ID already exists')) {
-                $this->updateStatus($bot, "✅ *" . Lang::get("zentrotraderbot::bot.sign_offer.proof_sent") . "*");
+                $this->updateStatus($bot, "✅ " . Lang::get("zentrotraderbot::bot.sign_offer.proof_sent"));
                 return true;
             }
             $this->updateStatus($bot, "❌ *" . Lang::get("zentrotraderbot::bot.sign_offer.error") . "*\n" . $e->getMessage());
@@ -1375,12 +1379,12 @@ class OffersController extends Controller
 
             // Atomic DB append con lock para evitar race condition entre webhooks simultaneos de album
             $currentImages = [];
-            $mediaGroupId  = $msg['media_group_id'] ?? null;
+            $mediaGroupId = $msg['media_group_id'] ?? null;
             $offer = Offers::findByCode($code);
             if ($offer) {
                 DB::transaction(function () use ($offer, $userId, $fileId, &$currentImages) {
                     $locked = Offers::lockForUpdate()->find($offer->id);
-                    $data   = $locked->data ?? [];
+                    $data = $locked->data ?? [];
                     $proofs = $data['proofs'][$userId] ?? [];
                     if (!in_array($fileId, $proofs)) {
                         $proofs[] = $fileId;
@@ -1396,20 +1400,22 @@ class OffersController extends Controller
             $msgText = "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($currentImages)])
                 . "\n\n❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more");
             $buttons = json_encode([
-                "inline_keyboard" => [[
-                    ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.yes_more"), "callback_data" => "proofmore {$code}"],
-                    ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.no_done"),  "callback_data" => "proofdone {$code}"],
-                ]],
+                "inline_keyboard" => [
+                    [
+                        ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.yes_more"), "callback_data" => "proofmore {$code}"],
+                        ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.no_done"), "callback_data" => "proofdone {$code}"],
+                    ]
+                ],
             ]);
 
             if ($mediaGroupId) {
                 // Cache::add es atomico (Redis SETNX): solo el primer webhook del album lo adquiere
                 $albumKey = "album_msg_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
-                $isFirst  = Cache::add($albumKey, 'pending', now()->addSeconds(10));
+                $isFirst = Cache::add($albumKey, 'pending', now()->addSeconds(10));
 
                 if ($isFirst) {
                     // Primera foto: envia el mensaje y guarda el message_id para que los demas editen
-                    $resp      = TelegramController::sendMessage([
+                    $resp = TelegramController::sendMessage([
                         "message" => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons],
                     ], $bot->tenant->token);
                     $messageId = json_decode($resp, true)['result']['message_id'] ?? null;
@@ -1421,7 +1427,10 @@ class OffersController extends Controller
                     $messageId = null;
                     for ($i = 0; $i < 10; $i++) {
                         $cached = Cache::get($albumKey);
-                        if ($cached && $cached !== 'pending') { $messageId = (int) $cached; break; }
+                        if ($cached && $cached !== 'pending') {
+                            $messageId = (int) $cached;
+                            break;
+                        }
                         usleep(50000); // 50 ms
                     }
                     if ($messageId) {
@@ -1433,14 +1442,14 @@ class OffersController extends Controller
 
                 return [
                     '__update' => true,
-                    'merge'    => ['images' => $currentImages],
+                    'merge' => ['images' => $currentImages],
                     'response' => ['text' => '', 'chat' => ['id' => $userId]],
                 ];
             }
 
             return [
                 '__update' => true,
-                'merge'    => ['images' => $currentImages],
+                'merge' => ['images' => $currentImages],
                 'response' => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons],
             ];
         }
@@ -1573,12 +1582,12 @@ class OffersController extends Controller
 
             // Atomic DB append con lock
             $currentImages = [];
-            $mediaGroupId  = $msg['media_group_id'] ?? null;
+            $mediaGroupId = $msg['media_group_id'] ?? null;
             $offer = Offers::findByCode($code);
             if ($offer) {
                 DB::transaction(function () use ($offer, $userId, $fileId, &$currentImages) {
                     $locked = Offers::lockForUpdate()->find($offer->id);
-                    $data   = $locked->data ?? [];
+                    $data = $locked->data ?? [];
                     $proofs = $data['evidence'][(string) $userId] ?? [];
                     if (!in_array($fileId, $proofs)) {
                         $proofs[] = $fileId;
@@ -1594,18 +1603,20 @@ class OffersController extends Controller
             $msgText = "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)])
                 . "\n\n❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more");
             $buttons = json_encode([
-                "inline_keyboard" => [[
-                    ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "evimore {$code}"],
-                    ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"),  "callback_data" => "evidone {$code}"],
-                ]],
+                "inline_keyboard" => [
+                    [
+                        ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "evimore {$code}"],
+                        ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"), "callback_data" => "evidone {$code}"],
+                    ]
+                ],
             ]);
 
             if ($mediaGroupId) {
                 $albumKey = "album_msg_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
-                $isFirst  = Cache::add($albumKey, 'pending', now()->addSeconds(10));
+                $isFirst = Cache::add($albumKey, 'pending', now()->addSeconds(10));
 
                 if ($isFirst) {
-                    $resp      = TelegramController::sendMessage([
+                    $resp = TelegramController::sendMessage([
                         "message" => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons],
                     ], $bot->tenant->token);
                     $messageId = json_decode($resp, true)['result']['message_id'] ?? null;
@@ -1616,7 +1627,10 @@ class OffersController extends Controller
                     $messageId = null;
                     for ($i = 0; $i < 10; $i++) {
                         $cached = Cache::get($albumKey);
-                        if ($cached && $cached !== 'pending') { $messageId = (int) $cached; break; }
+                        if ($cached && $cached !== 'pending') {
+                            $messageId = (int) $cached;
+                            break;
+                        }
                         usleep(50000);
                     }
                     if ($messageId) {
@@ -1628,14 +1642,14 @@ class OffersController extends Controller
 
                 return [
                     '__update' => true,
-                    'merge'    => ['images' => $currentImages],
+                    'merge' => ['images' => $currentImages],
                     'response' => ['text' => '', 'chat' => ['id' => $userId]],
                 ];
             }
 
             return [
                 '__update' => true,
-                'merge'    => ['images' => $currentImages],
+                'merge' => ['images' => $currentImages],
                 'response' => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons],
             ];
         }
