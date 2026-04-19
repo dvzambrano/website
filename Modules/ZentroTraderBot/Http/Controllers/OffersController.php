@@ -29,7 +29,6 @@ use Modules\Laravel\Services\TextService;
 use Modules\ZentroTraderBot\Jobs\UpdateOfferInChannel;
 use Modules\ZentroTraderBot\Jobs\SendRecoverReminder;
 use Modules\ZentroTraderBot\Jobs\ProcessProofSigning;
-use Modules\ZentroTraderBot\Jobs\SendAlbumImageCount;
 
 class OffersController extends Controller
 {
@@ -1394,12 +1393,44 @@ class OffersController extends Controller
                 $currentImages = array_unique(array_merge($state['data']['images'] ?? [], [$fileId]));
             }
 
-            // Album: respuesta silenciosa + job unico que envia 1 mensaje con el conteo final tras 2s
+            $msgText = "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($currentImages)])
+                . "\n\n❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more");
+            $buttons = json_encode([
+                "inline_keyboard" => [[
+                    ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.yes_more"), "callback_data" => "proofmore {$code}"],
+                    ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.no_done"),  "callback_data" => "proofdone {$code}"],
+                ]],
+            ]);
+
             if ($mediaGroupId) {
-                SendAlbumImageCount::dispatch(
-                    $bot->tenant->key, $code, $userId, $mediaGroupId,
-                    'proofs', 'proofmore', 'proofdone', 'zentrotraderbot::bot.proof_wizard'
-                )->delay(now()->addSeconds(2));
+                // Cache::add es atomico (Redis SETNX): solo el primer webhook del album lo adquiere
+                $albumKey = "album_msg_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
+                $isFirst  = Cache::add($albumKey, 'pending', now()->addSeconds(10));
+
+                if ($isFirst) {
+                    // Primera foto: envia el mensaje y guarda el message_id para que los demas editen
+                    $resp      = TelegramController::sendMessage([
+                        "message" => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons],
+                    ], $bot->tenant->token);
+                    $messageId = json_decode($resp, true)['result']['message_id'] ?? null;
+                    if ($messageId) {
+                        Cache::put($albumKey, $messageId, now()->addSeconds(10));
+                    }
+                } else {
+                    // Fotos siguientes: esperan el message_id y editan el mismo mensaje
+                    $messageId = null;
+                    for ($i = 0; $i < 10; $i++) {
+                        $cached = Cache::get($albumKey);
+                        if ($cached && $cached !== 'pending') { $messageId = (int) $cached; break; }
+                        usleep(50000); // 50 ms
+                    }
+                    if ($messageId) {
+                        TelegramController::editMessageText([
+                            "message" => ["chat" => ["id" => $userId], "message_id" => $messageId, "text" => $msgText, "reply_markup" => $buttons],
+                        ], $bot->tenant->token);
+                    }
+                }
+
                 return [
                     '__update' => true,
                     'merge'    => ['images' => $currentImages],
@@ -1409,19 +1440,8 @@ class OffersController extends Controller
 
             return [
                 '__update' => true,
-                'merge' => ['images' => $currentImages],
-                'response' => [
-                    "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($currentImages)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.proof_wizard.ask_more"),
-                    "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [
-                                ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.yes_more"), "callback_data" => "proofmore {$code}"],
-                                ["text" => Lang::get("zentrotraderbot::bot.proof_wizard.no_done"), "callback_data" => "proofdone {$code}"],
-                            ]
-                        ]
-                    ]),
-                ],
+                'merge'    => ['images' => $currentImages],
+                'response' => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons],
             ];
         }
 
@@ -1571,12 +1591,41 @@ class OffersController extends Controller
                 $currentImages = array_unique(array_merge($state['data']['images'] ?? [], [$fileId]));
             }
 
-            // Album: respuesta silenciosa + job unico que envia 1 mensaje con el conteo final tras 2s
+            $msgText = "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)])
+                . "\n\n❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more");
+            $buttons = json_encode([
+                "inline_keyboard" => [[
+                    ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "evimore {$code}"],
+                    ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"),  "callback_data" => "evidone {$code}"],
+                ]],
+            ]);
+
             if ($mediaGroupId) {
-                SendAlbumImageCount::dispatch(
-                    $bot->tenant->key, $code, $userId, $mediaGroupId,
-                    'evidence', 'evimore', 'evidone', 'zentrotraderbot::bot.evidence_wizard'
-                )->delay(now()->addSeconds(2));
+                $albumKey = "album_msg_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
+                $isFirst  = Cache::add($albumKey, 'pending', now()->addSeconds(10));
+
+                if ($isFirst) {
+                    $resp      = TelegramController::sendMessage([
+                        "message" => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons],
+                    ], $bot->tenant->token);
+                    $messageId = json_decode($resp, true)['result']['message_id'] ?? null;
+                    if ($messageId) {
+                        Cache::put($albumKey, $messageId, now()->addSeconds(10));
+                    }
+                } else {
+                    $messageId = null;
+                    for ($i = 0; $i < 10; $i++) {
+                        $cached = Cache::get($albumKey);
+                        if ($cached && $cached !== 'pending') { $messageId = (int) $cached; break; }
+                        usleep(50000);
+                    }
+                    if ($messageId) {
+                        TelegramController::editMessageText([
+                            "message" => ["chat" => ["id" => $userId], "message_id" => $messageId, "text" => $msgText, "reply_markup" => $buttons],
+                        ], $bot->tenant->token);
+                    }
+                }
+
                 return [
                     '__update' => true,
                     'merge'    => ['images' => $currentImages],
@@ -1586,19 +1635,8 @@ class OffersController extends Controller
 
             return [
                 '__update' => true,
-                'merge' => ['images' => $currentImages],
-                'response' => [
-                    "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)]) . "\n\n❓ " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more"),
-                    "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode([
-                        "inline_keyboard" => [
-                            [
-                                ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "evimore {$code}"],
-                                ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"), "callback_data" => "evidone {$code}"],
-                            ]
-                        ]
-                    ]),
-                ],
+                'merge'    => ['images' => $currentImages],
+                'response' => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons],
             ];
         }
 
