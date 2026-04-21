@@ -530,7 +530,7 @@ class OffersController extends Controller
                 case 'locked':
                     if ($isOwner)
                         array_push($menu, [
-                            ["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.options.recover_long_wait", ['time' => $diff["legible"]]), "callback_data" => "/recoveroffer {$offer->code}"]
+                            ["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.recover_offer.ready_button"), "callback_data" => "/recoveroffer {$offer->code}"]
                         ]);
                     else {
                         array_push($menu, [
