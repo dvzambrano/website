@@ -111,6 +111,28 @@ class CustomTestController extends BaseController
         $time = time();
         dd($code, $time, $uuid7, $uuid);
     }
+    public function testSupport()
+    {
+        $this->KashioBot->connectToThisTenant();
+
+        $id = Str::uuid();
+
+        $response = TelegramController::createForumTopic(
+            array(
+                "message" => array(
+                    "name" => date("H:i:s") . " {$id}",
+                    "chat" => array(
+                        "id" => env("TRADER_BOT_SUPPORT"),
+                    ),
+                ),
+            ),
+            $this->KashioBot->token
+        );
+        if ($response) {
+            $array = json_decode($response, true);
+            dd(env("TRADER_BOT_SUPPORT"), $array["result"]);
+        }
+    }
 
 
     public function testPublic()

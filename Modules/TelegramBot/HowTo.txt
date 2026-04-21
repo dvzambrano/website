@@ -1,0 +1,14 @@
+# Ejecutar solo estos tests (más rápido)
+./vendor/bin/phpunit tests/Feature/TelegramControllerTest.php
+
+# Con salida detallada (nombre de cada test)
+./vendor/bin/phpunit tests/Feature/TelegramControllerTest.php --testdox
+
+# Filtrar por un método específico
+./vendor/bin/phpunit --filter test_sendMessage_llama_endpoint_correcto
+
+# Filtrar por grupo temático (ej. todo lo de webhook)
+./vendor/bin/phpunit --filter "Webhook"
+
+# Correr todos los tests del proyecto
+./vendor/bin/phpunit

@@ -184,9 +184,15 @@ trait UsesTelegramBot
         }
 
         // preparando respuesta generica para un texto no reconocido en el bot
+        /*
         $reply = [
             "text" => "🙇🏻 " . Lang::get("telegrambot::bot.errors.unrecognizedcommand.text", ["text" => $this->message["text"]]) .
                 ".\n " . Lang::get("telegrambot::bot.errors.unrecognizedcommand.hint") . ".",
+        ];
+        */
+        // haciendo q no haya respuesta
+        $reply = [
+            "text" => "",
         ];
 
         if (!$array)
