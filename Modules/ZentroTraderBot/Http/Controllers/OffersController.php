@@ -1733,8 +1733,8 @@ class OffersController extends Controller
 
             // Reenviar SOLO las evidencias nuevas al forum thread si existe
             $threadId = $offer->data['dispute']['thread_id'] ?? null;
-            $supportChatId = env('TRADER_BOT_SUPPORT');
-            if ($threadId && $supportChatId) {
+            $supportId = env('TRADER_BOT_SUPPORT');
+            if ($threadId && $supportId) {
                 $userEvidence = $evidenceByUser[(string) $userId] ?? [];
                 $alreadyFwdCount = $offer->data['dispute']['evidence_forwarded'][(string) $userId] ?? 0;
                 $newFileIds = array_values(array_slice($userEvidence, $alreadyFwdCount));
@@ -1756,7 +1756,7 @@ class OffersController extends Controller
                         default => "👤 ID: `{$userId}`",
                     };
 
-                    $base = ['chat' => ['id' => $supportChatId], 'message_thread_id' => (int) $threadId, 'text' => ''];
+                    $base = ['chat' => ['id' => $supportId], 'message_thread_id' => (int) $threadId, 'text' => ''];
 
                     if (count($newFileIds) === 1) {
                         TelegramController::sendPhoto(['message' => array_merge($base, ['photo' => $newFileIds[0]])], $botTenant->token);
@@ -1826,12 +1826,12 @@ class OffersController extends Controller
 
         // Notificar en el thread de disputa
         $threadId = $offer->data['dispute']['thread_id'] ?? null;
-        $supportChatId = env('TRADER_BOT_SUPPORT');
-        if ($threadId && $supportChatId) {
+        $supportId = env('TRADER_BOT_SUPPORT');
+        if ($threadId && $supportId) {
             TelegramController::sendMessage([
                 "message" => [
                     "text" => "🔔 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.thread_more_requested") . "*",
-                    "chat" => ["id" => $supportChatId],
+                    "chat" => ["id" => $supportId],
                     "message_thread_id" => (int) $threadId,
                 ],
             ], $botTenant->token);
@@ -1899,14 +1899,14 @@ class OffersController extends Controller
         ], $botTenant->token);
 
         $threadId = $offer->data['dispute']['thread_id'] ?? null;
-        $supportChatId = env('TRADER_BOT_SUPPORT');
-        if ($threadId && $supportChatId) {
+        $supportId = env('TRADER_BOT_SUPPORT');
+        if ($threadId && $supportId) {
             TelegramController::sendMessage([
                 'message' => [
                     'text' =>
                         "✅ " . Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_thread_note') . "\n" .
                         "🆔 `{$userId}`",
-                    'chat' => ['id' => $supportChatId],
+                    'chat' => ['id' => $supportId],
                     'message_thread_id' => (int) $threadId,
                 ],
             ], $botTenant->token);
@@ -1937,8 +1937,8 @@ class OffersController extends Controller
         $buyerTgId = $buyerSub ? (string) $buyerSub->user_id : null;
         $sellerTgId = $sellerSub ? (string) $sellerSub->user_id : null;
 
-        $counterpartTgId = ((string) $userId === $buyerTgId) ? $sellerTgId : $buyerTgId;
-        if (!$counterpartTgId) {
+        $counterpartId = ((string) $userId === $buyerTgId) ? $sellerTgId : $buyerTgId;
+        if (!$counterpartId) {
             return ['text' => '❌ ' . Lang::get('zentrotraderbot::bot.sign_offer.account_not_found'), 'chat' => ['id' => $bot->actor->user_id]];
         }
 
@@ -1953,10 +1953,10 @@ class OffersController extends Controller
             'message' => [
                 'text' =>
                     "🚨 *" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_title') . "*\n"
-                    . "🆔 `{$offer->code}`\n\n"
-                    . "⚠️ " . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_line1') . "\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "⚠️ " . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_line1') . "\n\n"
                     . "⏱️ _" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_line2', ['time' => $diff['legible']]) . "_",
-                'chat' => ['id' => $counterpartTgId],
+                'chat' => ['id' => $counterpartId],
                 'reply_markup' => json_encode([
                     'inline_keyboard' => [
                         [
@@ -1968,12 +1968,14 @@ class OffersController extends Controller
         ], $botTenant->token);
 
         $threadId = $offer->data['dispute']['thread_id'] ?? null;
-        $supportChatId = env('TRADER_BOT_SUPPORT');
-        if ($threadId && $supportChatId) {
+        $supportId = env('TRADER_BOT_SUPPORT');
+        if ($threadId && $supportId) {
             TelegramController::sendMessage([
                 'message' => [
-                    'text' => "🔔 _" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_thread_note') . " (ID: `{$counterpartTgId}`, plazo: {$diff['legible']})_",
-                    'chat' => ['id' => $supportChatId],
+                    'text' =>
+                        "✅ " . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_thread_note') . "\n" .
+                        "🆔 `{$counterpartId}`",
+                    'chat' => ['id' => $supportId],
                     'message_thread_id' => (int) $threadId,
                 ],
             ], $botTenant->token);
@@ -2022,16 +2024,16 @@ class OffersController extends Controller
                 ? Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer')
                 : Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller');
             $threadId = $offer->data['dispute']['thread_id'] ?? null;
-            $supportChatId = env('TRADER_BOT_SUPPORT');
+            $supportId = env('TRADER_BOT_SUPPORT');
 
-            if ($threadId && $supportChatId) {
+            if ($threadId && $supportId) {
                 TelegramController::sendMessage([
                     'message' => [
                         'text' => "⚖️ *" . Lang::get('zentrotraderbot::bot.offer.disputed.solved_thread') . "*\n"
                             . "🆔 `{$offer->code}`\n"
                             . "🏆 {$sideLabel}\n"
                             . "🔗 `{$txHash}`",
-                        'chat' => ['id' => $supportChatId],
+                        'chat' => ['id' => $supportId],
                         'message_thread_id' => (int) $threadId,
                     ],
                 ], $botTenant->token);
