@@ -547,7 +547,7 @@ class ZentroTraderBotController extends JsonsController
             };
 
         // Arbiter resolves dispute on-chain in favor of buyer or seller
-        $this->strategies["/solvedsp"] =
+        $this->strategies["/solvedispute"] =
             function () use ($array) {
                 $controller = new OffersController();
                 return $controller->solveDispute($this, $array["pieces"][1], $array["pieces"][2]);

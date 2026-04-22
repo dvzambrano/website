@@ -329,6 +329,18 @@ class OfferObserver
                     . "🟢 " . Lang::get("zentrotraderbot::bot.offer.disputed.forum_buyer") . ": `{$buyerShort}`\n"
                     . "🔴 " . Lang::get("zentrotraderbot::bot.offer.disputed.forum_seller") . ": `{$sellerShort}`\n"
                     . "📅 " . now()->format('d M Y H:i') . " UTC",
+                "reply_markup" => json_encode([
+                    'inline_keyboard' => [
+                        [
+                            ['text' => '🏅 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer'), 'callback_data' => "/solvedispute {$offer->code} buyer"],
+                        ],
+                        [
+                            ['text' => '🎖 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller'), 'callback_data' => "/solvedispute {$offer->code} seller"],
+                        ],
+                    ],
+                ]),
+
+
             ],
         ], $bot->token);
 

@@ -1860,10 +1860,10 @@ class OffersController extends Controller
                     ['text' => '🆚 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_reqctr'), 'callback_data' => "/reqctrpart {$code} {$userId}"],
                 ],
                 [
-                    ['text' => '🏅 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer'), 'callback_data' => "/solvedsp {$code} buyer"],
+                    ['text' => '🏅 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer'), 'callback_data' => "/solvedispute {$code} buyer"],
                 ],
                 [
-                    ['text' => '🎖 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller'), 'callback_data' => "/solvedsp {$code} seller"],
+                    ['text' => '🎖 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller'), 'callback_data' => "/solvedispute {$code} seller"],
                 ],
             ],
         ]);
