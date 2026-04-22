@@ -532,6 +532,27 @@ class ZentroTraderBotController extends JsonsController
                 return $controller->requestMoreEvidence($this, $array["pieces"][1]);
             };
 
+        // Arbiter tells a specific user their evidence is insufficient → re-opens evidence wizard
+        $this->strategies["/reqnewevi"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->requestNewEvidenceFromUser($this, $array["pieces"][1], $array["pieces"][2]);
+            };
+
+        // Arbiter notifies the counterpart they have 1 trade-timeout to submit evidence
+        $this->strategies["/reqctrpart"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->requestEvidenceFromCounterpart($this, $array["pieces"][1], $array["pieces"][2]);
+            };
+
+        // Arbiter resolves dispute on-chain in favor of buyer or seller
+        $this->strategies["/solvedsp"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->solveDispute($this, $array["pieces"][1], $array["pieces"][2]);
+            };
+
         return $this->getProcessedMessage();
     }
 

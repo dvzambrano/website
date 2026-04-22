@@ -14,6 +14,7 @@ use Modules\TelegramBot\Entities\Actors;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
 use Modules\ZentroTraderBot\Jobs\SendRecoverReminder;
+use Modules\ZentroTraderBot\Http\Controllers\OffersController;
 use Illuminate\Support\Facades\Log;
 
 class OfferObserver
@@ -363,7 +364,7 @@ class OfferObserver
                 TelegramController::sendMessage([
                     'message' => ['chat' => ['id' => $supportChatId], 'message_thread_id' => $threadId, 'text' => $label],
                 ], $token);
-                $this->sendFilesToThread($fileIds, $supportChatId, $threadId, $token);
+                $this->sendFilesToThread($fileIds, $supportChatId, $threadId, $token, $offer->code, (string) $userId);
             }
         } else {
             TelegramController::sendMessage([
@@ -398,7 +399,7 @@ class OfferObserver
             TelegramController::sendMessage([
                 'message' => ['chat' => ['id' => $supportChatId], 'message_thread_id' => $threadId, 'text' => $label],
             ], $token);
-            $this->sendFilesToThread($fileIds, $supportChatId, $threadId, $token);
+            $this->sendFilesToThread($fileIds, $supportChatId, $threadId, $token, $offer->code, (string) $userId);
         }
     }
 
@@ -413,7 +414,7 @@ class OfferObserver
         return "👤 ID: `{$userId}`";
     }
 
-    private function sendFilesToThread(array $fileIds, string $chatId, int $threadId, string $token): void
+    private function sendFilesToThread(array $fileIds, string $chatId, int $threadId, string $token, string $code = '', string $userId = ''): void
     {
         if (empty($fileIds)) {
             return;
@@ -424,6 +425,12 @@ class OfferObserver
         } else {
             $media = array_map(fn($fid) => ['type' => 'photo', 'media' => $fid], $fileIds);
             TelegramController::sendMediaGroup(['message' => array_merge($base, ['media' => $media])], $token);
+        }
+        if ($code && $userId) {
+            TelegramController::sendMessage(['message' => array_merge($base, [
+                'text'         => "👆 " . Lang::get("zentrotraderbot::bot.offer.disputed.arbiter_actions"),
+                'reply_markup' => OffersController::arbiterButtons($code, $userId),
+            ])], $token);
         }
     }
 

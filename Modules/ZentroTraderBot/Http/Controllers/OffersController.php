@@ -1699,14 +1699,14 @@ class OffersController extends Controller
 
     private function completeEvidence($bot, array $state): array
     {
-        $code   = $state['data']['offer_code'];
+        $code = $state['data']['offer_code'];
         $userId = $bot->actor->user_id;
 
         $offer = Offers::findByCode($code);
         if ($offer) {
-            $botTenant      = app('active_bot');
+            $botTenant = app('active_bot');
             $actorsController = new ActorsController();
-            $admins         = $actorsController->getData(Actors::class, [
+            $admins = $actorsController->getData(Actors::class, [
                 ["contain" => true, "name" => "admin_level", "value" => [1, "1"]],
             ], $botTenant->code);
 
@@ -1732,28 +1732,28 @@ class OffersController extends Controller
             }
 
             // Reenviar SOLO las evidencias nuevas al forum thread si existe
-            $threadId      = $offer->data['dispute']['thread_id'] ?? null;
+            $threadId = $offer->data['dispute']['thread_id'] ?? null;
             $supportChatId = env('TRADER_BOT_SUPPORT');
             if ($threadId && $supportChatId) {
-                $userEvidence   = $evidenceByUser[(string) $userId] ?? [];
+                $userEvidence = $evidenceByUser[(string) $userId] ?? [];
                 $alreadyFwdCount = $offer->data['dispute']['evidence_forwarded'][(string) $userId] ?? 0;
-                $newFileIds      = array_values(array_slice($userEvidence, $alreadyFwdCount));
+                $newFileIds = array_values(array_slice($userEvidence, $alreadyFwdCount));
 
                 if (!empty($newFileIds)) {
-                    $buyerSub   = Suscriptions::findByAddress($offer->buyer_address);
-                    $sellerSub  = Suscriptions::findByAddress($offer->seller_address);
-                    $buyerTgId  = $buyerSub  ? (string) $buyerSub->user_id  : null;
+                    $buyerSub = Suscriptions::findByAddress($offer->buyer_address);
+                    $sellerSub = Suscriptions::findByAddress($offer->seller_address);
+                    $buyerTgId = $buyerSub ? (string) $buyerSub->user_id : null;
                     $sellerTgId = $sellerSub ? (string) $sellerSub->user_id : null;
 
                     $role = match (true) {
-                        $buyerTgId  && (string) $userId === $buyerTgId  => 'buyer',
+                        $buyerTgId && (string) $userId === $buyerTgId => 'buyer',
                         $sellerTgId && (string) $userId === $sellerTgId => 'seller',
-                        default                                          => 'unknown',
+                        default => 'unknown',
                     };
                     $label = match ($role) {
-                        'buyer'  => "🟢 *" . Lang::get("zentrotraderbot::bot.offer.disputed.by_buyer") . "*",
+                        'buyer' => "🟢 *" . Lang::get("zentrotraderbot::bot.offer.disputed.by_buyer") . "*",
                         'seller' => "🔴 *" . Lang::get("zentrotraderbot::bot.offer.disputed.by_seller") . "*",
-                        default  => "👤 ID: `{$userId}`",
+                        default => "👤 ID: `{$userId}`",
                     };
 
                     $base = ['chat' => ['id' => $supportChatId], 'message_thread_id' => (int) $threadId, 'text' => ''];
@@ -1771,10 +1771,17 @@ class OffersController extends Controller
                         TelegramController::sendMediaGroup(['message' => array_merge($base, ['media' => $media])], $botTenant->token);
                     }
 
+                    TelegramController::sendMessage([
+                        'message' => array_merge($base, [
+                            'text' => "👆 " . Lang::get("zentrotraderbot::bot.offer.disputed.arbiter_actions"),
+                            'reply_markup' => self::arbiterButtons($offer->code, (string) $userId),
+                        ]),
+                    ], $botTenant->token);
+
                     // Actualizar contador de evidencias reenviadas
                     DB::transaction(function () use ($offer, $userId, $userEvidence) {
                         $locked = Offers::lockForUpdate()->find($offer->id);
-                        $data   = $locked->data ?? [];
+                        $data = $locked->data ?? [];
                         $data['dispute']['evidence_forwarded'][(string) $userId] = count($userEvidence);
                         $locked->update(['data' => $data]);
                     });
@@ -1799,14 +1806,14 @@ class OffersController extends Controller
         $offer = Offers::findByCode($code);
         if (!$offer || strtoupper($offer->status) !== 'DISPUTED') {
             return [
-                "text"  => "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.not_found"),
-                "chat"  => ["id" => $bot->actor->user_id],
+                "text" => "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.not_found"),
+                "chat" => ["id" => $bot->actor->user_id],
             ];
         }
 
-        $botTenant    = app('active_bot');
+        $botTenant = app('active_bot');
         $evidenceMenu = [[["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_evidence"), "callback_data" => "/evidenceoffer " . $offer->code]]];
-        $text         = "🔔 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_title") . "*\n"
+        $text = "🔔 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_title") . "*\n"
             . "🆔 `{$offer->code}`\n\n"
             . "_" . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_body") . "_";
 
@@ -1815,8 +1822,8 @@ class OffersController extends Controller
             if ($sub && $sub->user_id) {
                 TelegramController::sendMessage([
                     "message" => [
-                        "text"         => $text,
-                        "chat"         => ["id" => $sub->user_id],
+                        "text" => $text,
+                        "chat" => ["id" => $sub->user_id],
                         "reply_markup" => json_encode(["inline_keyboard" => $evidenceMenu]),
                     ],
                 ], $botTenant->token);
@@ -1824,24 +1831,223 @@ class OffersController extends Controller
         }
 
         // Notificar en el thread de disputa
-        $threadId      = $offer->data['dispute']['thread_id'] ?? null;
+        $threadId = $offer->data['dispute']['thread_id'] ?? null;
         $supportChatId = env('TRADER_BOT_SUPPORT');
         if ($threadId && $supportChatId) {
             TelegramController::sendMessage([
                 "message" => [
-                    "text"              => "🔔 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.thread_more_requested") . "*",
-                    "chat"              => ["id" => $supportChatId],
+                    "text" => "🔔 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.thread_more_requested") . "*",
+                    "chat" => ["id" => $supportChatId],
                     "message_thread_id" => (int) $threadId,
                 ],
             ], $botTenant->token);
         }
 
         return [
-            "text"         => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_sent"),
-            "chat"         => ["id" => $bot->actor->user_id],
+            "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_sent"),
+            "chat" => ["id" => $bot->actor->user_id],
             "editprevious" => 1,
             "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
         ];
+    }
+
+    // =========================================================
+    // ARBITER BUTTONS — Teclado de acciones para el árbitro
+    // =========================================================
+
+    public static function arbiterButtons(string $code, string $userId): string
+    {
+        return json_encode([
+            'inline_keyboard' => [
+                [
+                    ['text' => '🔄 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_reqnew'), 'callback_data' => "/reqnewevi {$code} {$userId}"],
+                    ['text' => '↔️ ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_reqctr'), 'callback_data' => "/reqctrpart {$code} {$userId}"],
+                ],
+                [
+                    ['text' => '🟢 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer'), 'callback_data' => "/solvedsp {$code} buyer"],
+                    ['text' => '🔴 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller'), 'callback_data' => "/solvedsp {$code} seller"],
+                ],
+            ],
+        ]);
+    }
+
+    // =========================================================
+    // REQUEST NEW EVIDENCE — Árbitro pide nuevas evidencias al usuario
+    // =========================================================
+
+    public function requestNewEvidenceFromUser($bot, $code, $userId)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer || strtoupper($offer->status) !== 'DISPUTED') {
+            return ['text' => '❌ ' . Lang::get('zentrotraderbot::bot.sign_offer.not_found'), 'chat' => ['id' => $bot->actor->user_id]];
+        }
+
+        $botTenant = app('active_bot');
+
+        TelegramController::sendMessage([
+            'message' => [
+                'text' => "⚠️ *" . Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_title') . "*\n"
+                    . "🆔 `{$offer->code}`\n\n"
+                    . "_" . Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_body') . "_",
+                'chat' => ['id' => $userId],
+                'reply_markup' => json_encode([
+                    'inline_keyboard' => [
+                        [
+                            ['text' => '🧾 ' . Lang::get('zentrotraderbot::bot.options.send_evidence'), 'callback_data' => "/evidenceoffer {$code}"],
+                        ]
+                    ],
+                ]),
+            ],
+        ], $botTenant->token);
+
+        $threadId = $offer->data['dispute']['thread_id'] ?? null;
+        $supportChatId = env('TRADER_BOT_SUPPORT');
+        if ($threadId && $supportChatId) {
+            TelegramController::sendMessage([
+                'message' => [
+                    'text' => "🔔 _" . Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_thread_note') . " (ID: `{$userId}`)_",
+                    'chat' => ['id' => $supportChatId],
+                    'message_thread_id' => (int) $threadId,
+                ],
+            ], $botTenant->token);
+        }
+
+        return [
+            'text' => '✅ ' . Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_sent'),
+            'chat' => ['id' => $bot->actor->user_id],
+            'editprevious' => 1,
+            'reply_markup' => json_encode(['inline_keyboard' => [[['text' => '↖️ ' . Lang::get('telegrambot::bot.options.backtomainmenu'), 'callback_data' => 'menu']]]]),
+        ];
+    }
+
+    // =========================================================
+    // REQUEST EVIDENCE FROM COUNTERPART — Árbitro avisa a la contraparte
+    // =========================================================
+
+    public function requestEvidenceFromCounterpart($bot, $code, $userId)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer || strtoupper($offer->status) !== 'DISPUTED') {
+            return ['text' => '❌ ' . Lang::get('zentrotraderbot::bot.sign_offer.not_found'), 'chat' => ['id' => $bot->actor->user_id]];
+        }
+
+        $botTenant = app('active_bot');
+        $buyerSub = Suscriptions::findByAddress($offer->buyer_address);
+        $sellerSub = Suscriptions::findByAddress($offer->seller_address);
+        $buyerTgId = $buyerSub ? (string) $buyerSub->user_id : null;
+        $sellerTgId = $sellerSub ? (string) $sellerSub->user_id : null;
+
+        $counterpartTgId = ((string) $userId === $buyerTgId) ? $sellerTgId : $buyerTgId;
+        if (!$counterpartTgId) {
+            return ['text' => '❌ ' . Lang::get('zentrotraderbot::bot.sign_offer.account_not_found'), 'chat' => ['id' => $bot->actor->user_id]];
+        }
+
+        $blockchain = new BlockchainController();
+        $status = $blockchain->getStatus();
+        $diff = DateService::getTimeDifference(
+            Carbon::now()->getTimestamp(),
+            Carbon::now()->addSeconds($status['tradeTimeout'])->getTimestamp()
+        );
+
+        TelegramController::sendMessage([
+            'message' => [
+                'text' => "⚠️ *" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_title') . "*\n"
+                    . "🆔 `{$offer->code}`\n\n"
+                    . "_" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_body', ['time' => $diff['legible']]) . "_",
+                'chat' => ['id' => $counterpartTgId],
+                'reply_markup' => json_encode([
+                    'inline_keyboard' => [
+                        [
+                            ['text' => '🧾 ' . Lang::get('zentrotraderbot::bot.options.send_evidence'), 'callback_data' => "/evidenceoffer {$code}"],
+                        ]
+                    ],
+                ]),
+            ],
+        ], $botTenant->token);
+
+        $threadId = $offer->data['dispute']['thread_id'] ?? null;
+        $supportChatId = env('TRADER_BOT_SUPPORT');
+        if ($threadId && $supportChatId) {
+            TelegramController::sendMessage([
+                'message' => [
+                    'text' => "🔔 _" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_thread_note') . " (ID: `{$counterpartTgId}`, plazo: {$diff['legible']})_",
+                    'chat' => ['id' => $supportChatId],
+                    'message_thread_id' => (int) $threadId,
+                ],
+            ], $botTenant->token);
+        }
+
+        return [
+            'text' => '✅ ' . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_sent'),
+            'chat' => ['id' => $bot->actor->user_id],
+            'editprevious' => 1,
+            'reply_markup' => json_encode(['inline_keyboard' => [[['text' => '↖️ ' . Lang::get('telegrambot::bot.options.backtomainmenu'), 'callback_data' => 'menu']]]]),
+        ];
+    }
+
+    // =========================================================
+    // SOLVE DISPUTE — Árbitro resuelve la disputa on-chain
+    // =========================================================
+
+    public function solveDispute($bot, $code, $side)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer || strtoupper($offer->status) !== 'DISPUTED') {
+            return ['text' => '❌ ' . Lang::get('zentrotraderbot::bot.sign_offer.not_found'), 'chat' => ['id' => $bot->actor->user_id]];
+        }
+
+        $botTenant = app('active_bot');
+        $network = ConfigService::getNetworks(env('BASE_NETWORK'));
+        $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+        $escrow = new EscrowController();
+        $arbiterKey = decryptValue(env('TRADER_BOT_KEY'));
+        $winnerAddress = $side === 'buyer' ? $offer->buyer_address : $offer->seller_address;
+
+        try {
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $arbiterKey, $network, $offer, $winnerAddress) {
+                return $escrow->resolveDispute(
+                    $rpc,
+                    $arbiterKey,
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $offer->id,
+                    $winnerAddress,
+                    env('ETHERSCAN_API_KEY')
+                );
+            });
+
+            $sideLabel = $side === 'buyer'
+                ? Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer')
+                : Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller');
+            $threadId = $offer->data['dispute']['thread_id'] ?? null;
+            $supportChatId = env('TRADER_BOT_SUPPORT');
+
+            if ($threadId && $supportChatId) {
+                TelegramController::sendMessage([
+                    'message' => [
+                        'text' => "⚖️ *" . Lang::get('zentrotraderbot::bot.offer.disputed.solved_thread') . "*\n"
+                            . "🆔 `{$offer->code}`\n"
+                            . "🏆 {$sideLabel}\n"
+                            . "🔗 `{$txHash}`",
+                        'chat' => ['id' => $supportChatId],
+                        'message_thread_id' => (int) $threadId,
+                    ],
+                ], $botTenant->token);
+            }
+
+            return [
+                'text' => "✅ *" . Lang::get('zentrotraderbot::bot.offer.disputed.solved_done') . "*\n🔗 `{$txHash}`",
+                'chat' => ['id' => $bot->actor->user_id],
+                'editprevious' => 1,
+                'reply_markup' => json_encode(['inline_keyboard' => [[['text' => '↖️ ' . Lang::get('telegrambot::bot.options.backtomainmenu'), 'callback_data' => 'menu']]]]),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('solveDispute error: ' . $e->getMessage());
+            return [
+                'text' => '❌ ' . Lang::get('zentrotraderbot::bot.sign_offer.error') . ' ' . $e->getMessage(),
+                'chat' => ['id' => $bot->actor->user_id],
+            ];
+        }
     }
 
     /**
