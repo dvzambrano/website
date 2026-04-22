@@ -525,6 +525,13 @@ class ZentroTraderBotController extends JsonsController
                 return $controller->startEvidenceWizard($this, $array["pieces"][1]);
             };
 
+        // Arbiter requests more evidence from both parties of a disputed offer
+        $this->strategies["/requestevidence"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->requestMoreEvidence($this, $array["pieces"][1]);
+            };
+
         return $this->getProcessedMessage();
     }
 

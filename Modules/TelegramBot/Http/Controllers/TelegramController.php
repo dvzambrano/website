@@ -113,6 +113,9 @@ class TelegramController extends Controller
             if (isset($request["message"]["reply_to_message_id"]) && $request["message"]["reply_to_message_id"] != "") {
                 $url .= "&reply_to_message_id={$request["message"]["reply_to_message_id"]}";
             }
+            if (isset($request["message"]["message_thread_id"]) && $request["message"]["message_thread_id"] != "") {
+                $url .= "&message_thread_id={$request["message"]["message_thread_id"]}";
+            }
             if (isset($request["message"]["reply_markup"]) && $request["message"]["reply_markup"] != "") {
                 $reply_markup = urlencode($request["message"]["reply_markup"]);
                 $url .= "&reply_markup={$reply_markup}";

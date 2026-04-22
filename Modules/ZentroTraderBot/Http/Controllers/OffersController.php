@@ -1699,19 +1699,20 @@ class OffersController extends Controller
 
     private function completeEvidence($bot, array $state): array
     {
-        $code = $state['data']['offer_code'];
+        $code   = $state['data']['offer_code'];
         $userId = $bot->actor->user_id;
 
         $offer = Offers::findByCode($code);
         if ($offer) {
-            $botTenant = app('active_bot');
+            $botTenant      = app('active_bot');
             $actorsController = new ActorsController();
-            $admins = $actorsController->getData(Actors::class, [
+            $admins         = $actorsController->getData(Actors::class, [
                 ["contain" => true, "name" => "admin_level", "value" => [1, "1"]],
             ], $botTenant->code);
 
             $evidenceByUser = $offer->data['evidence'] ?? [];
 
+            // Notificar por DM a los admins (flujo anterior)
             foreach ($admins as $admin) {
                 TelegramController::sendMessage([
                     "message" => [
@@ -1729,11 +1730,115 @@ class OffersController extends Controller
                     }
                 }
             }
+
+            // Reenviar SOLO las evidencias nuevas al forum thread si existe
+            $threadId      = $offer->data['dispute']['thread_id'] ?? null;
+            $supportChatId = env('TRADER_BOT_SUPPORT');
+            if ($threadId && $supportChatId) {
+                $userEvidence   = $evidenceByUser[(string) $userId] ?? [];
+                $alreadyFwdCount = $offer->data['dispute']['evidence_forwarded'][(string) $userId] ?? 0;
+                $newFileIds      = array_values(array_slice($userEvidence, $alreadyFwdCount));
+
+                if (!empty($newFileIds)) {
+                    $buyerSub   = Suscriptions::findByAddress($offer->buyer_address);
+                    $sellerSub  = Suscriptions::findByAddress($offer->seller_address);
+                    $buyerTgId  = $buyerSub  ? (string) $buyerSub->user_id  : null;
+                    $sellerTgId = $sellerSub ? (string) $sellerSub->user_id : null;
+
+                    $role = match (true) {
+                        $buyerTgId  && (string) $userId === $buyerTgId  => 'buyer',
+                        $sellerTgId && (string) $userId === $sellerTgId => 'seller',
+                        default                                          => 'unknown',
+                    };
+                    $label = match ($role) {
+                        'buyer'  => "🟢 *" . Lang::get("zentrotraderbot::bot.offer.disputed.by_buyer") . "*",
+                        'seller' => "🔴 *" . Lang::get("zentrotraderbot::bot.offer.disputed.by_seller") . "*",
+                        default  => "👤 ID: `{$userId}`",
+                    };
+
+                    $base = ['chat' => ['id' => $supportChatId], 'message_thread_id' => (int) $threadId, 'text' => ''];
+
+                    TelegramController::sendMessage([
+                        'message' => array_merge($base, [
+                            'text' => "📤 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.thread_new_evidence") . "*\n🆔 `{$offer->code}`\n{$label}",
+                        ]),
+                    ], $botTenant->token);
+
+                    if (count($newFileIds) === 1) {
+                        TelegramController::sendPhoto(['message' => array_merge($base, ['photo' => $newFileIds[0]])], $botTenant->token);
+                    } else {
+                        $media = array_map(fn($fid) => ['type' => 'photo', 'media' => $fid], $newFileIds);
+                        TelegramController::sendMediaGroup(['message' => array_merge($base, ['media' => $media])], $botTenant->token);
+                    }
+
+                    // Actualizar contador de evidencias reenviadas
+                    DB::transaction(function () use ($offer, $userId, $userEvidence) {
+                        $locked = Offers::lockForUpdate()->find($offer->id);
+                        $data   = $locked->data ?? [];
+                        $data['dispute']['evidence_forwarded'][(string) $userId] = count($userEvidence);
+                        $locked->update(['data' => $data]);
+                    });
+                }
+            }
         }
 
         return [
             "text" => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notified"),
             "chat" => ["id" => $userId],
+            "editprevious" => 1,
+            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
+        ];
+    }
+
+    // =========================================================
+    // REQUEST MORE EVIDENCE — El árbitro pide más evidencias
+    // =========================================================
+
+    public function requestMoreEvidence($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer || strtoupper($offer->status) !== 'DISPUTED') {
+            return [
+                "text"  => "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.not_found"),
+                "chat"  => ["id" => $bot->actor->user_id],
+            ];
+        }
+
+        $botTenant    = app('active_bot');
+        $evidenceMenu = [[["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_evidence"), "callback_data" => "/evidenceoffer " . $offer->code]]];
+        $text         = "🔔 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_title") . "*\n"
+            . "🆔 `{$offer->code}`\n\n"
+            . "_" . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_body") . "_";
+
+        foreach ([$offer->buyer_address, $offer->seller_address] as $address) {
+            $sub = Suscriptions::findByAddress($address);
+            if ($sub && $sub->user_id) {
+                TelegramController::sendMessage([
+                    "message" => [
+                        "text"         => $text,
+                        "chat"         => ["id" => $sub->user_id],
+                        "reply_markup" => json_encode(["inline_keyboard" => $evidenceMenu]),
+                    ],
+                ], $botTenant->token);
+            }
+        }
+
+        // Notificar en el thread de disputa
+        $threadId      = $offer->data['dispute']['thread_id'] ?? null;
+        $supportChatId = env('TRADER_BOT_SUPPORT');
+        if ($threadId && $supportChatId) {
+            TelegramController::sendMessage([
+                "message" => [
+                    "text"              => "🔔 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.thread_more_requested") . "*",
+                    "chat"              => ["id" => $supportChatId],
+                    "message_thread_id" => (int) $threadId,
+                ],
+            ], $botTenant->token);
+        }
+
+        return [
+            "text"         => "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_sent"),
+            "chat"         => ["id" => $bot->actor->user_id],
             "editprevious" => 1,
             "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
         ];

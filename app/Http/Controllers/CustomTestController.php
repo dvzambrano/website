@@ -131,6 +131,14 @@ class CustomTestController extends BaseController
         if ($response) {
             $array = json_decode($response, true);
             dd(env("TRADER_BOT_SUPPORT"), $array["result"]);
+
+            /*
+            array:3 [▼ // app/Http/Controllers/CustomTestController.php:133
+                "message_thread_id" => 9
+                "name" => "15:56:04 983a8245-ae8f-4b05-98f3-8d9949dd1db8"
+                "icon_color" => 7322096
+                ]
+             */
         }
     }
 
