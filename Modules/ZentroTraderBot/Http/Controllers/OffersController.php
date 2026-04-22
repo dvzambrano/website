@@ -1903,7 +1903,9 @@ class OffersController extends Controller
         if ($threadId && $supportChatId) {
             TelegramController::sendMessage([
                 'message' => [
-                    'text' => "🔔 _" . Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_thread_note') . " (ID: `{$userId}`)_",
+                    'text' =>
+                        "✅ " . Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_thread_note') . "\n" .
+                        "🆔 `{$userId}`",
                     'chat' => ['id' => $supportChatId],
                     'message_thread_id' => (int) $threadId,
                 ],
@@ -1949,9 +1951,11 @@ class OffersController extends Controller
 
         TelegramController::sendMessage([
             'message' => [
-                'text' => "⚠️ *" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_title') . "*\n"
+                'text' =>
+                    "🚨 *" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_title') . "*\n"
                     . "🆔 `{$offer->code}`\n\n"
-                    . "_" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_body', ['time' => $diff['legible']]) . "_",
+                    . "⚠️ " . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_line1') . "\n"
+                    . "⏱️ _" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_line2', ['time' => $diff['legible']]) . "_",
                 'chat' => ['id' => $counterpartTgId],
                 'reply_markup' => json_encode([
                     'inline_keyboard' => [

@@ -207,8 +207,9 @@ return [
             "insufficient_thread_note" => "Se solicitaron nuevas evidencias al usuario",
             "insufficient_sent" => "Solicitud enviada al usuario.",
             // requestEvidenceFromCounterpart
-            "ctrpart_title" => "Se requieren evidencias de su parte",
-            "ctrpart_body" => "El árbitro necesita evidencias de su parte para resolver la disputa. Tiene :time para enviarlas o el fallo será en su contra.",
+            "ctrpart_title" => "Se requieren evidencias",
+            "ctrpart_line1" => "Se necesitan evidencias de su parte para resolver la disputa.",
+            "ctrpart_line2" => "Tiene :time para enviarlas o el fallo sería en su contra.",
             "ctrpart_thread_note" => "Se solicitaron evidencias a la contraparte",
             "ctrpart_sent" => "Solicitud enviada a la contraparte.",
             // solveDispute
