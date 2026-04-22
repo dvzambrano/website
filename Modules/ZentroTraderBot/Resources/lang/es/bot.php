@@ -196,24 +196,24 @@ return [
             "by_seller" => "Comprobante del Vendedor",
             "no_proofs" => "Sin comprobantes de pago registrados.",
             // Arbiter action buttons (inline keyboard)
-            "arbiter_actions"       => "Acciones del árbitro:",
-            "btn_reqnew"            => "Solicitar nuevas",
-            "btn_reqctr"            => "Pedir a contraparte",
-            "btn_favor_buyer"       => "Fallo: Comprador",
-            "btn_favor_seller"      => "Fallo: Vendedor",
+            "arbiter_actions" => "Acciones del árbitro:",
+            "btn_reqnew" => "Solicitar más evidencias",
+            "btn_reqctr" => "Solicitar evidencias a contraparte",
+            "btn_favor_buyer" => "Fallo a favor del COMPRADOR",
+            "btn_favor_seller" => "Fallo a favor del VENDEDOR",
             // requestNewEvidenceFromUser
-            "insufficient_title"    => "Evidencias insuficientes",
-            "insufficient_body"     => "El árbitro ha revisado tus evidencias y necesita información adicional. Por favor envía nuevas evidencias del intercambio.",
+            "insufficient_title" => "Evidencias insuficientes",
+            "insufficient_body" => "El árbitro ha revisado tus evidencias y necesita información adicional. Por favor envía nuevas evidencias del intercambio.",
             "insufficient_thread_note" => "Se solicitaron nuevas evidencias al usuario",
-            "insufficient_sent"     => "Solicitud enviada al usuario.",
+            "insufficient_sent" => "Solicitud enviada al usuario.",
             // requestEvidenceFromCounterpart
-            "ctrpart_title"         => "Se requieren evidencias de su parte",
-            "ctrpart_body"          => "El árbitro necesita evidencias de su parte para resolver la disputa. Tiene :time para enviarlas o el fallo será en su contra.",
-            "ctrpart_thread_note"   => "Se solicitaron evidencias a la contraparte",
-            "ctrpart_sent"          => "Solicitud enviada a la contraparte.",
+            "ctrpart_title" => "Se requieren evidencias de su parte",
+            "ctrpart_body" => "El árbitro necesita evidencias de su parte para resolver la disputa. Tiene :time para enviarlas o el fallo será en su contra.",
+            "ctrpart_thread_note" => "Se solicitaron evidencias a la contraparte",
+            "ctrpart_sent" => "Solicitud enviada a la contraparte.",
             // solveDispute
-            "solved_thread"         => "DISPUTA RESUELTA",
-            "solved_done"           => "Disputa resuelta en la blockchain.",
+            "solved_thread" => "DISPUTA RESUELTA",
+            "solved_done" => "Disputa resuelta en la blockchain.",
         ],
         "cancelled" => [
             "title" => "Oferta Cancelada",
@@ -522,7 +522,6 @@ return [
         "arbiter_notification_title" => "Nuevo envio de evidencias en disputa",
         "arbiter_notification_body" => "El usuario ha enviado evidencias para la revision del caso. Vea las imagenes adjuntas.",
         // Forum thread
-        "thread_new_evidence" => "Nueva evidencia recibida",
         "thread_more_requested" => "El árbitro ha solicitado más evidencias a las partes.",
         // Solicitud de más evidencias
         "more_requested_title" => "El árbitro solicita más evidencias",

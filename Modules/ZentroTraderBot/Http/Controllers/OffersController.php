@@ -1751,18 +1751,12 @@ class OffersController extends Controller
                         default => 'unknown',
                     };
                     $label = match ($role) {
-                        'buyer' => "🟢 *" . Lang::get("zentrotraderbot::bot.offer.disputed.by_buyer") . "*",
-                        'seller' => "🔴 *" . Lang::get("zentrotraderbot::bot.offer.disputed.by_seller") . "*",
+                        'buyer' => "*" . Lang::get("zentrotraderbot::bot.offer.disputed.by_buyer") . "* 🟢",
+                        'seller' => "*" . Lang::get("zentrotraderbot::bot.offer.disputed.by_seller") . "* 🔴",
                         default => "👤 ID: `{$userId}`",
                     };
 
                     $base = ['chat' => ['id' => $supportChatId], 'message_thread_id' => (int) $threadId, 'text' => ''];
-
-                    TelegramController::sendMessage([
-                        'message' => array_merge($base, [
-                            'text' => "📤 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.thread_new_evidence") . "*\n🆔 `{$offer->code}`\n{$label}",
-                        ]),
-                    ], $botTenant->token);
 
                     if (count($newFileIds) === 1) {
                         TelegramController::sendPhoto(['message' => array_merge($base, ['photo' => $newFileIds[0]])], $botTenant->token);
@@ -1773,7 +1767,7 @@ class OffersController extends Controller
 
                     TelegramController::sendMessage([
                         'message' => array_merge($base, [
-                            'text' => "👆 " . Lang::get("zentrotraderbot::bot.offer.disputed.arbiter_actions"),
+                            'text' => "👆 {$label}\n🆔 `{$offer->code}`",
                             'reply_markup' => self::arbiterButtons($offer->code, (string) $userId),
                         ]),
                     ], $botTenant->token);
@@ -1860,12 +1854,16 @@ class OffersController extends Controller
         return json_encode([
             'inline_keyboard' => [
                 [
-                    ['text' => '🔄 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_reqnew'), 'callback_data' => "/reqnewevi {$code} {$userId}"],
-                    ['text' => '↔️ ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_reqctr'), 'callback_data' => "/reqctrpart {$code} {$userId}"],
+                    ['text' => '✳️ ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_reqnew'), 'callback_data' => "/reqnewevi {$code} {$userId}"],
                 ],
                 [
-                    ['text' => '🟢 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer'), 'callback_data' => "/solvedsp {$code} buyer"],
-                    ['text' => '🔴 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller'), 'callback_data' => "/solvedsp {$code} seller"],
+                    ['text' => '🆚 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_reqctr'), 'callback_data' => "/reqctrpart {$code} {$userId}"],
+                ],
+                [
+                    ['text' => '🏅 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer'), 'callback_data' => "/solvedsp {$code} buyer"],
+                ],
+                [
+                    ['text' => '🎖 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller'), 'callback_data' => "/solvedsp {$code} seller"],
                 ],
             ],
         ]);
