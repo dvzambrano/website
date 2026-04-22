@@ -502,6 +502,18 @@ class ZentroTraderBotController extends JsonsController
                 return $controller->startProofWizard($this, $array["pieces"][1]);
             };
 
+        // Proof wizard pagination callbacks — resume the active wizard for this user
+        $this->strategies["proofmore"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->startProofWizard($this, $array["pieces"][1]);
+            };
+        $this->strategies["proofdone"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->startProofWizard($this, $array["pieces"][1]);
+            };
+
         // Seller (or pending signer) confirms receipt → signs on-chain via relayer (cero POL)
         $this->strategies["/signoffer"] =
             function () use ($array) {
@@ -520,6 +532,18 @@ class ZentroTraderBotController extends JsonsController
 
         // Evidence submission for disputed offers → enters evidence wizard (image collection)
         $this->strategies["/evidenceoffer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->startEvidenceWizard($this, $array["pieces"][1]);
+            };
+
+        // Evidence wizard pagination callbacks — resume the active wizard for this user
+        $this->strategies["evimore"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->startEvidenceWizard($this, $array["pieces"][1]);
+            };
+        $this->strategies["evidone"] =
             function () use ($array) {
                 $controller = new OffersController();
                 return $controller->startEvidenceWizard($this, $array["pieces"][1]);
