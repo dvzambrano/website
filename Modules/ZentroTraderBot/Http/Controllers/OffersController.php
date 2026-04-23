@@ -1930,11 +1930,10 @@ class OffersController extends Controller
 
         return [
             "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.seller_notified"),
-            //"editprevious" => 1,
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"]],
-                    [["text" => "🤝 " . Lang::get("zentrotraderbot::bot.p2pmenu.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
+                    [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
                     [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
                 ]
             ]),
