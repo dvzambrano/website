@@ -1965,11 +1965,11 @@ class OffersController extends Controller
     public function proofResubmitWizard($bot)
     {
         $text = $bot->message['text'] ?? '';
-        if (str_starts_with(ltrim($text), '/disputebybuyer')) {
+        if (str_starts_with(ltrim($text), '/disputebybuyer') || str_starts_with(ltrim($text), '/disputebyseller')) {
             $parts = explode(' ', trim($text));
             $code = $parts[1] ?? '';
             Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
-            return $this->openDisputeByBuyer($bot, $code);
+            return $this->openDispute($bot, $code);
         }
         return $this->runProofResubmitWizard($bot);
     }
@@ -2150,11 +2150,12 @@ class OffersController extends Controller
                 [
                     ["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
                     ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.not_received"), "callback_data" => "/notreceived {$offer->code}"],
-                ]
+                ],
+                [["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebyseller {$offer->code}"]],
             ];
             TelegramController::sendMessage([
                 "message" => [
-                    "text" => "🔄 *" . Lang::get("zentrotraderbot::bot.proof_resubmit.new_evidence_title") . "*\n"
+                    "text" => "👆 *" . Lang::get("zentrotraderbot::bot.proof_resubmit.new_evidence_title") . "*\n"
                         . "🆔 `{$offer->code}`\n\n"
                         . "🏦 " . Lang::get("zentrotraderbot::bot.proof_resubmit.new_evidence_body"),
                     "chat" => ["id" => $sellerSub->user_id],
@@ -2176,7 +2177,7 @@ class OffersController extends Controller
         ];
     }
 
-    public function openDisputeByBuyer($bot, $code)
+    public function openDispute($bot, $code)
     {
         $offer = Offers::findByCode($code);
         if (!$offer) {
@@ -2189,15 +2190,25 @@ class OffersController extends Controller
             return ["text" => ""];
         }
 
-        $buyer = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
-        if (!$buyer || strtolower($buyer->data['wallet']['address'] ?? '') !== strtolower($offer->buyer_address)) {
+        $sub = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+        if (!$sub) {
             $this->updateStatus($bot, "🚫 " . Lang::get("zentrotraderbot::bot.cancel_onchain.not_buyer"));
             return ["text" => ""];
         }
 
+        $walletAddress = strtolower($sub->data['wallet']['address'] ?? '');
+        $isBuyer = $walletAddress === strtolower($offer->buyer_address);
+        $isSeller = $walletAddress === strtolower($offer->seller_address);
+
+        if (!$isBuyer && !$isSeller) {
+            $this->updateStatus($bot, "🚫 " . Lang::get("zentrotraderbot::bot.cancel_onchain.not_buyer"));
+            return ["text" => ""];
+        }
+
+        $role = $isBuyer ? 'buyer' : 'seller';
         $network = ConfigService::getNetworks(env("BASE_NETWORK"));
         $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
-        $buyerKey = decryptValue($buyer->data['wallet']['private_key']);
+        $signerKey = decryptValue($sub->data['wallet']['private_key']);
         $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
         $deadline = time() + 3600;
 
@@ -2205,11 +2216,11 @@ class OffersController extends Controller
 
         try {
             $escrow = new EscrowController();
-            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $relayerKey, $buyerKey, $network, $offer, $deadline) {
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $relayerKey, $signerKey, $network, $offer, $deadline) {
                 return $escrow->openDisputeWithSignature(
                     $rpc,
                     $relayerKey,
-                    $buyerKey,
+                    $signerKey,
                     env('ESCROW_CONTRACT'),
                     $network['chainId'],
                     $offer->id,
@@ -2223,13 +2234,13 @@ class OffersController extends Controller
                 return ["text" => ""];
             }
 
-            $this->logOfferAction($offer, 'buyer', 'dispute_opened', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
+            $this->logOfferAction($offer, $role, 'dispute_opened', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
             $this->updateStatus($bot, "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_opened"));
             return ["text" => ""];
 
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'ID already exists')) {
-                $this->logOfferAction($offer, 'buyer', 'dispute_opened', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'note' => 'already_exists']);
+                $this->logOfferAction($offer, $role, 'dispute_opened', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'note' => 'already_exists']);
                 $this->updateStatus($bot, "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_opened"));
                 return ["text" => ""];
             }

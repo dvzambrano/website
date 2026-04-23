@@ -603,11 +603,18 @@ class ZentroTraderBotController extends JsonsController
                 return $controller->startProofResubmitWizard($this, $array["pieces"][1]);
             };
 
-        // Buyer opens dispute on-chain after seller claims payment not received
+        // Buyer or seller opens dispute on-chain
         $this->strategies["/disputebybuyer"] =
             function () use ($array) {
                 $controller = new OffersController();
-                $controller->openDisputeByBuyer($this, $array["pieces"][1]);
+                $controller->openDispute($this, $array["pieces"][1]);
+                return ["text" => ""];
+            };
+
+        $this->strategies["/disputebyseller"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->openDispute($this, $array["pieces"][1]);
                 return ["text" => ""];
             };
 
