@@ -1877,6 +1877,328 @@ class OffersController extends Controller
     }
 
     // =========================================================
+    // PROOF RESUBMIT — Vendedor dice no haber recibido, comprador reenvía evidencias
+    // =========================================================
+
+    public function notReceivedPayment($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer || !in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED'])) {
+            $this->updateStatus($bot, "⚠️ " . Lang::get("zentrotraderbot::bot.sign_offer.wrong_state"));
+            return ["text" => ""];
+        }
+
+        $callerSub = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+        if (!$callerSub || strtolower($callerSub->data['wallet']['address'] ?? '') !== strtolower($offer->seller_address)) {
+            return ["text" => ""];
+        }
+
+        $botTenant = app('active_bot');
+        $buyerSub = Suscriptions::findByAddress($offer->buyer_address);
+
+        if ($buyerSub && $buyerSub->user_id) {
+            $this->seedProofResubmitWizard($botTenant->key, (int) $buyerSub->user_id, $offer->code);
+
+            $text = "🧾 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
+                . "🆔 `{$offer->code}`\n\n"
+                . "⚠️ _" . Lang::get("zentrotraderbot::bot.proof_resubmit.wizard_context") . "_\n\n"
+                . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions");
+
+            TelegramController::sendMessage([
+                "message" => [
+                    "text" => $text,
+                    "chat" => ["id" => $buyerSub->user_id],
+                    "reply_markup" => json_encode(["inline_keyboard" => [
+                        [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]],
+                        [["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$offer->code}"]],
+                    ]]),
+                ],
+            ], $botTenant->token);
+        }
+
+        return [
+            "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.seller_notified"),
+            "editprevious" => 1,
+        ];
+    }
+
+    public function seedProofResubmitWizard(string $tenantKey, int $userId, string $offerCode): void
+    {
+        $cacheKey = "wizard_{$tenantKey}_{$userId}";
+        Cache::forever($cacheKey, [
+            'controller' => self::class,
+            'method'     => 'proofResubmitWizard',
+            'step'       => 'COLLECTING',
+            'data'       => ['offer_code' => $offerCode, 'images' => []],
+            'history'    => [],
+        ]);
+    }
+
+    public function startProofResubmitWizard($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer) {
+            return ["text" => "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.not_found")];
+        }
+        $bot->message['text'] = null;
+        return $this->runProofResubmitWizard($bot, ['offer_code' => $code, 'images' => []]);
+    }
+
+    public function proofResubmitWizard($bot)
+    {
+        return $this->runProofResubmitWizard($bot);
+    }
+
+    private function runProofResubmitWizard($bot, array $initialData = [])
+    {
+        $self = $this;
+        return (new WizardController())->run($bot, [
+            ['name' => 'COLLECTING', 'handler' => fn($b, $s) => $self->stepProofResubmitCollecting($b, $s)],
+        ], [
+            'controller' => self::class,
+            'method'     => 'proofResubmitWizard',
+            'initialData' => $initialData,
+            'onComplete' => fn($b, $s) => $self->completeProofResubmit($b, $s),
+            'onCancel' => fn($b) => [
+                "text" => "❌ " . Lang::get("zentrotraderbot::bot.proof_resubmit.cancelled"),
+                "chat" => ["id" => $b->actor->user_id],
+                "editprevious" => (isset($b->callback_query) || ($b->is_callback ?? false)) ? 1 : 0,
+                "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
+            ],
+        ]);
+    }
+
+    private function stepProofResubmitCollecting($bot, array $state): array
+    {
+        $text = $bot->message['text'] ?? '';
+        $userId = $bot->actor->user_id;
+        $code = $state['data']['offer_code'];
+        $cancelBtn = [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
+        $disputeBtn = [["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$code}"]];
+
+        $msg = request('message') ?? [];
+        $hasPhoto = isset($msg['photo']);
+        $isImageDoc = isset($msg['document']) && str_starts_with($msg['document']['mime_type'] ?? '', 'image/');
+        $isValidImage = $hasPhoto || $isImageDoc;
+        $isOtherMedia = !$isValidImage && (
+            isset($msg['document']) || isset($msg['video']) || isset($msg['audio']) ||
+            isset($msg['voice']) || isset($msg['sticker']) || isset($msg['animation']) ||
+            isset($msg['video_note']) || isset($msg['contact']) || isset($msg['location']) ||
+            isset($msg['poll']) || isset($msg['dice'])
+        );
+
+        // ── Imagen valida ────────────────────────────────────────────────────────
+        if ($isValidImage) {
+            $fileId = $hasPhoto ? end($msg['photo'])['file_id'] : $msg['document']['file_id'];
+            $currentImages = [];
+            $mediaGroupId = $msg['media_group_id'] ?? null;
+            $offer = Offers::findByCode($code);
+            if ($offer) {
+                DB::transaction(function () use ($offer, $userId, $fileId, &$currentImages) {
+                    $locked = Offers::lockForUpdate()->find($offer->id);
+                    $data = $locked->data ?? [];
+                    $proofs = $data['evidence'][(string) $userId] ?? [];
+                    if (!in_array($fileId, $proofs)) {
+                        $proofs[] = $fileId;
+                    }
+                    $data['evidence'][(string) $userId] = $proofs;
+                    $locked->update(['data' => $data]);
+                    $currentImages = $proofs;
+                });
+            } else {
+                $currentImages = array_unique(array_merge($state['data']['images'] ?? [], [$fileId]));
+            }
+
+            $msgText = "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)])
+                . "\n🤔 " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more");
+            $buttons = json_encode([
+                "inline_keyboard" => [[
+                    ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "proofresmore {$code}"],
+                    ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"), "callback_data" => "proofresdone {$code}"],
+                ]],
+            ]);
+
+            if ($mediaGroupId) {
+                $albumKey = "album_msg_{$bot->tenant->key}_{$userId}_{$mediaGroupId}";
+                $isFirst = Cache::add($albumKey, 'pending', now()->addSeconds(10));
+                if ($isFirst) {
+                    $resp = TelegramController::sendMessage([
+                        "message" => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons],
+                    ], $bot->tenant->token);
+                    $messageId = json_decode($resp, true)['result']['message_id'] ?? null;
+                    if ($messageId) Cache::put($albumKey, $messageId, now()->addSeconds(10));
+                } else {
+                    $messageId = null;
+                    for ($i = 0; $i < 10; $i++) {
+                        $cached = Cache::get($albumKey);
+                        if ($cached && $cached !== 'pending') { $messageId = (int) $cached; break; }
+                        usleep(50000);
+                    }
+                    if ($messageId) {
+                        TelegramController::editMessageText([
+                            "message" => ["chat" => ["id" => $userId], "message_id" => $messageId, "text" => $msgText, "reply_markup" => $buttons],
+                        ], $bot->tenant->token);
+                    }
+                }
+                return ['__update' => true, 'merge' => ['images' => $currentImages], 'response' => ['text' => '', 'chat' => ['id' => $userId]]];
+            }
+
+            return ['__update' => true, 'merge' => ['images' => $currentImages], 'response' => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons]];
+        }
+
+        // ── Contenido invalido ────────────────────────────────────────────────────
+        if ($isOtherMedia) {
+            return [
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "chat" => ["id" => $userId],
+                "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn, $disputeBtn]]),
+            ];
+        }
+
+        // ── "No, eso es todo" ─────────────────────────────────────────────────────
+        if (str_contains(strtolower($text), 'proofresdone')) {
+            $offer = Offers::findByCode($code);
+            $currentImages = $offer?->data['evidence'][(string) $userId] ?? ($state['data']['images'] ?? []);
+            if (empty($currentImages)) {
+                return [
+                    "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.no_images") . "\n\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                    "chat" => ["id" => $userId],
+                    "editprevious" => 1,
+                    "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn, $disputeBtn]]),
+                ];
+            }
+            return ['__advance' => true];
+        }
+
+        // ── Texto inesperado ──────────────────────────────────────────────────────
+        $isKnown = empty($text) || str_contains(strtolower($text), 'proofresmore') || str_contains(strtolower($text), 'proofresdone');
+        if (!empty($text) && !$isKnown) {
+            return [
+                "text" => "⚠️ " . Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "chat" => ["id" => $userId],
+                "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn, $disputeBtn]]),
+            ];
+        }
+
+        // ── Prompt inicial o "Sí, enviar otra" ───────────────────────────────────
+        $offer = Offers::findByCode($code);
+        return [
+            "text" => "🧾 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
+                . ($offer ? "🆔 `{$offer->code}`\n\n" : "")
+                . "⚠️ _" . Lang::get("zentrotraderbot::bot.proof_resubmit.wizard_context") . "_\n\n"
+                . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"),
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn, $disputeBtn]]),
+        ];
+    }
+
+    private function completeProofResubmit($bot, array $state): array
+    {
+        $code = $state['data']['offer_code'];
+        $userId = $bot->actor->user_id;
+        $botTenant = app('active_bot');
+
+        $offer = Offers::findByCode($code);
+        if (!$offer) {
+            return ["text" => "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.not_found"), "chat" => ["id" => $userId]];
+        }
+
+        $sellerSub = Suscriptions::findByAddress($offer->seller_address);
+        if ($sellerSub && $sellerSub->user_id) {
+            $newImages = $offer->data['evidence'][(string) $userId] ?? [];
+            if (!empty($newImages)) {
+                if (count($newImages) === 1) {
+                    TelegramController::sendPhoto(["message" => ["photo" => $newImages[0], "text" => "", "chat" => ["id" => $sellerSub->user_id]]], $botTenant->token);
+                } else {
+                    TelegramController::sendMediaGroup(["message" => ["chat" => ["id" => $sellerSub->user_id], "media" => array_map(fn($fid) => ["type" => "photo", "media" => $fid], $newImages)]], $botTenant->token);
+                }
+            }
+
+            $confirmMenu = [[
+                ["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
+                ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.not_received"), "callback_data" => "/notreceived {$offer->code}"],
+            ]];
+            TelegramController::sendMessage([
+                "message" => [
+                    "text" => "🔄 *" . Lang::get("zentrotraderbot::bot.proof_resubmit.new_evidence_title") . "*\n"
+                        . "🆔 `{$offer->code}`\n\n"
+                        . "🏦 " . Lang::get("zentrotraderbot::bot.proof_resubmit.new_evidence_body"),
+                    "chat" => ["id" => $sellerSub->user_id],
+                    "reply_markup" => json_encode(["inline_keyboard" => $confirmMenu]),
+                ],
+            ], $botTenant->token);
+        }
+
+        return [
+            "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.buyer_submitted"),
+            "chat" => ["id" => $userId],
+            "reply_markup" => json_encode(["inline_keyboard" => [[
+                ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$offer->code}"],
+            ]]]),
+        ];
+    }
+
+    public function openDisputeByBuyer($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer) {
+            $this->updateStatus($bot, "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.not_found"));
+            return ["text" => ""];
+        }
+
+        if (!in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED'])) {
+            $this->updateStatus($bot, "⚠️ " . Lang::get("zentrotraderbot::bot.sign_offer.wrong_state"));
+            return ["text" => ""];
+        }
+
+        $buyer = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+        if (!$buyer || strtolower($buyer->data['wallet']['address'] ?? '') !== strtolower($offer->buyer_address)) {
+            $this->updateStatus($bot, "🚫 " . Lang::get("zentrotraderbot::bot.cancel_onchain.not_buyer"));
+            return ["text" => ""];
+        }
+
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+        $buyerKey = decryptValue($buyer->data['wallet']['private_key']);
+        $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
+        $deadline = time() + 3600;
+
+        $this->updateStatus($bot, "⌛️ " . Lang::get("zentrotraderbot::bot.proof_resubmit.opening_dispute"));
+
+        try {
+            $escrow = new EscrowController();
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $relayerKey, $buyerKey, $network, $offer, $deadline) {
+                return $escrow->openDisputeWithSignature(
+                    $rpc,
+                    $relayerKey,
+                    $buyerKey,
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $offer->id,
+                    $deadline,
+                    env('ETHERSCAN_API_KEY')
+                );
+            });
+
+            if (!$txHash) {
+                $this->updateStatus($bot, "❌ " . Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_error"));
+                return ["text" => ""];
+            }
+
+            $this->updateStatus($bot, "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_opened"));
+            return ["text" => ""];
+
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'ID already exists')) {
+                $this->updateStatus($bot, "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_opened"));
+                return ["text" => ""];
+            }
+            $this->updateStatus($bot, "❌ " . Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_error") . "\n" . $e->getMessage());
+            return ["text" => ""];
+        }
+    }
+
+    // =========================================================
     // ARBITER BUTTONS — Teclado de acciones para el árbitro
     // =========================================================
 

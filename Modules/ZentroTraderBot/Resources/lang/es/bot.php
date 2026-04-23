@@ -59,6 +59,8 @@ return [
         "recover_not_paid" => "Ha pasado :time y no me han pagado",
         "recover_long_wait" => "Ha pasado más de :time y no me han pagado",
         "confirm_received" => "He recibido el Pago",
+        "not_received" => "No lo he recibido",
+        "open_dispute" => "Abrir Disputa",
         "talk_arbiter" => "Hablar con un Árbitro",
         "view_my_offer" => "Ver mi Oferta",
         "publish" => "Publicar",
@@ -529,6 +531,22 @@ return [
         "more_requested_title" => "El árbitro solicita más evidencias",
         "more_requested_body" => "El árbitro necesita información adicional para resolver la disputa. Por favor envíe nuevas evidencias.",
         "more_requested_sent" => "Solicitud de evidencias enviada a ambas partes.",
+    ],
+
+    // =========================================================
+    // PROOF RESUBMIT — Vendedor dice no haber recibido, comprador reenvía evidencias
+    // =========================================================
+
+    "proof_resubmit" => [
+        "wizard_context" => "El vendedor indica que no ha recibido el pago. Envíe nuevas evidencias que demuestren el pago, o abra una disputa si considera que actúa de mala fe.",
+        "seller_notified" => "Se notificó al comprador. Recibirá nuevas evidencias en breve.",
+        "new_evidence_title" => "El comprador ha enviado nuevas evidencias",
+        "new_evidence_body" => "Revisa las imágenes adjuntas. Confirma si recibiste el pago o indica que no lo has recibido.",
+        "buyer_submitted" => "Tus evidencias fueron enviadas al vendedor. Puedes abrir una disputa si consideras que no actúa de buena fe.",
+        "cancelled" => "Has cancelado el envío de evidencias.",
+        "opening_dispute" => "Abriendo disputa en el contrato...",
+        "dispute_opened" => "Disputa abierta. El árbitro revisará el caso.",
+        "dispute_error" => "No se pudo abrir la disputa.",
     ],
 
     // =========================================================

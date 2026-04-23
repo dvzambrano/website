@@ -577,6 +577,40 @@ class ZentroTraderBotController extends JsonsController
                 return $controller->solveDispute($this, $array["pieces"][1], $array["pieces"][2]);
             };
 
+        // Seller says they didn't receive payment → notifies buyer and starts proof-resubmit wizard
+        $this->strategies["/notreceived"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->notReceivedPayment($this, $array["pieces"][1]);
+            };
+
+        // Buyer resubmits evidence after seller rejection → proof-resubmit wizard entry point
+        $this->strategies["/proofresub"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->startProofResubmitWizard($this, $array["pieces"][1]);
+            };
+
+        // Proof-resubmit wizard pagination callbacks
+        $this->strategies["proofresmore"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->startProofResubmitWizard($this, $array["pieces"][1]);
+            };
+        $this->strategies["proofresdone"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->startProofResubmitWizard($this, $array["pieces"][1]);
+            };
+
+        // Buyer opens dispute on-chain after seller claims payment not received
+        $this->strategies["/disputebybuyer"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                $controller->openDisputeByBuyer($this, $array["pieces"][1]);
+                return ["text" => ""];
+            };
+
         return $this->getProcessedMessage();
     }
 
