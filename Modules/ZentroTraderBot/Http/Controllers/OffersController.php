@@ -1741,7 +1741,7 @@ class OffersController extends Controller
 
         $offer = Offers::findByCode($code);
         if ($offer) {
-            $buyerSub  = Suscriptions::findByAddress($offer->buyer_address);
+            $buyerSub = Suscriptions::findByAddress($offer->buyer_address);
             $evRole = ($buyerSub && (string) $buyerSub->user_id === (string) $userId) ? 'buyer' : 'seller';
             $this->logOfferAction($offer, $evRole, 'evidence_submitted', $userId, $bot->message['text'] ?? '', ['code' => $code, 'image_count' => count($offer->data['evidence'][(string) $userId] ?? [])]);
             $botTenant = app('active_bot');
@@ -1930,12 +1930,12 @@ class OffersController extends Controller
 
         return [
             "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.seller_notified"),
-            "editprevious" => 1,
+            //"editprevious" => 1,
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"]],
-                    [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
                     [["text" => "🤝 " . Lang::get("zentrotraderbot::bot.p2pmenu.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
+                    [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
                 ]
             ]),
         ];
@@ -2273,12 +2273,12 @@ class OffersController extends Controller
             $locked = Offers::lockForUpdate()->find($offer->id);
             $data = $locked->data ?? [];
             $data['audit'][] = [
-                'user_id'  => $userId,
-                'role'     => $role,
-                'action'   => $action,
+                'user_id' => $userId,
+                'role' => $role,
+                'action' => $action,
                 'callback' => $callback,
-                'at'       => now()->format("Y-m-d H:i:s"),
-                'details'  => $details,
+                'at' => now()->format("Y-m-d H:i:s"),
+                'details' => $details,
             ];
             $locked->update(['data' => $data]);
         });
