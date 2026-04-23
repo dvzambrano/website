@@ -1522,6 +1522,38 @@ class OffersController extends Controller
     // EVIDENCE WIZARD — Asistente de envio de evidencias en disputa
     // =========================================================
 
+    /**
+     * Inicializa el estado del wizard de evidencias en cache para un usuario.
+     * Permite arrancarlo directamente sin que el usuario toque un botón.
+     */
+    public function seedEvidenceWizard(string $tenantKey, int $userId, string $offerCode): void
+    {
+        $cacheKey = "wizard_{$tenantKey}_{$userId}";
+        Cache::forever($cacheKey, [
+            'controller' => self::class,
+            'method'     => 'evidenceWizard',
+            'step'       => 'COLLECTING',
+            'data'       => ['offer_code' => $offerCode, 'images' => []],
+            'history'    => [],
+        ]);
+    }
+
+    /**
+     * Construye el texto del prompt inicial del wizard segun el contexto.
+     * $context: 'dispute' (oferta entra en DISPUTED) | 'more' (árbitro pide más evidencias)
+     */
+    public function buildEvidenceWizardPromptText(Offers $offer, string $context = 'dispute'): string
+    {
+        $contextLine = $context === 'more'
+            ? "🔔 _" . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_body") . "_"
+            : "⚖️ _" . Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_dispute_context") . "_";
+
+        return "🧾 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
+            . "🆔 `{$offer->code}`\n\n"
+            . "{$contextLine}\n\n"
+            . "📸 " . Lang::get("zentrotraderbot::bot.evidence_wizard.instructions");
+    }
+
     public function startEvidenceWizard($bot, $code)
     {
         $offer = Offers::findByCode($code);
@@ -1806,19 +1838,18 @@ class OffersController extends Controller
         }
 
         $botTenant = app('active_bot');
-        $evidenceMenu = [[["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_evidence"), "callback_data" => "/evidenceoffer " . $offer->code]]];
-        $text = "🔔 *" . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_title") . "*\n"
-            . "🆔 `{$offer->code}`\n\n"
-            . "_" . Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_body") . "_";
+        $cancelMenu = [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]];
+        $wizardText = $this->buildEvidenceWizardPromptText($offer, 'more');
 
         foreach ([$offer->buyer_address, $offer->seller_address] as $address) {
             $sub = Suscriptions::findByAddress($address);
             if ($sub && $sub->user_id) {
+                $this->seedEvidenceWizard($botTenant->key, (int) $sub->user_id, $offer->code);
                 TelegramController::sendMessage([
                     "message" => [
-                        "text" => $text,
+                        "text" => $wizardText,
                         "chat" => ["id" => $sub->user_id],
-                        "reply_markup" => json_encode(["inline_keyboard" => $evidenceMenu]),
+                        "reply_markup" => json_encode(["inline_keyboard" => $cancelMenu]),
                     ],
                 ], $botTenant->token);
             }

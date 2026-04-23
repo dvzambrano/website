@@ -519,6 +519,7 @@ return [
         "no_images" => "No ha enviado ninguna imagen. Por favor envie al menos una imagen.",
         "invalid_content" => "Solo se aceptan imagenes. Por favor envie una foto o un archivo de imagen (JPG, PNG, etc.).",
         "cancelled" => "Ha cancelado el envio de evidencias.",
+        "arbiter_dispute_context" => "El árbitro revisará el caso. Envíe las evidencias que demuestren que cumplió con su parte del acuerdo.",
         "arbiter_notified" => "Sus evidencias han sido enviadas al equipo de arbitraje para su revision.",
         "arbiter_notification_title" => "Nuevo envio de evidencias en disputa",
         "arbiter_notification_body" => "El usuario ha enviado evidencias para la revision del caso. Vea las imagenes adjuntas.",

@@ -165,14 +165,19 @@ class OfferObserver
                     . "🆔 `{$offer->code}`\n"
                     . "👉 _" . Lang::get("zentrotraderbot::bot.offer.disputed.claim_started") . "_\n";
 
-                $text = $generaltext
-                    . "👮‍♀️ *" . Lang::get("zentrotraderbot::bot.offer.disputed.arbiter_will_review") . "*\n\n"
-                    . "⚠️ *" . Lang::get("zentrotraderbot::bot.offer.disputed.send_evidence_note") . "*";
+                $offersController = new OffersController();
+                $cancelMenu = [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]];
+                $wizardText = $offersController->buildEvidenceWizardPromptText($offer, 'dispute');
 
-                $evidenceMenu = [[["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_evidence"), "callback_data" => "/evidenceoffer " . $offer->code]]];
+                foreach ([$offer->seller_address, $offer->buyer_address] as $address) {
+                    $sub = Suscriptions::findByAddress($address);
+                    if ($sub && $sub->user_id) {
+                        $offersController->seedEvidenceWizard($bot->key, (int) $sub->user_id, $offer->code);
+                    }
+                }
 
-                $this->notifyByAddress($offer->seller_address, $text, $bot->token, $evidenceMenu, $offer);
-                $this->notifyByAddress($offer->buyer_address, $text, $bot->token, $evidenceMenu, $offer);
+                $this->notifyByAddress($offer->seller_address, $wizardText, $bot->token, $cancelMenu, $offer);
+                $this->notifyByAddress($offer->buyer_address, $wizardText, $bot->token, $cancelMenu, $offer);
 
                 // Crear foro de disputa y reenviar evidencias existentes
                 $this->openDisputeThread($offer, $bot);
