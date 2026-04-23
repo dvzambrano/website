@@ -648,7 +648,9 @@ trait UsesTelegramBot
 
         $text .= "👇 " . Lang::get("telegrambot::bot.prompts.areyousure.text");
 
-        $no_callback = $no_method ?? "deleteconfirmation";
+        $no_callback = $no_method;
+        if (!$no_method || strtolower($no_method) == "none")
+            $no_callback = "deleteconfirmation";
 
         return array(
             "text" => $text,
