@@ -2308,19 +2308,13 @@ class OffersController extends Controller
         $botTenant = app('active_bot');
         $this->logOfferAction($offer, 'arbiter', 'request_new_evidence_from_user', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $code, 'target_tg_id' => $userId]);
 
+        $this->seedEvidenceWizard($botTenant->key, (int) $userId, $offer->code);
+        $cancelMenu = [[['text' => '❌ ' . Lang::get('zentrotraderbot::bot.options.cancel'), 'callback_data' => '/wizardcancel']]];
         TelegramController::sendMessage([
             'message' => [
-                'text' => "⚠️ *" . Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_title') . "*\n"
-                    . "🆔 `{$offer->code}`\n\n"
-                    . "_" . Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_body') . "_",
+                'text' => $this->buildEvidenceWizardPromptText($offer, 'more'),
                 'chat' => ['id' => $userId],
-                'reply_markup' => json_encode([
-                    'inline_keyboard' => [
-                        [
-                            ['text' => '🧾 ' . Lang::get('zentrotraderbot::bot.options.send_evidence'), 'callback_data' => "/evidenceoffer {$code}"],
-                        ]
-                    ],
-                ]),
+                'reply_markup' => json_encode(['inline_keyboard' => $cancelMenu]),
             ],
         ], $botTenant->token);
 
@@ -2369,28 +2363,13 @@ class OffersController extends Controller
             return ['text' => '❌ ' . Lang::get('zentrotraderbot::bot.sign_offer.account_not_found'), 'chat' => ['id' => $bot->actor->user_id]];
         }
 
-        $blockchain = new BlockchainController();
-        $status = $blockchain->getStatus();
-        $diff = DateService::getTimeDifference(
-            Carbon::now()->getTimestamp(),
-            Carbon::now()->addSeconds($status['tradeTimeout'])->getTimestamp()
-        );
-
+        $this->seedEvidenceWizard($botTenant->key, (int) $counterpartId, $offer->code);
+        $cancelMenu = [[['text' => '❌ ' . Lang::get('zentrotraderbot::bot.options.cancel'), 'callback_data' => '/wizardcancel']]];
         TelegramController::sendMessage([
             'message' => [
-                'text' =>
-                    "🚨 *" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_title') . "*\n"
-                    . "🆔 `{$offer->code}`\n"
-                    . "⚠️ " . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_line1') . "\n\n"
-                    . "⏱️ _" . Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_line2', ['time' => $diff['legible']]) . "_",
+                'text' => $this->buildEvidenceWizardPromptText($offer, 'more'),
                 'chat' => ['id' => $counterpartId],
-                'reply_markup' => json_encode([
-                    'inline_keyboard' => [
-                        [
-                            ['text' => '🧾 ' . Lang::get('zentrotraderbot::bot.options.send_evidence'), 'callback_data' => "/evidenceoffer {$code}"],
-                        ]
-                    ],
-                ]),
+                'reply_markup' => json_encode(['inline_keyboard' => $cancelMenu]),
             ],
         ], $botTenant->token);
 
