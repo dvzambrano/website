@@ -290,8 +290,10 @@ return [
                 "line2" => "Esto puede tardar entre 1 y 3 minutos; por ahora no necesita hacer nada más.",
             ],
             "dispute" => [
-                "line1" => "Se detectó la apertura de disputa.",
-                "line2" => "Esto puede tardar entre 1 y 3 minutos; por ahora no necesita hacer nada más.",
+                "buyer_line1" => "Tu solicitud de disputa fue registrada.",
+                "buyer_line2" => "Un árbitro revisará el caso lo antes posible.",
+                "seller_line1" => "El comprador ha abierto una disputa sobre este intercambio.",
+                "seller_line2" => "Un árbitro revisará el caso en breve. Asegúrese de tener evidencias listas para enviár cuando se lo soliciten.",
             ],
             "resolving" => [
                 "line1" => "Un árbitro está revisando este caso.",
