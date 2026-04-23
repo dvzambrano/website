@@ -841,6 +841,7 @@ class OffersController extends Controller
                 return false;
             }
 
+            $this->logOfferAction($offer, 'seller', 'offer_recovered', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
             $this->updateStatus($bot, "✅ *" . Lang::get("zentrotraderbot::bot.recover_offer.success", ['amount' => number_format($offer->amount, 2)]) . "*");
 
             return $txHash;
@@ -1237,11 +1238,13 @@ class OffersController extends Controller
                 return false;
             }
 
+            $this->logOfferAction($offer, 'seller', 'payment_confirmed', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
             $this->updateStatus($bot, "✅ *" . Lang::get("zentrotraderbot::bot.sign_offer.confirmation_sent") . "*");
             return $txHash;
 
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'ID already exists')) {
+                $this->logOfferAction($offer, 'seller', 'payment_confirmed', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'note' => 'already_exists']);
                 $this->updateStatus($bot, "✅ *" . Lang::get("zentrotraderbot::bot.sign_offer.confirmation_sent") . "*");
                 return true;
             }
@@ -1302,6 +1305,7 @@ class OffersController extends Controller
                 return false;
             }
 
+            $this->logOfferAction($offer, 'buyer', 'trade_cancelled', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
             $this->updateStatus($bot, "⌛️ " . Lang::get("zentrotraderbot::bot.cancel_onchain.sent"));
             return $txHash;
 
@@ -1504,6 +1508,7 @@ class OffersController extends Controller
             // Las imágenes y el botón de confirmar al vendedor se envían desde
             // ProcessContractActivity::sendPendingNotification cuando Moralis detecta
             // la TX en mempool (TRADESIGNED unconfirmed). Nada que hacer aquí.
+            $this->logOfferAction($offer, 'buyer', 'proof_submitted', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $code, 'image_count' => count($images)]);
         }
 
         ProcessProofSigning::dispatch(
@@ -1531,10 +1536,10 @@ class OffersController extends Controller
         $cacheKey = "wizard_{$tenantKey}_{$userId}";
         Cache::forever($cacheKey, [
             'controller' => self::class,
-            'method'     => 'evidenceWizard',
-            'step'       => 'COLLECTING',
-            'data'       => ['offer_code' => $offerCode, 'images' => []],
-            'history'    => [],
+            'method' => 'evidenceWizard',
+            'step' => 'COLLECTING',
+            'data' => ['offer_code' => $offerCode, 'images' => []],
+            'history' => [],
         ]);
     }
 
@@ -1736,6 +1741,9 @@ class OffersController extends Controller
 
         $offer = Offers::findByCode($code);
         if ($offer) {
+            $buyerSub  = Suscriptions::findByAddress($offer->buyer_address);
+            $evRole = ($buyerSub && (string) $buyerSub->user_id === (string) $userId) ? 'buyer' : 'seller';
+            $this->logOfferAction($offer, $evRole, 'evidence_submitted', $userId, $bot->message['text'] ?? '', ['code' => $code, 'image_count' => count($offer->data['evidence'][(string) $userId] ?? [])]);
             $botTenant = app('active_bot');
             $actorsController = new ActorsController();
             $admins = $actorsController->getData(Actors::class, [
@@ -1838,6 +1846,7 @@ class OffersController extends Controller
         }
 
         $botTenant = app('active_bot');
+        $this->logOfferAction($offer, 'arbiter', 'request_more_evidence', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $code]);
         $cancelMenu = [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]];
         $wizardText = $this->buildEvidenceWizardPromptText($offer, 'more');
 
@@ -1894,6 +1903,7 @@ class OffersController extends Controller
         }
 
         $botTenant = app('active_bot');
+        $this->logOfferAction($offer, 'seller', 'payment_rejected', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code]);
         $buyerSub = Suscriptions::findByAddress($offer->buyer_address);
 
         if ($buyerSub && $buyerSub->user_id) {
@@ -1908,10 +1918,12 @@ class OffersController extends Controller
                 "message" => [
                     "text" => $text,
                     "chat" => ["id" => $buyerSub->user_id],
-                    "reply_markup" => json_encode(["inline_keyboard" => [
-                        [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]],
-                        [["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$offer->code}"]],
-                    ]]),
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]],
+                            [["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$offer->code}"]],
+                        ]
+                    ]),
                 ],
             ], $botTenant->token);
         }
@@ -1919,11 +1931,13 @@ class OffersController extends Controller
         return [
             "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.seller_notified"),
             "editprevious" => 1,
-            "reply_markup" => json_encode(["inline_keyboard" => [
-                [["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"]],
-                [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
-                [["text" => "🤝 " . Lang::get("zentrotraderbot::bot.p2pmenu.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
-            ]]),
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"]],
+                    [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                    [["text" => "🤝 " . Lang::get("zentrotraderbot::bot.p2pmenu.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
+                ]
+            ]),
         ];
     }
 
@@ -1932,10 +1946,10 @@ class OffersController extends Controller
         $cacheKey = "wizard_{$tenantKey}_{$userId}";
         Cache::forever($cacheKey, [
             'controller' => self::class,
-            'method'     => 'proofResubmitWizard',
-            'step'       => 'COLLECTING',
-            'data'       => ['offer_code' => $offerCode, 'images' => []],
-            'history'    => [],
+            'method' => 'proofResubmitWizard',
+            'step' => 'COLLECTING',
+            'data' => ['offer_code' => $offerCode, 'images' => []],
+            'history' => [],
         ]);
     }
 
@@ -1968,7 +1982,7 @@ class OffersController extends Controller
             ['name' => 'COLLECTING', 'handler' => fn($b, $s) => $self->stepProofResubmitCollecting($b, $s)],
         ], [
             'controller' => self::class,
-            'method'     => 'proofResubmitWizard',
+            'method' => 'proofResubmitWizard',
             'initialData' => $initialData,
             'onComplete' => fn($b, $s) => $self->completeProofResubmit($b, $s),
             'onCancel' => fn($b) => [
@@ -2024,10 +2038,12 @@ class OffersController extends Controller
             $msgText = "✅ " . Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)])
                 . "\n🤔 " . Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more");
             $buttons = json_encode([
-                "inline_keyboard" => [[
-                    ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "proofresmore {$code}"],
-                    ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"), "callback_data" => "proofresdone {$code}"],
-                ]],
+                "inline_keyboard" => [
+                    [
+                        ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "proofresmore {$code}"],
+                        ["text" => Lang::get("zentrotraderbot::bot.evidence_wizard.no_done"), "callback_data" => "proofresdone {$code}"],
+                    ]
+                ],
             ]);
 
             if ($mediaGroupId) {
@@ -2038,12 +2054,16 @@ class OffersController extends Controller
                         "message" => ["text" => $msgText, "chat" => ["id" => $userId], "reply_markup" => $buttons],
                     ], $bot->tenant->token);
                     $messageId = json_decode($resp, true)['result']['message_id'] ?? null;
-                    if ($messageId) Cache::put($albumKey, $messageId, now()->addSeconds(10));
+                    if ($messageId)
+                        Cache::put($albumKey, $messageId, now()->addSeconds(10));
                 } else {
                     $messageId = null;
                     for ($i = 0; $i < 10; $i++) {
                         $cached = Cache::get($albumKey);
-                        if ($cached && $cached !== 'pending') { $messageId = (int) $cached; break; }
+                        if ($cached && $cached !== 'pending') {
+                            $messageId = (int) $cached;
+                            break;
+                        }
                         usleep(50000);
                     }
                     if ($messageId) {
@@ -2115,6 +2135,7 @@ class OffersController extends Controller
             return ["text" => "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.not_found"), "chat" => ["id" => $userId]];
         }
 
+        $this->logOfferAction($offer, 'buyer', 'proof_resubmitted', $userId, $bot->message['text'] ?? '', ['code' => $code, 'image_count' => count($offer->data['evidence'][(string) $userId] ?? [])]);
         $sellerSub = Suscriptions::findByAddress($offer->seller_address);
         if ($sellerSub && $sellerSub->user_id) {
             $newImages = $offer->data['evidence'][(string) $userId] ?? [];
@@ -2126,10 +2147,12 @@ class OffersController extends Controller
                 }
             }
 
-            $confirmMenu = [[
-                ["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
-                ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.not_received"), "callback_data" => "/notreceived {$offer->code}"],
-            ]];
+            $confirmMenu = [
+                [
+                    ["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
+                    ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.not_received"), "callback_data" => "/notreceived {$offer->code}"],
+                ]
+            ];
             TelegramController::sendMessage([
                 "message" => [
                     "text" => "🔄 *" . Lang::get("zentrotraderbot::bot.proof_resubmit.new_evidence_title") . "*\n"
@@ -2144,9 +2167,13 @@ class OffersController extends Controller
         return [
             "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.buyer_submitted"),
             "chat" => ["id" => $userId],
-            "reply_markup" => json_encode(["inline_keyboard" => [[
-                ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$offer->code}"],
-            ]]]),
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [
+                        ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$offer->code}"],
+                    ]
+                ]
+            ]),
         ];
     }
 
@@ -2197,11 +2224,13 @@ class OffersController extends Controller
                 return ["text" => ""];
             }
 
+            $this->logOfferAction($offer, 'buyer', 'dispute_opened', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
             $this->updateStatus($bot, "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_opened"));
             return ["text" => ""];
 
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'ID already exists')) {
+                $this->logOfferAction($offer, 'buyer', 'dispute_opened', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'note' => 'already_exists']);
                 $this->updateStatus($bot, "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_opened"));
                 return ["text" => ""];
             }
@@ -2235,6 +2264,27 @@ class OffersController extends Controller
     }
 
     // =========================================================
+    // OFFER AUDIT LOG — Registra cronológicamente cada acción de comprador, vendedor y árbitro
+    // =========================================================
+
+    private function logOfferAction(Offers $offer, string $role, string $action, int $userId, string $callback = '', array $details = []): void
+    {
+        DB::transaction(function () use ($offer, $role, $action, $userId, $callback, $details) {
+            $locked = Offers::lockForUpdate()->find($offer->id);
+            $data = $locked->data ?? [];
+            $data['audit'][] = [
+                'user_id'  => $userId,
+                'role'     => $role,
+                'action'   => $action,
+                'callback' => $callback,
+                'at'       => now()->format("Y-m-d H:i:s"),
+                'details'  => $details,
+            ];
+            $locked->update(['data' => $data]);
+        });
+    }
+
+    // =========================================================
     // REQUEST NEW EVIDENCE — Árbitro pide nuevas evidencias al usuario
     // =========================================================
 
@@ -2246,6 +2296,7 @@ class OffersController extends Controller
         }
 
         $botTenant = app('active_bot');
+        $this->logOfferAction($offer, 'arbiter', 'request_new_evidence_from_user', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $code, 'target_tg_id' => $userId]);
 
         TelegramController::sendMessage([
             'message' => [
@@ -2297,6 +2348,7 @@ class OffersController extends Controller
         }
 
         $botTenant = app('active_bot');
+        $this->logOfferAction($offer, 'arbiter', 'request_evidence_from_counterpart', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $code, 'reference_tg_id' => $userId]);
         $buyerSub = Suscriptions::findByAddress($offer->buyer_address);
         $sellerSub = Suscriptions::findByAddress($offer->seller_address);
         $buyerTgId = $buyerSub ? (string) $buyerSub->user_id : null;
@@ -2388,6 +2440,7 @@ class OffersController extends Controller
             $sideLabel = $side === 'buyer'
                 ? Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer')
                 : Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller');
+            $this->logOfferAction($offer, 'arbiter', 'solve_dispute', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $code, 'side' => $side, 'winner_address' => $winnerAddress, 'tx_hash' => $txHash]);
             $threadId = $offer->data['dispute']['thread_id'] ?? null;
             $supportId = env('TRADER_BOT_SUPPORT');
 
