@@ -100,6 +100,20 @@ trait UsesTelegramBot
         )
             return response()->json(["message" => "OK"], 200);
 
+        // Cuando el reply indica eliminar el mensaje actual (p.ej. botón NO sin accion definida)
+        if (!empty($this->reply["deletecurrent"])) {
+            try {
+                TelegramController::deleteMessage([
+                    "message" => [
+                        "id" => $this->message["message_id"],
+                        "chat" => ["id" => $this->message["chat"]["id"]],
+                    ],
+                ], $this->tenant->token);
+            } catch (\Throwable $th) {
+            }
+            return response()->json(["message" => "OK"], 200);
+        }
+
         $log = "TelegramBotController {$type} reply from " . $this->tenant->code;
         Log::info("✅ {$log} to {$logfrom}" . json_encode($this->reply) . "\n");
         // Armando la respuesta correspondiente:
@@ -448,7 +462,11 @@ trait UsesTelegramBot
                 break;
 
             case "confirmation":
-                $reply = $this->getAreYouSurePrompt($array["pieces"][1], $array["pieces"][2]);
+                $reply = $this->getAreYouSurePrompt($array["pieces"][1], $array["pieces"][2] ?? null);
+                break;
+
+            case "deleteconfirmation":
+                $reply = ["deletecurrent" => true];
                 break;
 
             default:
@@ -620,7 +638,7 @@ trait UsesTelegramBot
         return $reply;
     }
 
-    public function getAreYouSurePrompt($yes_method, $no_method, $message = false, $showwarning = true)
+    public function getAreYouSurePrompt($yes_method, $no_method = null, $message = false, $showwarning = true)
     {
         $text = "⚠️ *" . Lang::get("telegrambot::bot.prompts.areyousure.header") . "*\n";
         if ($message)
@@ -630,13 +648,15 @@ trait UsesTelegramBot
 
         $text .= "👇 " . Lang::get("telegrambot::bot.prompts.areyousure.text");
 
+        $no_callback = $no_method ?? "deleteconfirmation";
+
         return array(
             "text" => $text,
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "👍 " . Lang::get("telegrambot::bot.options.yes"), "callback_data" => "{$yes_method}"],
-                        ["text" => "❌ " . Lang::get("telegrambot::bot.options.no"), "callback_data" => "{$no_method}"],
+                        ["text" => "❌ " . Lang::get("telegrambot::bot.options.no"), "callback_data" => "{$no_callback}"],
                     ],
                 ],
             ]),

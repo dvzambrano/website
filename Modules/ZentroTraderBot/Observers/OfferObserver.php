@@ -332,10 +332,10 @@ class OfferObserver
                 "reply_markup" => json_encode([
                     'inline_keyboard' => [
                         [
-                            ['text' => '🏅 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer'), 'callback_data' => "confirmation|solvedispute {$offer->code} buyer|menu"],
+                            ['text' => '🏅 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer'), 'callback_data' => "confirmation|solvedispute-{$offer->code}-buyer|menu"],
                         ],
                         [
-                            ['text' => '🎖 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller'), 'callback_data' => "confirmation|solvedispute {$offer->code} seller|menu"],
+                            ['text' => '🎖 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller'), 'callback_data' => "confirmation|solvedispute-{$offer->code}-seller|menu"],
                         ],
                     ],
                 ]),
