@@ -2004,7 +2004,7 @@ class OffersController extends Controller
         $network = ConfigService::getNetworks(env('BASE_NETWORK'));
         $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
         $escrow = new EscrowController();
-        $arbiterKey = decryptValue(env('TRADER_BOT_KEY'));
+        $arbiterKey = decryptValue(env('ESCROW_ARBITER_KEY'));
         $winnerAddress = $side === 'buyer' ? $offer->buyer_address : $offer->seller_address;
 
         try {
