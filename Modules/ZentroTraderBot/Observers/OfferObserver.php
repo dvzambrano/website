@@ -246,7 +246,7 @@ class OfferObserver
                     . "🙏 _" . Lang::get("zentrotraderbot::bot.offer.solved.thanks") . "_\n",
                     $bot->token,
                     [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
-                    $offer
+                    null
                 );
                 $this->notifyByAddress(
                     $looser,
@@ -259,7 +259,7 @@ class OfferObserver
                         [["text" => "👩‍💻 " . Lang::get("zentrotraderbot::bot.options.talk_arbiter"), "callback_data" => "menu"]],
                         [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
                     ],
-                    $offer
+                    null
                 );
                 $offer->updateStatus('COMPLETED', ['updated_at' => now()]);
                 break;
