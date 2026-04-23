@@ -257,7 +257,7 @@ return [
             ],
             "cancelling" => [
                 "line1" => "Se detectó tu cancelación.",
-                "line2" => "Confirmando en breve...",
+                "line2" => "Esto puede tardar entre 1 y 3 minutos; por ahora no necesita hacer nada más.",
             ],
             "signing_proof" => [
                 "title" => "Tu comprobante de pago fue enviado.",
@@ -285,15 +285,15 @@ return [
             ],
             "expiring" => [
                 "line1" => "Se detectó la expiración del intercambio.",
-                "line2" => "Confirmando en breve...",
+                "line2" => "Esto puede tardar entre 1 y 3 minutos; por ahora no necesita hacer nada más.",
             ],
             "dispute" => [
                 "line1" => "Se detectó la apertura de disputa.",
-                "line2" => "Confirmando en breve...",
+                "line2" => "Esto puede tardar entre 1 y 3 minutos; por ahora no necesita hacer nada más.",
             ],
             "resolving" => [
-                "line1" => "Se detectó la resolución del árbitro.",
-                "line2" => "Confirmando en breve...",
+                "line1" => "Un árbitro está revisando este caso.",
+                "line2" => "En breve se emitirá el veredicto en base a las evidencias aportadas...",
             ],
         ],
     ],

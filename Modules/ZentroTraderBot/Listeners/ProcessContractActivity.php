@@ -290,13 +290,17 @@ class ProcessContractActivity
                 break;
 
             case 'DISPUTEOPENED':
-                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.dispute.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.dispute.line2");
+                $msg = $header
+                    . Lang::get("zentrotraderbot::bot.offer.pending.dispute.line1") . "\n"
+                    . Lang::get("zentrotraderbot::bot.offer.pending.dispute.line2");
                 $this->notifyByAddress($offer->seller_address, $msg, $bot->token, [], $offer);
                 $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer);
                 break;
 
             case 'DISPUTERESOLVED':
-                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.resolving.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.resolving.line2");
+                $msg = $header
+                    . Lang::get("zentrotraderbot::bot.offer.pending.resolving.line1") . "\n"
+                    . Lang::get("zentrotraderbot::bot.offer.pending.resolving.line2");
                 $this->notifyByAddress($offer->seller_address, $msg, $bot->token, [], $offer);
                 $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer);
                 break;
