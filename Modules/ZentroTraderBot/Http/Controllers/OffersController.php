@@ -1919,6 +1919,11 @@ class OffersController extends Controller
         return [
             "text" => "✅ " . Lang::get("zentrotraderbot::bot.proof_resubmit.seller_notified"),
             "editprevious" => 1,
+            "reply_markup" => json_encode(["inline_keyboard" => [
+                [["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"]],
+                [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                [["text" => "🤝 " . Lang::get("zentrotraderbot::bot.p2pmenu.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
+            ]]),
         ];
     }
 
@@ -1946,6 +1951,13 @@ class OffersController extends Controller
 
     public function proofResubmitWizard($bot)
     {
+        $text = $bot->message['text'] ?? '';
+        if (str_starts_with(ltrim($text), '/disputebybuyer')) {
+            $parts = explode(' ', trim($text));
+            $code = $parts[1] ?? '';
+            Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
+            return $this->openDisputeByBuyer($bot, $code);
+        }
         return $this->runProofResubmitWizard($bot);
     }
 
