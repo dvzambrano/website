@@ -293,14 +293,28 @@ class ProcessContractActivity
                 break;
 
             case 'DISPUTEOPENED':
-                $msgBuyer = $header
-                    . Lang::get("zentrotraderbot::bot.offer.pending.dispute.buyer_line1") . "\n"
-                    . Lang::get("zentrotraderbot::bot.offer.pending.dispute.buyer_line2");
-                $msgSeller = $header
-                    . Lang::get("zentrotraderbot::bot.offer.pending.dispute.seller_line1") . "\n"
-                    . Lang::get("zentrotraderbot::bot.offer.pending.dispute.seller_line2");
-                $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, [], $offer);
-                $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, [], $offer);
+                // Determine who opened the dispute from the audit log
+                $audit = $offer->data['audit'] ?? [];
+                $lastDispute = collect($audit)->filter(fn($e) => ($e['action'] ?? '') === 'dispute_opened')->last();
+                $openerRole = $lastDispute['role'] ?? 'buyer'; // fallback to buyer
+
+                $msgOpener = $header
+                    . Lang::get("zentrotraderbot::bot.offer.pending.dispute.opener_line1") . "\n"
+                    . Lang::get("zentrotraderbot::bot.offer.pending.dispute.opener_line2");
+
+                if ($openerRole === 'seller') {
+                    $msgCounterpart = $header
+                        . Lang::get("zentrotraderbot::bot.offer.pending.dispute.seller_opened_counterpart_line1") . "\n"
+                        . Lang::get("zentrotraderbot::bot.offer.pending.dispute.seller_opened_counterpart_line2");
+                    $this->notifyByAddress($offer->seller_address, $msgOpener, $bot->token, [], $offer);
+                    $this->notifyByAddress($offer->buyer_address, $msgCounterpart, $bot->token, [], $offer);
+                } else {
+                    $msgCounterpart = $header
+                        . Lang::get("zentrotraderbot::bot.offer.pending.dispute.buyer_opened_counterpart_line1") . "\n"
+                        . Lang::get("zentrotraderbot::bot.offer.pending.dispute.buyer_opened_counterpart_line2");
+                    $this->notifyByAddress($offer->buyer_address, $msgOpener, $bot->token, [], $offer);
+                    $this->notifyByAddress($offer->seller_address, $msgCounterpart, $bot->token, [], $offer);
+                }
                 break;
 
             case 'DISPUTERESOLVED':
