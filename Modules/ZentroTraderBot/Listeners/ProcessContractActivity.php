@@ -262,7 +262,7 @@ class ProcessContractActivity
                             ["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
                             ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.not_received"), "callback_data" => "/notreceived {$offer->code}"],
                         ],
-                        [["text" => Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"]],
+                        [["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"]],
                     ];
                     $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $confirmMenu, $offer);
                 } else {

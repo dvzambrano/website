@@ -68,8 +68,8 @@ return [
         "cancel" => "Cancelar",
         "previous" => "Anterior",
         "next" => "Siguiente",
-        "message_buyer"  => "💬 Enviar mensaje al Comprador",
-        "message_seller" => "💬 Enviar mensaje al Vendedor",
+        "message_buyer" => "Enviar mensaje al Comprador",
+        "message_seller" => "Enviar mensaje al Vendedor",
     ],
 
     // =========================================================
@@ -77,18 +77,18 @@ return [
     // =========================================================
 
     "chat" => [
-        "mode_active"             => "Estás en modo chat con :counterpart. Todo lo que envíes será transmitido anónimamente. Usa el botón para salir.",
-        "exit_btn"                => "Salir del chat",
-        "reply_btn"               => "Responder",
-        "started"                 => "Modo chat activo. Todo lo que escribas o envíes llegará a :counterpart de forma anónima.",
-        "exited"                  => "Has salido del modo chat.",
-        "message_sent"            => "Mensaje enviado.",
-        "buyer_says"              => "El comprador dice",
-        "seller_says"             => "El vendedor dice",
-        "counterpart_buyer"       => "el comprador",
-        "counterpart_seller"      => "el vendedor",
+        "mode_active" => "Estás en modo chat con :counterpart. Todo lo que envíes será transmitido anónimamente. Usa el botón para salir.",
+        "exit_btn" => "Salir del chat",
+        "reply_btn" => "Responder",
+        "started" => "Modo chat activo. Todo lo que escribas o envíes llegará a :counterpart de forma anónima.",
+        "exited" => "Has salido del modo chat.",
+        "message_sent" => "Mensaje enviado.",
+        "buyer_says" => "El comprador dice",
+        "seller_says" => "El vendedor dice",
+        "counterpart_buyer" => "el comprador",
+        "counterpart_seller" => "el vendedor",
         "counterpart_unavailable" => "La contraparte no está disponible en este momento.",
-        "unsupported_media"       => "(Contenido multimedia no compatible con el chat interno)",
+        "unsupported_media" => "(Contenido multimedia no compatible con el chat interno)",
     ],
 
     "prompts" => [
@@ -492,7 +492,7 @@ return [
         "thanks" => "Gracias por ayudar a la comunidad",
         "not_found_title" => "Que raro",
         "not_found" => "No he encontrado la oferta",
-        "selected" => "Has seleccionado :stars/5 ✅",
+        "selected" => "Has seleccionado :stars/5",
         "comment_prompt" => "Si desea, escriba un comentario sobre su experiencia en este intercambio.\n\n_O pulse Omitir para continuar sin comentario._",
         "comment_skip" => "Omitir comentario",
         "comment_saved" => "Su comentario ha sido guardado.",

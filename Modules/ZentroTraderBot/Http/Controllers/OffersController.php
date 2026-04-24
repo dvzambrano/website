@@ -609,10 +609,10 @@ class OffersController extends Controller
 
     public function applyForOffer($bot, $code)
     {
-        // 1. Usamos el $code o $offer->id para que NADIE más pueda tocar esta oferta por 2 minutos
+        // 1. Lock de 5 min para cubrir confirmación blockchain (hasta 1-3 min) + margen
         $lockKey = "applying_offer_lock_{$code}";
 
-        if (!Cache::add($lockKey, $bot->actor->user_id, now()->addMinutes(2))) {
+        if (!Cache::add($lockKey, $bot->actor->user_id, now()->addMinutes(5))) {
             $whoIsApplying = Cache::get($lockKey);
             // Si el que tiene el candado soy yo mismo, es un reintento de Telegram, dejamos pasar.
             // Si es otro ID, detenemos el proceso.
