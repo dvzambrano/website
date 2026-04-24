@@ -242,7 +242,7 @@ class ProcessContractActivity
                     $sellerSub = Suscriptions::findByAddress($offer->seller_address);
                     $buyerSub = Suscriptions::findByAddress($offer->buyer_address);
                     if ($sellerSub && $sellerSub->user_id && $buyerSub) {
-                        $proofImages = $offer->data['proofs'][$buyerSub->user_id] ?? [];
+                        $proofImages = $offer->data['evidence'][(string) $buyerSub->user_id] ?? [];
                         if (!empty($proofImages)) {
                             if (count($proofImages) === 1) {
                                 TelegramController::sendPhoto(["message" => ["photo" => $proofImages[0], "text" => "", "chat" => ["id" => $sellerSub->user_id]]], $bot->token);

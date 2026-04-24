@@ -104,12 +104,12 @@ class Offers extends Model
         if (!$confirmed) {
             $entry = [
                 'tx_hash' => $txHash,
-                'pending_at' => now()->toISOString(),
+                'pending_at' => now()->format("Y-m-d H:i:s"),
                 'confirmed_at' => null,
             ];
         } else {
             $entry['tx_hash'] = $txHash; // actualizar hash por si hubo reorg
-            $entry['confirmed_at'] = now()->toISOString();
+            $entry['confirmed_at'] = now()->format("Y-m-d H:i:s");
         }
 
         $data['blockchain_events'][$eventName] = $entry;

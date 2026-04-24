@@ -363,9 +363,9 @@ class OfferObserver
         $buyerTgId = $buyerSub ? (string) $buyerSub->user_id : null;
         $sellerTgId = $sellerSub ? (string) $sellerSub->user_id : null;
 
-        // ── Comprobantes de pago ────────────────────────────────────────────
-        $proofs = $offer->data['proofs'] ?? [];
-        $hasProofs = !empty(array_filter($proofs));
+        // ── Comprobantes y evidencias ───────────────────────────────────────
+        $evidence = $offer->data['evidence'] ?? [];
+        $hasEvidence = !empty(array_filter($evidence));
 
         TelegramController::sendMessage([
             'message' => [
@@ -375,8 +375,8 @@ class OfferObserver
             ],
         ], $token);
 
-        if ($hasProofs) {
-            foreach ($proofs as $userId => $fileIds) {
+        if ($hasEvidence) {
+            foreach ($evidence as $userId => $fileIds) {
                 if (empty($fileIds)) {
                     continue;
                 }
@@ -394,32 +394,6 @@ class OfferObserver
                     'text' => "⚠️ _" . Lang::get("zentrotraderbot::bot.offer.disputed.no_proofs") . "_",
                 ],
             ], $token);
-        }
-
-        // ── Evidencias previas (si existen) ────────────────────────────────
-        $evidence = $offer->data['evidence'] ?? [];
-        $hasEvidence = !empty(array_filter($evidence));
-        if (!$hasEvidence) {
-            return;
-        }
-
-        TelegramController::sendMessage([
-            'message' => [
-                'chat' => ['id' => $supportChatId],
-                'message_thread_id' => $threadId,
-                'text' => "🗂️ *" . Lang::get("zentrotraderbot::bot.offer.disputed.evidence_section") . "*",
-            ],
-        ], $token);
-
-        foreach ($evidence as $userId => $fileIds) {
-            if (empty($fileIds)) {
-                continue;
-            }
-            $label = $this->roleLabel((string) $userId, $buyerTgId, $sellerTgId);
-            TelegramController::sendMessage([
-                'message' => ['chat' => ['id' => $supportChatId], 'message_thread_id' => $threadId, 'text' => $label],
-            ], $token);
-            $this->sendFilesToThread($fileIds, $supportChatId, $threadId, $token, $offer->code, (string) $userId);
         }
     }
 

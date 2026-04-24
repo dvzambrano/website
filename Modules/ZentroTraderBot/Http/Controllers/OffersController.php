@@ -1392,11 +1392,11 @@ class OffersController extends Controller
                 DB::transaction(function () use ($offer, $userId, $fileId, &$currentImages) {
                     $locked = Offers::lockForUpdate()->find($offer->id);
                     $data = $locked->data ?? [];
-                    $proofs = $data['proofs'][$userId] ?? [];
+                    $proofs = $data['evidence'][(string) $userId] ?? [];
                     if (!in_array($fileId, $proofs)) {
                         $proofs[] = $fileId;
                     }
-                    $data['proofs'][$userId] = $proofs;
+                    $data['evidence'][(string) $userId] = $proofs;
                     $locked->update(['data' => $data]);
                     $currentImages = $proofs;
                 });
