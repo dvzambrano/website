@@ -257,10 +257,13 @@ class ProcessContractActivity
                         . "*\n🆔 `{$code}`\n"
                         . "🏦 " . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof_seller.line1") . "\n"
                         . "🚨 *" . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof_seller.line2") . "*";
-                    $confirmMenu = [[
-                        ["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
-                        ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.not_received"), "callback_data" => "/notreceived {$offer->code}"],
-                    ]];
+                    $confirmMenu = [
+                        [
+                            ["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
+                            ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.not_received"), "callback_data" => "/notreceived {$offer->code}"],
+                        ],
+                        [["text" => Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"]],
+                    ];
                     $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $confirmMenu, $offer);
                 } else {
                     $msg = $header . "✅ " . Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm.line2");

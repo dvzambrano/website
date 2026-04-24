@@ -2253,6 +2253,183 @@ class OffersController extends Controller
     }
 
     // =========================================================
+    // INTERNAL CHAT — Chat anónimo entre comprador y vendedor
+    // =========================================================
+
+    public function startChat($bot, $code)
+    {
+        $offer = Offers::findByCode($code);
+        if (!$offer || !in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED', 'DISPUTED'])) {
+            $this->updateStatus($bot, "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.not_found"));
+            return ["text" => ""];
+        }
+
+        $sub = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+        if (!$sub) return ["text" => ""];
+
+        $wallet  = strtolower($sub->data['wallet']['address'] ?? '');
+        $isBuyer = $wallet === strtolower($offer->buyer_address);
+        $isSeller = $wallet === strtolower($offer->seller_address);
+        if (!$isBuyer && !$isSeller) return ["text" => ""];
+
+        $role        = $isBuyer ? 'buyer' : 'seller';
+        $counterpart = Lang::get("zentrotraderbot::bot.chat.counterpart_" . ($isBuyer ? 'seller' : 'buyer'));
+        $botTenant   = app('active_bot');
+        $chatKey     = "chat_{$botTenant->key}_{$bot->actor->user_id}";
+
+        $exitBtn = [[["text" => "🚪 " . Lang::get("zentrotraderbot::bot.chat.exit_btn"), "callback_data" => "/exitchat"]]];
+
+        // Send pinnable reminder message
+        $reminderText = "💬 *" . Lang::get("zentrotraderbot::bot.chat.mode_active", ['counterpart' => $counterpart]) . "*";
+        $raw = TelegramController::sendMessage([
+            "message" => [
+                "text"         => $reminderText,
+                "chat"         => ["id" => $bot->actor->user_id],
+                "reply_markup" => json_encode(["inline_keyboard" => $exitBtn]),
+            ],
+        ], $botTenant->token);
+
+        $pinnedMsgId = json_decode($raw, true)['result']['message_id'] ?? null;
+        if ($pinnedMsgId) {
+            TelegramController::pinMessage([
+                "message" => ["chat" => ["id" => $bot->actor->user_id], "message_id" => $pinnedMsgId],
+            ], $botTenant->token);
+        }
+
+        Cache::put($chatKey, [
+            'offer_code'       => $code,
+            'role'             => $role,
+            'pinned_message_id' => $pinnedMsgId,
+        ], now()->addHours(24));
+
+        return [
+            "text" => "✅ " . Lang::get("zentrotraderbot::bot.chat.started", ['counterpart' => $counterpart]),
+            "chat" => ["id" => $bot->actor->user_id],
+        ];
+    }
+
+    public function chatRelay($bot)
+    {
+        $botTenant = app('active_bot');
+        $chatKey   = "chat_{$botTenant->key}_{$bot->actor->user_id}";
+        $chatData  = Cache::get($chatKey);
+        if (!$chatData) return ["text" => ""];
+
+        $text = $bot->message['text'] ?? '';
+
+        if (str_starts_with(ltrim($text), '/exitchat')) {
+            return $this->exitChat($bot);
+        }
+
+        // If user clicks the "Responder" button while already in chat, refresh session
+        if (str_starts_with(ltrim($text), '/startchat')) {
+            $parts = explode(' ', trim($text));
+            return $this->startChat($bot, $parts[1] ?? $chatData['offer_code']);
+        }
+
+        $offer = Offers::findByCode($chatData['offer_code']);
+        if (!$offer) {
+            Cache::forget($chatKey);
+            return ["text" => ""];
+        }
+
+        $role   = $chatData['role'];
+        $prefix = "📨 *" . Lang::get("zentrotraderbot::bot.chat.{$role}_says") . ":*\n";
+
+        $counterpartAddress = $role === 'buyer' ? $offer->seller_address : $offer->buyer_address;
+        $counterpartSub     = Suscriptions::findByAddress($counterpartAddress);
+        if (!$counterpartSub || !$counterpartSub->user_id) {
+            return ["text" => "❌ " . Lang::get("zentrotraderbot::bot.chat.counterpart_unavailable")];
+        }
+
+        $counterpartId  = (int) $counterpartSub->user_id;
+        $counterpartRole = $role === 'buyer' ? 'seller' : 'buyer';
+        $counterpartLabel = Lang::get("zentrotraderbot::bot.chat.counterpart_{$role}"); // label for the counterpart's reply btn
+        $replyMarkup = json_encode(["inline_keyboard" => [
+            [["text" => Lang::get("zentrotraderbot::bot.options.message_{$counterpartRole}"), "callback_data" => "/startchat {$offer->code}"]],
+        ]]);
+
+        $this->forwardChatMessage($bot->message, $prefix, $counterpartId, $replyMarkup, $botTenant->token);
+
+        // If DISPUTED, also relay to dispute thread
+        if (strtoupper($offer->status) === 'DISPUTED') {
+            $threadId  = $offer->data['dispute']['thread_id'] ?? null;
+            $supportId = env('TRADER_BOT_SUPPORT');
+            if ($threadId && $supportId) {
+                $this->forwardChatMessage($bot->message, $prefix, (int) $supportId, null, $botTenant->token, (int) $threadId);
+            }
+        }
+
+        return [
+            "text" => "✅ " . Lang::get("zentrotraderbot::bot.chat.message_sent"),
+            "chat" => ["id" => $bot->actor->user_id],
+        ];
+    }
+
+    private function forwardChatMessage(array $msg, string $prefix, int $chatId, ?string $markup, string $token, ?int $threadId = null): void
+    {
+        $base = ['chat' => ['id' => $chatId]];
+        if ($threadId) $base['message_thread_id'] = $threadId;
+        if ($markup)   $base['reply_markup']       = $markup;
+
+        if (!empty($msg['photo'])) {
+            $photo = end($msg['photo']);
+            TelegramController::sendPhoto(['message' => array_merge($base, [
+                'photo' => $photo['file_id'],
+                'text'  => $prefix . ($msg['caption'] ?? ''),
+            ])], $token);
+        } elseif (!empty($msg['document'])) {
+            TelegramController::sendDocument(['message' => array_merge($base, [
+                'document' => $msg['document']['file_id'],
+                'text'     => $prefix . ($msg['caption'] ?? ''),
+            ])], $token);
+        } elseif (!empty($msg['video'])) {
+            TelegramController::sendVideo(['message' => array_merge($base, [
+                'video' => $msg['video']['file_id'],
+                'text'  => $prefix . ($msg['caption'] ?? ''),
+            ])], $token);
+        } elseif (!empty($msg['voice'])) {
+            TelegramController::sendVoice(['message' => array_merge($base, [
+                'voice' => $msg['voice']['file_id'],
+                'text'  => $prefix . ($msg['caption'] ?? ''),
+            ])], $token);
+        } elseif (!empty($msg['text'])) {
+            TelegramController::sendMessage(['message' => array_merge($base, [
+                'text' => $prefix . $msg['text'],
+            ])], $token);
+        } else {
+            TelegramController::sendMessage(['message' => array_merge($base, [
+                'text' => $prefix . Lang::get('zentrotraderbot::bot.chat.unsupported_media'),
+            ])], $token);
+        }
+    }
+
+    public function exitChat($bot)
+    {
+        $botTenant = app('active_bot');
+        $chatKey   = "chat_{$botTenant->key}_{$bot->actor->user_id}";
+        $chatData  = Cache::get($chatKey);
+
+        if ($chatData && !empty($chatData['pinned_message_id'])) {
+            $msgId = $chatData['pinned_message_id'];
+            TelegramController::unpinChatMessage([
+                "message" => ["chat" => ["id" => $bot->actor->user_id], "message_id" => $msgId],
+            ], $botTenant->token);
+            TelegramController::deleteMessage([
+                "message" => ["chat" => ["id" => $bot->actor->user_id], "message_id" => $msgId],
+            ], $botTenant->token);
+        }
+
+        Cache::forget($chatKey);
+
+        return [
+            "text"          => "🚪 " . Lang::get("zentrotraderbot::bot.chat.exited"),
+            "chat"          => ["id" => $bot->actor->user_id],
+            "deletecurrent" => true,
+        ];
+    }
+
+    // =========================================================
     // ARBITER BUTTONS — Teclado de acciones para el árbitro
     // =========================================================
 

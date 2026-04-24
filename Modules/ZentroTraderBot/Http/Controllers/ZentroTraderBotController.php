@@ -618,6 +618,19 @@ class ZentroTraderBotController extends JsonsController
                 return ["text" => ""];
             };
 
+        // Internal anonymous chat between buyer and seller
+        $this->strategies["/startchat"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->startChat($this, $array["pieces"][1] ?? '');
+            };
+
+        $this->strategies["/exitchat"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->exitChat($this);
+            };
+
         return $this->getProcessedMessage();
     }
 

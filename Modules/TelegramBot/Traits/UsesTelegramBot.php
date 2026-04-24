@@ -197,6 +197,13 @@ trait UsesTelegramBot
                 ->{$wizard['method']}($this);
         }
 
+        // En modo chat interno con la contraparte?
+        $chatKey = "chat_{$this->tenant->key}_{$this->actor->user_id}";
+        if (Cache::has($chatKey)) {
+            return app()->make(\Modules\ZentroTraderBot\Http\Controllers\OffersController::class)
+                ->chatRelay($this);
+        }
+
         // preparando respuesta generica para un texto no reconocido en el bot
         /*
         $reply = [
