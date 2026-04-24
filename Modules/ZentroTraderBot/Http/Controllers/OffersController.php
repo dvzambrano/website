@@ -2412,20 +2412,22 @@ class OffersController extends Controller
 
         if ($chatData && !empty($chatData['pinned_message_id'])) {
             $msgId = $chatData['pinned_message_id'];
-            TelegramController::unpinChatMessage([
-                "message" => ["chat" => ["id" => $bot->actor->user_id], "message_id" => $msgId],
-            ], $botTenant->token);
-            TelegramController::deleteMessage([
-                "message" => ["chat" => ["id" => $bot->actor->user_id], "message_id" => $msgId],
-            ], $botTenant->token);
+            try {
+                TelegramController::unpinChatMessage([
+                    "message" => ["chat" => ["id" => $bot->actor->user_id], "message_id" => $msgId],
+                ], $botTenant->token);
+                TelegramController::deleteMessage([
+                    "message" => ["chat" => ["id" => $bot->actor->user_id], "id" => $msgId],
+                ], $botTenant->token);
+            } catch (\Throwable $th) {
+            }
         }
 
         Cache::forget($chatKey);
 
         return [
-            "text"          => "🚪 " . Lang::get("zentrotraderbot::bot.chat.exited"),
-            "chat"          => ["id" => $bot->actor->user_id],
-            "deletecurrent" => true,
+            "text" => "🚪 " . Lang::get("zentrotraderbot::bot.chat.exited"),
+            "chat" => ["id" => $bot->actor->user_id],
         ];
     }
 
