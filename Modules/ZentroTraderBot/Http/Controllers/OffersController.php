@@ -897,6 +897,9 @@ class OffersController extends Controller
             $text .= "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
         }
         array_push($menu, [
+            ["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"],
+        ]);
+        array_push($menu, [
             ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
         ]);
 
@@ -999,7 +1002,7 @@ class OffersController extends Controller
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "⏭ " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"],
+                        ["text" => "🙅 " . Lang::get("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"],
                     ]
                 ]
             ]),
