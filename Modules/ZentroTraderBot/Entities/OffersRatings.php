@@ -5,8 +5,23 @@ namespace Modules\ZentroTraderBot\Entities;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Laravel\Traits\TenantTrait;
+use Modules\ZentroTraderBot\Entities\Offers;
+use Modules\ZentroTraderBot\Entities\Suscriptions;
+use Carbon\Carbon;
 
-
+/**
+ * @property int $id
+ * @property int $offer_id
+ * @property int $rater_user_id
+ * @property int $rated_user_id
+ * @property int $stars
+ * @property string|null $comment
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property Offers $offer
+ * @property Suscriptions $rater
+ * @property Suscriptions $rated
+ */
 class OffersRatings extends Model
 {
     use TenantTrait;

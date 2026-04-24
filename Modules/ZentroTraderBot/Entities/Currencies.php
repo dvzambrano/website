@@ -5,6 +5,19 @@ namespace Modules\ZentroTraderBot\Entities;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Laravel\Traits\TenantTrait;
 
+use Illuminate\Database\Eloquent\Collection;
+use Carbon\Carbon;
+
+/**
+ * @property int $id
+ * @property string $code
+ * @property string $name
+ * @property string|null $symbol
+ * @property bool $is_active
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property Collection<Paymentmethods> $paymentmethods
+ */
 class Currencies extends Model
 {
     use TenantTrait;
@@ -20,8 +33,8 @@ class Currencies extends Model
         return $this->belongsToMany(
             Paymentmethods::class,
             'currencypaymentmethods',
-            'currency_id',          // Llave foránea de este modelo en la pivot
-            'payment_method_id'     // Llave foránea del otro modelo en la pivot
+            'currency_id', // Llave foránea de este modelo en la pivot
+            'payment_method_id' // Llave foránea del otro modelo en la pivot
         )
             ->withPivot(['min_limit', 'max_limit', 'instructions', 'is_active'])
             ->withTimestamps();

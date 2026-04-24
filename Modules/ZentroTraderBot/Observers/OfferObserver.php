@@ -242,7 +242,7 @@ class OfferObserver
                     $winner,
                     $textBase
                     . "🏆 *" . Lang::get("zentrotraderbot::bot.offer.solved.winner") . "*\n\n"
-                    . "💵 _" . Lang::get("zentrotraderbot::bot.offer.solved.funds_released", ['amount' => $amount]) . "_\n"
+                    . "💵 _" . Lang::get("zentrotraderbot::bot.offer.solved.funds_released", ['net' => $net]) . "_\n"
                     . "🙏 _" . Lang::get("zentrotraderbot::bot.offer.solved.thanks") . "_\n",
                     $bot->token,
                     [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],

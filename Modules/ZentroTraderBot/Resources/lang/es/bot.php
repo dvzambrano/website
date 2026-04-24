@@ -234,7 +234,7 @@ return [
             "title" => "Transaccion REVISADA",
             "admin_reviewed" => "Un administrador ha revisado las evidencias presentadas.",
             "winner" => "La disputa ha finalizado a su favor.",
-            "funds_released" => "Se han liberado :amount USD a su cuenta.",
+            "funds_released" => "Se han liberado :net USD a su cuenta.",
             "thanks" => "Gracias por confiar en nosotros.",
             "loser" => "Le informamos que el arbitraje ha concluido a favor de la contraparte.",
             "contact_support" => "Si tiene dudas, contacte a soporte con el ID único de la transacción.",

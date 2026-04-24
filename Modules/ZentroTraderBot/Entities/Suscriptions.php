@@ -7,7 +7,16 @@ use Modules\Laravel\Traits\TenantTrait;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
+use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property array|null $data
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property Actors|null $actor
+ */
 class Suscriptions extends Actors
 {
     use TenantTrait;

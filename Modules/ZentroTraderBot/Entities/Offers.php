@@ -7,6 +7,26 @@ use Modules\Laravel\Services\DateService;
 use Modules\Laravel\Traits\TenantTrait;
 use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property int|null $user_id
+ * @property string $buyer_address
+ * @property string $seller_address
+ * @property string|null $winner_address
+ * @property float $amount
+ * @property string $currency
+ * @property float $price_per_usd
+ * @property string $payment_method
+ * @property string|null $payment_details
+ * @property string $status
+ * @property string $type
+ * @property string|null $tx_hash_deposit
+ * @property string|null $tx_hash_release
+ * @property array|null $data
+ * @property string $code
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class Offers extends Model
 {
     use TenantTrait;
@@ -78,17 +98,17 @@ class Offers extends Model
      */
     public function recordBlockchainEvent(string $eventName, string $txHash, bool $confirmed): void
     {
-        $data  = $this->data ?? [];
+        $data = $this->data ?? [];
         $entry = $data['blockchain_events'][$eventName] ?? [];
 
         if (!$confirmed) {
             $entry = [
-                'tx_hash'      => $txHash,
-                'pending_at'   => now()->toISOString(),
+                'tx_hash' => $txHash,
+                'pending_at' => now()->toISOString(),
                 'confirmed_at' => null,
             ];
         } else {
-            $entry['tx_hash']      = $txHash; // actualizar hash por si hubo reorg
+            $entry['tx_hash'] = $txHash; // actualizar hash por si hubo reorg
             $entry['confirmed_at'] = now()->toISOString();
         }
 
@@ -285,11 +305,11 @@ class Offers extends Model
             'OPEN' => $title,
             'CANCELLED' => "OFERTA FINALIZADA",
             'COMPLETED' => "OFERTA FINALIZADA",
-            'LOCKED' => "OFERTA EN CURSO",   // Fondos en Escrow
-            'SIGNED' => "OFERTA EN CURSO",   // Una parte ya firmó
+            'LOCKED' => "OFERTA EN CURSO", // Fondos en Escrow
+            'SIGNED' => "OFERTA EN CURSO", // Una parte ya firmó
             'DISPUTED' => "OFERTA EN CURSO", // En disputa
             'SOLVED' => "OFERTA FINALIZADA",
-            'EXPIRED' => "OFERTA FINALIZADA",  // Tiempo agotado
+            'EXPIRED' => "OFERTA FINALIZADA", // Tiempo agotado
             default => "OFERTA ACTUALIZADA",
         };
     }
@@ -300,11 +320,11 @@ class Offers extends Model
             'OPEN' => ["icon" => '⬜️', "color" => "⬜️"],
             'CANCELLED' => ["icon" => '❌', "color" => "🟫"],
             'COMPLETED' => ["icon" => '✅', "color" => "🟩"],
-            'LOCKED' => ["icon" => '🔒', "color" => "🟧"],   // Fondos en Escrow
-            'SIGNED' => ["icon" => '✍️', "color" => "🟨"],   // Una parte ya firmó
+            'LOCKED' => ["icon" => '🔒', "color" => "🟧"], // Fondos en Escrow
+            'SIGNED' => ["icon" => '✍️', "color" => "🟨"], // Una parte ya firmó
             'DISPUTED' => ["icon" => '⚖️', "color" => "🟪"], // En disputa
             'SOLVED' => ["icon" => '☑️', "color" => "🟪"],
-            'EXPIRED' => ["icon" => '⏱️', "color" => "🟦"],  // Tiempo agotado
+            'EXPIRED' => ["icon" => '⏱️', "color" => "🟦"], // Tiempo agotado
             default => ["icon" => '▫️', "color" => "⬜️"],
         };
     }
