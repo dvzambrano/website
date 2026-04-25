@@ -26,7 +26,6 @@ class ZentroTraderBotController extends JsonsController
     use UsesTelegramBot;
     public $AgentsController;
     public $engine;
-    public $parseMode = "MarkdownV2";
 
     private function t(string $key, array $replace = []): string
     {
@@ -35,6 +34,7 @@ class ZentroTraderBotController extends JsonsController
 
     public function __construct()
     {
+        $this->parseMode = "MarkdownV2";
         $this->tenant = app('active_bot');
 
         $this->ActorsController = new ActorsController();
