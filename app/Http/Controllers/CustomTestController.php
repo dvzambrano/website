@@ -73,6 +73,44 @@ class CustomTestController extends BaseController
         dd(LaravelController::getAvailableLanguages("ZentroTraderBot"));
     }
 
+    public function testFormat()
+    {
+        $user_id = 816767995;
+        $this->KashioBot->connectToThisTenant();
+        $text = "*1\. NEGRITAS* \| _Cursiva_ \| __Subrayado__ \| ~Tachado~ \n\n";
+        $text .= "||Spoiler|| \n\n";
+        $text .= "`código` \n\n";
+        $text .= "```php\n";
+        $text .= "echo \"Hola\";\n";
+        $text .= "```\n\n";
+        $text .= "[Enlace](https://google\.com) \n\n";
+        $text .= "> Cita línea 1\n";
+        $text .= "> Cita línea 2\n\n";
+        $text .= "Texto normal\n\n";
+        $text .= "*Combinación _anidada_* \n\n";
+        $text .= "Escapados: \_ \* \( \) \n\n";
+        $text .= "Emojis: 😀 🚀\n\n";
+
+        $response = TelegramController::sendMessage(
+            array(
+                "message" => array(
+                    "parse_mode" => "MarkdownV2",
+                    "text" => $text,
+                    "chat" => array(
+                        "id" => $user_id,
+                    ),
+                ),
+            ),
+            $this->KashioBot->token
+        );
+
+        if ($response) {
+            $array = json_decode($response, true);
+            dd($array);
+        }
+        die("done!");
+    }
+
     public function testStars()
     {
         $randomizer = new Randomizer();

@@ -12,3 +12,28 @@
 
 # Correr todos los tests del proyecto
 ./vendor/bin/phpunit
+
+
+
+
+
+
+
+
+
+
+### 📝 Tabla de formato MarkdownV2
+
+| Estilo | Sintaxis | Ejemplo | Resultado |
+| :--- | :--- | :--- | :--- |
+| **Negrita** | `*texto*` | `*Hola*` | **Hola** |
+| *Cursiva* | `_texto_` | `_Mundo_` | *Mundo* |
+| __Subrayado__ | `__texto__` | `__importante__` | <u>importante</u> |
+| ~~Tachado~~ | `~texto~` | `~error~` | ~~error~~ |
+| Spoiler (oculto) | `||texto||` | `||sorpresa||` | ████████ |
+| Enlace en línea | `[texto](URL)` | `[Google](https://google.com)` | [Google](https://google.com) |
+| Mención a usuario (por ID) | `[texto](tg://user?id=123)` | `[Soporte](tg://user?id=123456789)` | [Soporte](tg://user?id=123456789) |
+| `Código en línea` | `` `código` `` | `` `var x = 10` `` | `var x = 10` |
+| Bloque de código | ``` ```código``` ``` | ```` ``` `` `print("Hola")` `` ``` ```` | (bloque formateado) |
+| Bloque de código con lenguaje | ``` ```lenguaje ``` | ```` ```python `print("Hola")` ``` ```` | (bloque con resaltado) |
+| Cita en bloque | `>texto` | `>Esto es una cita` | (texto citado) |
