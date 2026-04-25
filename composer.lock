@@ -703,7 +703,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/laravel.git",
-                "reference": "8f1dfb1d04e50dc4b5d25e2391d72974d296fd41"
+                "reference": "b3ca1e03e1fa766456a8592b9a3dc574660ec040"
             },
             "require": {
                 "amenadiel/jpgraph": "*",
@@ -744,7 +744,7 @@
                 }
             ],
             "description": "Modulo base para funcionalidades de Laravel",
-            "time": "2026-04-09T22:14:23+00:00"
+            "time": "2026-04-25T14:29:24+00:00"
         },
         {
             "name": "dvzambrano/web3",

@@ -7,6 +7,7 @@ use Modules\Laravel\Traits\TenantTrait;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
+use Modules\Laravel\Services\TextService;
 use Carbon\Carbon;
 
 /**
@@ -119,11 +120,11 @@ class Suscriptions extends Actors
 
         $balanceText = "";
         if ($balance > 0)
-            $balanceText .= "\n\n💵 *" . Lang::get("zentrotraderbot::bot.prompts.balance.available") . "*: " . number_format($balance, 2) . " USD";
+            $balanceText .= "\n\n💵 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.prompts.balance.available")) . "*: " . TextService::mdv2(number_format($balance, 2)) . " USD";
         else
             $balanceText .= "\n";
         if ($sellerBalance > 0)
-            $balanceText .= "\n🔒 *" . Lang::get("zentrotraderbot::bot.prompts.balance.locked") . "*: " . number_format($sellerBalance, 2) . " USD";
+            $balanceText .= "\n🔒 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.prompts.balance.locked")) . "*: " . TextService::mdv2(number_format($sellerBalance, 2)) . " USD";
 
 
         return [

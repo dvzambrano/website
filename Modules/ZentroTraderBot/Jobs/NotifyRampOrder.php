@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Modules\Laravel\Services\TextService;
 use Modules\Web3\Services\ConfigService;
 
 class NotifyRampOrder implements ShouldQueue
@@ -43,19 +44,21 @@ class NotifyRampOrder implements ShouldQueue
         if (env("DEBUG_MODE", false))
             Log::debug("🐞 NotifyRampOrder handle bot: " . json_encode($this->bot) . " order: " . json_encode($this->order));
 
+        $t = fn(string $key, array $r = []) => TextService::mdv2(Lang::get($key, $r));
+
         // Construimos un mensaje atractivo
-        $message = "🔔 *" . Lang::get("zentrotraderbot::bot.prompts.buy.update.header") . "* \n\n";
+        $message = "🔔 *" . $t("zentrotraderbot::bot.prompts.buy.update.header") . "* \n\n";
         $message .= "🆔 `{$orderId}`\n";
-        $message .= "💰 *{$amount} {$currency}*\n";
+        $message .= "💰 *" . TextService::mdv2($amount) . " {$currency}*\n";
         $message .= "{$statusemoji} {$status}\n\n";
-        $message .= "📅 " . $createdAt . "\n\n";
+        $message .= "📅 " . TextService::mdv2($createdAt) . "\n\n";
 
         if ($status === 'COMPLETED') {
-            $message .= "✅ " . Lang::get("zentrotraderbot::bot.prompts.buy.update.completed");
+            $message .= "✅ " . $t("zentrotraderbot::bot.prompts.buy.update.completed");
         } elseif ($status === 'FAILED') {
-            $message .= "❌ " . Lang::get("zentrotraderbot::bot.prompts.buy.update.failed");
+            $message .= "❌ " . $t("zentrotraderbot::bot.prompts.buy.update.failed");
         } else {
-            $message .= "⏳ " . Lang::get("zentrotraderbot::bot.prompts.buy.update.processing");
+            $message .= "⏳ " . $t("zentrotraderbot::bot.prompts.buy.update.processing");
         }
 
         TelegramController::sendMessage(
@@ -65,6 +68,7 @@ class NotifyRampOrder implements ShouldQueue
                     "chat" => array(
                         "id" => $userId,
                     ),
+                    "parse_mode" => "MarkdownV2",
                 ),
             ),
             $this->bot['token']

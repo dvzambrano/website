@@ -109,7 +109,7 @@ class TelegramController extends Controller
                 ])->getContent();
             }
 
-            $url .= "&parse_mode=Markdown";
+            $url .= "&parse_mode=" . ($request["message"]["parse_mode"] ?? "Markdown");
             if (isset($request["message"]["reply_to_message_id"]) && $request["message"]["reply_to_message_id"] != "") {
                 $url .= "&reply_to_message_id={$request["message"]["reply_to_message_id"]}";
             }
@@ -658,7 +658,6 @@ class TelegramController extends Controller
                 }
             }
 
-            // If we are sending a caption but no parse_mode specified, default to Markdown
             if (isset($extra['caption']) && !isset($extra['parse_mode'])) {
                 $extra['parse_mode'] = 'Markdown';
             }

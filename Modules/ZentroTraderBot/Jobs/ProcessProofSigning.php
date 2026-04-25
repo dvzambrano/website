@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Modules\Laravel\Services\BehaviorService;
+use Modules\Laravel\Services\TextService;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Web3\Http\Controllers\EscrowController;
@@ -65,8 +66,9 @@ class ProcessProofSigning implements ShouldQueue
 
             if (!$txHash) {
                 TelegramController::sendMessage(["message" => [
-                    "text" => "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.no_confirm_payment"),
+                    "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.no_confirm_payment")),
                     "chat" => ["id" => $this->buyerUserId],
+                    "parse_mode" => "MarkdownV2",
                 ]], $bot->token);
             }
 
@@ -80,8 +82,9 @@ class ProcessProofSigning implements ShouldQueue
             ]);
 
             TelegramController::sendMessage(["message" => [
-                "text" => "❌ " . Lang::get("zentrotraderbot::bot.sign_offer.error") . "\n" . $e->getMessage(),
+                "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.error")) . "\n" . TextService::mdv2($e->getMessage()),
                 "chat" => ["id" => $this->buyerUserId],
+                "parse_mode" => "MarkdownV2",
             ]], $bot->token);
         }
     }

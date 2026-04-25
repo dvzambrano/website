@@ -4,6 +4,7 @@ namespace Modules\ZentroTraderBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 use Modules\Laravel\Services\DateService;
+use Modules\Laravel\Services\TextService;
 use Modules\Laravel\Traits\TenantTrait;
 use Carbon\Carbon;
 
@@ -132,10 +133,13 @@ class Offers extends Model
         return !empty($this->data['blockchain_events'][$eventName]['confirmed_at']);
     }
 
-    public function renderAsTelegramMessage($title = "", $owner = false, $stars = "")
+    public function renderAsTelegramMessage($title = "", $owner = false, $stars = "", $v2 = false)
     {
-        $total = number_format(($this->amount * $this->price_per_usd), 2);
-        $amount = number_format($this->amount, 2);
+        $esc = fn($val) => $v2 ? TextService::mdv2($val) : $val;
+
+        $total = $esc(number_format(($this->amount * $this->price_per_usd), 2));
+        $amount = $esc(number_format($this->amount, 2));
+        $price = $esc($this->price_per_usd);
         $isSell = strtolower($this->type) == "sell";
 
         $text = "{$title}\n";
@@ -147,7 +151,7 @@ class Offers extends Model
             $text .= "💵 Se compra: *{$amount} USD*\n";
         }
 
-        $text .= "🔖 Tasa: *{$this->price_per_usd} {$this->currency}/USD*\n";
+        $text .= "🔖 Tasa: *{$price} {$this->currency}/USD*\n";
 
         if ($isSell) {
             if ($owner) {
@@ -159,11 +163,8 @@ class Offers extends Model
             $text .= Offers::getTypeEmoji("sell")["icon"] . " Ud entrega: *{$total} {$this->currency}*\n";
         }
 
-        $text .= "💳 Medio de pago: *{$this->payment_method}*\n";
-        $text .= "🗓 Creada: *{$this->created_at}*\n\n";
-
-        //$created_at = $actor->getLocalDateTime($this->created_at, $tenant->code);
-        //$this->created_at
+        $text .= "💳 Medio de pago: *" . $esc($this->payment_method) . "*\n";
+        $text .= "🗓 Creada: *" . $esc($this->created_at) . "*\n\n";
 
         return $text;
     }

@@ -13,6 +13,7 @@ use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Laravel\Services\BehaviorService;
+use Modules\Laravel\Services\TextService;
 
 /**
  * Enviado cuando el vendedor intenta reclamar antes de que expire el plazo.
@@ -56,14 +57,16 @@ class SendRecoverReminder implements ShouldQueue
                 return;
             }
 
-            $text = "⏰ *" . Lang::get("zentrotraderbot::bot.recover_offer.ready_title") . "*\n"
+            $t = fn(string $key, array $r = []) => TextService::mdv2(Lang::get($key, $r));
+            $text = "⏰ *" . $t("zentrotraderbot::bot.recover_offer.ready_title") . "*\n"
                 . "🆔 `{$offer->code}`\n\n"
-                . "📋 " . Lang::get("zentrotraderbot::bot.recover_offer.ready_body");
+                . "📋 " . $t("zentrotraderbot::bot.recover_offer.ready_body");
 
             $payload = [
                 'message' => [
                     'chat' => ['id' => $this->sellerUserId],
                     'text' => $text,
+                    'parse_mode' => 'MarkdownV2',
                     'reply_markup' => json_encode([
                         'inline_keyboard' => [
                             [["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.recover_offer.ready_button"), "callback_data" => "/recoveroffer {$offer->code}"]],

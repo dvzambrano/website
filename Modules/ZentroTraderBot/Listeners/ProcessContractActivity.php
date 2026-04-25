@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Lang;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\Laravel\Services\BehaviorService;
+use Modules\Laravel\Services\TextService;
 use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
 
 class ProcessContractActivity
@@ -190,20 +191,21 @@ class ProcessContractActivity
     private function sendPendingNotification(Offers $offer, string $eventName, array $params, $bot): void
     {
         $code = $offer->code;
-        $header = "⌛️ *" . Lang::get("zentrotraderbot::bot.offer.pending.title") . "*\n🆔 `{$code}`\n";
+        $t = fn(string $key, array $r = []) => TextService::mdv2(Lang::get($key, $r));
+        $header = "⌛️ *" . $t("zentrotraderbot::bot.offer.pending.title") . "*\n🆔 `{$code}`\n";
 
         switch ($eventName) {
             case 'TRADECREATED':
                 $seller = $params['seller'] ?? $offer->seller_address;
                 $buyer = $params['buyer'] ?? $offer->buyer_address;
-                $msgSeller = "✅ *" . Lang::get("zentrotraderbot::bot.offer.pending.creating_seller.title")
+                $msgSeller = "✅ *" . $t("zentrotraderbot::bot.offer.pending.creating_seller.title")
                     . "*\n🆔 `{$code}`\n"
-                    . "🏦 " . Lang::get("zentrotraderbot::bot.offer.pending.creating_seller.line1") . "\n\n"
-                    . "⏱️ _" . Lang::get("zentrotraderbot::bot.offer.pending.creating_seller.line2") . "_";
-                $msgBuyer = "⌛️ *" . Lang::get("zentrotraderbot::bot.offer.pending.creating_buyer.title")
+                    . "🏦 " . $t("zentrotraderbot::bot.offer.pending.creating_seller.line1") . "\n\n"
+                    . "⏱️ _" . $t("zentrotraderbot::bot.offer.pending.creating_seller.line2") . "_";
+                $msgBuyer = "⌛️ *" . $t("zentrotraderbot::bot.offer.pending.creating_buyer.title")
                     . "*\n🆔 `{$code}`\n"
-                    . "🏦 " . Lang::get("zentrotraderbot::bot.offer.pending.creating_buyer.line1") . "\n\n"
-                    . "⏱️ _" . Lang::get("zentrotraderbot::bot.offer.pending.creating_buyer.line2") . "_";
+                    . "🏦 " . $t("zentrotraderbot::bot.offer.pending.creating_buyer.line1") . "\n\n"
+                    . "⏱️ _" . $t("zentrotraderbot::bot.offer.pending.creating_buyer.line2") . "_";
                 $this->notifyByAddress($seller, $msgSeller, $bot->token, [], $offer);
                 $this->notifyByAddress($buyer, $msgBuyer, $bot->token, [], $offer);
                 break;
@@ -214,15 +216,15 @@ class ProcessContractActivity
                     [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
                     [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
                 ];
-                $msgBuyer = "✅ *" . Lang::get("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
+                $msgBuyer = "✅ *" . $t("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
                     . "🆔 `{$code}`\n"
-                    . "📴 " . Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_self") . "\n\n"
-                    . "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
-                $msgSeller = "📴 *" . Lang::get("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
+                    . "📴 " . $t("zentrotraderbot::bot.offer.cancelled.cancelled_by_self") . "\n\n"
+                    . "👇 " . $t("telegrambot::bot.prompts.whatsnext");
+                $msgSeller = "📴 *" . $t("zentrotraderbot::bot.offer.cancelled.title") . "*\n"
                     . "🆔 `{$code}`\n"
-                    . "👉 " . Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_buyer") . "\n\n"
-                    . "💵 " . Lang::get("zentrotraderbot::bot.offer.cancelled.funds_returned", ['amount' => $amount])
-                    . "👇 " . Lang::get("telegrambot::bot.prompts.whatsnext");
+                    . "👉 " . $t("zentrotraderbot::bot.offer.cancelled.cancelled_by_buyer") . "\n\n"
+                    . "💵 " . $t("zentrotraderbot::bot.offer.cancelled.funds_returned", ['amount' => $amount])
+                    . "\n👇 " . $t("telegrambot::bot.prompts.whatsnext");
                 $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, $cancelMenu, $offer);
                 $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $cancelMenu, $offer);
                 break;
@@ -232,10 +234,10 @@ class ProcessContractActivity
                 $signerIsBuyer = $signer && strtolower($signer) === strtolower($offer->buyer_address ?? '');
                 if ($signerIsBuyer) {
                     // Notificar al comprador
-                    $msgBuyer = "✅ *" . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.title")
+                    $msgBuyer = "✅ *" . $t("zentrotraderbot::bot.offer.pending.signing_proof.title")
                         . "*\n🆔 `{$code}`\n"
-                        . "⏱️ " . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.line1") . "\n\n"
-                        . "👉 _" . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.line2") . "_";
+                        . "⏱️ " . $t("zentrotraderbot::bot.offer.pending.signing_proof.line1") . "\n\n"
+                        . "👉 _" . $t("zentrotraderbot::bot.offer.pending.signing_proof.line2") . "_";
                     $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, [], $offer);
 
                     // Enviar fotos de comprobante al vendedor (si las hay) antes del mensaje con botón
@@ -253,10 +255,10 @@ class ProcessContractActivity
                     }
 
                     // Mensaje al vendedor con botón de confirmar
-                    $msgSeller = "👆 *" . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof_seller.title")
+                    $msgSeller = "👆 *" . $t("zentrotraderbot::bot.offer.pending.signing_proof_seller.title")
                         . "*\n🆔 `{$code}`\n"
-                        . "🏦 " . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof_seller.line1") . "\n"
-                        . "🚨 *" . Lang::get("zentrotraderbot::bot.offer.pending.signing_proof_seller.line2") . "*";
+                        . "🏦 " . $t("zentrotraderbot::bot.offer.pending.signing_proof_seller.line1") . "\n"
+                        . "🚨 *" . $t("zentrotraderbot::bot.offer.pending.signing_proof_seller.line2") . "*";
                     $confirmMenu = [
                         [
                             ["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
@@ -266,26 +268,26 @@ class ProcessContractActivity
                     ];
                     $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $confirmMenu, $offer);
                 } else {
-                    $msg = $header . "✅ " . Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm.line2");
+                    $msg = $header . "✅ " . $t("zentrotraderbot::bot.offer.pending.signing_confirm.line1") . "\n" . $t("zentrotraderbot::bot.offer.pending.signing_confirm.line2");
                     $this->notifyByAddress($signer ?: $offer->seller_address, $msg, $bot->token, [], $offer);
                 }
                 break;
 
             case 'TRADECLOSED':
-                $msgBuyer = "🎉 *" . Lang::get("zentrotraderbot::bot.offer.pending.closing_buyer.line1")
+                $msgBuyer = "🎉 *" . $t("zentrotraderbot::bot.offer.pending.closing_buyer.line1")
                     . "*\n🆔 `{$code}`\n"
-                    . "🔐 " . Lang::get("zentrotraderbot::bot.offer.pending.closing_buyer.line2") . "\n\n"
-                    . "⏱️ _" . Lang::get("zentrotraderbot::bot.offer.pending.closing_buyer.line3") . "_";
-                $msgSeller = "🎉 *" . Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line1")
+                    . "🔐 " . $t("zentrotraderbot::bot.offer.pending.closing_buyer.line2") . "\n\n"
+                    . "⏱️ _" . $t("zentrotraderbot::bot.offer.pending.closing_buyer.line3") . "_";
+                $msgSeller = "🎉 *" . $t("zentrotraderbot::bot.offer.pending.closing_seller.line1")
                     . "*\n🆔 `{$code}`\n"
-                    . "🔐 " . Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line2") . "\n\n"
-                    . "⏱️ _" . Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line3") . "_";
+                    . "🔐 " . $t("zentrotraderbot::bot.offer.pending.closing_seller.line2") . "\n\n"
+                    . "⏱️ _" . $t("zentrotraderbot::bot.offer.pending.closing_seller.line3") . "_";
                 $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, [], $offer);
                 $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, [], $offer);
                 break;
 
             case 'TRADEEXPIRED':
-                $msg = $header . Lang::get("zentrotraderbot::bot.offer.pending.expiring.line1") . "\n" . Lang::get("zentrotraderbot::bot.offer.pending.expiring.line2");
+                $msg = $header . $t("zentrotraderbot::bot.offer.pending.expiring.line1") . "\n" . $t("zentrotraderbot::bot.offer.pending.expiring.line2");
                 // Notificamos al vendedor que inició la expiración
                 $userId = $offer->data['recover']['user_id'] ?? null;
                 if ($userId) {
@@ -302,19 +304,19 @@ class ProcessContractActivity
                 $openerRole = $lastDispute['role'] ?? 'buyer'; // fallback to buyer
 
                 $msgOpener = $header
-                    . Lang::get("zentrotraderbot::bot.offer.pending.dispute.opener_line1") . "\n"
-                    . Lang::get("zentrotraderbot::bot.offer.pending.dispute.opener_line2");
+                    . $t("zentrotraderbot::bot.offer.pending.dispute.opener_line1") . "\n"
+                    . $t("zentrotraderbot::bot.offer.pending.dispute.opener_line2");
 
                 if ($openerRole === 'seller') {
                     $msgCounterpart = $header
-                        . Lang::get("zentrotraderbot::bot.offer.pending.dispute.seller_opened_counterpart_line1") . "\n"
-                        . Lang::get("zentrotraderbot::bot.offer.pending.dispute.seller_opened_counterpart_line2");
+                        . $t("zentrotraderbot::bot.offer.pending.dispute.seller_opened_counterpart_line1") . "\n"
+                        . $t("zentrotraderbot::bot.offer.pending.dispute.seller_opened_counterpart_line2");
                     $this->notifyByAddress($offer->seller_address, $msgOpener, $bot->token, [], $offer);
                     $this->notifyByAddress($offer->buyer_address, $msgCounterpart, $bot->token, [], $offer);
                 } else {
                     $msgCounterpart = $header
-                        . Lang::get("zentrotraderbot::bot.offer.pending.dispute.buyer_opened_counterpart_line1") . "\n"
-                        . Lang::get("zentrotraderbot::bot.offer.pending.dispute.buyer_opened_counterpart_line2");
+                        . $t("zentrotraderbot::bot.offer.pending.dispute.buyer_opened_counterpart_line1") . "\n"
+                        . $t("zentrotraderbot::bot.offer.pending.dispute.buyer_opened_counterpart_line2");
                     $this->notifyByAddress($offer->buyer_address, $msgOpener, $bot->token, [], $offer);
                     $this->notifyByAddress($offer->seller_address, $msgCounterpart, $bot->token, [], $offer);
                 }
@@ -322,8 +324,8 @@ class ProcessContractActivity
 
             case 'DISPUTERESOLVED':
                 $msg = $header
-                    . Lang::get("zentrotraderbot::bot.offer.pending.resolving.line1") . "\n"
-                    . Lang::get("zentrotraderbot::bot.offer.pending.resolving.line2");
+                    . $t("zentrotraderbot::bot.offer.pending.resolving.line1") . "\n"
+                    . $t("zentrotraderbot::bot.offer.pending.resolving.line2");
                 $this->notifyByAddress($offer->seller_address, $msg, $bot->token, [], $offer);
                 $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer);
                 break;
@@ -417,6 +419,7 @@ class ProcessContractActivity
             'message' => [
                 'chat' => ['id' => $telegramId],
                 'text' => $text,
+                'parse_mode' => 'MarkdownV2',
             ],
         ];
 

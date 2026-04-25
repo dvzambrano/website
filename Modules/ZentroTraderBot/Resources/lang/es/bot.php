@@ -340,7 +340,7 @@ return [
             "ask_buy" => "Cuántos USD desea comprar? Escriba solo el número. Ejemplo: 100",
             "selling_too_much" => "Intentas vender :amount USD",
             "ask_sell_available" => "Cuántos de sus :balance USD disponibles desea vender?",
-            "number_hint" => "Escriba solo el número. Ejemplo: :example",
+            "number_hint" => "Escriba solo el número. Ejemplo:",
         ],
         "step2" => [
             "subtitle" => "Moneda local del intercambio",
@@ -353,7 +353,7 @@ return [
             "invalid_price" => ":value no es un precio válido",
             "ask_sell" => "Cuántos :coin desea recibir por cada USD?",
             "ask_buy" => "Cuántos :coin desea pagar por cada USD?",
-            "example" => "Por ejemplo: :example",
+            "example" => "Por ejemplo:",
         ],
         "step4" => [
             "subtitle" => "Método de pago deseado",
@@ -492,7 +492,8 @@ return [
         "not_found_title" => "Que raro",
         "not_found" => "No he encontrado la oferta",
         "selected" => "Has seleccionado :stars/5",
-        "comment_prompt" => "Si desea, escriba un comentario sobre su experiencia en este intercambio.\n\n_O pulse Omitir para continuar sin comentario._",
+        "comment_prompt" => "Si desea, escriba un comentario sobre su experiencia en este intercambio.",
+        "comment_prompt_italic" => "O pulse Omitir para continuar sin comentario.",
         "comment_skip" => "Omitir comentario",
         "comment_saved" => "Su comentario ha sido guardado.",
         "cancelled" => "Valoración cancelada.",

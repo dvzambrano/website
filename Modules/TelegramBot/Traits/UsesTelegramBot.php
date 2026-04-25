@@ -21,6 +21,9 @@ trait UsesTelegramBot
     public $TelegramController;
     public $strategies = [];
 
+    /** parse_mode por defecto para todos los mensajes enviados por este bot. */
+    public $parseMode = "Markdown";
+
     public function receiveMessage($bot, $update)
     {
         // Chequear si ya se ha guardado la informacion del bot desde Telegram
@@ -124,6 +127,7 @@ trait UsesTelegramBot
                 "chat" => array(
                     "id" => $this->message["chat"]["id"],
                 ),
+                "parse_mode" => $this->reply["parse_mode"] ?? $this->parseMode,
                 "reply_to_message_id" => isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) ? false : $this->message["message_id"], // responder al mensaje q origino esta interaccion del bot si no es dvzambrano
                 "reply_markup" => isset($this->reply["reply_markup"]) ? $this->reply["reply_markup"] : false,
             ),
