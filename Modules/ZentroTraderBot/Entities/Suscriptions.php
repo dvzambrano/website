@@ -120,7 +120,7 @@ class Suscriptions extends Actors
 
         $balanceText = "";
         if ($balance > 0)
-            $balanceText .= "\n\n💵 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.prompts.balance.available")) . "*: " . TextService::mdv2(number_format($balance, 2)) . " USD";
+            $balanceText .= "\n\n💵 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.prompts.balance.available")) . "*: ||" . TextService::mdv2(number_format($balance, 2)) . "|| USD";
         else
             $balanceText .= "\n";
         if ($sellerBalance > 0)
