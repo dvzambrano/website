@@ -1180,12 +1180,12 @@ class OffersController extends Controller
                 return false;
             }
 
-            $this->updateStatus($bot, "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.proof_sent")));
+            $this->updateStatus($bot, "✔️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.proof_sent")));
             return $txHash;
 
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'ID already exists')) {
-                $this->updateStatus($bot, "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.proof_sent")));
+                $this->updateStatus($bot, "✔️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.proof_sent")));
                 return true;
             }
             $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.error")) . "*\n" . $e->getMessage());
@@ -1525,7 +1525,7 @@ class OffersController extends Controller
         );
 
         return [
-            "text" => "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.proof_sent")) . "*",
+            "text" => "✔️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.proof_sent")),
             "chat" => ["id" => $bot->actor->user_id],
         ];
     }
