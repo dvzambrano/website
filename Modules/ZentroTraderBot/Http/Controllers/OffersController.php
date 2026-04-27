@@ -2387,34 +2387,39 @@ class OffersController extends Controller
         if ($threadId) $base['message_thread_id'] = $threadId;
         if ($markup)   $base['reply_markup']       = $markup;
 
+        $quote = function(string $text): string {
+            if ($text === '') return '';
+            return '>' . str_replace("\n", "\n>", $text);
+        };
+
         if (!empty($msg['photo'])) {
             $photo = end($msg['photo']);
             TelegramController::sendPhoto(['message' => array_merge($base, [
                 'photo' => $photo['file_id'],
-                'text'  => $prefix . TextService::mdv2($msg['caption'] ?? ''),
+                'text'  => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
             ])], $token);
         } elseif (!empty($msg['document'])) {
             TelegramController::sendDocument(['message' => array_merge($base, [
                 'document' => $msg['document']['file_id'],
-                'text'     => $prefix . TextService::mdv2($msg['caption'] ?? ''),
+                'text'     => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
             ])], $token);
         } elseif (!empty($msg['video'])) {
             TelegramController::sendVideo(['message' => array_merge($base, [
                 'video' => $msg['video']['file_id'],
-                'text'  => $prefix . TextService::mdv2($msg['caption'] ?? ''),
+                'text'  => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
             ])], $token);
         } elseif (!empty($msg['voice'])) {
             TelegramController::sendVoice(['message' => array_merge($base, [
                 'voice' => $msg['voice']['file_id'],
-                'text'  => $prefix . TextService::mdv2($msg['caption'] ?? ''),
+                'text'  => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
             ])], $token);
         } elseif (!empty($msg['text'])) {
             TelegramController::sendMessage(['message' => array_merge($base, [
-                'text' => $prefix . TextService::mdv2($msg['text']),
+                'text' => $prefix . $quote(TextService::mdv2($msg['text'])),
             ])], $token);
         } else {
             TelegramController::sendMessage(['message' => array_merge($base, [
-                'text' => $prefix . $this->t('zentrotraderbot::bot.chat.unsupported_media'),
+                'text' => $prefix . $quote($this->t('zentrotraderbot::bot.chat.unsupported_media')),
             ])], $token);
         }
     }

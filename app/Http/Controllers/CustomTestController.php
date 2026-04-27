@@ -83,7 +83,8 @@ class CustomTestController extends BaseController
         $text .= "```php\n";
         $text .= "echo \"Hola\";\n";
         $text .= "```\n\n";
-        $text .= "[Enlace](https://google\.com) \n\n";
+        $text .= "[Enlace a Google](https://www\.google\.com) \n\n";
+        $text .= "[Contactar con soporte](tg://user?id={$user_id}) \n\n";
         $text .= "> Cita línea 1\n";
         $text .= "> Cita línea 2\n\n";
         $text .= "Texto normal\n\n";
