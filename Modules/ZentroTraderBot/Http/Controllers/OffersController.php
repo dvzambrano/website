@@ -805,7 +805,7 @@ class OffersController extends Controller
             // Si es un error real, liberamos para permitir reintento y restauramos el boton
             Cache::forget($lockKey);
             UpdateOfferInChannel::dispatch($bot->tenant->key, $code);
-            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.network_error")) . "*\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.network_error")) . "*\n" . TextService::mdv2($e->getMessage()));
             return false;
         }
     }
@@ -1251,7 +1251,7 @@ class OffersController extends Controller
                 $this->updateStatus($bot, "✔️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.proof_sent")));
                 return true;
             }
-            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.error")) . "*\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.error")) . "*\n" . TextService::mdv2($e->getMessage()));
             return false;
         }
     }
@@ -1318,7 +1318,7 @@ class OffersController extends Controller
                 $this->updateStatus($bot, "✔️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.confirmation_sent")));
                 return true;
             }
-            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.error")) . "*\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.error")) . "*\n" . TextService::mdv2($e->getMessage()));
             return false;
         }
     }
@@ -1384,7 +1384,7 @@ class OffersController extends Controller
                 $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.sent")));
                 return true;
             }
-            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.error")) . "*\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.error")) . "*\n" . TextService::mdv2($e->getMessage()));
             return false;
         }
     }
@@ -2320,7 +2320,7 @@ class OffersController extends Controller
                 $this->updateStatus($bot, "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_opened")));
                 return ["text" => ""];
             }
-            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_error")) . "\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_error")) . "\n" . TextService::mdv2($e->getMessage()));
             return ["text" => ""];
         }
     }
@@ -2744,7 +2744,7 @@ class OffersController extends Controller
         } catch (\Throwable $e) {
             Log::error('solveDispute error: ' . $e->getMessage());
             return [
-                'text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.sign_offer.error')) . ' ' . $e->getMessage(),
+                'text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.sign_offer.error')) . ' ' . TextService::mdv2($e->getMessage()),
                 'chat' => ['id' => $bot->actor->user_id],
             ];
         }
