@@ -2329,14 +2329,8 @@ class OffersController extends Controller
 
         $counterpartId = (int) $counterpartSub->user_id;
         $counterpartRole = $role === 'buyer' ? 'seller' : 'buyer';
-        $counterpartLabel = TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.counterpart_{$role}")); // label for the counterpart's reply btn
-        $replyMarkup = json_encode([
-            "inline_keyboard" => [
-                [["text" => TextService::mdv2(Lang::get("zentrotraderbot::bot.options.message_{$counterpartRole}")), "callback_data" => "/startchat {$offer->code}"]],
-            ]
-        ]);
 
-        $this->forwardChatMessage($bot->message, $prefix, $counterpartId, $replyMarkup, $botTenant->token);
+        $this->forwardChatMessage($bot->message, $prefix, $counterpartId, null, $botTenant->token);
 
         // Auto-activate counterpart into chat mode if they haven't entered yet
         if (!Cache::has("chat_{$botTenant->key}_{$counterpartId}")) {
