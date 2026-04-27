@@ -2293,8 +2293,8 @@ class OffersController extends Controller
 
         // Send pinnable reminder message
         $reminderText = "💬 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.active.line1", ['counterpart' => $counterpart])) . "*\n"
-            . "📡 _" . Lang::get("zentrotraderbot::bot.chat.active.line2") . "_\n"
-            . "👇 " . Lang::get("zentrotraderbot::bot.chat.active.line3");
+            . "📡 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.active.line2")) . "_\n"
+            . "👇 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.active.line3"));
         $raw = TelegramController::sendMessage([
             "message" => [
                 "text" => $reminderText,
