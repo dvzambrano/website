@@ -3,6 +3,7 @@
 namespace Modules\ZentroTraderBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Services\DateService;
 use Modules\Laravel\Services\TextService;
 use Modules\Laravel\Traits\TenantTrait;
@@ -292,26 +293,22 @@ class Offers extends Model
 
     public static function getStatusTitle($status, $diff)
     {
-        $title = "";
-        // Solo si está abierta calculamos los prefijos de tiempo
-        if ($diff['days'] == 0 && $diff['hours'] < 1) {
-            $title = "¡NUEVA OFERTA";
-        } elseif ($diff['days'] == 0) {
-            $title = "OFERTA RECIENTE";
-        } else {
-            $title = "OFERTA DISPONIBLE";
-        }
+        $openTitle = match (true) {
+            $diff['days'] == 0 && $diff['hours'] < 1 => Lang::get("zentrotraderbot::bot.show_offer.status_title.new"),
+            $diff['days'] == 0                        => Lang::get("zentrotraderbot::bot.show_offer.status_title.recent"),
+            default                                   => Lang::get("zentrotraderbot::bot.show_offer.status_title.available"),
+        };
 
         return match (strtoupper($status)) {
-            'OPEN' => $title,
-            'CANCELLED' => "OFERTA FINALIZADA",
-            'COMPLETED' => "OFERTA FINALIZADA",
-            'LOCKED' => "OFERTA EN CURSO", // Fondos en Escrow
-            'SIGNED' => "OFERTA EN CURSO", // Una parte ya firmó
-            'DISPUTED' => "OFERTA EN CURSO", // En disputa
-            'SOLVED' => "OFERTA FINALIZADA",
-            'EXPIRED' => "OFERTA FINALIZADA", // Tiempo agotado
-            default => "OFERTA ACTUALIZADA",
+            'OPEN'      => $openTitle,
+            'CANCELLED' => Lang::get("zentrotraderbot::bot.show_offer.status_title.cancelled"),
+            'COMPLETED' => Lang::get("zentrotraderbot::bot.show_offer.status_title.completed"),
+            'LOCKED'    => Lang::get("zentrotraderbot::bot.show_offer.status_title.locked"),
+            'SIGNED'    => Lang::get("zentrotraderbot::bot.show_offer.status_title.signed"),
+            'DISPUTED'  => Lang::get("zentrotraderbot::bot.show_offer.status_title.disputed"),
+            'SOLVED'    => Lang::get("zentrotraderbot::bot.show_offer.status_title.solved"),
+            'EXPIRED'   => Lang::get("zentrotraderbot::bot.show_offer.status_title.expired"),
+            default     => Lang::get("zentrotraderbot::bot.show_offer.status_title.default"),
         };
     }
 

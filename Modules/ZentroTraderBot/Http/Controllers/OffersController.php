@@ -504,19 +504,28 @@ class OffersController extends Controller
 
         $offer = Offers::findByCode($code);
         if ($offer && $offer->id > 0) {
-            $diff = DateService::getTimeDifference($offer->created_at->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+            $diff = DateService::getTimeDifference(
+                $offer->created_at->getTimestamp(),
+                Carbon::now()->getTimestamp(),
+                "DH"
+            );
 
-            $isSell = strtolower($offer->type) == "sell";
-            $title = $isSell ? "🟥" : "🟩";
-            $isOwner = $bot->actor->user_id == $offer->user_id;
+            $isSell      = strtolower($offer->type) == "sell";
+            $isOwner     = $bot->actor->user_id == $offer->user_id;
+            $offerStatus = strtolower($offer->status);
 
-            $text = $offer->renderAsTelegramMessage("{$title} *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.show_offer.offer_label")) . "*", $isOwner, "", true);
+            $statusEmoji = Offers::getStatusEmoji($offer->status);
+            $icon        = $offerStatus === 'open'
+                ? ($isSell ? "🟥" : "🟩")
+                : $statusEmoji["color"];
+            $statusTitle = Offers::getStatusTitle($offer->status, $diff);
+
+            $text = $offer->renderAsTelegramMessage("{$icon} *" . TextService::mdv2($statusTitle) . "*", $isOwner, "", true);
             $text .= "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext"));
 
             // Determinar rol real (comprador/vendedor) por dirección de wallet
             $isBuyer = false;
             $isSeller = false;
-            $offerStatus = strtolower($offer->status);
             if (in_array($offerStatus, ['locked', 'signed', 'disputed', 'expired'])) {
                 $sub = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
                 if ($sub) {
