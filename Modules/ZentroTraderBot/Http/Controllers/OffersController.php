@@ -2319,7 +2319,7 @@ class OffersController extends Controller
         }
 
         $role = $chatData['role'];
-        $prefix = "📨 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.{$role}_says")) . ":*\n";
+        $prefix = "_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.{$role}_says")) . ":_\n";
 
         $counterpartAddress = $role === 'buyer' ? $offer->seller_address : $offer->buyer_address;
         $counterpartSub = Suscriptions::findByAddress($counterpartAddress);
