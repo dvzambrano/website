@@ -68,6 +68,7 @@ trait UsesTelegramBot
             $this->message = $update['callback_query']["message"];
             $this->message["from"]["id"] = $update['callback_query']["from"]["id"];
             $this->message["text"] = $update['callback_query']["data"];
+            $this->message["_update_type"] = "callback_query";
             if (isset($update['callback_query']["from"]["username"])) {
                 $this->message["from"]["username"] = $update['callback_query']["from"]["username"];
             }
@@ -204,8 +205,14 @@ trait UsesTelegramBot
         // En modo chat interno con la contraparte?
         $chatKey = "chat_{$this->tenant->key}_{$this->actor->user_id}";
         if (Cache::has($chatKey)) {
-            return app()->make(\Modules\ZentroTraderBot\Http\Controllers\OffersController::class)
-                ->chatRelay($this);
+            if (($this->message['_update_type'] ?? '') === 'callback_query') {
+                // Botón pulsado estando en chat: salir del chat y ejecutar el callback normalmente
+                app()->make(\Modules\ZentroTraderBot\Http\Controllers\OffersController::class)
+                    ->exitChat($this);
+            } else {
+                return app()->make(\Modules\ZentroTraderBot\Http\Controllers\OffersController::class)
+                    ->chatRelay($this);
+            }
         }
 
         // preparando respuesta generica para un texto no reconocido en el bot
