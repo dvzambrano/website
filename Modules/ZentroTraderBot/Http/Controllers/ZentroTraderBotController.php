@@ -958,7 +958,7 @@ class ZentroTraderBotController extends JsonsController
 
         if (!$status) {
             return [
-                "text" => "❌ Error: No se pudo conectar con la Blockchain.",
+                "text" => "❌ Error: No se pudo conectar con la Blockchain\.",
                 "chat" => ["id" => $this->actor->user_id]
             ];
         }
@@ -1003,7 +1003,7 @@ class ZentroTraderBotController extends JsonsController
 
         } catch (\Exception $e) {
             return [
-                "text" => "❌ Error al procesar el reporte: " . $e->getMessage(),
+                "text" => "❌ Error al procesar el reporte: " . TextService::mdv2($e->getMessage()),
                 "chat" => ["id" => $this->actor->user_id]
             ];
         }
