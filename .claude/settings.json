@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -c \"from urllib.parse import unquote_plus; print\\(unquote_plus\\('%F0%9F%91%8B+%2ABienvenido+al+KashioBot%2A%21%0A_El+puente+m%C3%A1s+r%C3%A1pido+y+seguro+para+mover+tu+dinero+usando+la+estabilidad+del+USD+digital%5C.%3A_%0A%0A%F0%9F%9A%80+R%C3%A1pido%3A+Intercambios+P2P+en+minutos%5C.%0A%E2%9C%85+Seguro%3A+Fondos+protegidos+por+contratos+inteligentes%5C.%0A%0A%F0%9F%92%B5+%2ASaldo+disponible%2A%3A+298%5C.00+USD%0A%0A%F0%9F%91%87+%C2%BFEn+qu%C3%A9+le+puedo+ayudar+hoy%3F'\\)\\)\")"
+      "Bash(python3 -c \"from urllib.parse import unquote_plus; print\\(unquote_plus\\('%F0%9F%91%8B+%2ABienvenido+al+KashioBot%2A%21%0A_El+puente+m%C3%A1s+r%C3%A1pido+y+seguro+para+mover+tu+dinero+usando+la+estabilidad+del+USD+digital%5C.%3A_%0A%0A%F0%9F%9A%80+R%C3%A1pido%3A+Intercambios+P2P+en+minutos%5C.%0A%E2%9C%85+Seguro%3A+Fondos+protegidos+por+contratos+inteligentes%5C.%0A%0A%F0%9F%92%B5+%2ASaldo+disponible%2A%3A+298%5C.00+USD%0A%0A%F0%9F%91%87+%C2%BFEn+qu%C3%A9+le+puedo+ayudar+hoy%3F'\\)\\)\")",
+      "Bash(grep -c '$this->t\\(' /mnt/D/Proyecto/website/Modules/ZentroTraderBot/Http/Controllers/OffersController.php /mnt/D/Proyecto/website/Modules/ZentroTraderBot/Http/Controllers/ZentroTraderBotController.php)"
     ]
   }
 }

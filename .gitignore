@@ -24,7 +24,9 @@ Homestead.yaml
 Thumbs.db
 
 /.claude
+.claude/settings.json
 
 /Modules/TelegramBot/Database/Seeders/TelegramBotsSeeder.php
 /Modules/ZentroTraderBot/Database/Seeders/MetadataSeeder.php
 Modules/ZentroTraderBot/storage/
+

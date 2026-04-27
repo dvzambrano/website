@@ -34,10 +34,6 @@ class OffersController extends Controller
 {
     use BlockchainTools;
 
-    private function t(string $key, array $replace = []): string
-    {
-        return TextService::mdv2(Lang::get($key, $replace));
-    }
 
     public function sell($bot, $stars = "")
     {
@@ -76,14 +72,14 @@ class OffersController extends Controller
         $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
         return [
             "text" =>
-                "❌ *" . $this->t("zentrotraderbot::bot.wizard.cancelled_title") . "*\n" .
-                "_" . $this->t("zentrotraderbot::bot.wizard.cancelled") . "_\n\n" .
-                "👇 " . $this->t("telegrambot::bot.prompts.whatsnext"),
+                "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.cancelled_title")) . "*\n" .
+                "_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.cancelled")) . "_\n\n" .
+                "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext")),
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
-                    [["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                    [["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.backtop2pmenu")), "callback_data" => "/p2pmenu"]],
+                    [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
                 ],
             ]),
             "editprevious" => $isCallback ? 1 : 0,
@@ -118,16 +114,16 @@ class OffersController extends Controller
             if (!is_numeric($text) || $text <= 0) {
                 return [
                     "text" =>
-                        "✨ *" . $this->t("zentrotraderbot::bot.wizard.title") . "*\n" .
-                        "◾️ _" . $this->t("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                        "▫️ *" . $this->t("zentrotraderbot::bot.wizard.step1.subtitle") . "*\n" .
-                        "❌ " . $this->t("zentrotraderbot::bot.wizard.step1.invalid_amount", ['value' => $text]) . "\n" .
+                        "✨ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.title")) . "*\n" .
+                        "◾️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)])) . "_\n" .
+                        "▫️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.subtitle")) . "*\n" .
+                        "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.invalid_amount", ['value' => $text])) . "\n" .
                         "▫️ " . ($isSell
-                            ? $this->t("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance])
-                            : $this->t("zentrotraderbot::bot.wizard.step1.ask_buy")) . "\n" .
-                        "▫️ " . $this->t("zentrotraderbot::bot.wizard.step1.number_hint") . " `" . ($balance ?: 100) . "`",
+                            ? TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance]))
+                            : TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.ask_buy"))) . "\n" .
+                        "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.number_hint")) . " `" . ($balance ?: 100) . "`",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]]]),
+                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1,
                 ];
             }
@@ -135,14 +131,14 @@ class OffersController extends Controller
             if ($isSell && (float) $text > $balanceRaw) {
                 return [
                     "text" =>
-                        "✨ *" . $this->t("zentrotraderbot::bot.wizard.title") . "*\n" .
-                        "◾️ _" . $this->t("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                        "▫️ *" . $this->t("zentrotraderbot::bot.wizard.step1.subtitle") . "*\n" .
-                        "❌ " . $this->t("zentrotraderbot::bot.wizard.step1.selling_too_much", ['amount' => $text]) . "\n" .
-                        "▫️ " . $this->t("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance]) . "\n" .
-                        "▫️ " . $this->t("zentrotraderbot::bot.wizard.step1.number_hint") . " `{$balance}`",
+                        "✨ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.title")) . "*\n" .
+                        "◾️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)])) . "_\n" .
+                        "▫️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.subtitle")) . "*\n" .
+                        "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.selling_too_much", ['amount' => $text])) . "\n" .
+                        "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance])) . "\n" .
+                        "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.number_hint")) . " `{$balance}`",
                     "chat" => ["id" => $userId],
-                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]]]),
+                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"]]]]),
                     "editprevious" => 1,
                 ];
             }
@@ -151,19 +147,19 @@ class OffersController extends Controller
         }
 
         $amountPrompt = $isSell
-            ? "▫️ " . $this->t("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance]) . "\n" .
-            "▫️ " . $this->t("zentrotraderbot::bot.wizard.step1.number_hint") . " `{$balance}`"
-            : "▫️ _" . $this->t("zentrotraderbot::bot.wizard.step1.ask_buy") . "_";
+            ? "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.ask_sell_available", ['balance' => $balance])) . "\n" .
+            "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.number_hint")) . " `{$balance}`"
+            : "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.ask_buy")) . "_";
 
         return [
             "text" =>
-                "✨ *" . $this->t("zentrotraderbot::bot.wizard.title") . "*\n" .
-                "◾️ _" . $this->t("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                "▫️ *" . $this->t("zentrotraderbot::bot.wizard.step1.subtitle") . "*\n" .
+                "✨ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.title")) . "*\n" .
+                "◾️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(1), 'total' => TextService::getNumberAsEmoji(5)])) . "_\n" .
+                "▫️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step1.subtitle")) . "*\n" .
                 "▫️ \n" .
                 $amountPrompt,
             "chat" => ["id" => $userId],
-            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]]]),
+            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"]]]]),
             "editprevious" => $text == null ? 1 : 0,
         ];
     }
@@ -189,22 +185,22 @@ class OffersController extends Controller
             $buttons[] = $row;
         }
         $buttons[] = [
-            ["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-            ["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+            ["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.back")), "callback_data" => "/wizardprevious"],
+            ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"],
         ];
 
         $currencyPrompt = $isSell
-            ? $this->t("zentrotraderbot::bot.wizard.step2.ask_sell")
-            : $this->t("zentrotraderbot::bot.wizard.step2.ask_buy");
+            ? TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step2.ask_sell"))
+            : TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step2.ask_buy"));
 
         return [
             "text" =>
-                "✨ *" . $this->t("zentrotraderbot::bot.wizard.title") . "*\n" .
-                "▫️ _" . $this->t("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(2), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                "◾️ *" . $this->t("zentrotraderbot::bot.wizard.step2.subtitle") . "*\n" .
+                "✨ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.title")) . "*\n" .
+                "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(2), 'total' => TextService::getNumberAsEmoji(5)])) . "_\n" .
+                "◾️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step2.subtitle")) . "*\n" .
                 "▫️ \n" .
                 "▫️ _{$currencyPrompt}_\n" .
-                "▫️ " . $this->t("zentrotraderbot::bot.wizard.step2.select_available") . " 👇",
+                "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step2.select_available")) . " 👇",
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
             "editprevious" => 1,
@@ -224,8 +220,8 @@ class OffersController extends Controller
         $val = $cgval > 0 ? $cgval : ($ccval > 0 ? $ccval : 1.02);
 
         $navButtons = [
-            ["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-            ["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+            ["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.back")), "callback_data" => "/wizardprevious"],
+            ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"],
         ];
 
         if ($text !== null) {
@@ -239,14 +235,14 @@ class OffersController extends Controller
             if (!is_numeric($text) || $text <= 0) {
                 return [
                     "text" =>
-                        "✨ *" . $this->t("zentrotraderbot::bot.wizard.title") . "*\n" .
-                        "▫️ _" . $this->t("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(3), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                        "▫️ *" . $this->t("zentrotraderbot::bot.wizard.step3.subtitle", ['coin' => $coin]) . "*\n" .
-                        "❌ " . $this->t("zentrotraderbot::bot.wizard.step3.invalid_price", ['value' => $text]) . "\n" .
+                        "✨ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.title")) . "*\n" .
+                        "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(3), 'total' => TextService::getNumberAsEmoji(5)])) . "_\n" .
+                        "▫️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step3.subtitle", ['coin' => $coin])) . "*\n" .
+                        "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step3.invalid_price", ['value' => $text])) . "\n" .
                         "▫️ " . ($isSell
-                            ? $this->t("zentrotraderbot::bot.wizard.step3.ask_sell", ['coin' => $coin])
-                            : $this->t("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin])) . "\n" .
-                        "▫️ " . $this->t("zentrotraderbot::bot.wizard.step3.example") . " `" . number_format($val, 2) . "`",
+                            ? TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step3.ask_sell", ['coin' => $coin]))
+                            : TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin]))) . "\n" .
+                        "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step3.example")) . " `" . number_format($val, 2) . "`",
                     "chat" => ["id" => $userId],
                     "reply_markup" => json_encode(["inline_keyboard" => [$navButtons]]),
                     "editprevious" => 1,
@@ -258,14 +254,14 @@ class OffersController extends Controller
 
         return [
             "text" =>
-                "✨ *" . $this->t("zentrotraderbot::bot.wizard.title") . "*\n" .
-                "▫️ _" . $this->t("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(3), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                "▫️ *" . $this->t("zentrotraderbot::bot.wizard.step3.subtitle", ['coin' => $coin]) . "*\n" .
+                "✨ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.title")) . "*\n" .
+                "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(3), 'total' => TextService::getNumberAsEmoji(5)])) . "_\n" .
+                "▫️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step3.subtitle", ['coin' => $coin])) . "*\n" .
                 "◾️ \n" .
                 "▫️ " . ($isSell
-                    ? $this->t("zentrotraderbot::bot.wizard.step3.ask_sell", ['coin' => $coin])
-                    : $this->t("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin])) . "\n" .
-                "▫️ " . $this->t("zentrotraderbot::bot.wizard.step3.example") . " `" . number_format($val, 2) . "`",
+                    ? TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step3.ask_sell", ['coin' => $coin]))
+                    : TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step3.ask_buy", ['coin' => $coin]))) . "\n" .
+                "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step3.example")) . " `" . number_format($val, 2) . "`",
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode(["inline_keyboard" => [$navButtons]]),
             "editprevious" => 1,
@@ -302,22 +298,22 @@ class OffersController extends Controller
             $buttons[] = $row;
         }
         $buttons[] = [
-            ["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-            ["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+            ["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.back")), "callback_data" => "/wizardprevious"],
+            ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"],
         ];
 
         $methodPrompt = $isSell
-            ? $this->t("zentrotraderbot::bot.wizard.step4.ask_sell", ['currency' => $state['data']['currency']])
-            : $this->t("zentrotraderbot::bot.wizard.step4.ask_buy", ['currency' => $state['data']['currency']]);
+            ? TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step4.ask_sell", ['currency' => $state['data']['currency']]))
+            : TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step4.ask_buy", ['currency' => $state['data']['currency']]));
 
         return [
             "text" =>
-                "✨ *" . $this->t("zentrotraderbot::bot.wizard.title") . "*\n" .
-                "▫️ _" . $this->t("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(4), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                "▫️ *" . $this->t("zentrotraderbot::bot.wizard.step4.subtitle") . "*\n" .
+                "✨ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.title")) . "*\n" .
+                "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(4), 'total' => TextService::getNumberAsEmoji(5)])) . "_\n" .
+                "▫️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step4.subtitle")) . "*\n" .
                 "▫️ \n" .
                 "▫️ _{$methodPrompt}_\n" .
-                "◾️ " . $this->t("zentrotraderbot::bot.wizard.step4.select_available") . " 👇",
+                "◾️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step4.select_available")) . " 👇",
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode(["inline_keyboard" => $buttons]),
             "editprevious" => 1,
@@ -337,23 +333,23 @@ class OffersController extends Controller
         }
 
         $detailsPrompt = $isSell
-            ? "▫️ _" . $this->t("zentrotraderbot::bot.wizard.step5.ask_sell", ['method' => $methodName]) . "_"
-            : "▫️ _" . $this->t("zentrotraderbot::bot.wizard.step5.ask_buy", ['method' => $methodName]) . "_";
+            ? "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.ask_sell", ['method' => $methodName])) . "_"
+            : "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.ask_buy", ['method' => $methodName])) . "_";
 
         return [
             "text" =>
-                "✨ *" . $this->t("zentrotraderbot::bot.wizard.title") . "*\n" .
-                "▫️ _" . $this->t("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(5), 'total' => TextService::getNumberAsEmoji(5)]) . "_\n" .
-                "▫️ *" . $this->t("zentrotraderbot::bot.wizard.step5.subtitle") . "*\n" .
+                "✨ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.title")) . "*\n" .
+                "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(5), 'total' => TextService::getNumberAsEmoji(5)])) . "_\n" .
+                "▫️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.subtitle")) . "*\n" .
                 "▫️ \n" .
                 $detailsPrompt . "\n" .
-                "◾️ *" . $this->t("zentrotraderbot::bot.wizard.step5.be_explicit") . "*",
+                "◾️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.be_explicit")) . "*",
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-                        ["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+                        ["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.back")), "callback_data" => "/wizardprevious"],
+                        ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"],
                     ]
                 ],
             ]),
@@ -373,23 +369,23 @@ class OffersController extends Controller
         }
 
         $total = number_format($state['data']['amount'] * $state['data']['price'], 2);
-        $confirmLabel = $isSell ? "💵 " . $this->t("zentrotraderbot::bot.wizard.confirm.selling") : "🟢 " . $this->t("zentrotraderbot::bot.wizard.confirm.buying");
-        $resultLabel = $isSell ? "💱 " . $this->t("zentrotraderbot::bot.wizard.confirm.receiving") : "💱 " . $this->t("zentrotraderbot::bot.wizard.confirm.paying");
+        $confirmLabel = $isSell ? "💵 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.confirm.selling")) : "🟢 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.confirm.buying"));
+        $resultLabel = $isSell ? "💱 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.confirm.receiving")) : "💱 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.confirm.paying"));
 
         return [
             "text" =>
-                "✨ *" . $this->t("zentrotraderbot::bot.wizard.confirm.title") . "*\n" .
+                "✨ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.confirm.title")) . "*\n" .
                 "{$confirmLabel}: *" . TextService::mdv2($state['data']['amount']) . " USD* a *" . TextService::mdv2($state['data']['price']) . " {$state['data']['currency']}/USD*\n" .
                 "{$resultLabel}: *" . TextService::mdv2($total) . " {$state['data']['currency']}*\n" .
                 "🏦 " . TextService::mdv2($state['data']['method_name']) . ": `{$state['data']['details']}`\n" .
-                "👇 " . $this->t("telegrambot::bot.prompts.whatsnext"),
+                "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext")),
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✅ " . $this->t("zentrotraderbot::bot.options.publish"), "callback_data" => "/offerconfirm"]],
+                    [["text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.publish")), "callback_data" => "/offerconfirm"]],
                     [
-                        ["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.back"), "callback_data" => "/wizardprevious"],
-                        ["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"],
+                        ["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.back")), "callback_data" => "/wizardprevious"],
+                        ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"],
                     ],
                 ],
             ]),
@@ -456,23 +452,23 @@ class OffersController extends Controller
             Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
 
             $isSell = $state['data']['type'] === 'sell';
-            $text = "✅ *" . $this->t("zentrotraderbot::bot.offer_publish.title") . "*\n";
-            $text .= "📢 " . $this->t("zentrotraderbot::bot.offer_publish.published") . "\n\n";
-            $text .= "⚠️ *" . $this->t("zentrotraderbot::bot.offer_publish.security_notes") . "*\n";
+            $text = "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.title")) . "*\n";
+            $text .= "📢 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.published")) . "\n\n";
+            $text .= "⚠️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.security_notes")) . "*\n";
 
             if ($isSell) {
-                $text .= "🔒 *" . $this->t("zentrotraderbot::bot.offer_publish.sell_lock") . "*\n";
-                $text .= "🚫 *" . $this->t("zentrotraderbot::bot.offer_publish.sell_rule") . "*\n";
+                $text .= "🔒 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.sell_lock")) . "*\n";
+                $text .= "🚫 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.sell_rule")) . "*\n";
             } else {
-                $text .= "🔒 *" . $this->t("zentrotraderbot::bot.offer_publish.buy_custody") . "*\n";
-                $text .= "🚫 *" . $this->t("zentrotraderbot::bot.offer_publish.buy_rule") . "*\n";
+                $text .= "🔒 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.buy_custody")) . "*\n";
+                $text .= "🚫 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.buy_rule")) . "*\n";
             }
 
-            $text .= "⚖️ *" . $this->t("zentrotraderbot::bot.offer_publish.arbitrage") . "*\n\n";
+            $text .= "⚖️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.arbitrage")) . "*\n\n";
             $text .= "👍 " . ($isSell
-                ? $this->t("zentrotraderbot::bot.offer_publish.goodluck_sell")
-                : $this->t("zentrotraderbot::bot.offer_publish.goodluck_buy")) .
-                " _" . $this->t("zentrotraderbot::bot.offer_publish.notify") . "_";
+                ? TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.goodluck_sell"))
+                : TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.goodluck_buy"))) .
+                " _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.notify")) . "_";
 
             return [
                 "text" => $text,
@@ -480,10 +476,10 @@ class OffersController extends Controller
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
                         [
-                            ["text" => "👀 " . $this->t("zentrotraderbot::bot.options.view_my_offer"), "url" => "https://t.me/KashioChannel/{$messageId}"]
+                            ["text" => "👀 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.view_my_offer")), "url" => "https://t.me/KashioChannel/{$messageId}"]
                         ],
                         [
-                            ["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]
+                            ["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]
                         ]
                     ],
                 ]),
@@ -492,7 +488,7 @@ class OffersController extends Controller
 
         // Opcional: Manejo de error si Telegram falla
         return [
-            "text" => "❌ *" . $this->t("zentrotraderbot::bot.offer_publish.error") . "*\n_" . $this->t("zentrotraderbot::bot.offer_publish.error_retry") . "_",
+            "text" => "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.error")) . "*\n_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer_publish.error_retry")) . "_",
             "chat" => ["id" => $bot->actor->user_id]
         ];
     }
@@ -514,15 +510,15 @@ class OffersController extends Controller
             $title = $isSell ? "🟥" : "🟩";
             $isOwner = $bot->actor->user_id == $offer->user_id;
 
-            $text = $offer->renderAsTelegramMessage("{$title} *" . $this->t("zentrotraderbot::bot.show_offer.offer_label") . "*", $isOwner, "", true);
-            $text .= "👇 " . $this->t("telegrambot::bot.prompts.whatsnext");
+            $text = $offer->renderAsTelegramMessage("{$title} *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.show_offer.offer_label")) . "*", $isOwner, "", true);
+            $text .= "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext"));
 
 
             switch ($offer->status) {
                 case 'open':
                     if ($isOwner)
                         array_push($menu, [
-                            ["text" => "❌ " . $this->t("zentrotraderbot::bot.options.delete_offer"), "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"]
+                            ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.delete_offer")), "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"]
                         ]);
                     else {
                         $total = number_format(($offer->amount * $offer->price_per_usd), 2);
@@ -535,33 +531,33 @@ class OffersController extends Controller
                 case 'locked':
                     if ($isOwner)
                         array_push($menu, [
-                            ["text" => "⏱️ " . $this->t("zentrotraderbot::bot.recover_offer.ready_button"), "callback_data" => "/recoveroffer {$offer->code}"]
+                            ["text" => "⏱️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.recover_offer.ready_button")), "callback_data" => "/recoveroffer {$offer->code}"]
                         ]);
                     else {
                         array_push($menu, [
-                            ["text" => "🧾 " . $this->t("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer " . $offer->code]
+                            ["text" => "🧾 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.send_proof")), "callback_data" => "/comprobantoffer " . $offer->code]
                         ]);
                         array_push($menu, [
-                            ["text" => "❌ " . $this->t("telegrambot::bot.options.cancel"), "callback_data" => "/canceloffer " . $offer->code]
+                            ["text" => "❌ " . TextService::mdv2(Lang::get("telegrambot::bot.options.cancel")), "callback_data" => "/canceloffer " . $offer->code]
                         ]);
                     }
                     break;
                 case 'disputed':
                     array_push($menu, [
-                        ["text" => "🧾 " . $this->t("zentrotraderbot::bot.options.send_evidence"), "callback_data" => "/evidenceoffer " . $offer->code],
+                        ["text" => "🧾 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.send_evidence")), "callback_data" => "/evidenceoffer " . $offer->code],
                     ]);
                     break;
                 default:
                     break;
             }
         } else {
-            $text = "🤔 *" . $this->t("zentrotraderbot::bot.show_offer.not_found_title") . "*\n";
-            $text .= "_" . $this->t("zentrotraderbot::bot.show_offer.not_found") . "_\n\n";
-            $text .= "👇 " . $this->t("telegrambot::bot.prompts.whatsnext");
+            $text = "🤔 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.show_offer.not_found_title")) . "*\n";
+            $text .= "_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.show_offer.not_found")) . "_\n\n";
+            $text .= "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext"));
         }
 
         array_push($menu, [
-            ["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
+            ["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"],
         ]);
 
         return [
@@ -623,7 +619,7 @@ class OffersController extends Controller
             // Si el que tiene el candado soy yo mismo, es un reintento de Telegram, dejamos pasar.
             // Si es otro ID, detenemos el proceso.
             if ($whoIsApplying != $bot->actor->user_id) {
-                $this->updateStatus($bot, "⚠️ " . $this->t("zentrotraderbot::bot.apply_offer.being_processed"));
+                $this->updateStatus($bot, "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.being_processed")));
                 return true;
             }
         }
@@ -631,7 +627,7 @@ class OffersController extends Controller
         // 2. Localización y Validación de la Oferta
         $offer = Offers::findByCode($code);
         if (!$offer || strtoupper($offer->status) !== 'OPEN') { // Validación extra de estado
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.apply_offer.not_available", ['code' => $code]));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.not_available", ['code' => $code])));
             Cache::forget($lockKey);
             return false;
         }
@@ -676,7 +672,7 @@ class OffersController extends Controller
         $deadline = time() + 3600; // 1 hora de validez para el Permit
 
         // ESTADO 1: Preparación Criptográfica (Local y rápido)
-        $this->updateStatus($bot, "⌛️ *" . $this->t("zentrotraderbot::bot.apply_offer.step1") . "*");
+        $this->updateStatus($bot, "⌛️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step1")) . "*");
 
         if (env("DEBUG_MODE", false))
             Log::debug("🐞 OffersController applyForOffer:", [
@@ -692,7 +688,7 @@ class OffersController extends Controller
         try {
             $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($bot, $escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network, $relayerKey, $tokenInfo) {
 
-                $this->updateStatus($bot, "⌛️ *" . $this->t("zentrotraderbot::bot.apply_offer.step2") . "*");
+                $this->updateStatus($bot, "⌛️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step2")) . "*");
 
                 return $escrow->createTradeWithSignature(
                     $rpc,
@@ -715,13 +711,13 @@ class OffersController extends Controller
             ]);
 
             if (!$txHash) {
-                $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.apply_offer.no_hash"));
+                $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.no_hash")));
                 Cache::forget($lockKey);
                 UpdateOfferInChannel::dispatch($bot->tenant->key, $code);
                 return false;
             }
 
-            $this->updateStatus($bot, "⌛️ *" . $this->t("zentrotraderbot::bot.apply_offer.step3") . "*");
+            $this->updateStatus($bot, "⌛️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step3")) . "*");
 
             // NOTA: No liberamos el $lockKey aquí, dejamos que expire o
             // que el Listener lo haga al confirmar, para evitar "clicks" rápidos.
@@ -739,14 +735,14 @@ class OffersController extends Controller
 
             // Manejo de error "ID already exists" (Transacción enviada pero error en respuesta RPC)
             if (str_contains($e->getMessage(), 'ID already exists')) {
-                $this->updateStatus($bot, "⌛️ *" . $this->t("zentrotraderbot::bot.apply_offer.step3") . "*");
+                $this->updateStatus($bot, "⌛️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step3")) . "*");
                 return true;
             }
 
             // Si es un error real, liberamos para permitir reintento y restauramos el boton
             Cache::forget($lockKey);
             UpdateOfferInChannel::dispatch($bot->tenant->key, $code);
-            $this->updateStatus($bot, "❌ *" . $this->t("zentrotraderbot::bot.apply_offer.network_error") . "*\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.network_error")) . "*\n" . $e->getMessage());
             return false;
         }
     }
@@ -760,7 +756,7 @@ class OffersController extends Controller
         $blockchain = new BlockchainController();
         $status = $blockchain->getStatus();
 
-        $this->updateStatus($bot, "⏳ *" . $this->t("zentrotraderbot::bot.recover_offer.checking") . "*");
+        $this->updateStatus($bot, "⏳ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.recover_offer.checking")) . "*");
 
         // 1. Configuración de Red
         $network = ConfigService::getNetworks(env("BASE_NETWORK"));
@@ -779,7 +775,7 @@ class OffersController extends Controller
         });
 
         if (!$blockchainTrade) {
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.recover_offer.not_found_blockchain"));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.recover_offer.not_found_blockchain")));
             return false;
         }
 
@@ -793,8 +789,8 @@ class OffersController extends Controller
 
             $this->updateStatus(
                 $bot,
-                "🚫 " . $this->t("zentrotraderbot::bot.recover_offer.wait", ['minutes' => $minutes]) . "\n\n"
-                . "🔔 " . $this->t("zentrotraderbot::bot.recover_offer.wait_scheduled")
+                "🚫 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.recover_offer.wait", ['minutes' => $minutes])) . "\n\n"
+                . "🔔 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.recover_offer.wait_scheduled"))
             );
 
             // Programar el recordatorio para cuando expire el plazo exactamente
@@ -816,7 +812,7 @@ class OffersController extends Controller
         $offer->update(['data' => $currentData]);
 
         // 4. Ejecución Gasless (expireTradeWithSignature)
-        $this->updateStatus($bot, "⚖️ *" . $this->t("zentrotraderbot::bot.recover_offer.requesting") . "*");
+        $this->updateStatus($bot, "⚖️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.recover_offer.requesting")) . "*");
 
         try {
             // Obtenemos la llave del vendedor para FIRMAR (No gasta gas)
@@ -843,17 +839,17 @@ class OffersController extends Controller
             });
 
             if (!$txHash) {
-                $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.recover_offer.rejected"));
+                $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.recover_offer.rejected")));
                 return false;
             }
 
             $this->logOfferAction($offer, 'seller', 'offer_recovered', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
-            $this->updateStatus($bot, "✅ *" . $this->t("zentrotraderbot::bot.recover_offer.success", ['amount' => number_format($offer->amount, 2)]) . "*");
+            $this->updateStatus($bot, "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.recover_offer.success", ['amount' => number_format($offer->amount, 2)])) . "*");
 
             return $txHash;
 
         } catch (\Exception $e) {
-            $this->updateStatus($bot, "❌ *" . $this->t("zentrotraderbot::bot.recover_offer.error") . "* " . TextService::mdv2($e->getMessage()));
+            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.recover_offer.error")) . "* " . TextService::mdv2($e->getMessage()));
             return false;
         }
     }
@@ -893,20 +889,20 @@ class OffersController extends Controller
 
             }
 
-            $text = "✅ *" . $this->t("zentrotraderbot::bot.rate_offer.success_title") . "*\n";
-            $text .= "🙏 " . $this->t("zentrotraderbot::bot.rate_offer.thanks") . "\n\n";
-            $text .= "👇 " . $this->t("telegrambot::bot.prompts.whatsnext");
+            $text = "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.success_title")) . "*\n";
+            $text .= "🙏 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.thanks")) . "\n\n";
+            $text .= "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext"));
 
         } else {
-            $text = "🤔 *" . $this->t("zentrotraderbot::bot.rate_offer.not_found_title") . "*\n";
-            $text .= "_" . $this->t("zentrotraderbot::bot.rate_offer.not_found") . "_\n\n";
-            $text .= "👇 " . $this->t("telegrambot::bot.prompts.whatsnext");
+            $text = "🤔 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.not_found_title")) . "*\n";
+            $text .= "_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.not_found")) . "_\n\n";
+            $text .= "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext"));
         }
         array_push($menu, [
-            ["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"],
+            ["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.backtop2pmenu")), "callback_data" => "/p2pmenu"],
         ]);
         array_push($menu, [
-            ["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
+            ["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"],
         ]);
 
         $payload = [
@@ -937,13 +933,13 @@ class OffersController extends Controller
         if (!$offer) {
             $payload = [
                 "message" => [
-                    "text" => "🤔 *" . $this->t("zentrotraderbot::bot.rate_offer.not_found_title") . "*\n"
-                        . "_" . $this->t("zentrotraderbot::bot.rate_offer.not_found") . "_\n\n"
-                        . "👇 " . $this->t("telegrambot::bot.prompts.whatsnext"),
+                    "text" => "🤔 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.not_found_title")) . "*\n"
+                        . "_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.not_found")) . "_\n\n"
+                        . "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext")),
                     "chat" => ["id" => $bot->actor->user_id],
                     "message_id" => $bot->message["message_id"],
                     "parse_mode" => "MarkdownV2",
-                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
+                    "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]]]]),
                 ],
             ];
             try {
@@ -984,10 +980,10 @@ class OffersController extends Controller
             'initialData' => $initialData,
             'onComplete' => fn($b, $s) => $self->completeRating($b, $s),
             'onCancel' => fn($b) => [
-                "text" => "❌ " . $this->t("zentrotraderbot::bot.rate_offer.cancelled"),
+                "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.cancelled")),
                 "chat" => ["id" => $b->actor->user_id],
                 "editprevious" => (isset($b->callback_query) || ($b->is_callback ?? false)) ? 1 : 0,
-                "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
+                "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]]]]),
             ],
         ]);
     }
@@ -1005,12 +1001,12 @@ class OffersController extends Controller
         }
 
         return [
-            "text" => "⭐ " . $stars . "/5\n\n💬 " . $this->t("zentrotraderbot::bot.rate_offer.comment_prompt") . "\n\n_" . $this->t("zentrotraderbot::bot.rate_offer.comment_prompt_italic") . "_",
+            "text" => "⭐ " . $stars . "/5\n\n💬 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.comment_prompt")) . "\n\n_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.comment_prompt_italic")) . "_",
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "🙅 " . $this->t("zentrotraderbot::bot.rate_offer.comment_skip"), "callback_data" => "ratingskip {$code}"],
+                        ["text" => "🙅 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.comment_skip")), "callback_data" => "ratingskip {$code}"],
                     ]
                 ]
             ]),
@@ -1038,10 +1034,10 @@ class OffersController extends Controller
             }
         }
 
-        $successText = "✅ *" . $this->t("zentrotraderbot::bot.rate_offer.success_title") . "*\n"
-            . "🙏 " . $this->t("zentrotraderbot::bot.rate_offer.thanks") . "\n\n"
-            . "👇 " . $this->t("telegrambot::bot.prompts.whatsnext");
-        $menu = json_encode(["inline_keyboard" => [[["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]);
+        $successText = "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.success_title")) . "*\n"
+            . "🙏 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.rate_offer.thanks")) . "\n\n"
+            . "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext"));
+        $menu = json_encode(["inline_keyboard" => [[["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]]]]);
 
         if ($isCallback) {
             $payload = ["message" => ["text" => $successText, "chat" => ["id" => $userId], "message_id" => $bot->message["message_id"], "parse_mode" => "MarkdownV2", "reply_markup" => $menu]];
@@ -1081,12 +1077,12 @@ class OffersController extends Controller
 
         if ($offers->isEmpty()) {
             return [
-                "text" => "📭 *" . $this->t("zentrotraderbot::bot.active_offers.empty") . "*\n" .
-                    $this->t("zentrotraderbot::bot.active_offers.empty_cta"),
+                "text" => "📭 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.active_offers.empty")) . "*\n" .
+                    TextService::mdv2(Lang::get("zentrotraderbot::bot.active_offers.empty_cta")),
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
                         [
-                            ["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]
+                            ["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.backtop2pmenu")), "callback_data" => "/p2pmenu"]
                         ]
                     ]
                 ])
@@ -1094,8 +1090,8 @@ class OffersController extends Controller
         }
 
         // 2. Construir el menú visual
-        $text = "📋 *" . $this->t("zentrotraderbot::bot.active_offers.title") . "*\n";
-        $text .= "👇 " . $this->t("telegrambot::bot.prompts.chooseoneoption");
+        $text = "📋 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.active_offers.title")) . "*\n";
+        $text .= "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.chooseoneoption"));
 
         $buttons = [];
         foreach ($offers as $offer) {
@@ -1114,17 +1110,17 @@ class OffersController extends Controller
 
         $navigation = [];
         if ($page > 1)
-            $navigation[] = ["text" => "◀️ " . $this->t("zentrotraderbot::bot.options.previous"), "callback_data" => "/activeoffers " . ($page - 1)];
+            $navigation[] = ["text" => "◀️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.previous")), "callback_data" => "/activeoffers " . ($page - 1)];
         if ($total > ($page * $perPage))
-            $navigation[] = ["text" => $this->t("zentrotraderbot::bot.options.next") . " ▶️", "callback_data" => "/activeoffers " . ($page + 1)];
+            $navigation[] = ["text" => TextService::mdv2(Lang::get("zentrotraderbot::bot.options.next")) . " ▶️", "callback_data" => "/activeoffers " . ($page + 1)];
 
         if (!empty($navigation))
             $buttons[] = $navigation;
 
 
         // Botón para volver
-        $buttons[] = [["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]];
-        $buttons[] = [["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]];
+        $buttons[] = [["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.backtop2pmenu")), "callback_data" => "/p2pmenu"]];
+        $buttons[] = [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]];
 
         return [
             "text" => $text,
@@ -1140,18 +1136,18 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer) {
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.sign_offer.not_found"));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.not_found")));
             return false;
         }
 
         if (!in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED'])) {
-            $this->updateStatus($bot, "⚠️ " . $this->t("zentrotraderbot::bot.sign_offer.wrong_state"));
+            $this->updateStatus($bot, "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.wrong_state")));
             return false;
         }
 
         $buyer = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
         if (!$buyer) {
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.sign_offer.account_not_found"));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.account_not_found")));
             return false;
         }
 
@@ -1162,7 +1158,7 @@ class OffersController extends Controller
         $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
         $deadline = time() + 3600;
 
-        $this->updateStatus($bot, "⌛️ " . $this->t("zentrotraderbot::bot.sign_offer.sending_proof"));
+        $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.sending_proof")));
 
         try {
             $escrow = new EscrowController();
@@ -1180,19 +1176,19 @@ class OffersController extends Controller
             });
 
             if (!$txHash) {
-                $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.sign_offer.no_confirm_payment"));
+                $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.no_confirm_payment")));
                 return false;
             }
 
-            $this->updateStatus($bot, "✅ " . $this->t("zentrotraderbot::bot.sign_offer.proof_sent"));
+            $this->updateStatus($bot, "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.proof_sent")));
             return $txHash;
 
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'ID already exists')) {
-                $this->updateStatus($bot, "✅ " . $this->t("zentrotraderbot::bot.sign_offer.proof_sent"));
+                $this->updateStatus($bot, "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.proof_sent")));
                 return true;
             }
-            $this->updateStatus($bot, "❌ *" . $this->t("zentrotraderbot::bot.sign_offer.error") . "*\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.error")) . "*\n" . $e->getMessage());
             return false;
         }
     }
@@ -1205,18 +1201,18 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer) {
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.sign_offer.not_found"));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.not_found")));
             return false;
         }
 
         if (!in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED'])) {
-            $this->updateStatus($bot, "⚠️ " . $this->t("zentrotraderbot::bot.sign_offer.wrong_state"));
+            $this->updateStatus($bot, "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.wrong_state")));
             return false;
         }
 
         $signer = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
         if (!$signer) {
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.sign_offer.account_not_found"));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.account_not_found")));
             return false;
         }
 
@@ -1227,7 +1223,7 @@ class OffersController extends Controller
         $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
         $deadline = time() + 3600;
 
-        $this->updateStatus($bot, "⌛️ " . $this->t("zentrotraderbot::bot.sign_offer.confirming_receipt"));
+        $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.confirming_receipt")));
 
         try {
             $escrow = new EscrowController();
@@ -1245,21 +1241,21 @@ class OffersController extends Controller
             });
 
             if (!$txHash) {
-                $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.sign_offer.no_sign"));
+                $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.no_sign")));
                 return false;
             }
 
             $this->logOfferAction($offer, 'seller', 'payment_confirmed', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
-            $this->updateStatus($bot, "✅ *" . $this->t("zentrotraderbot::bot.sign_offer.confirmation_sent") . "*");
+            $this->updateStatus($bot, "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.confirmation_sent")) . "*");
             return $txHash;
 
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'ID already exists')) {
                 $this->logOfferAction($offer, 'seller', 'payment_confirmed', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'note' => 'already_exists']);
-                $this->updateStatus($bot, "✅ *" . $this->t("zentrotraderbot::bot.sign_offer.confirmation_sent") . "*");
+                $this->updateStatus($bot, "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.confirmation_sent")) . "*");
                 return true;
             }
-            $this->updateStatus($bot, "❌ *" . $this->t("zentrotraderbot::bot.sign_offer.error") . "*\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.error")) . "*\n" . $e->getMessage());
             return false;
         }
     }
@@ -1272,18 +1268,18 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer) {
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.cancel_onchain.not_found"));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.not_found")));
             return false;
         }
 
         if (strtoupper($offer->status) !== 'LOCKED') {
-            $this->updateStatus($bot, "⚠️ " . $this->t("zentrotraderbot::bot.cancel_onchain.wrong_state"));
+            $this->updateStatus($bot, "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.wrong_state")));
             return false;
         }
 
         $buyer = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
         if (!$buyer || strtolower($buyer->data['wallet']['address']) !== strtolower($offer->buyer_address)) {
-            $this->updateStatus($bot, "🚫 " . $this->t("zentrotraderbot::bot.cancel_onchain.not_buyer"));
+            $this->updateStatus($bot, "🚫 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.not_buyer")));
             return false;
         }
 
@@ -1294,7 +1290,7 @@ class OffersController extends Controller
         $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
         $deadline = time() + 3600;
 
-        $this->updateStatus($bot, "⌛️ " . $this->t("zentrotraderbot::bot.cancel_onchain.processing"));
+        $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.processing")));
 
         try {
             $escrow = new EscrowController();
@@ -1312,20 +1308,20 @@ class OffersController extends Controller
             });
 
             if (!$txHash) {
-                $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.cancel_onchain.no_cancel"));
+                $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.no_cancel")));
                 return false;
             }
 
             $this->logOfferAction($offer, 'buyer', 'trade_cancelled', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
-            $this->updateStatus($bot, "⌛️ " . $this->t("zentrotraderbot::bot.cancel_onchain.sent"));
+            $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.sent")));
             return $txHash;
 
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'ID already exists')) {
-                $this->updateStatus($bot, "⌛️ " . $this->t("zentrotraderbot::bot.cancel_onchain.sent"));
+                $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.sent")));
                 return true;
             }
-            $this->updateStatus($bot, "❌ *" . $this->t("zentrotraderbot::bot.cancel_onchain.error") . "*\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.error")) . "*\n" . $e->getMessage());
             return false;
         }
     }
@@ -1338,7 +1334,7 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer || !in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED'])) {
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.sign_offer.not_found"));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.not_found")));
             return ["text" => ""];
         }
 
@@ -1362,10 +1358,10 @@ class OffersController extends Controller
             'initialData' => $initialData,
             'onComplete' => fn($b, $s) => $self->completeProof($b, $s),
             'onCancel' => fn($b) => [
-                "text" => "❌ " . $this->t("zentrotraderbot::bot.proof_wizard.cancelled"),
+                "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.cancelled")),
                 "chat" => ["id" => $b->actor->user_id],
                 "editprevious" => (isset($b->callback_query) || ($b->is_callback ?? false)) ? 1 : 0,
-                "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
+                "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]]]]),
             ],
         ]);
     }
@@ -1375,7 +1371,7 @@ class OffersController extends Controller
         $text = $bot->message['text'] ?? '';
         $userId = $bot->actor->user_id;
         $code = $state['data']['offer_code'];
-        $cancelBtn = [["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
+        $cancelBtn = [["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"]];
 
         $msg = request('message') ?? [];
         $hasPhoto = isset($msg['photo']);
@@ -1412,13 +1408,13 @@ class OffersController extends Controller
                 $currentImages = array_unique(array_merge($state['data']['images'] ?? [], [$fileId]));
             }
 
-            $msgText = "✅ " . $this->t("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($currentImages)])
-                . "\n🤔 " . $this->t("zentrotraderbot::bot.proof_wizard.ask_more");
+            $msgText = "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.image_received", ['count' => count($currentImages)]))
+                . "\n🤔 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.ask_more"));
             $buttons = json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => $this->t("zentrotraderbot::bot.proof_wizard.yes_more"), "callback_data" => "proofmore {$code}"],
-                        ["text" => $this->t("zentrotraderbot::bot.proof_wizard.no_done"), "callback_data" => "proofdone {$code}"],
+                        ["text" => TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.yes_more")), "callback_data" => "proofmore {$code}"],
+                        ["text" => TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.no_done")), "callback_data" => "proofdone {$code}"],
                     ]
                 ],
             ]);
@@ -1472,7 +1468,7 @@ class OffersController extends Controller
         // ── Contenido invalido ────────────────────────────────────────────────────
         if ($isOtherMedia) {
             return [
-                "text" => "⚠️ " . $this->t("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n📸 " . $this->t("zentrotraderbot::bot.proof_wizard.instructions"),
+                "text" => "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content")) . "\n📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.instructions")),
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
@@ -1482,7 +1478,7 @@ class OffersController extends Controller
         if (str_contains(strtolower($text), 'proofdone')) {
             if (empty($state['data']['images'])) {
                 return [
-                    "text" => "⚠️ " . $this->t("zentrotraderbot::bot.proof_wizard.no_images") . "\n\n📸 " . $this->t("zentrotraderbot::bot.proof_wizard.instructions"),
+                    "text" => "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.no_images")) . "\n\n📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.instructions")),
                     "chat" => ["id" => $userId],
                     "editprevious" => 1,
                     "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
@@ -1495,7 +1491,7 @@ class OffersController extends Controller
         $isKnown = empty($text) || str_contains(strtolower($text), 'proofmore') || str_contains(strtolower($text), 'proofdone');
         if (!empty($text) && !$isKnown) {
             return [
-                "text" => "⚠️ " . $this->t("zentrotraderbot::bot.proof_wizard.invalid_content") . "\n📸 " . $this->t("zentrotraderbot::bot.proof_wizard.instructions"),
+                "text" => "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.invalid_content")) . "\n📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.instructions")),
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
@@ -1503,7 +1499,7 @@ class OffersController extends Controller
 
         // ── Prompt inicial o "Sí, enviar otra" ───────────────────────────────────
         return [
-            "text" => "📸 " . $this->t("zentrotraderbot::bot.proof_wizard.instructions"),
+            "text" => "📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_wizard.instructions")),
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
         ];
@@ -1529,7 +1525,7 @@ class OffersController extends Controller
         );
 
         return [
-            "text" => "✅ *" . $this->t("zentrotraderbot::bot.sign_offer.proof_sent") . "*",
+            "text" => "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.proof_sent")) . "*",
             "chat" => ["id" => $bot->actor->user_id],
         ];
     }
@@ -1561,20 +1557,20 @@ class OffersController extends Controller
     public function buildEvidenceWizardPromptText(Offers $offer, string $context = 'dispute'): string
     {
         $contextLine = $context === 'more'
-            ? "🔔 _" . $this->t("zentrotraderbot::bot.evidence_wizard.more_requested_body") . "_"
-            : "⚖️ _" . $this->t("zentrotraderbot::bot.evidence_wizard.arbiter_dispute_context") . "_";
+            ? "🔔 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_body")) . "_"
+            : "⚖️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_dispute_context")) . "_";
 
-        return "🧾 *" . $this->t("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
+        return "🧾 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.title")) . "*\n"
             . "🆔 `{$offer->code}`\n\n"
             . "{$contextLine}\n\n"
-            . "📸 " . $this->t("zentrotraderbot::bot.evidence_wizard.instructions");
+            . "📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"));
     }
 
     public function startEvidenceWizard($bot, $code)
     {
         $offer = Offers::findByCode($code);
         if (!$offer) {
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.sign_offer.not_found"));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.not_found")));
             return ["text" => ""];
         }
 
@@ -1598,10 +1594,10 @@ class OffersController extends Controller
             'initialData' => $initialData,
             'onComplete' => fn($b, $s) => $self->completeEvidence($b, $s),
             'onCancel' => fn($b) => [
-                "text" => "❌ " . $this->t("zentrotraderbot::bot.evidence_wizard.cancelled"),
+                "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.cancelled")),
                 "chat" => ["id" => $b->actor->user_id],
                 "editprevious" => (isset($b->callback_query) || ($b->is_callback ?? false)) ? 1 : 0,
-                "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
+                "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]]]]),
             ],
         ]);
     }
@@ -1611,7 +1607,7 @@ class OffersController extends Controller
         $text = $bot->message['text'] ?? '';
         $userId = $bot->actor->user_id;
         $code = $state['data']['offer_code'];
-        $cancelBtn = [["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
+        $cancelBtn = [["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"]];
 
         $msg = request('message') ?? [];
         $hasPhoto = isset($msg['photo']);
@@ -1648,13 +1644,13 @@ class OffersController extends Controller
                 $currentImages = array_unique(array_merge($state['data']['images'] ?? [], [$fileId]));
             }
 
-            $msgText = "✅ " . $this->t("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)])
-                . "\n🤔 " . $this->t("zentrotraderbot::bot.evidence_wizard.ask_more");
+            $msgText = "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)]))
+                . "\n🤔 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more"));
             $buttons = json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => $this->t("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "evimore {$code}"],
-                        ["text" => $this->t("zentrotraderbot::bot.evidence_wizard.no_done"), "callback_data" => "evidone {$code}"],
+                        ["text" => TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more")), "callback_data" => "evimore {$code}"],
+                        ["text" => TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.no_done")), "callback_data" => "evidone {$code}"],
                     ]
                 ],
             ]);
@@ -1705,7 +1701,7 @@ class OffersController extends Controller
         // ── Contenido invalido ────────────────────────────────────────────────────
         if ($isOtherMedia) {
             return [
-                "text" => "⚠️ " . $this->t("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n📸 " . $this->t("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "text" => "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content")) . "\n📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.instructions")),
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
@@ -1715,7 +1711,7 @@ class OffersController extends Controller
         if (str_contains(strtolower($text), 'evidone')) {
             if (empty($state['data']['images'])) {
                 return [
-                    "text" => "⚠️ " . $this->t("zentrotraderbot::bot.evidence_wizard.no_images") . "\n\n📸 " . $this->t("zentrotraderbot::bot.evidence_wizard.instructions"),
+                    "text" => "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.no_images")) . "\n\n📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.instructions")),
                     "chat" => ["id" => $userId],
                     "editprevious" => 1,
                     "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
@@ -1728,7 +1724,7 @@ class OffersController extends Controller
         $isKnown = empty($text) || str_contains(strtolower($text), 'evimore') || str_contains(strtolower($text), 'evidone');
         if (!empty($text) && !$isKnown) {
             return [
-                "text" => "⚠️ " . $this->t("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n📸 " . $this->t("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "text" => "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content")) . "\n📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.instructions")),
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
             ];
@@ -1737,9 +1733,9 @@ class OffersController extends Controller
         // ── Prompt inicial o "Sí, enviar otra" ───────────────────────────────────
         $offer = Offers::findByCode($code);
         return [
-            "text" => "🧾 *" . $this->t("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
+            "text" => "🧾 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.title")) . "*\n"
                 . ($offer ? "🆔 `{$offer->code}`\n\n" : "")
-                . "📸 " . $this->t("zentrotraderbot::bot.evidence_wizard.instructions"),
+                . "📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.instructions")),
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn]]),
         ];
@@ -1767,7 +1763,7 @@ class OffersController extends Controller
             foreach ($admins as $admin) {
                 TelegramController::sendMessage([
                     "message" => [
-                        "text" => "⚖️ *" . $this->t("zentrotraderbot::bot.evidence_wizard.arbiter_notification_title") . "*\n🆔 `{$offer->code}`\n\n" . $this->t("zentrotraderbot::bot.evidence_wizard.arbiter_notification_body"),
+                        "text" => "⚖️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notification_title")) . "*\n🆔 `{$offer->code}`\n\n" . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notification_body")),
                         "chat" => ["id" => $admin->user_id],
                         "parse_mode" => "MarkdownV2",
                     ]
@@ -1803,8 +1799,8 @@ class OffersController extends Controller
                         default => 'unknown',
                     };
                     $label = match ($role) {
-                        'buyer' => "*" . $this->t("zentrotraderbot::bot.offer.disputed.by_buyer") . "* 🟢",
-                        'seller' => "*" . $this->t("zentrotraderbot::bot.offer.disputed.by_seller") . "* 🔴",
+                        'buyer' => "*" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.by_buyer")) . "* 🟢",
+                        'seller' => "*" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.by_seller")) . "* 🔴",
                         default => "👤 ID: `{$userId}`",
                     };
 
@@ -1837,10 +1833,10 @@ class OffersController extends Controller
         }
 
         return [
-            "text" => "✅ " . $this->t("zentrotraderbot::bot.evidence_wizard.arbiter_notified"),
+            "text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.arbiter_notified")),
             "chat" => ["id" => $userId],
             "editprevious" => 1,
-            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
+            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]]]]),
         ];
     }
 
@@ -1853,14 +1849,14 @@ class OffersController extends Controller
         $offer = Offers::findByCode($code);
         if (!$offer || strtoupper($offer->status) !== 'DISPUTED') {
             return [
-                "text" => "❌ " . $this->t("zentrotraderbot::bot.sign_offer.not_found"),
+                "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.not_found")),
                 "chat" => ["id" => $bot->actor->user_id],
             ];
         }
 
         $botTenant = app('active_bot');
         $this->logOfferAction($offer, 'arbiter', 'request_more_evidence', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $code]);
-        $cancelMenu = [[["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]];
+        $cancelMenu = [[["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"]]];
         $wizardText = $this->buildEvidenceWizardPromptText($offer, 'more');
 
         foreach ([$offer->buyer_address, $offer->seller_address] as $address) {
@@ -1884,7 +1880,7 @@ class OffersController extends Controller
         if ($threadId && $supportId) {
             TelegramController::sendMessage([
                 "message" => [
-                    "text" => "🔔 *" . $this->t("zentrotraderbot::bot.evidence_wizard.thread_more_requested") . "*",
+                    "text" => "🔔 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.thread_more_requested")) . "*",
                     "chat" => ["id" => $supportId],
                     "parse_mode" => "MarkdownV2",
                     "message_thread_id" => (int) $threadId,
@@ -1893,10 +1889,10 @@ class OffersController extends Controller
         }
 
         return [
-            "text" => "✅ " . $this->t("zentrotraderbot::bot.evidence_wizard.more_requested_sent"),
+            "text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.more_requested_sent")),
             "chat" => ["id" => $bot->actor->user_id],
             "editprevious" => 1,
-            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
+            "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]]]]),
         ];
     }
 
@@ -1908,7 +1904,7 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer || !in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED'])) {
-            $this->updateStatus($bot, "⚠️ " . $this->t("zentrotraderbot::bot.sign_offer.wrong_state"));
+            $this->updateStatus($bot, "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.wrong_state")));
             return ["text" => ""];
         }
 
@@ -1924,10 +1920,10 @@ class OffersController extends Controller
         if ($buyerSub && $buyerSub->user_id) {
             $this->seedProofResubmitWizard($botTenant->key, (int) $buyerSub->user_id, $offer->code);
 
-            $text = "🧾 *" . $this->t("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
+            $text = "🧾 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.title")) . "*\n"
                 . "🆔 `{$offer->code}`\n\n"
-                . "⚠️ _" . $this->t("zentrotraderbot::bot.proof_resubmit.wizard_context") . "_\n\n"
-                . "📸 " . $this->t("zentrotraderbot::bot.evidence_wizard.instructions");
+                . "⚠️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.wizard_context")) . "_\n\n"
+                . "📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.instructions"));
 
             TelegramController::sendMessage([
                 "message" => [
@@ -1936,8 +1932,8 @@ class OffersController extends Controller
                     "parse_mode" => "MarkdownV2",
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
-                            [["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]],
-                            [["text" => "⚖️ " . $this->t("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$offer->code}"]],
+                            [["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"]],
+                            [["text" => "⚖️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.open_dispute")), "callback_data" => "/disputebybuyer {$offer->code}"]],
                         ]
                     ]),
                 ],
@@ -1945,12 +1941,12 @@ class OffersController extends Controller
         }
 
         return [
-            "text" => "✅ " . $this->t("zentrotraderbot::bot.proof_resubmit.seller_notified"),
+            "text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.seller_notified")),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "👍 " . $this->t("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"]],
-                    [["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
-                    [["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                    [["text" => "👍 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.confirm_received")), "callback_data" => "/signoffer {$offer->code}"]],
+                    [["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.backtop2pmenu")), "callback_data" => "/p2pmenu"]],
+                    [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
                 ]
             ]),
         ];
@@ -1972,7 +1968,7 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer) {
-            return ["text" => "❌ " . $this->t("zentrotraderbot::bot.sign_offer.not_found")];
+            return ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.not_found"))];
         }
         $bot->message['text'] = null;
         return $this->runProofResubmitWizard($bot, ['offer_code' => $code, 'images' => []]);
@@ -2001,10 +1997,10 @@ class OffersController extends Controller
             'initialData' => $initialData,
             'onComplete' => fn($b, $s) => $self->completeProofResubmit($b, $s),
             'onCancel' => fn($b) => [
-                "text" => "❌ " . $this->t("zentrotraderbot::bot.proof_resubmit.cancelled"),
+                "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.cancelled")),
                 "chat" => ["id" => $b->actor->user_id],
                 "editprevious" => (isset($b->callback_query) || ($b->is_callback ?? false)) ? 1 : 0,
-                "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]]]),
+                "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]]]]),
             ],
         ]);
     }
@@ -2014,8 +2010,8 @@ class OffersController extends Controller
         $text = $bot->message['text'] ?? '';
         $userId = $bot->actor->user_id;
         $code = $state['data']['offer_code'];
-        $cancelBtn = [["text" => "❌ " . $this->t("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]];
-        $disputeBtn = [["text" => "⚖️ " . $this->t("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$code}"]];
+        $cancelBtn = [["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"]];
+        $disputeBtn = [["text" => "⚖️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.open_dispute")), "callback_data" => "/disputebybuyer {$code}"]];
 
         $msg = request('message') ?? [];
         $hasPhoto = isset($msg['photo']);
@@ -2050,13 +2046,13 @@ class OffersController extends Controller
                 $currentImages = array_unique(array_merge($state['data']['images'] ?? [], [$fileId]));
             }
 
-            $msgText = "✅ " . $this->t("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)])
-                . "\n🤔 " . $this->t("zentrotraderbot::bot.evidence_wizard.ask_more");
+            $msgText = "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.image_received", ['count' => count($currentImages)]))
+                . "\n🤔 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.ask_more"));
             $buttons = json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => $this->t("zentrotraderbot::bot.evidence_wizard.yes_more"), "callback_data" => "proofresmore {$code}"],
-                        ["text" => $this->t("zentrotraderbot::bot.evidence_wizard.no_done"), "callback_data" => "proofresdone {$code}"],
+                        ["text" => TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.yes_more")), "callback_data" => "proofresmore {$code}"],
+                        ["text" => TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.no_done")), "callback_data" => "proofresdone {$code}"],
                     ]
                 ],
             ]);
@@ -2096,7 +2092,7 @@ class OffersController extends Controller
         // ── Contenido invalido ────────────────────────────────────────────────────
         if ($isOtherMedia) {
             return [
-                "text" => "⚠️ " . $this->t("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n📸 " . $this->t("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "text" => "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content")) . "\n📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.instructions")),
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn, $disputeBtn]]),
             ];
@@ -2108,7 +2104,7 @@ class OffersController extends Controller
             $currentImages = $offer?->data['evidence'][(string) $userId] ?? ($state['data']['images'] ?? []);
             if (empty($currentImages)) {
                 return [
-                    "text" => "⚠️ " . $this->t("zentrotraderbot::bot.evidence_wizard.no_images") . "\n\n📸 " . $this->t("zentrotraderbot::bot.evidence_wizard.instructions"),
+                    "text" => "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.no_images")) . "\n\n📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.instructions")),
                     "chat" => ["id" => $userId],
                     "editprevious" => 1,
                     "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn, $disputeBtn]]),
@@ -2121,7 +2117,7 @@ class OffersController extends Controller
         $isKnown = empty($text) || str_contains(strtolower($text), 'proofresmore') || str_contains(strtolower($text), 'proofresdone');
         if (!empty($text) && !$isKnown) {
             return [
-                "text" => "⚠️ " . $this->t("zentrotraderbot::bot.evidence_wizard.invalid_content") . "\n📸 " . $this->t("zentrotraderbot::bot.evidence_wizard.instructions"),
+                "text" => "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.invalid_content")) . "\n📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.instructions")),
                 "chat" => ["id" => $userId],
                 "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn, $disputeBtn]]),
             ];
@@ -2130,10 +2126,10 @@ class OffersController extends Controller
         // ── Prompt inicial o "Sí, enviar otra" ───────────────────────────────────
         $offer = Offers::findByCode($code);
         return [
-            "text" => "🧾 *" . $this->t("zentrotraderbot::bot.evidence_wizard.title") . "*\n"
+            "text" => "🧾 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.title")) . "*\n"
                 . ($offer ? "🆔 `{$offer->code}`\n\n" : "")
-                . "⚠️ _" . $this->t("zentrotraderbot::bot.proof_resubmit.wizard_context") . "_\n\n"
-                . "📸 " . $this->t("zentrotraderbot::bot.evidence_wizard.instructions"),
+                . "⚠️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.wizard_context")) . "_\n\n"
+                . "📸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.evidence_wizard.instructions")),
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode(["inline_keyboard" => [$cancelBtn, $disputeBtn]]),
         ];
@@ -2147,7 +2143,7 @@ class OffersController extends Controller
 
         $offer = Offers::findByCode($code);
         if (!$offer) {
-            return ["text" => "❌ " . $this->t("zentrotraderbot::bot.sign_offer.not_found"), "chat" => ["id" => $userId]];
+            return ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.not_found")), "chat" => ["id" => $userId]];
         }
 
         $this->logOfferAction($offer, 'buyer', 'proof_resubmitted', $userId, $bot->message['text'] ?? '', ['code' => $code, 'image_count' => count($offer->data['evidence'][(string) $userId] ?? [])]);
@@ -2164,16 +2160,16 @@ class OffersController extends Controller
 
             $confirmMenu = [
                 [
-                    ["text" => "👍 " . $this->t("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
-                    ["text" => "❌ " . $this->t("zentrotraderbot::bot.options.not_received"), "callback_data" => "/notreceived {$offer->code}"],
+                    ["text" => "👍 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.confirm_received")), "callback_data" => "/signoffer {$offer->code}"],
+                    ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.not_received")), "callback_data" => "/notreceived {$offer->code}"],
                 ],
-                [["text" => "⚖️ " . $this->t("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebyseller {$offer->code}"]],
+                [["text" => "⚖️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.open_dispute")), "callback_data" => "/disputebyseller {$offer->code}"]],
             ];
             TelegramController::sendMessage([
                 "message" => [
-                    "text" => "👆 *" . $this->t("zentrotraderbot::bot.proof_resubmit.new_evidence_title") . "*\n"
+                    "text" => "👆 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.new_evidence_title")) . "*\n"
                         . "🆔 `{$offer->code}`\n\n"
-                        . "🏦 " . $this->t("zentrotraderbot::bot.proof_resubmit.new_evidence_body"),
+                        . "🏦 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.new_evidence_body")),
                     "chat" => ["id" => $sellerSub->user_id],
                     "parse_mode" => "MarkdownV2",
                     "reply_markup" => json_encode(["inline_keyboard" => $confirmMenu]),
@@ -2182,12 +2178,12 @@ class OffersController extends Controller
         }
 
         return [
-            "text" => "✅ " . $this->t("zentrotraderbot::bot.proof_resubmit.buyer_submitted"),
+            "text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.buyer_submitted")),
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "⚖️ " . $this->t("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$offer->code}"],
+                        ["text" => "⚖️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.open_dispute")), "callback_data" => "/disputebybuyer {$offer->code}"],
                     ]
                 ]
             ]),
@@ -2198,18 +2194,18 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer) {
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.sign_offer.not_found"));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.not_found")));
             return ["text" => ""];
         }
 
         if (!in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED'])) {
-            $this->updateStatus($bot, "⚠️ " . $this->t("zentrotraderbot::bot.sign_offer.wrong_state"));
+            $this->updateStatus($bot, "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.wrong_state")));
             return ["text" => ""];
         }
 
         $sub = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
         if (!$sub) {
-            $this->updateStatus($bot, "🚫 " . $this->t("zentrotraderbot::bot.cancel_onchain.not_buyer"));
+            $this->updateStatus($bot, "🚫 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.not_buyer")));
             return ["text" => ""];
         }
 
@@ -2218,7 +2214,7 @@ class OffersController extends Controller
         $isSeller = $walletAddress === strtolower($offer->seller_address);
 
         if (!$isBuyer && !$isSeller) {
-            $this->updateStatus($bot, "🚫 " . $this->t("zentrotraderbot::bot.cancel_onchain.not_buyer"));
+            $this->updateStatus($bot, "🚫 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.cancel_onchain.not_buyer")));
             return ["text" => ""];
         }
 
@@ -2229,7 +2225,7 @@ class OffersController extends Controller
         $relayerKey = decryptValue(env('TRADER_BOT_KEY'));
         $deadline = time() + 3600;
 
-        $this->updateStatus($bot, "⌛️ " . $this->t("zentrotraderbot::bot.proof_resubmit.opening_dispute"));
+        $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.opening_dispute")));
 
         try {
             $escrow = new EscrowController();
@@ -2247,21 +2243,21 @@ class OffersController extends Controller
             });
 
             if (!$txHash) {
-                $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.proof_resubmit.dispute_error"));
+                $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_error")));
                 return ["text" => ""];
             }
 
             $this->logOfferAction($offer, $role, 'dispute_opened', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
-            $this->updateStatus($bot, "✅ " . $this->t("zentrotraderbot::bot.proof_resubmit.dispute_opened"));
+            $this->updateStatus($bot, "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_opened")));
             return ["text" => ""];
 
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'ID already exists')) {
                 $this->logOfferAction($offer, $role, 'dispute_opened', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'note' => 'already_exists']);
-                $this->updateStatus($bot, "✅ " . $this->t("zentrotraderbot::bot.proof_resubmit.dispute_opened"));
+                $this->updateStatus($bot, "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_opened")));
                 return ["text" => ""];
             }
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.proof_resubmit.dispute_error") . "\n" . $e->getMessage());
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.proof_resubmit.dispute_error")) . "\n" . $e->getMessage());
             return ["text" => ""];
         }
     }
@@ -2274,32 +2270,35 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer || !in_array(strtoupper($offer->status), ['LOCKED', 'SIGNED', 'DISPUTED'])) {
-            $this->updateStatus($bot, "❌ " . $this->t("zentrotraderbot::bot.sign_offer.not_found"));
+            $this->updateStatus($bot, "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.not_found")));
             return ["text" => ""];
         }
 
         $sub = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
-        if (!$sub) return ["text" => ""];
+        if (!$sub)
+            return ["text" => ""];
 
-        $wallet  = strtolower($sub->data['wallet']['address'] ?? '');
+        $wallet = strtolower($sub->data['wallet']['address'] ?? '');
         $isBuyer = $wallet === strtolower($offer->buyer_address);
         $isSeller = $wallet === strtolower($offer->seller_address);
-        if (!$isBuyer && !$isSeller) return ["text" => ""];
+        if (!$isBuyer && !$isSeller)
+            return ["text" => ""];
 
-        $role        = $isBuyer ? 'buyer' : 'seller';
-        $counterpart = $this->t("zentrotraderbot::bot.chat.counterpart_" . ($isBuyer ? 'seller' : 'buyer'));
-        $botTenant   = app('active_bot');
-        $chatKey     = "chat_{$botTenant->key}_{$bot->actor->user_id}";
+        $role = $isBuyer ? 'buyer' : 'seller';
+        $counterpart = TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.counterpart_" . ($isBuyer ? 'seller' : 'buyer')));
+        $botTenant = app('active_bot');
+        $chatKey = "chat_{$botTenant->key}_{$bot->actor->user_id}";
 
-        $exitBtn = [[["text" => "🚪 " . $this->t("zentrotraderbot::bot.chat.exit_btn"), "callback_data" => "/exitchat"]]];
+        $exitBtn = [[["text" => "🚪 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.exit_btn")), "callback_data" => "/exitchat"]]];
 
         // Send pinnable reminder message
-        $reminderText = "💬 *" . $this->t("zentrotraderbot::bot.chat.mode_active", ['counterpart' => $counterpart]) . "*";
+        $reminderText = "💬 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.mode_active", ['counterpart' => $counterpart])) . "*\n"
+            . "\n";
         $raw = TelegramController::sendMessage([
             "message" => [
-                "text"         => $reminderText,
-                "chat"         => ["id" => $bot->actor->user_id],
-                "parse_mode"   => "MarkdownV2",
+                "text" => $reminderText,
+                "chat" => ["id" => $bot->actor->user_id],
+                "parse_mode" => "MarkdownV2",
                 "reply_markup" => json_encode(["inline_keyboard" => $exitBtn]),
             ],
         ], $botTenant->token);
@@ -2312,13 +2311,13 @@ class OffersController extends Controller
         }
 
         Cache::put($chatKey, [
-            'offer_code'       => $code,
-            'role'             => $role,
+            'offer_code' => $code,
+            'role' => $role,
             'pinned_message_id' => $pinnedMsgId,
         ], now()->addHours(24));
 
         return [
-            "text" => "✅ " . $this->t("zentrotraderbot::bot.chat.started", ['counterpart' => $counterpart]),
+            "text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.started", ['counterpart' => $counterpart])),
             "chat" => ["id" => $bot->actor->user_id],
         ];
     }
@@ -2326,9 +2325,10 @@ class OffersController extends Controller
     public function chatRelay($bot)
     {
         $botTenant = app('active_bot');
-        $chatKey   = "chat_{$botTenant->key}_{$bot->actor->user_id}";
-        $chatData  = Cache::get($chatKey);
-        if (!$chatData) return ["text" => ""];
+        $chatKey = "chat_{$botTenant->key}_{$bot->actor->user_id}";
+        $chatData = Cache::get($chatKey);
+        if (!$chatData)
+            return ["text" => ""];
 
         $text = $bot->message['text'] ?? '';
 
@@ -2348,27 +2348,29 @@ class OffersController extends Controller
             return ["text" => ""];
         }
 
-        $role   = $chatData['role'];
-        $prefix = "📨 *" . $this->t("zentrotraderbot::bot.chat.{$role}_says") . ":*\n";
+        $role = $chatData['role'];
+        $prefix = "📨 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.{$role}_says")) . ":*\n";
 
         $counterpartAddress = $role === 'buyer' ? $offer->seller_address : $offer->buyer_address;
-        $counterpartSub     = Suscriptions::findByAddress($counterpartAddress);
+        $counterpartSub = Suscriptions::findByAddress($counterpartAddress);
         if (!$counterpartSub || !$counterpartSub->user_id) {
-            return ["text" => "❌ " . $this->t("zentrotraderbot::bot.chat.counterpart_unavailable")];
+            return ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.counterpart_unavailable"))];
         }
 
-        $counterpartId  = (int) $counterpartSub->user_id;
+        $counterpartId = (int) $counterpartSub->user_id;
         $counterpartRole = $role === 'buyer' ? 'seller' : 'buyer';
-        $counterpartLabel = $this->t("zentrotraderbot::bot.chat.counterpart_{$role}"); // label for the counterpart's reply btn
-        $replyMarkup = json_encode(["inline_keyboard" => [
-            [["text" => $this->t("zentrotraderbot::bot.options.message_{$counterpartRole}"), "callback_data" => "/startchat {$offer->code}"]],
-        ]]);
+        $counterpartLabel = TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.counterpart_{$role}")); // label for the counterpart's reply btn
+        $replyMarkup = json_encode([
+            "inline_keyboard" => [
+                [["text" => TextService::mdv2(Lang::get("zentrotraderbot::bot.options.message_{$counterpartRole}")), "callback_data" => "/startchat {$offer->code}"]],
+            ]
+        ]);
 
         $this->forwardChatMessage($bot->message, $prefix, $counterpartId, $replyMarkup, $botTenant->token);
 
         // If DISPUTED, also relay to dispute thread
         if (strtoupper($offer->status) === 'DISPUTED') {
-            $threadId  = $offer->data['dispute']['thread_id'] ?? null;
+            $threadId = $offer->data['dispute']['thread_id'] ?? null;
             $supportId = env('TRADER_BOT_SUPPORT');
             if ($threadId && $supportId) {
                 $this->forwardChatMessage($bot->message, $prefix, (int) $supportId, null, $botTenant->token, (int) $threadId);
@@ -2376,7 +2378,7 @@ class OffersController extends Controller
         }
 
         return [
-            "text" => "✅ " . $this->t("zentrotraderbot::bot.chat.message_sent"),
+            "text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.message_sent")),
             "chat" => ["id" => $bot->actor->user_id],
         ];
     }
@@ -2384,51 +2386,66 @@ class OffersController extends Controller
     private function forwardChatMessage(array $msg, string $prefix, int $chatId, ?string $markup, string $token, ?int $threadId = null): void
     {
         $base = ['chat' => ['id' => $chatId], 'parse_mode' => 'MarkdownV2'];
-        if ($threadId) $base['message_thread_id'] = $threadId;
-        if ($markup)   $base['reply_markup']       = $markup;
+        if ($threadId)
+            $base['message_thread_id'] = $threadId;
+        if ($markup)
+            $base['reply_markup'] = $markup;
 
-        $quote = function(string $text): string {
-            if ($text === '') return '';
+        $quote = function (string $text): string {
+            if ($text === '')
+                return '';
             return '>' . str_replace("\n", "\n>", $text);
         };
 
         if (!empty($msg['photo'])) {
             $photo = end($msg['photo']);
-            TelegramController::sendPhoto(['message' => array_merge($base, [
-                'photo' => $photo['file_id'],
-                'text'  => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
-            ])], $token);
+            TelegramController::sendPhoto([
+                'message' => array_merge($base, [
+                    'photo' => $photo['file_id'],
+                    'text' => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
+                ])
+            ], $token);
         } elseif (!empty($msg['document'])) {
-            TelegramController::sendDocument(['message' => array_merge($base, [
-                'document' => $msg['document']['file_id'],
-                'text'     => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
-            ])], $token);
+            TelegramController::sendDocument([
+                'message' => array_merge($base, [
+                    'document' => $msg['document']['file_id'],
+                    'text' => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
+                ])
+            ], $token);
         } elseif (!empty($msg['video'])) {
-            TelegramController::sendVideo(['message' => array_merge($base, [
-                'video' => $msg['video']['file_id'],
-                'text'  => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
-            ])], $token);
+            TelegramController::sendVideo([
+                'message' => array_merge($base, [
+                    'video' => $msg['video']['file_id'],
+                    'text' => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
+                ])
+            ], $token);
         } elseif (!empty($msg['voice'])) {
-            TelegramController::sendVoice(['message' => array_merge($base, [
-                'voice' => $msg['voice']['file_id'],
-                'text'  => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
-            ])], $token);
+            TelegramController::sendVoice([
+                'message' => array_merge($base, [
+                    'voice' => $msg['voice']['file_id'],
+                    'text' => $prefix . $quote(TextService::mdv2($msg['caption'] ?? '')),
+                ])
+            ], $token);
         } elseif (!empty($msg['text'])) {
-            TelegramController::sendMessage(['message' => array_merge($base, [
-                'text' => $prefix . $quote(TextService::mdv2($msg['text'])),
-            ])], $token);
+            TelegramController::sendMessage([
+                'message' => array_merge($base, [
+                    'text' => $prefix . $quote(TextService::mdv2($msg['text'])),
+                ])
+            ], $token);
         } else {
-            TelegramController::sendMessage(['message' => array_merge($base, [
-                'text' => $prefix . $quote($this->t('zentrotraderbot::bot.chat.unsupported_media')),
-            ])], $token);
+            TelegramController::sendMessage([
+                'message' => array_merge($base, [
+                    'text' => $prefix . $quote(TextService::mdv2(Lang::get('zentrotraderbot::bot.chat.unsupported_media'))),
+                ])
+            ], $token);
         }
     }
 
     public function exitChat($bot)
     {
         $botTenant = app('active_bot');
-        $chatKey   = "chat_{$botTenant->key}_{$bot->actor->user_id}";
-        $chatData  = Cache::get($chatKey);
+        $chatKey = "chat_{$botTenant->key}_{$bot->actor->user_id}";
+        $chatData = Cache::get($chatKey);
 
         if ($chatData && !empty($chatData['pinned_message_id'])) {
             $msgId = $chatData['pinned_message_id'];
@@ -2446,7 +2463,7 @@ class OffersController extends Controller
         Cache::forget($chatKey);
 
         return [
-            "text" => "🚪 " . $this->t("zentrotraderbot::bot.chat.exited"),
+            "text" => "🚪 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.exited")),
             "chat" => ["id" => $bot->actor->user_id],
         ];
     }
@@ -2504,14 +2521,14 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer || strtoupper($offer->status) !== 'DISPUTED') {
-            return ['text' => '❌ ' . $this->t('zentrotraderbot::bot.sign_offer.not_found'), 'chat' => ['id' => $bot->actor->user_id]];
+            return ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.sign_offer.not_found')), 'chat' => ['id' => $bot->actor->user_id]];
         }
 
         $botTenant = app('active_bot');
         $this->logOfferAction($offer, 'arbiter', 'request_new_evidence_from_user', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $code, 'target_tg_id' => $userId]);
 
         $this->seedEvidenceWizard($botTenant->key, (int) $userId, $offer->code);
-        $cancelMenu = [[['text' => '❌ ' . $this->t('zentrotraderbot::bot.options.cancel'), 'callback_data' => '/wizardcancel']]];
+        $cancelMenu = [[['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.cancel')), 'callback_data' => '/wizardcancel']]];
         TelegramController::sendMessage([
             'message' => [
                 'text' => $this->buildEvidenceWizardPromptText($offer, 'more'),
@@ -2527,7 +2544,7 @@ class OffersController extends Controller
             TelegramController::sendMessage([
                 'message' => [
                     'text' =>
-                        "✅ " . $this->t('zentrotraderbot::bot.offer.disputed.insufficient_thread_note') . "\n" .
+                        "✅ " . TextService::mdv2(Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_thread_note')) . "\n" .
                         "🆔 `{$userId}`",
                     'chat' => ['id' => $supportId],
                     'parse_mode' => 'MarkdownV2',
@@ -2537,10 +2554,10 @@ class OffersController extends Controller
         }
 
         return [
-            'text' => '✅ ' . $this->t('zentrotraderbot::bot.offer.disputed.insufficient_sent'),
+            'text' => '✅ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.offer.disputed.insufficient_sent')),
             'chat' => ['id' => $bot->actor->user_id],
             'editprevious' => 1,
-            'reply_markup' => json_encode(['inline_keyboard' => [[['text' => '↖️ ' . $this->t('telegrambot::bot.options.backtomainmenu'), 'callback_data' => 'menu']]]]),
+            'reply_markup' => json_encode(['inline_keyboard' => [[['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu']]]]),
         ];
     }
 
@@ -2552,7 +2569,7 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer || strtoupper($offer->status) !== 'DISPUTED') {
-            return ['text' => '❌ ' . $this->t('zentrotraderbot::bot.sign_offer.not_found'), 'chat' => ['id' => $bot->actor->user_id]];
+            return ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.sign_offer.not_found')), 'chat' => ['id' => $bot->actor->user_id]];
         }
 
         $botTenant = app('active_bot');
@@ -2564,11 +2581,11 @@ class OffersController extends Controller
 
         $counterpartId = ((string) $userId === $buyerTgId) ? $sellerTgId : $buyerTgId;
         if (!$counterpartId) {
-            return ['text' => '❌ ' . $this->t('zentrotraderbot::bot.sign_offer.account_not_found'), 'chat' => ['id' => $bot->actor->user_id]];
+            return ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.sign_offer.account_not_found')), 'chat' => ['id' => $bot->actor->user_id]];
         }
 
         $this->seedEvidenceWizard($botTenant->key, (int) $counterpartId, $offer->code);
-        $cancelMenu = [[['text' => '❌ ' . $this->t('zentrotraderbot::bot.options.cancel'), 'callback_data' => '/wizardcancel']]];
+        $cancelMenu = [[['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.cancel')), 'callback_data' => '/wizardcancel']]];
         TelegramController::sendMessage([
             'message' => [
                 'text' => $this->buildEvidenceWizardPromptText($offer, 'more'),
@@ -2584,7 +2601,7 @@ class OffersController extends Controller
             TelegramController::sendMessage([
                 'message' => [
                     'text' =>
-                        "✅ " . $this->t('zentrotraderbot::bot.offer.disputed.ctrpart_thread_note') . "\n" .
+                        "✅ " . TextService::mdv2(Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_thread_note')) . "\n" .
                         "🆔 `{$counterpartId}`",
                     'chat' => ['id' => $supportId],
                     'parse_mode' => 'MarkdownV2',
@@ -2594,10 +2611,10 @@ class OffersController extends Controller
         }
 
         return [
-            'text' => '✅ ' . $this->t('zentrotraderbot::bot.offer.disputed.ctrpart_sent'),
+            'text' => '✅ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.offer.disputed.ctrpart_sent')),
             'chat' => ['id' => $bot->actor->user_id],
             'editprevious' => 1,
-            'reply_markup' => json_encode(['inline_keyboard' => [[['text' => '↖️ ' . $this->t('telegrambot::bot.options.backtomainmenu'), 'callback_data' => 'menu']]]]),
+            'reply_markup' => json_encode(['inline_keyboard' => [[['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu']]]]),
         ];
     }
 
@@ -2609,7 +2626,7 @@ class OffersController extends Controller
     {
         $offer = Offers::findByCode($code);
         if (!$offer || strtoupper($offer->status) !== 'DISPUTED') {
-            return ['text' => '❌ ' . $this->t('zentrotraderbot::bot.sign_offer.not_found'), 'chat' => ['id' => $bot->actor->user_id]];
+            return ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.sign_offer.not_found')), 'chat' => ['id' => $bot->actor->user_id]];
         }
 
         $botTenant = app('active_bot');
@@ -2633,8 +2650,8 @@ class OffersController extends Controller
             });
 
             $sideLabel = $side === 'buyer'
-                ? $this->t('zentrotraderbot::bot.offer.disputed.btn_favor_buyer')
-                : $this->t('zentrotraderbot::bot.offer.disputed.btn_favor_seller');
+                ? TextService::mdv2(Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer'))
+                : TextService::mdv2(Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller'));
             $this->logOfferAction($offer, 'arbiter', 'solve_dispute', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $code, 'side' => $side, 'winner_address' => $winnerAddress, 'tx_hash' => $txHash]);
             $threadId = $offer->data['dispute']['thread_id'] ?? null;
             $supportId = env('TRADER_BOT_SUPPORT');
@@ -2642,7 +2659,7 @@ class OffersController extends Controller
             if ($threadId && $supportId) {
                 TelegramController::sendMessage([
                     'message' => [
-                        'text' => "⚖️ *" . $this->t('zentrotraderbot::bot.offer.disputed.solved_thread') . "*\n"
+                        'text' => "⚖️ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.offer.disputed.solved_thread')) . "*\n"
                             . "🆔 `{$offer->code}`\n"
                             . "🏆 " . TextService::mdv2($sideLabel) . "\n"
                             . "🔗 `{$txHash}`",
@@ -2654,15 +2671,15 @@ class OffersController extends Controller
             }
 
             return [
-                'text' => "✅ *" . $this->t('zentrotraderbot::bot.offer.disputed.solved_done') . "*\n🔗 `{$txHash}`",
+                'text' => "✅ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.offer.disputed.solved_done')) . "*\n🔗 `{$txHash}`",
                 'chat' => ['id' => $bot->actor->user_id],
                 'editprevious' => 1,
-                'reply_markup' => json_encode(['inline_keyboard' => [[['text' => '↖️ ' . $this->t('telegrambot::bot.options.backtomainmenu'), 'callback_data' => 'menu']]]]),
+                'reply_markup' => json_encode(['inline_keyboard' => [[['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu']]]]),
             ];
         } catch (\Throwable $e) {
             Log::error('solveDispute error: ' . $e->getMessage());
             return [
-                'text' => '❌ ' . $this->t('zentrotraderbot::bot.sign_offer.error') . ' ' . $e->getMessage(),
+                'text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.sign_offer.error')) . ' ' . $e->getMessage(),
                 'chat' => ['id' => $bot->actor->user_id],
             ];
         }
@@ -2677,8 +2694,8 @@ class OffersController extends Controller
             "text" => "",
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "⬅️ " . $this->t("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
-                    [["text" => "↖️ " . $this->t("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                    [["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.backtop2pmenu")), "callback_data" => "/p2pmenu"]],
+                    [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]]
                 ],
             ]),
         ];
@@ -2690,19 +2707,19 @@ class OffersController extends Controller
             $offer = Offers::findByCode($code);
 
             if (!$offer) {
-                $reply["text"] = "⚠️ " . $this->t("zentrotraderbot::bot.delete_offer.not_found");
+                $reply["text"] = "⚠️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.delete_offer.not_found"));
                 return $reply;
             }
 
             // 2. Validar propiedad: Solo el creador puede cancelarla
             if ((int) $offer->user_id !== $userId) {
-                $reply["text"] = "🚫 " . $this->t("zentrotraderbot::bot.delete_offer.no_permission");
+                $reply["text"] = "🚫 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.delete_offer.no_permission"));
                 return $reply;
             }
 
             // 3. Verificar que esté abierta (Si ya hay un Escrow LOCK, no se puede cancelar así)
             if (strtoupper($offer->status) !== 'OPEN') {
-                $reply["text"] = "🛑 " . $this->t("zentrotraderbot::bot.delete_offer.wrong_state");
+                $reply["text"] = "🛑 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.delete_offer.wrong_state"));
                 return $reply;
             }
 
@@ -2726,14 +2743,14 @@ class OffersController extends Controller
                 'updated_at' => now(),
             ]);
 
-            $reply["text"] = "✅ *" . $this->t("zentrotraderbot::bot.delete_offer.success_title") . "*\n" .
-                "_" . $this->t("zentrotraderbot::bot.delete_offer.success") . "_\n\n" .
-                "👇 " . $this->t("telegrambot::bot.prompts.whatsnext");
+            $reply["text"] = "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.delete_offer.success_title")) . "*\n" .
+                "_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.delete_offer.success")) . "_\n\n" .
+                "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext"));
 
         } catch (\Exception $e) {
             Log::error("🆘 Error cancelando oferta {$code}: " . $e->getMessage());
 
-            $reply["text"] = "❌ " . $this->t("zentrotraderbot::bot.delete_offer.error");
+            $reply["text"] = "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.delete_offer.error"));
         }
 
 
