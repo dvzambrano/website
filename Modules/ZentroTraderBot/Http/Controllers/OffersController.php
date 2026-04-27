@@ -493,6 +493,56 @@ class OffersController extends Controller
         ];
     }
 
+    /**
+     * Queries the on-chain state for an active trade and updates the DB if it has drifted.
+     * Covers missed webhook events (cancelled, completed, disputed) so the user always
+     * sees buttons that match what the smart contract will actually accept.
+     *
+     * TradeState enum:  0=LOCKED  1=COMPLETED  2=CANCELLED  3=DISPUTED
+     */
+    private function syncWithOnchain(Offers $offer): void
+    {
+        $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+        $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+        $escrow = new EscrowController();
+
+        try {
+            $onchainTrade = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $offer) {
+                return $escrow->getTradeById(
+                    $rpc,
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $offer->id,
+                    env('ETHERSCAN_API_KEY')
+                );
+            });
+
+            if (!$onchainTrade)
+                return;
+
+            $onchainStatus = match ((int) $onchainTrade['state']) {
+                0 => ($onchainTrade['sellerSigned'] || $onchainTrade['buyerSigned']) ? 'signed' : 'locked',
+                1 => 'completed',
+                2 => 'cancelled',
+                3 => 'disputed',
+                default => null,
+            };
+
+            if ($onchainStatus === null || $onchainStatus === strtolower($offer->status))
+                return;
+
+            Log::warning("⚠️ OffersController syncWithOnchain: state mismatch for {$offer->code}", [
+                'db' => $offer->status,
+                'onchain' => $onchainStatus,
+            ]);
+
+            $offer->updateStatus($onchainStatus);
+
+        } catch (\Exception $e) {
+            Log::warning("⚠️ OffersController syncWithOnchain failed for {$offer->code}: " . $e->getMessage());
+        }
+    }
+
     public function showOffer($bot, $code, $menu = false)
     {
         $blockchain = new BlockchainController();
@@ -510,12 +560,18 @@ class OffersController extends Controller
                 "DH"
             );
 
-            $isSell      = strtolower($offer->type) == "sell";
-            $isOwner     = $bot->actor->user_id == $offer->user_id;
+            $isSell = strtolower($offer->type) == "sell";
+            $isOwner = $bot->actor->user_id == $offer->user_id;
             $offerStatus = strtolower($offer->status);
 
+            // Sync on-chain state for active trades to detect missed events
+            if (\in_array($offerStatus, ['locked', 'signed', 'expired'])) {
+                $this->syncWithOnchain($offer);
+                $offerStatus = strtolower($offer->status);
+            }
+
             $statusEmoji = Offers::getStatusEmoji($offer->status);
-            $icon        = $offerStatus === 'open'
+            $icon = $offerStatus === 'open'
                 ? ($isSell ? "🟥" : "🟩")
                 : $statusEmoji["color"];
             $statusTitle = Offers::getStatusTitle($offer->status, $diff);
@@ -529,8 +585,8 @@ class OffersController extends Controller
             if (in_array($offerStatus, ['locked', 'signed', 'disputed', 'expired'])) {
                 $sub = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
                 if ($sub) {
-                    $wallet  = strtolower($sub->data['wallet']['address'] ?? '');
-                    $isBuyer  = $wallet !== '' && $wallet === strtolower($offer->buyer_address  ?? '');
+                    $wallet = strtolower($sub->data['wallet']['address'] ?? '');
+                    $isBuyer = $wallet !== '' && $wallet === strtolower($offer->buyer_address ?? '');
                     $isSeller = $wallet !== '' && $wallet === strtolower($offer->seller_address ?? '');
                 }
             }
@@ -542,7 +598,7 @@ class OffersController extends Controller
                             ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.delete_offer"), "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"],
                         ]);
                     else {
-                        $total     = number_format(($offer->amount * $offer->price_per_usd), 2);
+                        $total = number_format(($offer->amount * $offer->price_per_usd), 2);
                         $btnAction = $isSell ? "✅ Comprar" : "💰 Vender";
                         array_push($menu, [
                             ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"],
@@ -556,7 +612,7 @@ class OffersController extends Controller
                             ["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer {$offer->code}"],
                         ]);
                         array_push($menu, [
-                            ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"),  "callback_data" => "/disputebybuyer {$offer->code}"],
+                            ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$offer->code}"],
                             ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_seller"), "callback_data" => "/startchat {$offer->code}"],
                         ]);
                         array_push($menu, [
@@ -577,14 +633,14 @@ class OffersController extends Controller
                     if ($isBuyer) {
                         // Comprobante enviado, esperando confirmación del vendedor
                         array_push($menu, [
-                            ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"),  "callback_data" => "/disputebybuyer {$offer->code}"],
+                            ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebybuyer {$offer->code}"],
                             ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_seller"), "callback_data" => "/startchat {$offer->code}"],
                         ]);
                     } elseif ($isSeller) {
                         // El comprador ya envió su comprobante
                         array_push($menu, [
                             ["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
-                            ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.not_received"),     "callback_data" => "/notreceived {$offer->code}"],
+                            ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.not_received"), "callback_data" => "/notreceived {$offer->code}"],
                         ]);
                         array_push($menu, [
                             ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebyseller {$offer->code}"],
@@ -599,7 +655,7 @@ class OffersController extends Controller
                     ]);
                     $chatBtn = $isBuyer
                         ? ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_seller"), "callback_data" => "/startchat {$offer->code}"]
-                        : ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"),  "callback_data" => "/startchat {$offer->code}"];
+                        : ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"];
                     array_push($menu, [$chatBtn]);
                     break;
 
