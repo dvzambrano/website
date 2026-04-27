@@ -402,20 +402,19 @@ return [
     // =========================================================
     // SHOW — Mostrar una oferta
     // =========================================================
-
     "show_offer" => [
         "status_title" => [
-            "new"       => "¡NUEVA OFERTA",
-            "recent"    => "OFERTA RECIENTE",
+            "new" => "NUEVA OFERTA",
+            "recent" => "OFERTA RECIENTE",
             "available" => "OFERTA DISPONIBLE",
-            "locked"    => "OFERTA EN CURSO",
-            "signed"    => "OFERTA EN CURSO",
-            "disputed"  => "OFERTA EN DISPUTA",
-            "solved"    => "DISPUTA RESUELTA",
-            "expired"   => "OFERTA EXPIRADA",
+            "locked" => "OFERTA EN CURSO",
+            "signed" => "OFERTA EN CURSO",
+            "disputed" => "OFERTA EN DISPUTA",
+            "solved" => "DISPUTA RESUELTA",
+            "expired" => "OFERTA EXPIRADA",
             "cancelled" => "OFERTA CANCELADA",
             "completed" => "OFERTA COMPLETADA",
-            "default"   => "OFERTA ACTUALIZADA",
+            "default" => "OFERTA ACTUALIZADA",
         ],
         "not_found_title" => "Que raro",
         "not_found" => "No he encontrado la oferta",

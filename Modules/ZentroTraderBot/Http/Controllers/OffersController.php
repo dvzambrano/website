@@ -791,7 +791,7 @@ class OffersController extends Controller
         $deadline = time() + 3600; // 1 hora de validez para el Permit
 
         // ESTADO 1: Preparación Criptográfica (Local y rápido)
-        $this->updateStatus($bot, "⌛️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step1")) . "*");
+        $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step1")));
 
         if (env("DEBUG_MODE", false))
             Log::debug("🐞 OffersController applyForOffer:", [
@@ -807,7 +807,7 @@ class OffersController extends Controller
         try {
             $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($bot, $escrow, $key, $offer, $amountWei, $buyerAddress, $deadline, $network, $relayerKey, $tokenInfo) {
 
-                $this->updateStatus($bot, "⌛️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step2")) . "*");
+                $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step2")));
 
                 return $escrow->createTradeWithSignature(
                     $rpc,
@@ -836,7 +836,7 @@ class OffersController extends Controller
                 return false;
             }
 
-            $this->updateStatus($bot, "⌛️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step3")) . "*");
+            $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step3")));
 
             // NOTA: No liberamos el $lockKey aquí, dejamos que expire o
             // que el Listener lo haga al confirmar, para evitar "clicks" rápidos.
@@ -854,7 +854,7 @@ class OffersController extends Controller
 
             // Manejo de error "ID already exists" (Transacción enviada pero error en respuesta RPC)
             if (str_contains($e->getMessage(), 'ID already exists')) {
-                $this->updateStatus($bot, "⌛️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step3")) . "*");
+                $this->updateStatus($bot, "⌛️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.apply_offer.step3")));
                 return true;
             }
 
