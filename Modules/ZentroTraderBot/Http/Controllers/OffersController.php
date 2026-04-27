@@ -1246,13 +1246,13 @@ class OffersController extends Controller
             }
 
             $this->logOfferAction($offer, 'seller', 'payment_confirmed', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'tx_hash' => $txHash]);
-            $this->updateStatus($bot, "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.confirmation_sent")) . "*");
+            $this->updateStatus($bot, "✔️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.confirmation_sent")));
             return $txHash;
 
         } catch (\Exception $e) {
             if (str_contains($e->getMessage(), 'ID already exists')) {
                 $this->logOfferAction($offer, 'seller', 'payment_confirmed', $bot->actor->user_id, $bot->message['text'] ?? '', ['code' => $offer->code, 'note' => 'already_exists']);
-                $this->updateStatus($bot, "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.confirmation_sent")) . "*");
+                $this->updateStatus($bot, "✔️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.confirmation_sent")));
                 return true;
             }
             $this->updateStatus($bot, "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.sign_offer.error")) . "*\n" . $e->getMessage());
