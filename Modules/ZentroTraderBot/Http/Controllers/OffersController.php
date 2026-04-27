@@ -2285,41 +2285,11 @@ class OffersController extends Controller
             return ["text" => ""];
 
         $role = $isBuyer ? 'buyer' : 'seller';
-        $counterpart = TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.counterpart_" . ($isBuyer ? 'seller' : 'buyer')));
         $botTenant = app('active_bot');
-        $chatKey = "chat_{$botTenant->key}_{$bot->actor->user_id}";
 
-        $exitBtn = [[["text" => "🚪 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.exit_btn")), "callback_data" => "/exitchat"]]];
+        $this->enterChatMode((int) $bot->actor->user_id, $role, $code, $botTenant);
 
-        // Send pinnable reminder message
-        $reminderText = "💬 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.active.line1", ['counterpart' => $counterpart])) . "*\n"
-            . "📡 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.active.line2")) . "_\n"
-            . "👇 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.active.line3"));
-        $raw = TelegramController::sendMessage([
-            "message" => [
-                "text" => $reminderText,
-                "chat" => ["id" => $bot->actor->user_id],
-                "parse_mode" => "MarkdownV2",
-                "reply_markup" => json_encode(["inline_keyboard" => $exitBtn]),
-            ],
-        ], $botTenant->token);
-
-        $pinnedMsgId = json_decode($raw, true)['result']['message_id'] ?? null;
-        if ($pinnedMsgId) {
-            TelegramController::pinMessage([
-                "message" => ["chat" => ["id" => $bot->actor->user_id], "message_id" => $pinnedMsgId],
-            ], $botTenant->token);
-        }
-
-        Cache::put($chatKey, [
-            'offer_code' => $code,
-            'role' => $role,
-            'pinned_message_id' => $pinnedMsgId,
-        ], now()->addHours(24));
-
-        return [
-            "text" => "",
-        ];
+        return ["text" => ""];
     }
 
     public function chatRelay($bot)
@@ -2367,6 +2337,11 @@ class OffersController extends Controller
         ]);
 
         $this->forwardChatMessage($bot->message, $prefix, $counterpartId, $replyMarkup, $botTenant->token);
+
+        // Auto-activate counterpart into chat mode if they haven't entered yet
+        if (!Cache::has("chat_{$botTenant->key}_{$counterpartId}")) {
+            $this->enterChatMode($counterpartId, $counterpartRole, $offer->code, $botTenant);
+        }
 
         // If DISPUTED, also relay to dispute thread
         if (strtoupper($offer->status) === 'DISPUTED') {
@@ -2439,6 +2414,39 @@ class OffersController extends Controller
                 ])
             ], $token);
         }
+    }
+
+    private function enterChatMode(int $userId, string $role, string $offerCode, object $botTenant): void
+    {
+        $counterpartRole = $role === 'buyer' ? 'seller' : 'buyer';
+        $counterpartLabel = TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.counterpart_{$counterpartRole}"));
+        $exitBtn = [[["text" => "🚪 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.exit_btn")), "callback_data" => "/exitchat"]]];
+
+        $reminderText = "💬 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.active.line1", ['counterpart' => $counterpartLabel])) . "*\n"
+            . "📡 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.active.line2")) . "_\n"
+            . "👇 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.active.line3"));
+
+        $raw = TelegramController::sendMessage([
+            "message" => [
+                "text" => $reminderText,
+                "chat" => ["id" => $userId],
+                "parse_mode" => "MarkdownV2",
+                "reply_markup" => json_encode(["inline_keyboard" => $exitBtn]),
+            ],
+        ], $botTenant->token);
+
+        $pinnedMsgId = json_decode($raw, true)['result']['message_id'] ?? null;
+        if ($pinnedMsgId) {
+            TelegramController::pinMessage([
+                "message" => ["chat" => ["id" => $userId], "message_id" => $pinnedMsgId],
+            ], $botTenant->token);
+        }
+
+        Cache::put("chat_{$botTenant->key}_{$userId}", [
+            'offer_code' => $offerCode,
+            'role' => $role,
+            'pinned_message_id' => $pinnedMsgId,
+        ], now()->addHours(24));
     }
 
     public function exitChat($bot)
