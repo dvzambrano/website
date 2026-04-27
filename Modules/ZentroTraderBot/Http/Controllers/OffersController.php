@@ -513,40 +513,94 @@ class OffersController extends Controller
             $text = $offer->renderAsTelegramMessage("{$title} *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.show_offer.offer_label")) . "*", $isOwner, "", true);
             $text .= "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext"));
 
+            // Determinar rol real (comprador/vendedor) por dirección de wallet
+            $isBuyer = false;
+            $isSeller = false;
+            $offerStatus = strtolower($offer->status);
+            if (in_array($offerStatus, ['locked', 'signed', 'disputed', 'expired'])) {
+                $sub = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+                if ($sub) {
+                    $wallet  = strtolower($sub->data['wallet']['address'] ?? '');
+                    $isBuyer  = $wallet !== '' && $wallet === strtolower($offer->buyer_address  ?? '');
+                    $isSeller = $wallet !== '' && $wallet === strtolower($offer->seller_address ?? '');
+                }
+            }
 
-            switch ($offer->status) {
+            switch ($offerStatus) {
                 case 'open':
                     if ($isOwner)
                         array_push($menu, [
-                            ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.delete_offer")), "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"]
+                            ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.delete_offer"), "callback_data" => "confirmation|deleteoffer-{$offer->code}|menu"],
                         ]);
                     else {
-                        $total = number_format(($offer->amount * $offer->price_per_usd), 2);
+                        $total     = number_format(($offer->amount * $offer->price_per_usd), 2);
                         $btnAction = $isSell ? "✅ Comprar" : "💰 Vender";
                         array_push($menu, [
-                            ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"]
+                            ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"],
                         ]);
                     }
                     break;
+
                 case 'locked':
-                    if ($isOwner)
+                    if ($isBuyer) {
                         array_push($menu, [
-                            ["text" => "⏱️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.recover_offer.ready_button")), "callback_data" => "/recoveroffer {$offer->code}"]
-                        ]);
-                    else {
-                        array_push($menu, [
-                            ["text" => "🧾 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.send_proof")), "callback_data" => "/comprobantoffer " . $offer->code]
+                            ["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer {$offer->code}"],
                         ]);
                         array_push($menu, [
-                            ["text" => "❌ " . TextService::mdv2(Lang::get("telegrambot::bot.options.cancel")), "callback_data" => "/canceloffer " . $offer->code]
+                            ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"),  "callback_data" => "/disputebybuyer {$offer->code}"],
+                            ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_seller"), "callback_data" => "/startchat {$offer->code}"],
+                        ]);
+                        array_push($menu, [
+                            ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "/canceloffer {$offer->code}"],
+                        ]);
+                    } elseif ($isSeller) {
+                        array_push($menu, [
+                            ["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.recover_offer.ready_button"), "callback_data" => "/recoveroffer {$offer->code}"],
+                        ]);
+                        array_push($menu, [
+                            ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebyseller {$offer->code}"],
+                            ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"],
                         ]);
                     }
                     break;
+
+                case 'signed':
+                    if ($isBuyer) {
+                        // Comprobante enviado, esperando confirmación del vendedor
+                        array_push($menu, [
+                            ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"),  "callback_data" => "/disputebybuyer {$offer->code}"],
+                            ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_seller"), "callback_data" => "/startchat {$offer->code}"],
+                        ]);
+                    } elseif ($isSeller) {
+                        // El comprador ya envió su comprobante
+                        array_push($menu, [
+                            ["text" => "👍 " . Lang::get("zentrotraderbot::bot.options.confirm_received"), "callback_data" => "/signoffer {$offer->code}"],
+                            ["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.not_received"),     "callback_data" => "/notreceived {$offer->code}"],
+                        ]);
+                        array_push($menu, [
+                            ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebyseller {$offer->code}"],
+                            ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"],
+                        ]);
+                    }
+                    break;
+
                 case 'disputed':
                     array_push($menu, [
-                        ["text" => "🧾 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.send_evidence")), "callback_data" => "/evidenceoffer " . $offer->code],
+                        ["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_evidence"), "callback_data" => "/evidenceoffer {$offer->code}"],
                     ]);
+                    $chatBtn = $isBuyer
+                        ? ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_seller"), "callback_data" => "/startchat {$offer->code}"]
+                        : ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"),  "callback_data" => "/startchat {$offer->code}"];
+                    array_push($menu, [$chatBtn]);
                     break;
+
+                case 'expired':
+                    if ($isSeller)
+                        array_push($menu, [
+                            ["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.recover_offer.ready_button"), "callback_data" => "/recoveroffer {$offer->code}"],
+                        ]);
+                    break;
+
                 default:
                     break;
             }
