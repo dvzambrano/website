@@ -78,9 +78,9 @@ return [
 
     "chat" => [
         "active" => [
-            "line1" => "Estás en modo chat con :counterpart.",
-            "line2" => "Todo lo que envíes será transmitido anónimamente.",
-            "line3" => "Usa el botón para salir.",
+            "line1" => "Estás en modo chat con :counterpart",
+            "line2" => "Todo lo que envíes será transmitido anónimamente",
+            "line3" => "Usa el botón para salir",
         ],
         "exit_btn" => "Salir del chat",
         "reply_btn" => "Responder",
