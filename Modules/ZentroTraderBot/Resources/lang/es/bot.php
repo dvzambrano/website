@@ -77,10 +77,13 @@ return [
     // =========================================================
 
     "chat" => [
-        "mode_active" => "Estás en modo chat con :counterpart. Todo lo que envíes será transmitido anónimamente. Usa el botón para salir.",
+        "active" => [
+            "line1" => "Estás en modo chat con :counterpart.",
+            "line2" => "Todo lo que envíes será transmitido anónimamente.",
+            "line3" => "Usa el botón para salir.",
+        ],
         "exit_btn" => "Salir del chat",
         "reply_btn" => "Responder",
-        "started" => "Modo chat activo. Todo lo que escribas o envíes llegará a :counterpart de forma anónima.",
         "exited" => "Has salido del modo chat.",
         "message_sent" => "Mensaje enviado.",
         "buyer_says" => "El comprador dice",

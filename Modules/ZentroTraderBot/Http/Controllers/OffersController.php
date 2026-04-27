@@ -2292,8 +2292,9 @@ class OffersController extends Controller
         $exitBtn = [[["text" => "🚪 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.exit_btn")), "callback_data" => "/exitchat"]]];
 
         // Send pinnable reminder message
-        $reminderText = "💬 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.mode_active", ['counterpart' => $counterpart])) . "*\n"
-            . "\n";
+        $reminderText = "💬 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.active.line1", ['counterpart' => $counterpart])) . "*\n"
+            . "📡 _" . Lang::get("zentrotraderbot::bot.chat.active.line2") . "_\n"
+            . "👇 " . Lang::get("zentrotraderbot::bot.chat.active.line3");
         $raw = TelegramController::sendMessage([
             "message" => [
                 "text" => $reminderText,
@@ -2317,8 +2318,7 @@ class OffersController extends Controller
         ], now()->addHours(24));
 
         return [
-            "text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.started", ['counterpart' => $counterpart])),
-            "chat" => ["id" => $bot->actor->user_id],
+            "text" => "",
         ];
     }
 
@@ -2378,7 +2378,7 @@ class OffersController extends Controller
         }
 
         return [
-            "text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.message_sent")),
+            "text" => "✔️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.message_sent")) . "_",
             "chat" => ["id" => $bot->actor->user_id],
         ];
     }
