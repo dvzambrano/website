@@ -2318,7 +2318,8 @@ class OffersController extends Controller
         ], now()->addHours(24));
 
         return [
-            "text" => "",
+            "text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.chat.started", ['counterpart' => $counterpart])),
+            "chat" => ["id" => $bot->actor->user_id],
         ];
     }
 

@@ -84,6 +84,7 @@ return [
         ],
         "exit_btn" => "Salir del chat",
         "reply_btn" => "Responder",
+        "started" => "Modo chat activo. Todo lo que escribas o envíes llegará a :counterpart de forma anónima.",
         "exited" => "Has salido del modo chat.",
         "message_sent" => "Mensaje enviado.",
         "buyer_says" => "El comprador dice",
