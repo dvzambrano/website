@@ -45,7 +45,6 @@ class PaymentMethodsController extends Controller
 
         $text = $bot->message['text'] ?? null;
         $userId = $bot->actor->user_id;
-        $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
 
         // El comando que abrió el wizard no es un dato válido
         if ($text === self::TRIGGER_COMMAND) {
@@ -100,7 +99,7 @@ class PaymentMethodsController extends Controller
                 "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.next_hint")) . "_",
             "chat"         => ["id" => $userId],
             "reply_markup" => json_encode(["inline_keyboard" => [$navButtons]]),
-            "editprevious" => $isCallback ? 1 : 0,
+            "editprevious" => 1,
         ];
     }
 
@@ -134,7 +133,7 @@ class PaymentMethodsController extends Controller
                     [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
                 ],
             ]),
-            "editprevious" => $isCallback ? 1 : 0,
+            "editprevious" => 1,
         ];
     }
 
@@ -154,7 +153,7 @@ class PaymentMethodsController extends Controller
                     [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
                 ],
             ]),
-            "editprevious" => $isCallback ? 1 : 0,
+            "editprevious" => 1,
         ];
     }
 
