@@ -603,6 +603,7 @@ return [
         "ask_details" => "Escriba sus datos de :method (correo, número de cuenta, teléfono, etc.) y pulse Enter para guardar.",
         "next_hint" => "Pulse Siguiente para saltar este método sin modificarlo.",
         "next" => "Siguiente",
+        "clear" => "Limpiar",
     ],
 
     // =========================================================

@@ -12,7 +12,6 @@ use Modules\Laravel\Services\TextService;
 
 class PaymentMethodsController extends Controller
 {
-    // Texto que inicia el wizard; no debe tratarse como datos del usuario
     private const TRIGGER_COMMAND = '/p2ppaymentmethods';
 
     public function wizard($bot)
@@ -31,11 +30,11 @@ class PaymentMethodsController extends Controller
         }
 
         return (new WizardController())->run($bot, $steps, [
-            'controller' => self::class,
-            'method'     => 'wizard',
+            'controller'  => self::class,
+            'method'      => 'wizard',
             'initialData' => [],
-            'onComplete' => fn($b, $_s) => $self->completedResponse($b),
-            'onCancel'   => fn($b) => $self->cancelResponse($b),
+            'onComplete'  => fn($b, $_s) => $self->completedResponse($b),
+            'onCancel'    => fn($b) => $self->cancelResponse($b),
         ]);
     }
 
@@ -43,7 +42,7 @@ class PaymentMethodsController extends Controller
     {
         $this->deleteUserText($bot);
 
-        $text = $bot->message['text'] ?? null;
+        $text   = $bot->message['text'] ?? null;
         $userId = $bot->actor->user_id;
 
         // El comando que abrió el wizard no es un dato válido
@@ -51,9 +50,19 @@ class PaymentMethodsController extends Controller
             $text = null;
         }
 
-        // Botón "Siguiente": avanza sin guardar nada nuevo para este método
+        // Botón "Siguiente": avanza sin modificar este método
         if ($text === '/wizardnext') {
             return ['__advance' => true, 'merge' => []];
+        }
+
+        // Botón "Limpiar": elimina el dato guardado y refresca el mismo paso
+        if ($text === '/wizardclear') {
+            $this->clearMethodForUser($userId, $method);
+            return [
+                '__update' => true,
+                'merge'    => [],
+                'response' => $this->buildStepPrompt($userId, $method, $stepNum, $total, null),
+            ];
         }
 
         // El usuario escribió sus datos → guardar inmediatamente y avanzar
@@ -62,10 +71,15 @@ class PaymentMethodsController extends Controller
             return ['__advance' => true, 'merge' => []];
         }
 
-        // Renderizar el prompt para este método
+        // Render inicial del prompt (fetch fresco de DB para mostrar el valor actual)
         $suscriptor = Suscriptions::where('user_id', $userId)->first();
-        $existing = $suscriptor->data['payment_methods'][$method->identifier]['details'] ?? null;
+        $existing   = $suscriptor->data['payment_methods'][$method->identifier]['details'] ?? null;
 
+        return $this->buildStepPrompt($userId, $method, $stepNum, $total, $existing);
+    }
+
+    private function buildStepPrompt(int $userId, $method, int $stepNum, int $total, ?string $existing): array
+    {
         $currentValueLine = $existing
             ? "\n▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.current_value")) . ": `" . TextService::mdv2($existing) . "`"
             : "\n▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.not_configured")) . "_";
@@ -75,6 +89,12 @@ class PaymentMethodsController extends Controller
             $navButtons[] = [
                 "text"          => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.back")),
                 "callback_data" => "/wizardprevious",
+            ];
+        }
+        if ($existing) {
+            $navButtons[] = [
+                "text"          => "🗑️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.clear")),
+                "callback_data" => "/wizardclear",
             ];
         }
         $navButtons[] = [
@@ -87,7 +107,7 @@ class PaymentMethodsController extends Controller
         ];
 
         return [
-            "text" =>
+            "text"         =>
                 "💳 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.title")) . "*\n" .
                 "◾️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", [
                     'n'     => TextService::getNumberAsEmoji($stepNum),
@@ -117,12 +137,21 @@ class PaymentMethodsController extends Controller
         $suscriptor->update(['data' => $data]);
     }
 
+    private function clearMethodForUser(int $userId, $method): void
+    {
+        $suscriptor = Suscriptions::where('user_id', $userId)->first();
+        if (!$suscriptor) return;
+
+        $data = $suscriptor->data ?? [];
+        unset($data['payment_methods'][$method->identifier]);
+        $suscriptor->update(['data' => $data]);
+    }
+
     private function completedResponse($bot): array
     {
         $userId = $bot->actor->user_id;
-        $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
         return [
-            "text" =>
+            "text"         =>
                 "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.saved_title")) . "*\n" .
                 "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.saved_body")) . "_\n\n" .
                 "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext")),
@@ -140,9 +169,8 @@ class PaymentMethodsController extends Controller
     private function cancelResponse($bot): array
     {
         $userId = $bot->actor->user_id;
-        $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
         return [
-            "text" =>
+            "text"         =>
                 "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.cancelled_title")) . "*\n" .
                 "_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.cancelled")) . "_\n\n" .
                 "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext")),
