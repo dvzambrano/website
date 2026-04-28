@@ -17,6 +17,7 @@ use Modules\ZentroTraderBot\Jobs\SendRecoverReminder;
 use Modules\ZentroTraderBot\Http\Controllers\OffersController;
 use Modules\Laravel\Services\TextService;
 use Illuminate\Support\Facades\Log;
+use Modules\ZentroTraderBot\Http\Controllers\OffersAlertsController;
 
 class OfferObserver
 {
@@ -28,6 +29,8 @@ class OfferObserver
         $bot = app('active_bot');
 
         UpdateOfferInChannel::dispatch($bot->key, $offer->code);
+
+        OffersAlertsController::notifyMatchingAlerts($offer, $bot->token);
     }
 
     /**

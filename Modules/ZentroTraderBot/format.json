@@ -1,30 +1,58 @@
 {
-    "code": { "prefix": "L", "suffix": "9" },
-    "channel": { "message_id": 241 },
+    "code": { "prefix": "Q", "suffix": "C" },
+    "channel": [],
     "apply": { "user_id": 7682020688 },
     "blockchain_events": {
         "TRADECREATED": {
-            "tx_hash": "0xce6559a939afbbf002e148f19073da8c9b60fd7983dfd8d7b348dc2eab1e59fd",
-            "pending_at": "2026-04-12T16:41:01.442277Z",
-            "confirmed_at": "2026-04-12T16:43:29.959070Z"
+            "tx_hash": "0x64560c2b1d7217bff75486e600c6997f386c6c53c8f56e9f37169d41133ac995",
+            "pending_at": "2026-04-27 20:24:16",
+            "confirmed_at": "2026-04-27 20:25:36"
         },
-        "TRADEEXPIRED": {
-            "tx_hash": "0x66e449ecfc4504c6f5ecd7ec39bb8ce8980ff02f9c2cda854c4b7ff76661260f",
-            "pending_at": "2026-04-12T17:44:21.849706Z",
-            "confirmed_at": "2026-04-12T17:46:51.403264Z"
+        "TRADESIGNED": {
+            "tx_hash": "0x616403be41c2022e0f00ceb884886c3b5598bce2c269e90f0e3f1bd448be6025",
+            "pending_at": "2026-04-27 20:28:40",
+            "confirmed_at": "2026-04-27 20:31:11"
         },
-        "DISPUTEOPENED": {
-            "tx_hash": "0x66e449ecfc4504c6f5ecd7ec39bb8ce8980ff02f9c2cda854c4b7ff76661260f",
-            "pending_at": "2026-04-12T17:44:22.042333Z",
-            "confirmed_at": "2026-04-12T17:46:53.464598Z"
+        "TRADECLOSED": {
+            "tx_hash": "0x616403be41c2022e0f00ceb884886c3b5598bce2c269e90f0e3f1bd448be6025",
+            "pending_at": "2026-04-27 20:28:40",
+            "confirmed_at": "2026-04-27 20:31:11"
         }
     },
-    "last_status_messages": { "816767995": 5965, "7682020688": 5966 },
-    "recover": { "message_id": 5960, "user_id": 816767995 },
-    "evidence": [
-        "AgACAgEAAxkBAAIXUWnb26X9GSwv1SNECGxDNmOthlTRAAJSDGsbgxDgRkc5BUvZoFVlAQADAgADeQADOwQ",
-        "AgACAgEAAxkBAAIXUmnb26WFCoNwZt6v_k1jg5MRTz-sAAJTDGsbgxDgRuZdJZStjcpIAQADAgADeQADOwQ",
-        "AgACAgEAAxkBAAIXU2nb26Ww_LBfiVFfdb7x8IbCnTCkAAJUDGsbgxDgRjGEZnc54-5kAQADAgADeQADOwQ",
-        "AgACAgEAAxkBAAIXVWnb27MuJo5T5T9yrzDp1R504_TwAAJVDGsbgxDgRvoQGo2q_GxNAQADAgADeQADOwQ"
-    ]
+    "last_status_messages": { "816767995": 7207, "7682020688": 7208 },
+    "evidence": {
+        "7682020688": [
+            "AgACAgEAAxkBAAIcG2nvxq5IIj9z6AoSF3JfDAhQXyMMAAJ5DGsb2YiAR_31EZBWIkHIAQADAgADeQADOwQ"
+        ]
+    },
+    "audit": [
+        {
+            "user_id": 7682020688,
+            "role": "buyer",
+            "action": "proof_submitted",
+            "callback": "proofdone Q000010C",
+            "at": "2026-04-27 20:27:29",
+            "details": { "code": "Q000010C", "image_count": 1 }
+        },
+        {
+            "user_id": 816767995,
+            "role": "seller",
+            "action": "payment_rejected",
+            "callback": "\/notreceived Q000010C",
+            "at": "2026-04-27 20:28:26",
+            "details": { "code": "Q000010C" }
+        },
+        {
+            "user_id": 816767995,
+            "role": "seller",
+            "action": "payment_confirmed",
+            "callback": "\/signoffer Q000010C",
+            "at": "2026-04-27 20:28:37",
+            "details": {
+                "code": "Q000010C",
+                "tx_hash": "0x616403be41c2022e0f00ceb884886c3b5598bce2c269e90f0e3f1bd448be6025"
+            }
+        }
+    ],
+    "signer": "0xd4b4e6dd4134ce09d910aaa3583bbe5d1172220d"
 }

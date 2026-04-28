@@ -70,6 +70,7 @@ return [
         "next" => "Siguiente",
         "message_buyer" => "Enviar mensaje al Comprador",
         "message_seller" => "Enviar mensaje al Vendedor",
+        "myalerts"       => "Alertas de Ofertas",
     ],
 
     // =========================================================
@@ -618,4 +619,78 @@ return [
         "empty_cta" => "Publica una o explora el mercado.",
         "title" => "Tus Ofertas Activas",
     ],
+
+    // =========================================================
+    // ALERTS WIZARD — Asistente de creación de alertas
+    // =========================================================
+
+    "alerts_wizard" => [
+        "title"           => "Asistente de Alertas de Ofertas",
+        "cancelled_title" => "Operación cancelada.",
+        "cancelled"       => "Has cancelado la configuración de la alerta.",
+        "step"            => "Paso :n de :total",
+        "any"             => "Cualquiera",
+        "unlimited"       => "Sin límite",
+        "step1" => [
+            "subtitle"     => "Tipo de oferta a vigilar",
+            "ask"          => "¿Sobre qué tipo de oferta quieres recibir alertas?",
+            "select"       => "Elige una opción",
+            "option_buy"   => "Oferta de Compra",
+            "option_sell"  => "Oferta de Venta",
+        ],
+        "step2" => [
+            "subtitle" => "Método de pago",
+            "ask"      => "¿Por qué método de pago quieres filtrar?",
+            "select"   => "Elige un método o selecciona cualquiera",
+            "any"      => "Cualquier método",
+        ],
+        "step3" => [
+            "subtitle" => "Precio máximo por USD",
+            "ask"      => "¿Cuál es el precio máximo que aceptas pagar por cada USD?",
+            "example"  => "Por ejemplo:",
+            "any"      => "Sin límite de precio",
+            "invalid"  => ":value no es un precio válido",
+        ],
+        "confirm" => [
+            "title"     => "Resumen de tu Alerta",
+            "type"      => "Tipo de oferta",
+            "method"    => "Método de pago",
+            "max_price" => "Precio máximo",
+            "save"      => "Guardar Alerta",
+        ],
+    ],
+
+    // =========================================================
+    // ALERTS — Listado y gestión de alertas
+    // =========================================================
+
+    "alerts" => [
+        "title"           => "Mis Alertas de Ofertas",
+        "empty"           => "No tienes alertas configuradas aún.",
+        "create"          => "Crear nueva alerta",
+        "view_mine"       => "Mis Alertas",
+        "delete"          => "Eliminar",
+        "deleted"         => "Alerta eliminada.",
+        "saved"           => "¡Tu alerta ha sido configurada!",
+        "watching"        => "Estamos observando las nuevas ofertas y te notificaremos en cuanto aparezca una que coincida con tu criterio.",
+        "type_buy"        => "Oferta de Compra",
+        "type_sell"       => "Oferta de Venta",
+        "method_any"      => "Cualquier método",
+        "price_unlimited" => "Sin límite de precio",
+        "price_max"       => "Máx. :price / USD",
+    ],
+
+    // =========================================================
+    // ALERT MATCH — Notificación de coincidencia
+    // =========================================================
+
+    "alert_match" => [
+        "title" => "Oferta encontrada",
+        "line1" => "Hay una nueva oferta que coincide con tus criterios de alerta:",
+        "view"  => "Ver Oferta",
+    ],
+
+    // =========================================================
+    // OPTIONS — nuevas entradas para el menú
+    // =========================================================
 ];

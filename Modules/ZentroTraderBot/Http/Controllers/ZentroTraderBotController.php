@@ -428,6 +428,24 @@ class ZentroTraderBotController extends JsonsController
                 return $controller->wizard($this);
             };
 
+        $this->strategies["/p2palerts"] =
+            function () {
+                $controller = new OffersAlertsController();
+                return $controller->listAlerts($this);
+            };
+
+        $this->strategies["/p2palertcreate"] =
+            function () {
+                $controller = new OffersAlertsController();
+                return $controller->wizard($this);
+            };
+
+        $this->strategies["p2palertdelete"] =
+            function () use ($array) {
+                $controller = new OffersAlertsController();
+                return $controller->deleteAlert($this, (int) $array["pieces"][1]);
+            };
+
 
         $this->strategies["/p2pbuy"] =
             function () use ($suscriptor) {
@@ -898,6 +916,9 @@ class ZentroTraderBotController extends JsonsController
                     ],
                     [
                         ["text" => "💳 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.mypaymentmethods")), "callback_data" => "/p2ppaymentmethods"],
+                    ],
+                    [
+                        ["text" => "🔔 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.myalerts")), "callback_data" => "/p2palerts"],
                     ],
                     [
                         ["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"],
