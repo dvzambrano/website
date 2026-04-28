@@ -589,6 +589,23 @@ return [
     ],
 
     // =========================================================
+    // PAYMENT WIZARD — Asistente de configuración de métodos de pago
+    // =========================================================
+
+    "payment_wizard" => [
+        "title" => "Mis Métodos de Pago",
+        "cancelled_title" => "Asistente cancelado.",
+        "cancelled" => "No se han guardado cambios en sus métodos de pago.",
+        "saved_title" => "Métodos de pago guardados",
+        "saved_body" => ":count método(s) actualizados correctamente.",
+        "current_value" => "Configurado actualmente",
+        "not_configured" => "Sin configurar",
+        "ask_details" => "Escriba sus datos de :method (correo, número de cuenta, teléfono, etc.)",
+        "skip_hint" => "Pulse Saltar para omitir este método sin modificarlo.",
+        "skip" => "Saltar",
+    ],
+
+    // =========================================================
     // ACTIVE OFFERS — Lista de ofertas activas
     // =========================================================
 
