@@ -210,7 +210,7 @@ class ProcessContractActivity
                 break;
 
             case 'TRADECANCELLED':
-                $amount = TextService::mdv2(number_format($offer->amount, 2));
+                $amount = number_format($offer->amount, 2);
                 $cancelMenu = [
                     [["text" => "⬅️ " . Lang::get("zentrotraderbot::bot.options.backtop2pmenu"), "callback_data" => "/p2pmenu"]],
                     [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
