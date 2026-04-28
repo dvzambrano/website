@@ -294,16 +294,16 @@ class OffersAlertsController extends Controller
             $body = '';
             foreach ($alerts as $alert) {
                 $typeLabel = $alert->type === 'buy'
-                    ? Lang::get('zentrotraderbot::bot.alerts.type_buy')
-                    : Lang::get('zentrotraderbot::bot.alerts.type_sell');
+                    ? TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.type_buy'))
+                    : TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.type_sell'));
 
                 $methodLabel = $alert->payment_method
-                    ? $alert->payment_method
-                    : Lang::get('zentrotraderbot::bot.alerts.method_any');
+                    ? TextService::mdv2($alert->payment_method)
+                    : TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.method_any'));
 
                 $priceLabel = $alert->max_price
-                    ? Lang::get('zentrotraderbot::bot.alerts.price_max', ['price' => number_format((float) $alert->max_price, 2)])
-                    : Lang::get('zentrotraderbot::bot.alerts.price_unlimited');
+                    ? TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.price_max', ['price' => number_format((float) $alert->max_price, 2)]))
+                    : TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.price_unlimited'));
 
                 $body .= "▫️ {$typeLabel} · {$methodLabel} · {$priceLabel}\n";
 
