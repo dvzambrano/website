@@ -594,15 +594,15 @@ return [
 
     "payment_wizard" => [
         "title" => "Mis Métodos de Pago",
-        "cancelled_title" => "Asistente cancelado.",
-        "cancelled" => "No se han guardado cambios en sus métodos de pago.",
-        "saved_title" => "Métodos de pago guardados",
-        "saved_body" => ":count método(s) actualizados correctamente.",
-        "current_value" => "Configurado actualmente",
+        "cancelled_title" => "Asistente cerrado.",
+        "cancelled" => "Sus datos ya guardados se han conservado.",
+        "saved_title" => "Configuración completada",
+        "saved_body" => "Sus métodos de pago han quedado guardados correctamente.",
+        "current_value" => "Valor actual",
         "not_configured" => "Sin configurar",
-        "ask_details" => "Escriba sus datos de :method (correo, número de cuenta, teléfono, etc.)",
-        "skip_hint" => "Pulse Saltar para omitir este método sin modificarlo.",
-        "skip" => "Saltar",
+        "ask_details" => "Escriba sus datos de :method (correo, número de cuenta, teléfono, etc.) y pulse Enter para guardar.",
+        "next_hint" => "Pulse Siguiente para saltar este método sin modificarlo.",
+        "next" => "Siguiente",
     ],
 
     // =========================================================

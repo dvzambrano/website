@@ -12,12 +12,12 @@ use Modules\Laravel\Services\TextService;
 
 class PaymentMethodsController extends Controller
 {
+    // Texto que inicia el wizard; no debe tratarse como datos del usuario
+    private const TRIGGER_COMMAND = '/p2ppaymentmethods';
+
     public function wizard($bot)
     {
         $self = $this;
-
-        $suscriptor = Suscriptions::where('user_id', $bot->actor->user_id)->first();
-        $existingMethods = $suscriptor ? ($suscriptor->data['payment_methods'] ?? []) : [];
 
         $methods = Paymentmethods::orderBy('id')->get();
         $total = $methods->count();
@@ -25,45 +25,47 @@ class PaymentMethodsController extends Controller
         $steps = [];
         foreach ($methods as $index => $method) {
             $steps[] = [
-                'name' => 'STEP_' . strtoupper($method->identifier),
-                'handler' => fn($b, $s) => $self->stepMethod($b, $s, $method, $index + 1, $total),
+                'name'    => 'STEP_' . strtoupper($method->identifier),
+                'handler' => fn($b, $_s) => $self->stepMethod($b, $method, $index + 1, $total),
             ];
         }
 
         return (new WizardController())->run($bot, $steps, [
             'controller' => self::class,
-            'method' => 'wizard',
-            'initialData' => [
-                'existing' => $existingMethods,
-                'collected' => [],
-            ],
-            'onComplete' => fn($b, $s) => $self->saveAndComplete($b, $s),
-            'onCancel' => fn($b) => $self->cancelResponse($b),
+            'method'     => 'wizard',
+            'initialData' => [],
+            'onComplete' => fn($b, $_s) => $self->completedResponse($b),
+            'onCancel'   => fn($b) => $self->cancelResponse($b),
         ]);
     }
 
-    private function stepMethod($bot, array $state, $method, int $stepNum, int $total): array
+    private function stepMethod($bot, $method, int $stepNum, int $total): array
     {
         $this->deleteUserText($bot);
+
         $text = $bot->message['text'] ?? null;
         $userId = $bot->actor->user_id;
         $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
 
-        if ($text === '/wizardskip') {
+        // El comando que abrió el wizard no es un dato válido
+        if ($text === self::TRIGGER_COMMAND) {
+            $text = null;
+        }
+
+        // Botón "Siguiente": avanza sin guardar nada nuevo para este método
+        if ($text === '/wizardnext') {
             return ['__advance' => true, 'merge' => []];
         }
 
+        // El usuario escribió sus datos → guardar inmediatamente y avanzar
         if ($text !== null) {
-            $collected = $state['data']['collected'] ?? [];
-            $collected[$method->identifier] = [
-                'name' => $method->name,
-                'icon' => $method->icon,
-                'details' => $text,
-            ];
-            return ['__advance' => true, 'merge' => ['collected' => $collected]];
+            $this->saveMethodForUser($userId, $method, $text);
+            return ['__advance' => true, 'merge' => []];
         }
 
-        $existing = $state['data']['existing'][$method->identifier]['details'] ?? null;
+        // Renderizar el prompt para este método
+        $suscriptor = Suscriptions::where('user_id', $userId)->first();
+        $existing = $suscriptor->data['payment_methods'][$method->identifier]['details'] ?? null;
 
         $currentValueLine = $existing
             ? "\n▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.current_value")) . ": `" . TextService::mdv2($existing) . "`"
@@ -71,47 +73,61 @@ class PaymentMethodsController extends Controller
 
         $navButtons = [];
         if ($stepNum > 1) {
-            $navButtons[] = ["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.back")), "callback_data" => "/wizardprevious"];
+            $navButtons[] = [
+                "text"          => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.back")),
+                "callback_data" => "/wizardprevious",
+            ];
         }
-        $navButtons[] = ["text" => "⏭️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.skip")), "callback_data" => "/wizardskip"];
-        $navButtons[] = ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"];
+        $navButtons[] = [
+            "text"          => "➡️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.next")),
+            "callback_data" => "/wizardnext",
+        ];
+        $navButtons[] = [
+            "text"          => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")),
+            "callback_data" => "/wizardcancel",
+        ];
 
         return [
             "text" =>
                 "💳 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.title")) . "*\n" .
-                "◾️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji($stepNum), 'total' => TextService::getNumberAsEmoji($total)])) . "_\n\n" .
+                "◾️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", [
+                    'n'     => TextService::getNumberAsEmoji($stepNum),
+                    'total' => TextService::getNumberAsEmoji($total),
+                ])) . "_\n\n" .
                 ($method->icon ? $method->icon . " " : "") . "*" . TextService::mdv2($method->name) . "*" .
                 $currentValueLine . "\n\n" .
                 "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.ask_details", ['method' => $method->name])) . "\n" .
-                "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.skip_hint")) . "_",
-            "chat" => ["id" => $userId],
+                "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.next_hint")) . "_",
+            "chat"         => ["id" => $userId],
             "reply_markup" => json_encode(["inline_keyboard" => [$navButtons]]),
             "editprevious" => $isCallback ? 1 : 0,
         ];
     }
 
-    private function saveAndComplete($bot, array $state): array
+    private function saveMethodForUser(int $userId, $method, string $details): void
     {
-        $userId = $bot->actor->user_id;
         $suscriptor = Suscriptions::where('user_id', $userId)->first();
-
-        $existing = $state['data']['existing'] ?? [];
-        $collected = $state['data']['collected'] ?? [];
-        $merged = array_merge($existing, $collected);
+        if (!$suscriptor) return;
 
         $data = $suscriptor->data ?? [];
-        $data['payment_methods'] = $merged;
+        $data['payment_methods'][$method->identifier] = [
+            'name'    => $method->name,
+            'icon'    => $method->icon,
+            'details' => $details,
+        ];
         $suscriptor->update(['data' => $data]);
+    }
 
-        $savedCount = count($collected);
+    private function completedResponse($bot): array
+    {
+        $userId = $bot->actor->user_id;
         $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
-
         return [
             "text" =>
                 "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.saved_title")) . "*\n" .
-                "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.saved_body", ['count' => $savedCount])) . "\n\n" .
+                "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.saved_body")) . "_\n\n" .
                 "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext")),
-            "chat" => ["id" => $userId],
+            "chat"         => ["id" => $userId],
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.backtop2pmenu")), "callback_data" => "/p2pmenu"]],
@@ -131,7 +147,7 @@ class PaymentMethodsController extends Controller
                 "❌ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.cancelled_title")) . "*\n" .
                 "_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.payment_wizard.cancelled")) . "_\n\n" .
                 "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext")),
-            "chat" => ["id" => $userId],
+            "chat"         => ["id" => $userId],
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.backtop2pmenu")), "callback_data" => "/p2pmenu"]],
