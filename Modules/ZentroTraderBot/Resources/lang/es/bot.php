@@ -369,6 +369,9 @@ return [
             "ask_sell" => "Escriba los detalles de su cuenta :method:",
             "ask_buy" => "Escriba los detalles o bancos desde donde pagará por :method:",
             "be_explicit" => "Recuerde ser explícito, cualquier dato faltante podría afectar el tiempo de la transacción.",
+            "saved_value" => "Datos guardados",
+            "saved_hint" => "Pulse el botón para usar estos datos, o escriba datos diferentes solo para esta oferta.",
+            "use_saved" => "Usar mis datos guardados",
         ],
         "confirm" => [
             "title" => "Resumen de su Oferta",

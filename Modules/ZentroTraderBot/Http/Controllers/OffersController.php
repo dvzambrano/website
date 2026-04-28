@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Entities\Currencies;
 use Modules\ZentroTraderBot\Entities\OffersRatings;
+use Modules\ZentroTraderBot\Entities\Paymentmethods;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Http\Controllers\WizardController;
 use Illuminate\Support\Facades\Lang;
@@ -323,15 +324,64 @@ class OffersController extends Controller
     private function stepDetails($bot, array $state): array
     {
         $this->deleteUserText($bot);
-        $text = $bot->message["text"] ?? null;
-        $userId = $bot->actor->user_id;
-        $isSell = ($state['data']['type'] ?? 'sell') === 'sell';
-        $methodName = $state['data']['method_name'] ?? $state['data']['method'];
+        $text       = $bot->message["text"] ?? null;
+        $userId     = $bot->actor->user_id;
+        $isSell     = ($state['data']['type'] ?? 'sell') === 'sell';
+        $methodId   = $state['data']['method'];
+        $methodName = $state['data']['method_name'] ?? $methodId;
 
+        $suscriptor   = Suscriptions::where('user_id', $userId)->first();
+        $savedDetails = $suscriptor->data['payment_methods'][$methodId]['details'] ?? null;
+
+        // El usuario eligió usar sus datos guardados
+        if ($text === '/offerdetailsaved') {
+            return ['__advance' => true, 'merge' => ['details' => $savedDetails]];
+        }
+
+        // El usuario escribió datos manualmente
         if ($text !== null) {
+            // Sólo guardar en la suscripción si NO tenía este método configurado previamente
+            if (!$savedDetails) {
+                $paymentMethod = Paymentmethods::where('identifier', $methodId)->first();
+                $data = $suscriptor->data ?? [];
+                $data['payment_methods'][$methodId] = [
+                    'name'    => $paymentMethod->name ?? $methodName,
+                    'icon'    => $paymentMethod->icon ?? null,
+                    'details' => $text,
+                ];
+                $suscriptor->update(['data' => $data]);
+            }
             return ['__advance' => true, 'merge' => ['details' => $text]];
         }
 
+        $navButtons = [
+            ["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.back")), "callback_data" => "/wizardprevious"],
+            ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"],
+        ];
+
+        // Tiene datos guardados: mostrar pre-relleno con botón de usar
+        if ($savedDetails) {
+            return [
+                "text" =>
+                    "✨ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.title")) . "*\n" .
+                    "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step", ['n' => TextService::getNumberAsEmoji(5), 'total' => TextService::getNumberAsEmoji(5)])) . "_\n" .
+                    "▫️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.subtitle")) . "*\n" .
+                    "◾️ \n" .
+                    "🏦 *" . TextService::mdv2($methodName) . "*\n" .
+                    "▫️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.saved_value")) . ": `" . TextService::mdv2($savedDetails) . "`\n\n" .
+                    "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.saved_hint")) . "_",
+                "chat" => ["id" => $userId],
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [["text" => "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.use_saved")), "callback_data" => "/offerdetailsaved"]],
+                        $navButtons,
+                    ],
+                ]),
+                "editprevious" => 1,
+            ];
+        }
+
+        // No tiene datos guardados: prompt normal
         $detailsPrompt = $isSell
             ? "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.ask_sell", ['method' => $methodName])) . "_"
             : "▫️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.ask_buy", ['method' => $methodName])) . "_";
@@ -346,12 +396,7 @@ class OffersController extends Controller
                 "◾️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.wizard.step5.be_explicit")) . "*",
             "chat" => ["id" => $userId],
             "reply_markup" => json_encode([
-                "inline_keyboard" => [
-                    [
-                        ["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.back")), "callback_data" => "/wizardprevious"],
-                        ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.cancel")), "callback_data" => "/wizardcancel"],
-                    ]
-                ],
+                "inline_keyboard" => [$navButtons],
             ]),
             "editprevious" => 1,
         ];
