@@ -200,10 +200,12 @@ trait UsesTelegramBot
             }
         }
 
-        // eliminar el mensaje q origino esta interaccion del bot
+        // eliminar el mensaje de texto que originó esta interacción
+        // Para callback_query NO hay mensaje del usuario: $this->message es el propio mensaje del bot (el que tenía el teclado)
         if (
             $this->message["message_id"] != "" &&
-            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])
+            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) &&
+            ($this->message['_update_type'] ?? '') !== 'callback_query'
         ) {
             try {
                 $array = array(
