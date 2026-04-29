@@ -31,6 +31,7 @@ class OfferObserver
         UpdateOfferInChannel::dispatch($bot->key, $offer->code);
 
         OffersAlertsController::notifyMatchingAlerts($offer, $bot->token);
+        OffersAlertsController::notifyBestSellMatches($offer, $bot->token);
     }
 
     /**

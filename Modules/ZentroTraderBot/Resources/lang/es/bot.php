@@ -704,8 +704,20 @@ return [
 
     "alert_match" => [
         "title" => "Oferta encontrada",
-        "line1" => "Hay una nueva oferta que coincide con tus criterios de alerta:",
+        "line1" => "Una nueva oferta coincide con tus criterios de alerta:",
         "view" => "Ver Oferta",
+    ],
+
+    // =========================================================
+    // BUY MATCH — Sugerencia de ventas al publicar una compra
+    // =========================================================
+
+    "buy_match" => [
+        "title"       => "Ofertas de venta disponibles para ti",
+        "subtitle"    => "Estas son las 3 mejores ofertas de venta que se ajustan a tu oferta de compra. Puedes aplicar directamente a cualquiera de ellas:",
+        "offer_label" => "Opción #:n",
+        "hint"        => "Toca cualquier botón para ver los detalles y aplicar.",
+        "view_all"    => "Ver todas las ofertas",
     ],
 
     // =========================================================

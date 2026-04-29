@@ -346,6 +346,62 @@ class OffersAlertsController extends Controller
     // NOTIFICAR — Usuarios con alertas coincidentes
     // =========================================================
 
+    /**
+     * Cuando se publica una oferta de COMPRA, busca las 3 mejores ofertas de
+     * VENTA compatibles (mismo método de pago, estado open, otro usuario) y
+     * notifica al comprador por DM para que pueda aplicar directamente.
+     */
+    public static function notifyBestSellMatches(Offers $offer, string $token): void
+    {
+        if (strtolower($offer->type) !== 'buy' || strtolower($offer->status) !== 'open') {
+            return;
+        }
+
+        $sellOffers = Offers::where('status', 'open')
+            ->where('type', 'sell')
+            ->where('payment_method', $offer->payment_method)
+            ->where('user_id', '!=', $offer->user_id)
+            ->orderBy('price_per_usd', 'asc')
+            ->limit(3)
+            ->get();
+
+        if ($sellOffers->isEmpty()) {
+            return;
+        }
+
+        $text = "🎯 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.buy_match.title')) . "*\n"
+            . "▫️ \n"
+            . "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.buy_match.subtitle')) . "_\n"
+            . "▫️ \n";
+
+        $buttons = [];
+
+        foreach ($sellOffers as $index => $sellOffer) {
+            $num    = $index + 1;
+            $amount = number_format($sellOffer->amount, 2);
+            $price  = number_format($sellOffer->price_per_usd, 2);
+
+            $text .= "🔴 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.buy_match.offer_label', ['n' => $num])) . "* — `{$sellOffer->code}`\n"
+                . "💵 {$amount} USD · 🔖 " . TextService::mdv2($price) . " {$sellOffer->currency}/USD\n"
+                . "💳 " . TextService::mdv2($sellOffer->payment_method) . "\n"
+                . "▫️ \n";
+
+            $buttons[] = [['text' => "👉 #$num — $amount USD @ $price " . $sellOffer->currency, 'callback_data' => '/showoffer ' . $sellOffer->code]];
+        }
+
+        $text .= "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.buy_match.hint')) . "_";
+        $buttons[] = [['text' => '📋 ' . Lang::get('zentrotraderbot::bot.buy_match.view_all'), 'callback_data' => '/p2pmenu']];
+
+        TelegramController::sendMessage([
+            'message' => [
+                'chat'         => ['id' => $offer->user_id],
+                'text'         => $text,
+                'parse_mode'   => 'MarkdownV2',
+                'reply_markup' => json_encode(['inline_keyboard' => $buttons]),
+            ],
+        ], $token);
+    }
+
     public static function notifyMatchingAlerts(Offers $offer, string $token): void
     {
         if (strtolower($offer->status) !== 'open') {
@@ -370,19 +426,10 @@ class OffersAlertsController extends Controller
                 continue;
             }
 
-            $typeLabel = $offer->type === 'buy'
-                ? Lang::get('zentrotraderbot::bot.alerts.type_buy')
-                : Lang::get('zentrotraderbot::bot.alerts.type_sell');
+            $title = "🔔 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alert_match.title')) . "*\n"
+                . "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alert_match.line1')) . "_";
 
-            $text =
-                "🔔 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alert_match.title')) . "*\n" .
-                "▫️ \n" .
-                "📌 *{$typeLabel}*\n" .
-                "💳 " . TextService::mdv2($offer->payment_method) . "\n" .
-                "💲 " . TextService::mdv2(number_format($offer->price_per_usd, 2)) . " / USD\n" .
-                "💵 " . TextService::mdv2(number_format($offer->amount, 2)) . " USD\n" .
-                "▫️ \n" .
-                "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alert_match.line1')) . "_";
+            $text = $offer->renderAsTelegramMessage($title, false, "", true);
 
             TelegramController::sendMessage([
                 'message' => [
