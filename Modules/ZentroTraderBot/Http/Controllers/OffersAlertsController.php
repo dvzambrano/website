@@ -382,7 +382,7 @@ class OffersAlertsController extends Controller
             $price  = number_format($sellOffer->price_per_usd, 2);
 
             $text .= "🔴 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.buy_match.offer_label', ['n' => $num])) . "* — `{$sellOffer->code}`\n"
-                . "💵 {$amount} USD · 🔖 " . TextService::mdv2($price) . " {$sellOffer->currency}/USD\n"
+                . "💵 " . TextService::mdv2($amount) . " USD · 🔖 " . TextService::mdv2($price) . " " . TextService::mdv2($sellOffer->currency) . "/USD\n"
                 . "💳 " . TextService::mdv2($sellOffer->payment_method) . "\n"
                 . "▫️ \n";
 
