@@ -174,15 +174,30 @@ trait UsesTelegramBot
                     // Condición autodestroy == 0: si hay autodestroy, se necesita un mensaje nuevo para programar su borrado
                     $lastBotMessage = Cache::get($cacheKey);
                     if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
-                        $editArray = $array;
-                        $editArray["message"]["message_id"] = $lastBotMessage["message_id"];
-                        $editResponse = TelegramController::editMessageText($editArray, $this->tenant->token);
-                        $editData = json_decode($editResponse, true);
-                        if ($editData['ok'] ?: false) {
-                            $response = $editResponse;
-                        } else {
-                            // Fallback: el edit falló (mensaje expirado, borrado externamente, etc.), enviar nuevo
+                        if (isset($lastBotMessage["reply_to_message"])) {
+                            // El mensaje cacheado fue enviado como reply: Telegram no permite quitar ese indicador al editar.
+                            // Borrar ese mensaje y enviar uno nuevo limpio; a partir de aquí todos los ciclos editarán sin indicador.
+                            try {
+                                TelegramController::deleteMessage([
+                                    "message" => [
+                                        "id" => $lastBotMessage["message_id"],
+                                        "chat" => ["id" => $this->message["chat"]["id"]],
+                                    ],
+                                ], $this->tenant->token);
+                            } catch (\Throwable $th) {
+                            }
                             $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
+                        } else {
+                            $editArray = $array;
+                            $editArray["message"]["message_id"] = $lastBotMessage["message_id"];
+                            $editResponse = TelegramController::editMessageText($editArray, $this->tenant->token);
+                            $editData = json_decode($editResponse, true);
+                            if ($editData['ok'] ?: false) {
+                                $response = $editResponse;
+                            } else {
+                                // Fallback: el edit falló (mensaje expirado, borrado externamente, etc.), enviar nuevo
+                                $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
+                            }
                         }
                     } else {
                         // Sin mensaje previo en caché (primera interacción), enviar nuevo normalmente
