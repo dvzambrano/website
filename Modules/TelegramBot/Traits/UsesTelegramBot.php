@@ -139,6 +139,26 @@ trait UsesTelegramBot
         $cacheKey = "lastmessage_{$this->tenant->key}_{$this->actor->user_id}";
         if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
             $autodestroy = $this->reply["autodestroy"];
+
+        // Mejora A: si el usuario quiere chat limpio, eliminar la última respuesta del bot antes de enviar la nueva
+        if (
+            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) &&
+            empty($this->reply["editprevious"])
+        ) {
+            $lastBotMessage = Cache::get($cacheKey);
+            if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
+                try {
+                    TelegramController::deleteMessage([
+                        "message" => [
+                            "id" => $lastBotMessage["message_id"],
+                            "chat" => ["id" => $this->message["chat"]["id"]],
+                        ],
+                    ], $this->tenant->token);
+                } catch (\Throwable $th) {
+                }
+            }
+        }
+
         if (isset($this->reply["photo"])) {
             $response = TelegramController::sendPhoto($array, $this->tenant->token, $autodestroy);
         } else {
@@ -163,8 +183,7 @@ trait UsesTelegramBot
         // eliminar el mensaje q origino esta interaccion del bot
         if (
             $this->message["message_id"] != "" &&
-            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) &&
-            empty($this->reply["editprevious"])
+            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])
         ) {
             try {
                 $array = array(
@@ -633,9 +652,9 @@ trait UsesTelegramBot
 
         // Opciones para todos los usuarios:
         if (isset($array[$this->tenant->code]["config_delete_prev_messages"])) {
-            array_push($menu, [["text" => "🟢 " . Lang::get("telegrambot::bot.options.keepprevmessages"), "callback_data" => "configdeleteprevmessages"]]);
+            array_push($menu, [["text" => "🟢 Chat limpio: activo", "callback_data" => "configdeleteprevmessages"]]);
         } else {
-            array_push($menu, [["text" => "🔴 " . Lang::get("telegrambot::bot.options.deleteprevmessages"), "callback_data" => "configdeleteprevmessages"]]);
+            array_push($menu, [["text" => "⚫ Chat limpio: desactivado", "callback_data" => "configdeleteprevmessages"]]);
         }
 
         $timezone = "UTC";
