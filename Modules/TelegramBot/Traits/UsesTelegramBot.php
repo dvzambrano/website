@@ -140,37 +140,57 @@ trait UsesTelegramBot
         if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
             $autodestroy = $this->reply["autodestroy"];
 
-        // Mejora A: si el usuario quiere chat limpio, eliminar la última respuesta del bot antes de enviar la nueva
-        if (
-            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) &&
-            empty($this->reply["editprevious"])
-        ) {
-            $lastBotMessage = Cache::get($cacheKey);
-            if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
-                try {
-                    TelegramController::deleteMessage([
-                        "message" => [
-                            "id" => $lastBotMessage["message_id"],
-                            "chat" => ["id" => $this->message["chat"]["id"]],
-                        ],
-                    ], $this->tenant->token);
-                } catch (\Throwable $th) {
+        if (isset($this->reply["photo"])) {
+            // Las fotos no se pueden editar a texto ni viceversa: en chat limpio se borra el mensaje previo del bot y se envía la foto nueva
+            if (isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])) {
+                $lastBotMessage = Cache::get($cacheKey);
+                if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
+                    try {
+                        TelegramController::deleteMessage([
+                            "message" => [
+                                "id" => $lastBotMessage["message_id"],
+                                "chat" => ["id" => $this->message["chat"]["id"]],
+                            ],
+                        ], $this->tenant->token);
+                    } catch (\Throwable $th) {
+                    }
                 }
             }
-        }
-
-        if (isset($this->reply["photo"])) {
             $response = TelegramController::sendPhoto($array, $this->tenant->token, $autodestroy);
         } else {
             // solo se envia un mensaje si tiene text
             // antes estaba $this->message["text"] pero lo cambie para q mandara el error cuando mandan la captura de un pago sin nombre y cantidad
             if (isset($this->reply["text"]) && $this->reply["text"] != "") {
                 if (isset($this->reply["editprevious"]) && $this->reply["editprevious"] > 0) {
+                    // El comando pide explícitamente editar el mensaje anterior del bot
                     $lastmessage = Cache::get($cacheKey);
                     $array["message"]["message_id"] = $lastmessage["message_id"];
                     $response = TelegramController::editMessageText($array, $this->tenant->token);
-                } else
+                } elseif (
+                    isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) &&
+                    $autodestroy == 0
+                ) {
+                    // Chat limpio: editar el mensaje previo del bot en lugar de borrar+reenviar
+                    // Condición autodestroy == 0: si hay autodestroy, se necesita un mensaje nuevo para programar su borrado
+                    $lastBotMessage = Cache::get($cacheKey);
+                    if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
+                        $editArray = $array;
+                        $editArray["message"]["message_id"] = $lastBotMessage["message_id"];
+                        $editResponse = TelegramController::editMessageText($editArray, $this->tenant->token);
+                        $editData = json_decode($editResponse, true);
+                        if ($editData['ok'] ?: false) {
+                            $response = $editResponse;
+                        } else {
+                            // Fallback: el edit falló (mensaje expirado, borrado externamente, etc.), enviar nuevo
+                            $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
+                        }
+                    } else {
+                        // Sin mensaje previo en caché (primera interacción), enviar nuevo normalmente
+                        $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
+                    }
+                } else {
                     $response = TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
+                }
             }
         }
         if ($response) {
