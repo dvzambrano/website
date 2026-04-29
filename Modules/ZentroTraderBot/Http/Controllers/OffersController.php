@@ -3000,7 +3000,8 @@ class OffersController extends Controller
         $trades = max(0, ($reputation['trades'] ?? 1) - 1);
         $average = (float) ($reputation['average'] ?? 5.0);
         $isVip = $reputation['vip'] ?? false;
-        $stars = TextService::getStars($average, 0.25, "⭐", "💫", "");
+        $displayAverage = $trades === 0 ? 0.9 : $average;
+        $stars = TextService::getStars($displayAverage, 0.25, "⭐", "💫", "");
 
         // Estadísticas de rendimiento
         $stats = $suscription->data['stats'] ?? [];
@@ -3030,7 +3031,8 @@ class OffersController extends Controller
             $sinceDate = TextService::mdv2(\Carbon\Carbon::createFromTimestamp($memberSince)->format('M Y'));
             $text .= "📅 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.member_since")) . ":* `{$sinceDate}`\n";
         }
-        $text .= "⭐ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.rating")) . ":* `" . number_format($average, 2) . "`\n\n";
+        $ratingLabel = $trades === 0 ? "0" : number_format($average, 2);
+        $text .= "⭐ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.rating")) . ":* `{$ratingLabel}`\n\n";
 
         // Métodos de pago (solo nombre e icono, sin datos privados de cuenta)
         $paymentMethods = $suscription->data['payment_methods'] ?? [];
