@@ -324,13 +324,13 @@ class OffersController extends Controller
     private function stepDetails($bot, array $state): array
     {
         $this->deleteUserText($bot);
-        $text       = $bot->message["text"] ?? null;
-        $userId     = $bot->actor->user_id;
-        $isSell     = ($state['data']['type'] ?? 'sell') === 'sell';
-        $methodId   = $state['data']['method'];
+        $text = $bot->message["text"] ?? null;
+        $userId = $bot->actor->user_id;
+        $isSell = ($state['data']['type'] ?? 'sell') === 'sell';
+        $methodId = $state['data']['method'];
         $methodName = $state['data']['method_name'] ?? $methodId;
 
-        $suscriptor   = Suscriptions::where('user_id', $userId)->first();
+        $suscriptor = Suscriptions::where('user_id', $userId)->first();
         $savedDetails = $suscriptor->data['payment_methods'][$methodId]['details'] ?? null;
 
         // El usuario eligió usar sus datos guardados
@@ -345,8 +345,8 @@ class OffersController extends Controller
                 $paymentMethod = Paymentmethods::where('identifier', $methodId)->first();
                 $data = $suscriptor->data ?? [];
                 $data['payment_methods'][$methodId] = [
-                    'name'    => $paymentMethod->name ?? $methodName,
-                    'icon'    => $paymentMethod->icon ?? null,
+                    'name' => $paymentMethod->name ?? $methodName,
+                    'icon' => $paymentMethod->icon ?? null,
                     'details' => $text,
                 ];
                 $suscriptor->update(['data' => $data]);
@@ -2958,7 +2958,7 @@ class OffersController extends Controller
 
         $requesterSub = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
         if ($requesterSub) {
-            $wallet      = strtolower($requesterSub->data['wallet']['address'] ?? '');
+            $wallet = strtolower($requesterSub->data['wallet']['address'] ?? '');
             $buyerWallet = strtolower($offer->buyer_address ?? '');
             $sellerWallet = strtolower($offer->seller_address ?? '');
 
@@ -2988,31 +2988,17 @@ class OffersController extends Controller
 
         // Reputación
         $reputation = $suscription->data['reputation'] ?? [];
-        $trades     = max(0, ($reputation['trades'] ?? 1) - 1);
-        $average    = (float) ($reputation['average'] ?? 5.0);
-        $isVip      = $reputation['vip'] ?? false;
-        $stars      = TextService::getStars($average, 0.25, "⭐", "💫", "");
-
-        // Nombre / username desde la relación Actors
-        $actor      = $suscription->actor;
-        $displayName = '';
-        if ($actor) {
-            $telegram    = $actor->data['telegram'] ?? [];
-            $username    = $telegram['username'] ?? null;
-            $firstName   = $telegram['first_name'] ?? '';
-            $lastName    = $telegram['last_name'] ?? '';
-            $displayName = $username ? "@{$username}" : trim("{$firstName} {$lastName}");
-        }
-        if (!$displayName) {
-            $displayName = "Trader #{$profileUserId}";
-        }
+        $trades = max(0, ($reputation['trades'] ?? 1) - 1);
+        $average = (float) ($reputation['average'] ?? 5.0);
+        $isVip = $reputation['vip'] ?? false;
+        $stars = TextService::getStars($average, 0.25, "⭐", "💫", "");
 
         // Construir texto del perfil
         $vipBadge = $isVip ? " 🏆 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.vip")) : "";
-        $text  = "👤 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.header")) . "{$vipBadge}*\n";
-        $text .= "💼 " . TextService::mdv2($displayName) . "\n\n";
-        $text .= "📊 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.trades")) . ":* `{$trades}`\n";
-        $text .= "⭐ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.rating")) . ":* `" . number_format($average, 2) . "` {$stars}\n\n";
+        $text = "👤 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.header")) . "{$vipBadge}*\n";
+        $text .= "{$stars}\n\n";
+        $text .= "📈 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.trades")) . ":* `{$trades}`\n";
+        $text .= "⭐ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.rating")) . ":* `" . number_format($average, 2) . "`\n\n";
 
         // Métodos de pago (solo nombre e icono, sin datos privados de cuenta)
         $paymentMethods = $suscription->data['payment_methods'] ?? [];
@@ -3037,19 +3023,20 @@ class OffersController extends Controller
         if ($ratings->count() > 0) {
             $text .= "💬 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.last_reviews")) . ":*\n";
             foreach ($ratings as $rating) {
-                $rStars  = TextService::getStars($rating->stars, 0.25, "⭐", "💫", "");
+                $rStars = TextService::getStars($rating->stars, 0.25, "⭐", "💫", "");
                 $comment = TextService::mdv2($rating->comment);
-                $text   .= "{$rStars} _\"{$comment}\"_\n";
+                $text .= "{$rStars} _\"{$comment}\"_\n";
             }
         } else {
             $text .= "💬 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.no_reviews")) . "_\n";
         }
 
         return [
-            "text"         => $text,
-            "chat"         => ["id" => $bot->actor->user_id],
+            "text" => $text,
+            "chat" => ["id" => $bot->actor->user_id],
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
+                    [["text" => "⬅️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.backtop2pmenu")), "callback_data" => "/p2pmenu"]],
                     [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
                 ],
             ]),

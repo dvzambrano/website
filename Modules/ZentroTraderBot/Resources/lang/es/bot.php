@@ -70,10 +70,10 @@ return [
         "next" => "Siguiente",
         "message_buyer" => "Enviar mensaje al Comprador",
         "message_seller" => "Enviar mensaje al Vendedor",
-        "myalerts"       => "Alertas de Ofertas",
-        "view_profile"         => "Ver Perfil",
-        "view_profile_seller"  => "Ver Perfil del Vendedor",
-        "view_profile_buyer"   => "Ver Perfil del Comprador",
+        "myalerts" => "Alertas de Ofertas",
+        "view_profile" => "Ver Perfil",
+        "view_profile_seller" => "Ver Perfil del Vendedor",
+        "view_profile_buyer" => "Ver Perfil del Comprador",
     ],
 
     // =========================================================
@@ -81,14 +81,14 @@ return [
     // =========================================================
 
     "profile" => [
-        "header"          => "PERFIL DEL TRADER",
-        "vip"             => "VIP",
-        "trades"          => "Trades completados",
-        "rating"          => "Calificación promedio",
+        "header" => "PERFIL DEL TRADER",
+        "vip" => "VIP",
+        "trades" => "Trades completados",
+        "rating" => "Calificación promedio",
         "payment_methods" => "Opera con",
-        "last_reviews"    => "Últimas reseñas",
-        "no_reviews"      => "Sin reseñas aún",
-        "not_found"       => "No se pudo encontrar el perfil de este trader",
+        "last_reviews" => "Últimas reseñas",
+        "no_reviews" => "Sin reseñas aún",
+        "not_found" => "No se pudo encontrar el perfil de este trader",
     ],
 
     // =========================================================
@@ -643,38 +643,38 @@ return [
     // =========================================================
 
     "alerts_wizard" => [
-        "title"           => "Asistente de Alertas de Ofertas",
+        "title" => "Asistente de Alertas de Ofertas",
         "cancelled_title" => "Operación cancelada.",
-        "cancelled"       => "Has cancelado la configuración de la alerta.",
-        "step"            => "Paso :n de :total",
-        "any"             => "Cualquiera",
-        "unlimited"       => "Sin límite",
+        "cancelled" => "Has cancelado la configuración de la alerta.",
+        "step" => "Paso :n de :total",
+        "any" => "Cualquiera",
+        "unlimited" => "Sin límite",
         "step1" => [
-            "subtitle"     => "Tipo de oferta a vigilar",
-            "ask"          => "¿Sobre qué tipo de oferta quieres recibir alertas?",
-            "select"       => "Elige una opción",
-            "option_buy"   => "Oferta de Compra",
-            "option_sell"  => "Oferta de Venta",
+            "subtitle" => "Tipo de oferta a vigilar",
+            "ask" => "¿Sobre qué tipo de oferta quieres recibir alertas?",
+            "select" => "Elige una opción",
+            "option_buy" => "Oferta de Compra",
+            "option_sell" => "Oferta de Venta",
         ],
         "step2" => [
             "subtitle" => "Método de pago",
-            "ask"      => "¿Por qué método de pago quieres filtrar?",
-            "select"   => "Elige un método o selecciona cualquiera",
-            "any"      => "Cualquier método",
+            "ask" => "¿Por qué método de pago quieres filtrar?",
+            "select" => "Elige un método o selecciona cualquiera",
+            "any" => "Cualquier método",
         ],
         "step3" => [
             "subtitle" => "Precio máximo por USD",
-            "ask"      => "¿Cuál es el precio máximo que aceptas pagar por cada USD?",
-            "example"  => "Por ejemplo:",
-            "any"      => "Sin límite de precio",
-            "invalid"  => ":value no es un precio válido",
+            "ask" => "¿Cuál es el precio máximo que aceptas pagar por cada USD?",
+            "example" => "Por ejemplo:",
+            "any" => "Sin límite de precio",
+            "invalid" => ":value no es un precio válido",
         ],
         "confirm" => [
-            "title"     => "Resumen de tu Alerta",
-            "type"      => "Tipo de oferta",
-            "method"    => "Método de pago",
+            "title" => "Resumen de tu Alerta",
+            "type" => "Tipo de oferta",
+            "method" => "Método de pago",
             "max_price" => "Precio máximo",
-            "save"      => "Guardar Alerta",
+            "save" => "Guardar Alerta",
         ],
     ],
 
@@ -683,19 +683,19 @@ return [
     // =========================================================
 
     "alerts" => [
-        "title"           => "Mis Alertas de Ofertas",
-        "empty"           => "No tienes alertas configuradas aún.",
-        "create"          => "Crear nueva alerta",
-        "view_mine"       => "Mis Alertas",
-        "delete"          => "Eliminar",
-        "deleted"         => "Alerta eliminada.",
-        "saved"           => "¡Tu alerta ha sido configurada!",
-        "watching"        => "Estamos observando las nuevas ofertas y te notificaremos en cuanto aparezca una que coincida con tu criterio.",
-        "type_buy"        => "Oferta de Compra",
-        "type_sell"       => "Oferta de Venta",
-        "method_any"      => "Cualquier método",
+        "title" => "Mis Alertas de Ofertas",
+        "empty" => "No tienes alertas configuradas aún.",
+        "create" => "Crear nueva alerta",
+        "view_mine" => "Mis Alertas",
+        "delete" => "Eliminar",
+        "deleted" => "Alerta eliminada.",
+        "saved" => "¡Tu alerta ha sido configurada!",
+        "watching" => "Estamos observando las nuevas ofertas y te notificaremos en cuanto aparezca una que coincida con tu criterio.",
+        "type_buy" => "Oferta de Compra",
+        "type_sell" => "Oferta de Venta",
+        "method_any" => "Cualquier método",
         "price_unlimited" => "Sin límite de precio",
-        "price_max"       => "Máx. :price / USD",
+        "price_max" => "Máx. :price / USD",
     ],
 
     // =========================================================
@@ -705,7 +705,7 @@ return [
     "alert_match" => [
         "title" => "Oferta encontrada",
         "line1" => "Hay una nueva oferta que coincide con tus criterios de alerta:",
-        "view"  => "Ver Oferta",
+        "view" => "Ver Oferta",
     ],
 
     // =========================================================
