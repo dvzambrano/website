@@ -667,9 +667,12 @@ class OffersController extends Controller
                             ["text" => "❌ " . Lang::get("telegrambot::bot.options.cancel"), "callback_data" => "/canceloffer {$offer->code}"],
                         ]);
                     } elseif ($isSeller) {
-                        array_push($menu, [
-                            ["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.recover_offer.ready_button"), "callback_data" => "/recoveroffer {$offer->code}"],
-                        ]);
+                        $timeoutAt = (int) ($offer->data['timeout_at'] ?? 0);
+                        if ($timeoutAt > 0 && now()->timestamp >= $timeoutAt) {
+                            array_push($menu, [
+                                ["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.recover_offer.ready_button"), "callback_data" => "/recoveroffer {$offer->code}"],
+                            ]);
+                        }
                         array_push($menu, [
                             ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebyseller {$offer->code}"],
                             ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"],
@@ -708,10 +711,14 @@ class OffersController extends Controller
                     break;
 
                 case 'expired':
-                    if ($isSeller)
-                        array_push($menu, [
-                            ["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.recover_offer.ready_button"), "callback_data" => "/recoveroffer {$offer->code}"],
-                        ]);
+                    if ($isSeller) {
+                        $timeoutAt = (int) ($offer->data['timeout_at'] ?? 0);
+                        if ($timeoutAt === 0 || now()->timestamp >= $timeoutAt) {
+                            array_push($menu, [
+                                ["text" => "⏱️ " . Lang::get("zentrotraderbot::bot.recover_offer.ready_button"), "callback_data" => "/recoveroffer {$offer->code}"],
+                            ]);
+                        }
+                    }
                     break;
 
                 default:

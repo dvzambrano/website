@@ -106,6 +106,11 @@ class OfferObserver
                     [["text" => "👤 " . Lang::get("zentrotraderbot::bot.options.view_profile_buyer"), "callback_data" => "/viewprofile {$offer->code}"]],
                 ], $offer);
 
+                // Guardar el timestamp exacto en que el vendedor podrá reclamar
+                $currentData = $offer->data ?? [];
+                $currentData['timeout_at'] = now()->addSeconds($status["tradeTimeout"])->timestamp;
+                $offer->updateQuietly(['data' => $currentData]);
+
                 // Despachar recordatorio con el botón de reclamar para cuando expire el plazo
                 $sellerSub = Suscriptions::findByAddress($offer->seller_address);
                 if ($sellerSub && $sellerSub->user_id) {
