@@ -24,27 +24,27 @@ class OffersAlertsController extends Controller
 
     public function wizard($bot): array
     {
-        $self  = $this;
+        $self = $this;
         $steps = [
-            ['name' => 'STEP_TYPE',    'handler' => fn($b, $s) => $self->stepType($b, $s)],
-            ['name' => 'STEP_METHOD',  'handler' => fn($b, $s) => $self->stepMethod($b, $s)],
-            ['name' => 'STEP_PRICE',   'handler' => fn($b, $s) => $self->stepPrice($b, $s)],
+            ['name' => 'STEP_TYPE', 'handler' => fn($b, $s) => $self->stepType($b, $s)],
+            ['name' => 'STEP_METHOD', 'handler' => fn($b, $s) => $self->stepMethod($b, $s)],
+            ['name' => 'STEP_PRICE', 'handler' => fn($b, $s) => $self->stepPrice($b, $s)],
             ['name' => 'STEP_CONFIRM', 'handler' => fn($b, $s) => $self->stepConfirm($b, $s)],
         ];
 
         return (new WizardController())->run($bot, $steps, [
-            'controller'  => self::class,
-            'method'      => 'wizard',
+            'controller' => self::class,
+            'method' => 'wizard',
             'initialData' => [],
-            'onComplete'  => fn($b, $s) => $self->publishAlert($b, $s),
-            'onCancel'    => fn($b) => $self->cancelWizardResponse($b),
+            'onComplete' => fn($b, $s) => $self->publishAlert($b, $s),
+            'onCancel' => fn($b) => $self->cancelWizardResponse($b),
         ]);
     }
 
     private function stepType($bot, array $state): array
     {
         $this->deleteUserText($bot);
-        $text   = $bot->message['text'] ?? null;
+        $text = $bot->message['text'] ?? null;
         $userId = $bot->actor->user_id;
 
         if ($text !== null && !in_array($text, [self::TRIGGER_COMMAND])) {
@@ -61,11 +61,11 @@ class OffersAlertsController extends Controller
                 "▫️ \n" .
                 "▫️ _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step1.ask')) . "_\n" .
                 "◾️ " . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step1.select')) . " 👇",
-            'chat'         => ['id' => $userId],
+            'chat' => ['id' => $userId],
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [
-                        ['text' => '🟩 ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step1.option_buy')),  'callback_data' => 'buy'],
+                        ['text' => '🟩 ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step1.option_buy')), 'callback_data' => 'buy'],
                         ['text' => '🟥 ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step1.option_sell')), 'callback_data' => 'sell'],
                     ],
                     [['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.cancel')), 'callback_data' => '/wizardcancel']],
@@ -78,11 +78,11 @@ class OffersAlertsController extends Controller
     private function stepMethod($bot, array $state): array
     {
         $this->deleteUserText($bot);
-        $text   = $bot->message['text'] ?? null;
+        $text = $bot->message['text'] ?? null;
         $userId = $bot->actor->user_id;
 
         $navButtons = [
-            ['text' => '⬅️ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.back')),   'callback_data' => '/wizardprevious'],
+            ['text' => '⬅️ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.back')), 'callback_data' => '/wizardprevious'],
             ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.cancel')), 'callback_data' => '/wizardcancel'],
         ];
 
@@ -112,7 +112,7 @@ class OffersAlertsController extends Controller
                 "▫️ \n" .
                 "▫️ _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step2.ask')) . "_\n" .
                 "◾️ " . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step2.select')) . " 👇",
-            'chat'         => ['id' => $userId],
+            'chat' => ['id' => $userId],
             'reply_markup' => json_encode(['inline_keyboard' => $buttons]),
             'editprevious' => 1,
         ];
@@ -121,11 +121,11 @@ class OffersAlertsController extends Controller
     private function stepPrice($bot, array $state): array
     {
         $this->deleteUserText($bot);
-        $text   = $bot->message['text'] ?? null;
+        $text = $bot->message['text'] ?? null;
         $userId = $bot->actor->user_id;
 
         $navButtons = [
-            ['text' => '⬅️ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.back')),   'callback_data' => '/wizardprevious'],
+            ['text' => '⬅️ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.back')), 'callback_data' => '/wizardprevious'],
             ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.cancel')), 'callback_data' => '/wizardcancel'],
         ];
 
@@ -136,7 +136,8 @@ class OffersAlertsController extends Controller
 
             try {
                 $parsed = NumberService::parse($text);
-                if (is_numeric($parsed)) $text = $parsed;
+                if (is_numeric($parsed))
+                    $text = $parsed;
             } catch (\Throwable $th) {
             }
 
@@ -149,7 +150,7 @@ class OffersAlertsController extends Controller
                         "❌ " . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step3.invalid', ['value' => $text])) . "\n" .
                         "▫️ _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step3.ask')) . "_\n" .
                         "▫️ " . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step3.example')) . " `1\.03`",
-                    'chat'         => ['id' => $userId],
+                    'chat' => ['id' => $userId],
                     'reply_markup' => json_encode([
                         'inline_keyboard' => [
                             [['text' => '🔓 ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step3.any')), 'callback_data' => '/alertpricenone']],
@@ -171,7 +172,7 @@ class OffersAlertsController extends Controller
                 "▫️ \n" .
                 "▫️ _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step3.ask')) . "_\n" .
                 "▫️ " . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step3.example')) . " `1\.03`",
-            'chat'         => ['id' => $userId],
+            'chat' => ['id' => $userId],
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [['text' => '🔓 ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.step3.any')), 'callback_data' => '/alertpricenone']],
@@ -185,14 +186,14 @@ class OffersAlertsController extends Controller
     private function stepConfirm($bot, array $state): array
     {
         $this->deleteUserText($bot);
-        $text   = $bot->message['text'] ?? null;
+        $text = $bot->message['text'] ?? null;
         $userId = $bot->actor->user_id;
 
         if ($text === self::CONFIRM_COMMAND) {
             return ['__advance' => true];
         }
 
-        $data      = $state['data'];
+        $data = $state['data'];
         $typeLabel = ($data['type'] ?? 'buy') === 'buy'
             ? Lang::get('zentrotraderbot::bot.alerts_wizard.step1.option_buy')
             : Lang::get('zentrotraderbot::bot.alerts_wizard.step1.option_sell');
@@ -209,17 +210,17 @@ class OffersAlertsController extends Controller
             'text' =>
                 "🔔 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.confirm.title')) . "*\n" .
                 "▫️ \n" .
-                "📌 " . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.confirm.type'))   . ": *{$typeLabel}*\n" .
+                "📌 " . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.confirm.type')) . ": *{$typeLabel}*\n" .
                 "💳 " . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.confirm.method')) . ": *{$methodLabel}*\n" .
                 "💲 " . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.confirm.max_price')) . ": *{$priceLabel}*\n" .
                 "▫️ \n" .
                 "👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
-            'chat'         => ['id' => $userId],
+            'chat' => ['id' => $userId],
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [['text' => '✅ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.confirm.save')), 'callback_data' => self::CONFIRM_COMMAND]],
                     [
-                        ['text' => '⬅️ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.back')),   'callback_data' => '/wizardprevious'],
+                        ['text' => '⬅️ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.back')), 'callback_data' => '/wizardprevious'],
                         ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.cancel')), 'callback_data' => '/wizardcancel'],
                     ],
                 ],
@@ -231,14 +232,14 @@ class OffersAlertsController extends Controller
     private function publishAlert($bot, array $state): array
     {
         $userId = $bot->actor->user_id;
-        $data   = $state['data'];
+        $data = $state['data'];
 
         OffersAlerts::create([
-            'user_id'        => $userId,
-            'type'           => $data['type'],
+            'user_id' => $userId,
+            'type' => $data['type'],
             'payment_method' => $data['method'] ?? null,
-            'max_price'      => $data['max_price'] ?? null,
-            'is_active'      => true,
+            'max_price' => $data['max_price'] ?? null,
+            'is_active' => true,
         ]);
 
         return [
@@ -246,7 +247,7 @@ class OffersAlertsController extends Controller
                 "✅ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.saved')) . "*\n" .
                 "▫️ \n" .
                 "👁 _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.watching')) . "_",
-            'chat'         => ['id' => $userId],
+            'chat' => ['id' => $userId],
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [['text' => '🔔 ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.view_mine')), 'callback_data' => '/p2palerts']],
@@ -259,14 +260,14 @@ class OffersAlertsController extends Controller
 
     private function cancelWizardResponse($bot): array
     {
-        $userId     = $bot->actor->user_id;
+        $userId = $bot->actor->user_id;
         $isCallback = isset($bot->callback_query) || ($bot->is_callback ?? false);
         return [
             'text' =>
                 "❌ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.cancelled_title')) . "*\n" .
                 "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts_wizard.cancelled')) . "_\n\n" .
                 "👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
-            'chat'         => ['id' => $userId],
+            'chat' => ['id' => $userId],
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [['text' => '⬅️ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.options.backtop2pmenu')), 'callback_data' => '/p2pmenu']],
@@ -309,7 +310,7 @@ class OffersAlertsController extends Controller
 
                 $keyboard[] = [
                     [
-                        'text'          => '🗑 ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.delete')) . " #{$alert->id}",
+                        'text' => '🗑 ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.delete')) . " #{$alert->id}",
                         'callback_data' => "confirmation|p2palertdelete-{$alert->id}|/p2palerts",
                     ],
                 ];
@@ -324,7 +325,7 @@ class OffersAlertsController extends Controller
                 "🔔 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.title')) . "*\n" .
                 "▫️ \n" .
                 $body,
-            'chat'         => ['id' => $userId],
+            'chat' => ['id' => $userId],
             'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
             'editprevious' => 1,
         ];
@@ -370,16 +371,14 @@ class OffersAlertsController extends Controller
         }
 
         $text = "🎯 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.buy_match.title')) . "*\n"
-            . "▫️ \n"
-            . "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.buy_match.subtitle')) . "_\n"
-            . "▫️ \n";
+            . "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.buy_match.subtitle')) . "_\n\n";
 
         $buttons = [];
 
         foreach ($sellOffers as $index => $sellOffer) {
-            $num    = $index + 1;
+            $num = $index + 1;
             $amount = number_format($sellOffer->amount, 2);
-            $price  = number_format($sellOffer->price_per_usd, 2);
+            $price = number_format($sellOffer->price_per_usd, 2);
 
             $text .= "🔴 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.buy_match.offer_label', ['n' => $num])) . "* — `{$sellOffer->code}`\n"
                 . "💵 " . TextService::mdv2($amount) . " USD · 🔖 " . TextService::mdv2($price) . " " . TextService::mdv2($sellOffer->currency) . "/USD\n"
@@ -394,9 +393,9 @@ class OffersAlertsController extends Controller
 
         TelegramController::sendMessage([
             'message' => [
-                'chat'         => ['id' => $offer->user_id],
-                'text'         => $text,
-                'parse_mode'   => 'MarkdownV2',
+                'chat' => ['id' => $offer->user_id],
+                'text' => $text,
+                'parse_mode' => 'MarkdownV2',
                 'reply_markup' => json_encode(['inline_keyboard' => $buttons]),
             ],
         ], $token);
@@ -412,11 +411,11 @@ class OffersAlertsController extends Controller
             ->where('type', $offer->type)
             ->where(function ($q) use ($offer) {
                 $q->whereNull('payment_method')
-                  ->orWhere('payment_method', $offer->payment_method);
+                    ->orWhere('payment_method', $offer->payment_method);
             })
             ->where(function ($q) use ($offer) {
                 $q->whereNull('max_price')
-                  ->orWhere('max_price', '>=', $offer->price_per_usd);
+                    ->orWhere('max_price', '>=', $offer->price_per_usd);
             })
             ->get();
 
@@ -433,9 +432,9 @@ class OffersAlertsController extends Controller
 
             TelegramController::sendMessage([
                 'message' => [
-                    'chat'         => ['id' => $alert->user_id],
-                    'text'         => $text,
-                    'parse_mode'   => 'MarkdownV2',
+                    'chat' => ['id' => $alert->user_id],
+                    'text' => $text,
+                    'parse_mode' => 'MarkdownV2',
                     'reply_markup' => json_encode([
                         'inline_keyboard' => [
                             [['text' => '👀 ' . Lang::get('zentrotraderbot::bot.alert_match.view'), 'callback_data' => '/showoffer ' . $offer->code]],
@@ -454,11 +453,13 @@ class OffersAlertsController extends Controller
     private function getAllActiveMethods(): array
     {
         $result = [];
-        $seen   = [];
+        $seen = [];
 
-        $currencies = Currencies::where('is_active', true)->with(['paymentmethods' => function ($q) {
-            $q->wherePivot('is_active', true);
-        }])->get();
+        $currencies = Currencies::where('is_active', true)->with([
+            'paymentmethods' => function ($q) {
+                $q->wherePivot('is_active', true);
+            }
+        ])->get();
 
         foreach ($currencies as $currency) {
             foreach ($currency->paymentmethods as $method) {
@@ -466,8 +467,8 @@ class OffersAlertsController extends Controller
                     $seen[$method->identifier] = true;
                     $result[] = [
                         'identifier' => $method->identifier,
-                        'name'       => $method->name,
-                        'icon'       => $method->icon ?? '💳',
+                        'name' => $method->name,
+                        'icon' => $method->icon ?? '💳',
                     ];
                 }
             }
@@ -483,7 +484,7 @@ class OffersAlertsController extends Controller
             try {
                 TelegramController::deleteMessage([
                     'message' => [
-                        'id'   => $bot->message['message_id'],
+                        'id' => $bot->message['message_id'],
                         'chat' => ['id' => $bot->message['chat']['id']],
                     ],
                 ], $bot->tenant->token);

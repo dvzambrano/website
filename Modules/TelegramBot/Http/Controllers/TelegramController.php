@@ -31,6 +31,11 @@ class TelegramController extends Controller
         return $base;
     }
 
+    private static function sanitizeUrl(string $url): string
+    {
+        return preg_replace('#(https://api\.telegram\.org/(?:file/)?bot)[^/]+(/.*)#', '$1[REDACTED]$2', $url);
+    }
+
     public static function analizeUrl($url)
     {
         // Primero, utilizamos parse_url para obtener la parte del "path"
@@ -94,6 +99,7 @@ class TelegramController extends Controller
      */
     public static function send($request, $url, $attempt = 1, $data = false)
     {
+        $safeUrl = self::sanitizeUrl($url);
         try {
             // si es DEMO escribimos en la consola y retornamos message_id -1
             if (isset($request["demo"]) && $request["demo"] == true) {
@@ -138,20 +144,20 @@ class TelegramController extends Controller
             if (!$response->successful()) {
                 Log::warning("⚠️ TelegramController send HTTP failure", [
                     'status' => $response->status(),
-                    'url' => $url,
+                    'url' => $safeUrl,
                     'body' => $response->body(),
                 ]);
             }
             $body = $response->body();
             if (trim($body) === '') {
-                Log::warning("⚠️ TelegramController send empty body", ['url' => $url]);
+                Log::warning("⚠️ TelegramController send empty body", ['url' => $safeUrl]);
                 // return a generic failure JSON so callers can handle it
                 return json_encode(['ok' => false, 'description' => 'empty response from telegram']);
             }
             // attempt to validate json
             json_decode($body);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                Log::warning("⚠️ TelegramController send invalid JSON", ['body' => $body, 'url' => $url]);
+                Log::warning("⚠️ TelegramController send invalid JSON", ['body' => $body, 'url' => $safeUrl]);
                 // still return the raw body so higher layers can inspect
             }
             return $body;
@@ -159,7 +165,7 @@ class TelegramController extends Controller
         } catch (\Throwable $th) {
             $array = TelegramController::analizeUrl($url);
             $method = $array["path_parts"][count($array["path_parts"]) - 1];
-            Log::error("🆘 TelegramController {$method} attempt {$attempt}, CODE: {$th->getCode()}, line {$th->getLine()}, URL: {$url}, Message: {$th->getMessage()}");
+            Log::error("🆘 TelegramController {$method} attempt {$attempt}, CODE: {$th->getCode()}, line {$th->getLine()}, URL: {$safeUrl}, Message: {$th->getMessage()}");
             //Log::error("🆘 TelegramController TraceAsString: " . $th->getTraceAsString());
 
             // si hay algun error retornamos message_id 0
@@ -279,7 +285,7 @@ class TelegramController extends Controller
             && str_contains($array['description'], 'failed to get HTTP URL content')
         ) {
             Log::warning('⚠️ sendPhoto remote fetch failed; attempting manual upload', [
-                'url' => $url,
+                'url' => self::sanitizeUrl($url),
                 'description' => $array['description'],
                 'photo' => $request['message']['photo'] ?? null,
             ]);
@@ -310,7 +316,7 @@ class TelegramController extends Controller
 
         if (!$array || !isset($array['result'])) {
             Log::warning('⚠️ sendPhoto unexpected response', [
-                'url' => $url,
+                'url' => self::sanitizeUrl($url),
                 'response' => $response,
                 'request' => $request,
             ]);
@@ -361,7 +367,7 @@ class TelegramController extends Controller
             && str_contains($array['description'], 'failed to get HTTP URL content')
         ) {
             Log::warning('⚠️ sendMediaGroup remote fetch failed; attempting manual upload', [
-                'url' => $url,
+                'url' => self::sanitizeUrl($url),
                 'description' => $array['description'],
                 'media' => $media,
             ]);
@@ -597,7 +603,7 @@ class TelegramController extends Controller
             if ($response->successful()) {
                 return $response->body();
             }
-            Log::warning("⚠️ TelegramController getFileUrl HTTP status {$response->status()} for URL: {$url}");
+            Log::warning("⚠️ TelegramController getFileUrl HTTP status {$response->status()} for URL: " . self::sanitizeUrl($url));
         } catch (\Throwable $th) {
             Log::error("🆘 TelegramController getFileUrl error: " . $th->getMessage());
         }
@@ -617,7 +623,7 @@ class TelegramController extends Controller
             return $response->body();
         }
 
-        Log::error("🆘 TelegramController getFile: Fallo al descargar archivo de Telegram: " . $url);
+        Log::error("🆘 TelegramController getFile: Fallo al descargar archivo de Telegram: " . self::sanitizeUrl($url));
         return null;
     }
 
