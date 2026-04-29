@@ -195,7 +195,16 @@ trait UsesTelegramBot
                             if ($editData['ok'] ?: false) {
                                 $response = $editResponse;
                             } else {
-                                // Fallback: el edit falló (mensaje expirado, borrado externamente, etc.), enviar nuevo
+                                // Fallback: el edit falló — borrar el anterior y enviar nuevo para mantener el chat limpio
+                                try {
+                                    TelegramController::deleteMessage([
+                                        "message" => [
+                                            "id" => $lastBotMessage["message_id"],
+                                            "chat" => ["id" => $this->message["chat"]["id"]],
+                                        ],
+                                    ], $this->tenant->token);
+                                } catch (\Throwable $th) {
+                                }
                                 $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
                             }
                         }
