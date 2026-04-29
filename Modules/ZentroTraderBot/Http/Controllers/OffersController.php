@@ -675,6 +675,8 @@ class OffersController extends Controller
                         }
                         array_push($menu, [
                             ["text" => "⚖️ " . Lang::get("zentrotraderbot::bot.options.open_dispute"), "callback_data" => "/disputebyseller {$offer->code}"],
+                        ]);
+                        array_push($menu, [
                             ["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"],
                         ]);
                     }
