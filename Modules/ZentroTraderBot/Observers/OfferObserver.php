@@ -18,6 +18,7 @@ use Modules\ZentroTraderBot\Http\Controllers\OffersController;
 use Modules\Laravel\Services\TextService;
 use Illuminate\Support\Facades\Log;
 use Modules\ZentroTraderBot\Http\Controllers\OffersAlertsController;
+use Illuminate\Support\Facades\Cache;
 
 class OfferObserver
 {
@@ -456,12 +457,23 @@ class OfferObserver
         if (!$telegramId || !$token)
             return;
 
-        // Eliminar el mensaje de estado anterior para este usuario
+        // Sincronizar ambos sistemas de tracking para mantener un único mensaje activo en el chat
+        $bot = app('active_bot');
+        $cacheMsgKey = $bot ? "lastmessage_{$bot->key}_{$telegramId}" : null;
+        $cachedMsg = $cacheMsgKey ? Cache::get($cacheMsgKey) : null;
+        $cachedMsgId = (int) ($cachedMsg['message_id'] ?? 0);
+
+        $prevTradeMsgId = 0;
         if ($offer) {
-            $prevMsgId = $offer->data['last_status_messages'][$telegramId] ?? null;
-            if ($prevMsgId && (int) $prevMsgId > 0) {
-                DeleteTelegramMessage::dispatch($token, (int) $telegramId, (int) $prevMsgId);
+            $prevTradeMsgId = (int) ($offer->data['last_status_messages'][$telegramId] ?? 0);
+            if ($prevTradeMsgId > 0) {
+                DeleteTelegramMessage::dispatch($token, (int) $telegramId, $prevTradeMsgId);
             }
+        }
+
+        // Borrar también el mensaje de respuesta de menú si es diferente al último mensaje del trade
+        if ($cachedMsgId > 0 && $cachedMsgId !== $prevTradeMsgId) {
+            DeleteTelegramMessage::dispatch($token, (int) $telegramId, $cachedMsgId);
         }
 
         $payload = [
@@ -476,17 +488,20 @@ class OfferObserver
 
         $response = TelegramController::sendMessage($payload, $token);
 
-        // Guardar el message_id del mensaje enviado para poder eliminarlo en el siguiente estado.
+        // Guardar el message_id en ambos sistemas de tracking.
         // Se usa saveQuietly() para evitar re-disparar el Observer mientras syncOriginal() aún
         // no ha sido invocado por el save() padre (evita recursión y spam de mensajes).
-        if ($offer) {
-            $arr = json_decode($response, true);
-            $msgId = $arr['result']['message_id'] ?? null;
-            if ($msgId && (int) $msgId > 0) {
+        $arr = json_decode($response, true);
+        $msgId = (int) ($arr['result']['message_id'] ?? 0);
+        if ($msgId > 0) {
+            if ($offer) {
                 $data = $offer->data ?? [];
-                $data['last_status_messages'][$telegramId] = (int) $msgId;
+                $data['last_status_messages'][$telegramId] = $msgId;
                 $offer->data = $data;
                 $offer->saveQuietly();
+            }
+            if ($cacheMsgKey) {
+                Cache::forever($cacheMsgKey, $arr['result']);
             }
         }
     }

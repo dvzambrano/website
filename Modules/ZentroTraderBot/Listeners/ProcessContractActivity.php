@@ -205,8 +205,8 @@ class ProcessContractActivity
                     . "🆔 `{$code}`\n"
                     . "🏦 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.creating_buyer.line1")) . "\n\n"
                     . "⏱️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.creating_buyer.line2")) . "_";
-                $this->notifyByAddress($seller, $msgSeller, $bot->token, [], $offer);
-                $this->notifyByAddress($buyer, $msgBuyer, $bot->token, [], $offer);
+                $this->notifyByAddress($seller, $msgSeller, $bot->token, [], $offer, $bot->key);
+                $this->notifyByAddress($buyer, $msgBuyer, $bot->token, [], $offer, $bot->key);
                 break;
 
             case 'TRADECANCELLED':
@@ -224,8 +224,8 @@ class ProcessContractActivity
                     . "👉 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.cancelled.cancelled_by_buyer")) . "\n\n"
                     . "💵 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.cancelled.funds_returned", ['amount' => $amount])) . "\n"
                     . "👇 " . TextService::mdv2(Lang::get("telegrambot::bot.prompts.whatsnext"));
-                $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, $cancelMenu, $offer);
-                $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $cancelMenu, $offer);
+                $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, $cancelMenu, $offer, $bot->key);
+                $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $cancelMenu, $offer, $bot->key);
                 break;
 
             case 'TRADESIGNED':
@@ -236,7 +236,7 @@ class ProcessContractActivity
                         . "🆔 `{$code}`\n"
                         . "⏱️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.line1")) . "\n\n"
                         . "👉 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.signing_proof.line2")) . "_";
-                    $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, [], $offer);
+                    $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, [], $offer, $bot->key);
 
                     // Enviar fotos de comprobante al vendedor (si las hay) antes del mensaje con botón
                     $sellerSub = Suscriptions::findByAddress($offer->seller_address);
@@ -263,12 +263,12 @@ class ProcessContractActivity
                         ],
                         [["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"]],
                     ];
-                    $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $confirmMenu, $offer);
+                    $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, $confirmMenu, $offer, $bot->key);
                 } else {
                     $msg = $header
                         . "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm.line1")) . "\n"
                         . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.signing_confirm.line2"));
-                    $this->notifyByAddress($signer ?: $offer->seller_address, $msg, $bot->token, [], $offer);
+                    $this->notifyByAddress($signer ?: $offer->seller_address, $msg, $bot->token, [], $offer, $bot->key);
                 }
                 break;
 
@@ -281,8 +281,8 @@ class ProcessContractActivity
                     . "🆔 `{$code}`\n"
                     . "🔐 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line2")) . "\n\n"
                     . "⏱️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.closing_seller.line3")) . "_";
-                $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, [], $offer);
-                $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, [], $offer);
+                $this->notifyByAddress($offer->buyer_address, $msgBuyer, $bot->token, [], $offer, $bot->key);
+                $this->notifyByAddress($offer->seller_address, $msgSeller, $bot->token, [], $offer, $bot->key);
                 break;
 
             case 'TRADEEXPIRED':
@@ -293,7 +293,7 @@ class ProcessContractActivity
                 if ($userId) {
                     $suscriptor = Suscriptions::where('user_id', $userId)->first();
                     if ($suscriptor)
-                        $this->notifyByAddress($suscriptor->data['wallet']['address'] ?? '', $msg, $bot->token, [], $offer);
+                        $this->notifyByAddress($suscriptor->data['wallet']['address'] ?? '', $msg, $bot->token, [], $offer, $bot->key);
                 }
                 break;
 
@@ -310,14 +310,14 @@ class ProcessContractActivity
                     $msgCounterpart = $header
                         . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.dispute.seller_opened_counterpart_line1")) . "\n"
                         . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.dispute.seller_opened_counterpart_line2"));
-                    $this->notifyByAddress($offer->seller_address, $msgOpener, $bot->token, [], $offer);
-                    $this->notifyByAddress($offer->buyer_address, $msgCounterpart, $bot->token, [], $offer);
+                    $this->notifyByAddress($offer->seller_address, $msgOpener, $bot->token, [], $offer, $bot->key);
+                    $this->notifyByAddress($offer->buyer_address, $msgCounterpart, $bot->token, [], $offer, $bot->key);
                 } else {
                     $msgCounterpart = $header
                         . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.dispute.buyer_opened_counterpart_line1")) . "\n"
                         . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.dispute.buyer_opened_counterpart_line2"));
-                    $this->notifyByAddress($offer->buyer_address, $msgOpener, $bot->token, [], $offer);
-                    $this->notifyByAddress($offer->seller_address, $msgCounterpart, $bot->token, [], $offer);
+                    $this->notifyByAddress($offer->buyer_address, $msgOpener, $bot->token, [], $offer, $bot->key);
+                    $this->notifyByAddress($offer->seller_address, $msgCounterpart, $bot->token, [], $offer, $bot->key);
                 }
                 break;
 
@@ -325,8 +325,8 @@ class ProcessContractActivity
                 $msg = $header
                     . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.resolving.line1")) . "\n"
                     . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.pending.resolving.line2"));
-                $this->notifyByAddress($offer->seller_address, $msg, $bot->token, [], $offer);
-                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer);
+                $this->notifyByAddress($offer->seller_address, $msg, $bot->token, [], $offer, $bot->key);
+                $this->notifyByAddress($offer->buyer_address, $msg, $bot->token, [], $offer, $bot->key);
                 break;
         }
     }
@@ -393,9 +393,10 @@ class ProcessContractActivity
 
     /**
      * Envía un mensaje de Telegram buscando al usuario por su dirección de wallet.
-     * Elimina el mensaje de estado anterior del usuario (si existe) y almacena el nuevo message_id.
+     * Elimina el mensaje de estado anterior del usuario (si existe) y almacena el nuevo message_id
+     * en ambos sistemas de tracking: last_status_messages (trade) y lastmessage_* (UsesTelegramBot).
      */
-    private function notifyByAddress(?string $address, string $text, string $token, array $menu = [], ?Offers $offer = null): void
+    private function notifyByAddress(?string $address, string $text, string $token, array $menu = [], ?Offers $offer = null, string $botKey = ''): void
     {
         if (!$address)
             return;
@@ -406,12 +407,22 @@ class ProcessContractActivity
 
         $telegramId = $suscriptor->user_id;
 
-        // Eliminar el mensaje de estado anterior para este usuario
+        // Sincronizar ambos sistemas de tracking para mantener un único mensaje activo en el chat
+        $cacheMsgKey = $botKey ? "lastmessage_{$botKey}_{$telegramId}" : null;
+        $cachedMsg = $cacheMsgKey ? Cache::get($cacheMsgKey) : null;
+        $cachedMsgId = (int) ($cachedMsg['message_id'] ?? 0);
+
+        $prevTradeMsgId = 0;
         if ($offer) {
-            $prevMsgId = $offer->data['last_status_messages'][$telegramId] ?? null;
-            if ($prevMsgId && (int) $prevMsgId > 0) {
-                DeleteTelegramMessage::dispatch($token, (int) $telegramId, (int) $prevMsgId);
+            $prevTradeMsgId = (int) ($offer->data['last_status_messages'][$telegramId] ?? 0);
+            if ($prevTradeMsgId > 0) {
+                DeleteTelegramMessage::dispatch($token, (int) $telegramId, $prevTradeMsgId);
             }
+        }
+
+        // Borrar también el mensaje de respuesta de menú si es diferente al último mensaje del trade
+        if ($cachedMsgId > 0 && $cachedMsgId !== $prevTradeMsgId) {
+            DeleteTelegramMessage::dispatch($token, (int) $telegramId, $cachedMsgId);
         }
 
         $payload = [
@@ -427,14 +438,17 @@ class ProcessContractActivity
 
         $response = TelegramController::sendMessage($payload, $token);
 
-        // Guardar el message_id del mensaje enviado para poder eliminarlo en el siguiente estado
-        if ($offer) {
-            $arr = json_decode($response, true);
-            $msgId = $arr['result']['message_id'] ?? null;
-            if ($msgId && (int) $msgId > 0) {
+        // Guardar el message_id en ambos sistemas de tracking
+        $arr = json_decode($response, true);
+        $msgId = (int) ($arr['result']['message_id'] ?? 0);
+        if ($msgId > 0) {
+            if ($offer) {
                 $data = $offer->data ?? [];
-                $data['last_status_messages'][$telegramId] = (int) $msgId;
+                $data['last_status_messages'][$telegramId] = $msgId;
                 $offer->update(['data' => $data]);
+            }
+            if ($cacheMsgKey) {
+                Cache::forever($cacheMsgKey, $arr['result']);
             }
         }
     }
