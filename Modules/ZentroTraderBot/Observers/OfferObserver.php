@@ -84,6 +84,7 @@ class OfferObserver
                     [
                         [["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer " . $offer->code]],
                         [["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_seller"), "callback_data" => "/startchat {$offer->code}"]],
+                        [["text" => "👤 " . Lang::get("zentrotraderbot::bot.options.view_profile_seller"), "callback_data" => "/viewprofile {$offer->code}"]],
                         [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/canceloffer " . $offer->code]],
                     ],
                     $offer
@@ -100,6 +101,7 @@ class OfferObserver
 
                 $this->notifyByAddress($offer->seller_address, $text, $bot->token, [
                     [["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"]],
+                    [["text" => "👤 " . Lang::get("zentrotraderbot::bot.options.view_profile_buyer"), "callback_data" => "/viewprofile {$offer->code}"]],
                 ], $offer);
 
                 // Despachar recordatorio con el botón de reclamar para cuando expire el plazo

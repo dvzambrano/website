@@ -71,6 +71,24 @@ return [
         "message_buyer" => "Enviar mensaje al Comprador",
         "message_seller" => "Enviar mensaje al Vendedor",
         "myalerts"       => "Alertas de Ofertas",
+        "view_profile"         => "Ver Perfil",
+        "view_profile_seller"  => "Ver Perfil del Vendedor",
+        "view_profile_buyer"   => "Ver Perfil del Comprador",
+    ],
+
+    // =========================================================
+    // TRADER PROFILE — Vista pública del perfil
+    // =========================================================
+
+    "profile" => [
+        "header"          => "PERFIL DEL TRADER",
+        "vip"             => "VIP",
+        "trades"          => "Trades completados",
+        "rating"          => "Calificación promedio",
+        "payment_methods" => "Opera con",
+        "last_reviews"    => "Últimas reseñas",
+        "no_reviews"      => "Sin reseñas aún",
+        "not_found"       => "No se pudo encontrar el perfil de este trader",
     ],
 
     // =========================================================

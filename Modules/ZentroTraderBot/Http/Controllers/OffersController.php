@@ -648,6 +648,9 @@ class OffersController extends Controller
                         array_push($menu, [
                             ["text" => "{$btnAction} por {$total} {$offer->currency}", "callback_data" => "/offerapply {$offer->code}"],
                         ]);
+                        array_push($menu, [
+                            ["text" => "👤 " . Lang::get("zentrotraderbot::bot.options.view_profile"), "callback_data" => "/viewprofile {$offer->code}"],
+                        ]);
                     }
                     break;
 
@@ -2921,5 +2924,135 @@ class OffersController extends Controller
 
 
         return $reply;
+    }
+
+    // =========================================================
+    // VIEW PROFILE — Perfil público de la contraparte
+    // =========================================================
+
+    /**
+     * Muestra el perfil público de la contraparte de una oferta.
+     * Si el solicitante es parte del trade, muestra a la otra parte.
+     * Si aún no es parte (oferta abierta), muestra al creador.
+     */
+    public function viewProfile($bot, $offerCode)
+    {
+        $offer = Offers::findByCode($offerCode);
+
+        if (!$offer) {
+            return [
+                "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.not_found")),
+                "chat" => ["id" => $bot->actor->user_id],
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
+                    ],
+                ]),
+            ];
+        }
+
+        // Detectar a quién pertenece el perfil a mostrar:
+        // Si el solicitante ya es parte del trade → mostrar contraparte.
+        // Si aún no es parte → mostrar creador de la oferta.
+        $profileUserId = $offer->user_id;
+
+        $requesterSub = Suscriptions::on('tenant')->where('user_id', $bot->actor->user_id)->first();
+        if ($requesterSub) {
+            $wallet      = strtolower($requesterSub->data['wallet']['address'] ?? '');
+            $buyerWallet = strtolower($offer->buyer_address ?? '');
+            $sellerWallet = strtolower($offer->seller_address ?? '');
+
+            if ($wallet && $buyerWallet && $wallet === $buyerWallet) {
+                // El solicitante es el comprador → mostrar perfil del vendedor
+                $sellerSub = Suscriptions::findByAddress($offer->seller_address);
+                $profileUserId = $sellerSub ? $sellerSub->user_id : $offer->user_id;
+            } elseif ($wallet && $sellerWallet && $wallet === $sellerWallet) {
+                // El solicitante es el vendedor → mostrar perfil del comprador
+                $buyerSub = Suscriptions::findByAddress($offer->buyer_address);
+                $profileUserId = $buyerSub ? $buyerSub->user_id : $offer->user_id;
+            }
+        }
+
+        $suscription = Suscriptions::on('tenant')->where('user_id', $profileUserId)->first();
+        if (!$suscription) {
+            return [
+                "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.not_found")),
+                "chat" => ["id" => $bot->actor->user_id],
+                "reply_markup" => json_encode([
+                    "inline_keyboard" => [
+                        [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
+                    ],
+                ]),
+            ];
+        }
+
+        // Reputación
+        $reputation = $suscription->data['reputation'] ?? [];
+        $trades     = max(0, ($reputation['trades'] ?? 1) - 1);
+        $average    = (float) ($reputation['average'] ?? 5.0);
+        $isVip      = $reputation['vip'] ?? false;
+        $stars      = TextService::getStars($average, 0.25, "⭐", "💫", "");
+
+        // Nombre / username desde la relación Actors
+        $actor      = $suscription->actor;
+        $displayName = '';
+        if ($actor) {
+            $telegram    = $actor->data['telegram'] ?? [];
+            $username    = $telegram['username'] ?? null;
+            $firstName   = $telegram['first_name'] ?? '';
+            $lastName    = $telegram['last_name'] ?? '';
+            $displayName = $username ? "@{$username}" : trim("{$firstName} {$lastName}");
+        }
+        if (!$displayName) {
+            $displayName = "Trader #{$profileUserId}";
+        }
+
+        // Construir texto del perfil
+        $vipBadge = $isVip ? " 🏆 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.vip")) : "";
+        $text  = "👤 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.header")) . "{$vipBadge}*\n";
+        $text .= "💼 " . TextService::mdv2($displayName) . "\n\n";
+        $text .= "📊 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.trades")) . ":* `{$trades}`\n";
+        $text .= "⭐ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.rating")) . ":* `" . number_format($average, 2) . "` {$stars}\n\n";
+
+        // Métodos de pago (solo nombre e icono, sin datos privados de cuenta)
+        $paymentMethods = $suscription->data['payment_methods'] ?? [];
+        if (!empty($paymentMethods)) {
+            $text .= "💳 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.payment_methods")) . ":*\n";
+            foreach ($paymentMethods as $pm) {
+                $icon = $pm['icon'] ?? '💳';
+                $name = TextService::mdv2($pm['name'] ?? '');
+                $text .= "{$icon} {$name}\n";
+            }
+            $text .= "\n";
+        }
+
+        // Últimas reseñas con comentario
+        $ratings = OffersRatings::where('rated_user_id', $profileUserId)
+            ->whereNotNull('comment')
+            ->where('comment', '!=', '')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        if ($ratings->count() > 0) {
+            $text .= "💬 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.last_reviews")) . ":*\n";
+            foreach ($ratings as $rating) {
+                $rStars  = TextService::getStars($rating->stars, 0.25, "⭐", "💫", "");
+                $comment = TextService::mdv2($rating->comment);
+                $text   .= "{$rStars} _\"{$comment}\"_\n";
+            }
+        } else {
+            $text .= "💬 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.no_reviews")) . "_\n";
+        }
+
+        return [
+            "text"         => $text,
+            "chat"         => ["id" => $bot->actor->user_id],
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
+                ],
+            ]),
+        ];
     }
 }

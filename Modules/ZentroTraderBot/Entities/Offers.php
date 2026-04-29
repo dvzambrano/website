@@ -212,7 +212,10 @@ class Offers extends Model
                     "inline_keyboard" => [
                         [
                             ["text" => "👉 Aplicar a esta oferta", 'url' => "https://t.me/" . $botName . "?start=offer_{$this->code}"]
-                        ]
+                        ],
+                        [
+                            ["text" => "👤 Ver Perfil", 'url' => "https://t.me/" . $botName . "?start=profile_{$this->code}"]
+                        ],
                     ],
                 ];
                 break;

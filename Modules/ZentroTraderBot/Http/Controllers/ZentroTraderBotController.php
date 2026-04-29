@@ -122,6 +122,10 @@ class ZentroTraderBotController extends JsonsController
                         $code = str_replace('offer_', '', $array["message"]);
                         $controller = new OffersController();
                         $reply = $controller->showOffer($this, $code);
+                    } elseif (str_starts_with($array["message"], 'profile_')) {
+                        $code = str_replace('profile_', '', $array["message"]);
+                        $controller = new OffersController();
+                        $reply = $controller->viewProfile($this, $code);
                     }
                 }
                 return $reply;
@@ -502,6 +506,12 @@ class ZentroTraderBotController extends JsonsController
             function () use ($array) {
                 $controller = new OffersController();
                 return $controller->showOffer($this, $array["pieces"][1]);
+            };
+
+        $this->strategies["/viewprofile"] =
+            function () use ($array) {
+                $controller = new OffersController();
+                return $controller->viewProfile($this, $array["pieces"][1]);
             };
 
 
