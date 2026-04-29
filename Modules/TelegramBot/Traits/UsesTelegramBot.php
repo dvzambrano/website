@@ -631,7 +631,7 @@ trait UsesTelegramBot
         array_push($menu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]);
 
         $reply = [
-            "text" => "👮‍♂️ *" . Lang::get("telegrambot::bot.adminmenu.header") . "*!\n_" . Lang::get("telegrambot::bot.adminmenu.warning") . "_\n\n👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
+            "text" => "👮‍♂️ *" . Lang::get("telegrambot::bot.adminmenu.header") . "*\!\n_" . Lang::get("telegrambot::bot.adminmenu.warning") . "_\n\n👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
             "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
@@ -666,7 +666,7 @@ trait UsesTelegramBot
         array_push($menu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]);
 
         $reply = [
-            "text" => "⚙️ *" . Lang::get("telegrambot::bot.configmenu.header") . "*!\n_" . Lang::get("telegrambot::bot.configmenu.warning") . "_\n\n👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
+            "text" => "⚙️ *" . Lang::get("telegrambot::bot.configmenu.header") . "*\!\n_" . Lang::get("telegrambot::bot.configmenu.warning") . "_\n\n👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
             "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
