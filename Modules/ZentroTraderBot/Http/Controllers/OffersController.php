@@ -3002,11 +3002,34 @@ class OffersController extends Controller
         $isVip = $reputation['vip'] ?? false;
         $stars = TextService::getStars($average, 0.25, "⭐", "💫", "");
 
+        // Estadísticas de rendimiento
+        $stats = $suscription->data['stats'] ?? [];
+        $completionRate = $stats['completion_rate'] ?? null;
+        $avgResponseMin = $stats['avg_response_minutes'] ?? null;
+        $avgReleaseMin  = $stats['avg_release_minutes'] ?? null;
+        $memberSince    = $stats['member_since'] ?? null;
+
+        $formatMinutes = function (int $minutes): string {
+            if ($minutes < 60) return Lang::get("zentrotraderbot::bot.profile.time_minutes", ['n' => $minutes]);
+            if ($minutes < 1440) return Lang::get("zentrotraderbot::bot.profile.time_hours", ['n' => round($minutes / 60)]);
+            return Lang::get("zentrotraderbot::bot.profile.time_days", ['n' => round($minutes / 1440)]);
+        };
+
         // Construir texto del perfil
         $vipBadge = $isVip ? " 🏆 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.vip")) : "";
         $text = "👤 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.header")) . "{$vipBadge}*\n";
         $text .= "{$stars}\n\n";
         $text .= "📈 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.trades")) . ":* `{$trades}`\n";
+        if ($completionRate !== null)
+            $text .= "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.completion_rate")) . ":* `" . number_format($completionRate, 1) . "%`\n";
+        if ($avgResponseMin !== null)
+            $text .= "⚡ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.avg_response")) . ":* `" . TextService::mdv2($formatMinutes($avgResponseMin)) . "`\n";
+        if ($avgReleaseMin !== null)
+            $text .= "🔓 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.avg_release")) . ":* `" . TextService::mdv2($formatMinutes($avgReleaseMin)) . "`\n";
+        if ($memberSince !== null) {
+            $sinceDate = TextService::mdv2(\Carbon\Carbon::createFromTimestamp($memberSince)->format('M Y'));
+            $text .= "📅 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.member_since")) . ":* `{$sinceDate}`\n";
+        }
         $text .= "⭐ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.profile.rating")) . ":* `" . number_format($average, 2) . "`\n\n";
 
         // Métodos de pago (solo nombre e icono, sin datos privados de cuenta)

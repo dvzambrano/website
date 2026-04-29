@@ -122,6 +122,18 @@ class OfferObserver
             case 'COMPLETED':
                 $isDispute = !empty($offer->winner_address);
 
+                // Registrar timestamp de cierre y actualizar estadísticas del vendedor
+                $completedData = $offer->data ?? [];
+                $completedData['completed_at'] = now()->timestamp;
+                $offer->updateQuietly(['data' => $completedData]);
+
+                if (!$isDispute) {
+                    $sellerSub = Suscriptions::findByAddress($offer->seller_address);
+                    if ($sellerSub) {
+                        $sellerSub->updateStats($completedData);
+                    }
+                }
+
                 // Mensaje al VENDEDOR
                 if ($isDispute) {
                     $msgSeller = "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.title_dispute")) . "*\n"
@@ -232,6 +244,10 @@ class OfferObserver
                 // Si quien firmó fue el COMPRADOR, el vendedor ya recibió el botón de confirmar
                 // en el pass unconfirmed de TRADESIGNED. No duplicamos el mensaje.
                 if ($signer !== strtolower($offer->seller_address)) {
+                    // Registrar cuándo el comprador envió su comprobante de pago
+                    $signedData = $offer->data ?? [];
+                    $signedData['signed_at'] = now()->timestamp;
+                    $offer->updateQuietly(['data' => $signedData]);
                     break;
                 }
 

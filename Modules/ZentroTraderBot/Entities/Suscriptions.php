@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Services\TextService;
 use Carbon\Carbon;
+use Modules\ZentroTraderBot\Entities\Offers;
 
 /**
  * @property int $id
@@ -135,5 +136,51 @@ class Suscriptions extends Actors
             ],
             "text" => $balanceText,
         ];
+    }
+
+    public function updateStats(array $offerData): void
+    {
+        $data = $this->data ?? [];
+        $stats = $data['stats'] ?? [];
+
+        // Primera vez que se completa un trade: registrar antigüedad
+        if (empty($stats['member_since'])) {
+            $stats['member_since'] = $offerData['locked_at'] ?? now()->timestamp;
+        }
+
+        // Tasa de completado — calculada desde la BD para exactitud
+        $address = strtolower($this->data['wallet']['address'] ?? '');
+        if ($address) {
+            $total = Offers::asSeller($address)
+                ->whereIn('status', ['completed', 'cancelled', 'expired'])
+                ->count();
+            $completed = Offers::asSeller($address)->where('status', 'completed')->count();
+            $stats['completion_rate'] = $total > 0 ? round(($completed / $total) * 100, 1) : 100.0;
+        }
+
+        $completedAt = $offerData['completed_at'] ?? now()->timestamp;
+
+        // Tiempo de respuesta: desde que el comprador envió comprobante hasta que el vendedor confirmó
+        $signedAt = $offerData['signed_at'] ?? null;
+        if ($signedAt && $completedAt > $signedAt) {
+            $minutes = round(($completedAt - $signedAt) / 60);
+            $n = ($stats['response_samples'] ?? 0) + 1;
+            $prev = $stats['avg_response_minutes'] ?? 0;
+            $stats['avg_response_minutes'] = (int) round($prev + ($minutes - $prev) / $n);
+            $stats['response_samples'] = $n;
+        }
+
+        // Tiempo de liberación: desde que el trade se bloqueó hasta que se completó
+        $lockedAt = $offerData['locked_at'] ?? null;
+        if ($lockedAt && $completedAt > $lockedAt) {
+            $minutes = round(($completedAt - $lockedAt) / 60);
+            $n = ($stats['release_samples'] ?? 0) + 1;
+            $prev = $stats['avg_release_minutes'] ?? 0;
+            $stats['avg_release_minutes'] = (int) round($prev + ($minutes - $prev) / $n);
+            $stats['release_samples'] = $n;
+        }
+
+        $data['stats'] = $stats;
+        $this->update(['data' => $data]);
     }
 }
