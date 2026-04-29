@@ -308,9 +308,17 @@ class OffersAlertsController extends Controller
 
                 $body .= "▫️ {$typeLabel} · {$methodLabel} · {$priceLabel}\n";
 
+                $typeRaw = $alert->type === 'buy'
+                    ? Lang::get('zentrotraderbot::bot.alerts.type_buy')
+                    : Lang::get('zentrotraderbot::bot.alerts.type_sell');
+                $methodRaw = $alert->payment_method ?? Lang::get('zentrotraderbot::bot.alerts.method_any');
+                $priceRaw = $alert->max_price
+                    ? Lang::get('zentrotraderbot::bot.alerts.price_max', ['price' => number_format((float) $alert->max_price, 2)])
+                    : Lang::get('zentrotraderbot::bot.alerts.price_unlimited');
+
                 $keyboard[] = [
                     [
-                        'text' => '🗑 ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.alerts.delete')) . " #{$alert->id}",
+                        'text' => "🗑 {$typeRaw} · {$methodRaw} · {$priceRaw}",
                         'callback_data' => "confirmation|p2palertdelete-{$alert->id}|/p2palerts",
                     ],
                 ];
