@@ -276,7 +276,7 @@ return [
         "cancelled_by_withdrawal" => [
             "title" => "Ofertas Canceladas Automáticamente",
             "reason" => "Se detectó una salida de :amount USD de su cuenta.",
-            "offers" => "Se :verb cancelado :count por fondos insuficientes:",
+            'offers' => 'Se ha cancelado :count oferta por fondos insuficientes|Se han cancelado :count ofertas por fondos insuficientes',
             "info" => "Las ofertas de venta requieren que los fondos estén disponibles en su cuenta.",
         ],
         "signed" => [

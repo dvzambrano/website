@@ -282,14 +282,12 @@ class ProcessWalletActivity
 
         // Notificar al usuario por DM
         $count = count($cancelledCodes);
-        $verb = $count === 1 ? 'ha' : 'han';
-        $noun = $count === 1 ? 'la oferta' : "las {$count} ofertas";
         $codesText = implode(', ', array_map(fn($c) => "`{$c}`", $cancelledCodes));
         $amountText = number_format($transferAmount, 2);
 
         $msg = "⚠️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.cancelled_by_withdrawal.title")) . "*\n"
             . "💸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.cancelled_by_withdrawal.reason", ['amount' => $amountText])) . "\n\n"
-            . "📴 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.cancelled_by_withdrawal.offers", ['verb' => $verb, 'count' => $noun])) . "\n"
+            . "📴 " . TextService::mdv2(Lang::choice("zentrotraderbot::bot.offer.cancelled_by_withdrawal.offers", $count, ['count' => $count])) . "\n"
             . $codesText . "\n\n"
             . "ℹ️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.cancelled_by_withdrawal.info")) . "_";
 
