@@ -273,6 +273,12 @@ return [
             "cancelled_by_self" => "Ud ha cancelado la aplicación a la Oferta.",
             "funds_returned" => "Estamos procesando la devolución de :amount USD a su cuenta.",
         ],
+        "cancelled_by_withdrawal" => [
+            "title" => "Ofertas Canceladas Automáticamente",
+            "reason" => "Se detectó una salida de :amount USD de su cuenta.",
+            "offers" => "Se :verb cancelado :count por fondos insuficientes:",
+            "info" => "Las ofertas de venta requieren que los fondos estén disponibles en su cuenta.",
+        ],
         "signed" => [
             "pending_title" => "Confirmacion Pendiente",
             "counterpart_confirmed" => "La contraparte ya ha confirmado esta transacción.",
@@ -720,11 +726,11 @@ return [
     // =========================================================
 
     "buy_match" => [
-        "title"       => "Ofertas de venta disponibles para ti",
-        "subtitle"    => "Estas son las 3 mejores ofertas de venta que se ajustan a tu oferta de compra. Puedes aplicar directamente a cualquiera de ellas:",
+        "title" => "Ofertas de venta disponibles para ti",
+        "subtitle" => "Estas son las 3 mejores ofertas de venta que se ajustan a tu oferta de compra. Puedes aplicar directamente a cualquiera de ellas:",
         "offer_label" => "Opción #:n",
-        "hint"        => "Toca cualquier botón para ver los detalles y aplicar.",
-        "view_all"    => "Ver todas las ofertas",
+        "hint" => "Toca cualquier botón para ver los detalles y aplicar.",
+        "view_all" => "Ver todas las ofertas",
     ],
 
     // =========================================================

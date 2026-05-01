@@ -99,6 +99,14 @@ class OffersController extends Controller
             $walletCtrl = new TraderWalletController();
             $suscriptor = Suscriptions::where('user_id', $userId)->first();
             $balanceRaw = (float) $walletCtrl->getBalance($suscriptor);
+
+            // Descontar el total de ofertas SELL en estado OPEN (soft reserve)
+            $openSellSum = (float) Offers::where('user_id', $userId)
+                ->where('type', 'sell')
+                ->where('status', 'open')
+                ->sum('amount');
+            $balanceRaw = max(0.0, $balanceRaw - $openSellSum);
+
             $balance = number_format($balanceRaw, 2);
         }
 
@@ -453,6 +461,13 @@ class OffersController extends Controller
     private function publishOffer($bot, $state, $stars = "")
     {
         // 1. PRIMER GUARDADO: Creamos la instancia y la persistimos para obtener el ID real de la DB
+        $isSellOffer = $state['data']['type'] === 'sell';
+        $sellerAddress = null;
+        if ($isSellOffer) {
+            $publisherSuscriptor = Suscriptions::where('user_id', $bot->actor->user_id)->first();
+            $sellerAddress = strtolower($publisherSuscriptor->data['wallet']['address'] ?? '');
+        }
+
         $offer = new Offers([
             'uuid' => (string) Str::uuid(),
             'user_id' => $bot->actor->user_id,
@@ -465,6 +480,7 @@ class OffersController extends Controller
             'status' => 'open',
             'network_id' => env("BASE_NETWORK"),
             'token_address' => env("BASE_TOKEN"),
+            'seller_address' => $sellerAddress,
         ]);
         // Asignamos los componentes aleatorios del código de soporte
         $offer->data = [
