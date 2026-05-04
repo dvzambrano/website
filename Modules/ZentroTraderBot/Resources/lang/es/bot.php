@@ -736,4 +736,47 @@ return [
     // =========================================================
     // OPTIONS — nuevas entradas para el menú
     // =========================================================
+
+    // =========================================================
+    // NETWORK STATUS — /network
+    // =========================================================
+    "network" => [
+        "header"       => "ESTADO DE",
+        "token_label"  => "Token Principal",
+        "gas"          => "Gas Actual",
+        "tx_cost"      => "Costo de Tx",
+        "fee_escrow"   => "Fee Escrow",
+        "min_fee"      => "MinFee Actual",
+        "avg_trade"    => "Basado en trades promedio de",
+        "alert"        => "ALERTA",
+        "loss"         => "Estás operando en pérdida con trades de",
+        "healthy"      => "SISTEMA SALUDABLE",
+        "margin_intro" => "Tienes un margen del",
+        "margin_over"  => "sobre el MinFee.",
+        "btn_reload"   => "Volver a cargar",
+        "error_connect" => "Error: No se pudo conectar con la Blockchain.",
+        "error_report"  => "Error al procesar el reporte",
+    ],
+
+    // =========================================================
+    // CONTRACT — /contract (solo admins)
+    // =========================================================
+    "contract" => [
+        "header"                  => "Estado del Contrato Escrow",
+        "network_label"           => "Red",
+        "token_label"             => "Token",
+        "locked"                  => "Fondos bloqueados en trades activos",
+        "fees"                    => "Fees disponibles para retirar",
+        "address_label"           => "Contrato",
+        "btn_withdraw"            => "Extraer fees",
+        "btn_refresh"             => "Actualizar",
+        "btn_status"              => "Ver estado del contrato",
+        "access_denied"           => "Acceso denegado. Este comando es solo para administradores.",
+        "access_denied_short"     => "Acceso denegado.",
+        "error_connect"           => "Error: No se pudo conectar con la Blockchain.",
+        "error_withdraw"          => "Error al ejecutar el retiro de fees. Revisa los logs para más detalles.",
+        "withdraw_confirm_title"   => "¿Retirar las fees acumuladas del contrato?",
+        "withdraw_confirm_warning" => "Esta acción ejecutará una transacción on-chain y transferirá los fondos disponibles al árbitro.",
+        "withdraw_success"        => "Fees retiradas exitosamente",
+    ],
 ];

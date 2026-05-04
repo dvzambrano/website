@@ -668,44 +668,44 @@ class ZentroTraderBotController extends JsonsController
             };
 
         // Contract finances — admin only
-        $this->strategies["/contract"] =
+        $this->strategies["/contract"] = $this->strategies["contract"] =
             function () {
                 if (!$this->actor->isLevel(1, $this->tenant->code)) {
-                    return ["text" => "❌ Acceso denegado\. Este comando es solo para administradores\."];
+                    return ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.access_denied"))];
                 }
 
                 $blockchain = new BlockchainController();
-                $finances   = $blockchain->getContractFinances();
+                $finances = $blockchain->getContractFinances();
 
                 if (!$finances) {
-                    return ["text" => "❌ Error: No se pudo conectar con la Blockchain\."];
+                    return ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.error_connect"))];
                 }
 
-                $token           = $finances['token'];
-                $network         = $finances['network'];
+                $token = $finances['token'];
+                $network = $finances['network'];
                 $lockedFormatted = number_format($finances['lockedUsd'], 4);
-                $feesFormatted   = number_format($finances['feesUsd'], 4);
-                $symbol          = $token['symbol'];
-                $contract        = TextService::mdv2(env('ESCROW_CONTRACT'));
+                $feesFormatted = number_format($finances['feesUsd'], 4);
+                $symbol = $token['symbol'];
+                $contract = TextService::mdv2(env('ESCROW_CONTRACT'));
 
-                $msg  = "🏦 *Estado del Contrato Escrow*\n\n";
-                $msg .= "🌐 *Red:* `" . TextService::mdv2($network['title'] ?? $network['name'] ?? '') . "`\n";
-                $msg .= "💰 *Token:* `{$symbol}`\n\n";
-                $msg .= "🔒 *Fondos bloqueados en trades activos:*\n";
+                $msg = "🏦 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.header")) . "*\n\n";
+                $msg .= "🌐 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.network_label")) . ":* `" . TextService::mdv2($network['title'] ?? $network['name'] ?? '') . "`\n";
+                $msg .= "💰 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.token_label")) . ":* `{$symbol}`\n\n";
+                $msg .= "🔒 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.locked")) . ":*\n";
                 $msg .= "     `{$lockedFormatted} {$symbol}`\n\n";
-                $msg .= "💸 *Fees disponibles para retirar:*\n";
+                $msg .= "💸 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.fees")) . ":*\n";
                 $msg .= "     `{$feesFormatted} {$symbol}`\n\n";
-                $msg .= "📍 _Contrato: `{$contract}`_";
+                $msg .= "📍 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.address_label")) . ": `{$contract}`_";
 
                 return [
-                    "text"         => $msg,
+                    "text" => $msg,
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
                             [
-                                ["text" => "💸 Extraer fees", "callback_data" => "withdrawfeesconfirmation|withdrawfees|contract"],
+                                ["text" => "💸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.btn_withdraw")), "callback_data" => "withdrawfeesconfirmation|withdrawfees|contract"],
                             ],
                             [
-                                ["text" => "🔄 Actualizar", "callback_data" => "/contract"],
+                                ["text" => "🔄 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.btn_refresh")), "callback_data" => "/contract"],
                             ],
                             [
                                 ["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"],
@@ -718,14 +718,14 @@ class ZentroTraderBotController extends JsonsController
         $this->strategies["withdrawfeesconfirmation"] =
             function () use ($array) {
                 if (!$this->actor->isLevel(1, $this->tenant->code)) {
-                    return ["text" => "❌ Acceso denegado\."];
+                    return ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.access_denied_short"))];
                 }
 
                 return $this->getAreYouSurePrompt(
                     $array["pieces"][1],
                     $array["pieces"][2],
-                    "\n💸 *¿Retirar las fees acumuladas del contrato?*\n" .
-                    "⚠️ _Esta acción ejecutará una transacción on\\-chain y transferirá los fondos disponibles al árbitro\\._\n",
+                    "\n💸 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.withdraw_confirm_title")) . "*\n" .
+                    "⚠️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.withdraw_confirm_warning")) . "_\n",
                     false
                 );
             };
@@ -733,18 +733,18 @@ class ZentroTraderBotController extends JsonsController
         $this->strategies["withdrawfees"] =
             function () {
                 if (!$this->actor->isLevel(1, $this->tenant->code)) {
-                    return ["text" => "❌ Acceso denegado\."];
+                    return ["text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.access_denied_short"))];
                 }
 
                 $blockchain = new BlockchainController();
-                $result     = $blockchain->withdrawContractFees();
+                $result = $blockchain->withdrawContractFees();
 
                 if (!$result) {
                     return [
-                        "text"         => "❌ Error al ejecutar el retiro de fees\. Revisa los logs para más detalles\.",
+                        "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.error_withdraw")),
                         "reply_markup" => json_encode([
                             "inline_keyboard" => [
-                                [["text" => "🔄 Ver estado del contrato", "callback_data" => "/contract"]],
+                                [["text" => "🔄 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.btn_status")), "callback_data" => "/contract"]],
                                 [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
                             ],
                         ]),
@@ -752,10 +752,10 @@ class ZentroTraderBotController extends JsonsController
                 }
 
                 return [
-                    "text"         => "✅ *Fees retiradas exitosamente*\n\n🔗 " . TextService::mdv2($result['explorer']),
+                    "text" => "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.withdraw_success")) . "*\n\n🔗 " . TextService::mdv2($result['explorer']),
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
-                            [["text" => "🔄 Ver estado del contrato", "callback_data" => "/contract"]],
+                            [["text" => "🔄 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.contract.btn_status")), "callback_data" => "/contract"]],
                             [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
                         ],
                     ]),
@@ -1090,7 +1090,7 @@ class ZentroTraderBotController extends JsonsController
 
         if (!$status) {
             return [
-                "text" => "❌ Error: No se pudo conectar con la Blockchain\.",
+                "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.error_connect")),
                 "chat" => ["id" => $this->actor->user_id]
             ];
         }
@@ -1107,20 +1107,23 @@ class ZentroTraderBotController extends JsonsController
             $breakEvenTrade = $status['breakEvenTrade'];
 
             // 3. Construimos el reporte de estado
-            $msg = "🌐 *ESTADO DE : " . TextService::mdv2($network['title']) . "*\n\n";
-            $msg .= "💰 *Token Principal:* `{$token['symbol']}`\n";
-            $msg .= "⛽ *Gas Actual:* `" . number_format($gasPriceGwei, 2) . "` Gwei\n";
-            $msg .= "💸 *Costo de Tx:* `\$" . number_format($costInUsd, 4) . "`\n";
-            $msg .= "📈 *Fee Escrow:* `" . ($feePercentage / 100) . "%` \(" . round($feePercentage) . " bps\)\n";
-            $msg .= "💲 *MinFee Actual:* `\$" . number_format($currentMinFeeUsd, 4) . "`\n\n";
+            $msg = "🌐 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.header")) . " : " . TextService::mdv2($network['title']) . "*\n\n";
+            $msg .= "💰 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.token_label")) . ":* `{$token['symbol']}`\n";
+            $msg .= "⛽ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.gas")) . ":* `" . number_format($gasPriceGwei, 2) . "` Gwei\n";
+            $msg .= "💸 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.tx_cost")) . ":* `\$" . number_format($costInUsd, 4) . "`\n";
+            $msg .= "📈 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.fee_escrow")) . ":* `" . ($feePercentage / 100) . "%` \(" . round($feePercentage) . " bps\)\n";
+            $msg .= "💲 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.min_fee")) . ":* `\$" . number_format($currentMinFeeUsd, 4) . "`\n\n";
 
             // Diagnóstico dinámico
             if ($costInUsd > $currentMinFeeUsd) {
-                $msg .= "💡 Basado en trades promedio de: 💲*" . TextService::mdv2(number_format($referenceTrade, 2)) . "*\n";
-                $msg .= "⚠️ *ALERTA:* Estás operando en pérdida con trades de: 💲" . TextService::mdv2(number_format($breakEvenTrade, 2));
+                $msg .= "💡 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.avg_trade")) . ": 💲*" . TextService::mdv2(number_format($referenceTrade, 2)) . "*\n";
+                $msg .= "⚠️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.alert")) . ":* " . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.loss")) . ": 💲" . TextService::mdv2(number_format($breakEvenTrade, 2));
             } else {
                 $margin = (($currentMinFeeUsd - $costInUsd) / $currentMinFeeUsd) * 100;
-                $msg .= "✅ *SISTEMA SALUDABLE:* Tienes un margen del `" . round($margin) . "%` sobre el MinFee\.";
+                $msg .= "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.healthy")) . ":* " .
+                    TextService::mdv2(Lang::get("zentrotraderbot::bot.network.margin_intro")) .
+                    " `" . round($margin) . "%` " .
+                    TextService::mdv2(Lang::get("zentrotraderbot::bot.network.margin_over"));
             }
 
             return [
@@ -1128,14 +1131,14 @@ class ZentroTraderBotController extends JsonsController
                 "chat" => ["id" => $this->actor->user_id],
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
-                        [["text" => "🔄 Volver a cargar", "callback_data" => "/network"]]
+                        [["text" => "🔄 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.btn_reload")), "callback_data" => "/network"]]
                     ],
                 ]),
             ];
 
         } catch (\Exception $e) {
             return [
-                "text" => "❌ Error al procesar el reporte: " . TextService::mdv2($e->getMessage()),
+                "text" => "❌ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.network.error_report")) . ": " . TextService::mdv2($e->getMessage()),
                 "chat" => ["id" => $this->actor->user_id]
             ];
         }

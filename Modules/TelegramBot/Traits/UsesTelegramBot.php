@@ -698,9 +698,9 @@ trait UsesTelegramBot
 
         // Opciones para todos los usuarios:
         if (isset($array[$this->tenant->code]["config_delete_prev_messages"])) {
-            array_push($menu, [["text" => "🟢 Chat limpio: activo", "callback_data" => "configdeleteprevmessages"]]);
+            array_push($menu, [["text" => "🟢 " . Lang::get("telegrambot::bot.configmenu.chat_clean_active"), "callback_data" => "configdeleteprevmessages"]]);
         } else {
-            array_push($menu, [["text" => "⚫ Chat limpio: desactivado", "callback_data" => "configdeleteprevmessages"]]);
+            array_push($menu, [["text" => "⚫ " . Lang::get("telegrambot::bot.configmenu.chat_clean_disabled"), "callback_data" => "configdeleteprevmessages"]]);
         }
 
         $timezone = "UTC";

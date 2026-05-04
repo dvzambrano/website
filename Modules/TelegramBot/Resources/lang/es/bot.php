@@ -11,8 +11,10 @@ return [
         "warning" => "Aquí encontrará herramientas útiles para la gestión integral del bot",
     ],
     "configmenu" => [
-        "header" => "Menú de configuraciones",
-        "warning" => "Aquí encontrará ajustes del comportamiento del bot",
+        "header"             => "Menú de configuraciones",
+        "warning"            => "Aquí encontrará ajustes del comportamiento del bot",
+        "chat_clean_active"  => "Chat limpio: activo",
+        "chat_clean_disabled" => "Chat limpio: desactivado",
     ],
     "role" => [
         "admin" => "Admin",
