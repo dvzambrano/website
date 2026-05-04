@@ -667,6 +667,101 @@ class ZentroTraderBotController extends JsonsController
                 return $controller->exitChat($this);
             };
 
+        // Contract finances — admin only
+        $this->strategies["/contract"] =
+            function () {
+                if (!$this->actor->isLevel(1, $this->tenant->code)) {
+                    return ["text" => "❌ Acceso denegado\. Este comando es solo para administradores\."];
+                }
+
+                $blockchain = new BlockchainController();
+                $finances   = $blockchain->getContractFinances();
+
+                if (!$finances) {
+                    return ["text" => "❌ Error: No se pudo conectar con la Blockchain\."];
+                }
+
+                $token           = $finances['token'];
+                $network         = $finances['network'];
+                $lockedFormatted = number_format($finances['lockedUsd'], 4);
+                $feesFormatted   = number_format($finances['feesUsd'], 4);
+                $symbol          = $token['symbol'];
+                $contract        = TextService::mdv2(env('ESCROW_CONTRACT'));
+
+                $msg  = "🏦 *Estado del Contrato Escrow*\n\n";
+                $msg .= "🌐 *Red:* `" . TextService::mdv2($network['title'] ?? $network['name'] ?? '') . "`\n";
+                $msg .= "💰 *Token:* `{$symbol}`\n\n";
+                $msg .= "🔒 *Fondos bloqueados en trades activos:*\n";
+                $msg .= "     `{$lockedFormatted} {$symbol}`\n\n";
+                $msg .= "💸 *Fees disponibles para retirar:*\n";
+                $msg .= "     `{$feesFormatted} {$symbol}`\n\n";
+                $msg .= "📍 _Contrato: `{$contract}`_";
+
+                return [
+                    "text"         => $msg,
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [
+                                ["text" => "💸 Extraer fees", "callback_data" => "withdrawfeesconfirmation|withdrawfees|contract"],
+                            ],
+                            [
+                                ["text" => "🔄 Actualizar", "callback_data" => "/contract"],
+                            ],
+                            [
+                                ["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"],
+                            ],
+                        ],
+                    ]),
+                ];
+            };
+
+        $this->strategies["withdrawfeesconfirmation"] =
+            function () use ($array) {
+                if (!$this->actor->isLevel(1, $this->tenant->code)) {
+                    return ["text" => "❌ Acceso denegado\."];
+                }
+
+                return $this->getAreYouSurePrompt(
+                    $array["pieces"][1],
+                    $array["pieces"][2],
+                    "\n💸 *¿Retirar las fees acumuladas del contrato?*\n" .
+                    "⚠️ _Esta acción ejecutará una transacción on\\-chain y transferirá los fondos disponibles al árbitro\\._\n",
+                    false
+                );
+            };
+
+        $this->strategies["withdrawfees"] =
+            function () {
+                if (!$this->actor->isLevel(1, $this->tenant->code)) {
+                    return ["text" => "❌ Acceso denegado\."];
+                }
+
+                $blockchain = new BlockchainController();
+                $result     = $blockchain->withdrawContractFees();
+
+                if (!$result) {
+                    return [
+                        "text"         => "❌ Error al ejecutar el retiro de fees\. Revisa los logs para más detalles\.",
+                        "reply_markup" => json_encode([
+                            "inline_keyboard" => [
+                                [["text" => "🔄 Ver estado del contrato", "callback_data" => "/contract"]],
+                                [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
+                            ],
+                        ]),
+                    ];
+                }
+
+                return [
+                    "text"         => "✅ *Fees retiradas exitosamente*\n\n🔗 " . TextService::mdv2($result['explorer']),
+                    "reply_markup" => json_encode([
+                        "inline_keyboard" => [
+                            [["text" => "🔄 Ver estado del contrato", "callback_data" => "/contract"]],
+                            [["text" => "↖️ " . TextService::mdv2(Lang::get("telegrambot::bot.options.backtomainmenu")), "callback_data" => "menu"]],
+                        ],
+                    ]),
+                ];
+            };
+
         return $this->getProcessedMessage();
     }
 

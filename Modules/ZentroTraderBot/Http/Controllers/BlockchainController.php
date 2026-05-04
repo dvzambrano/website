@@ -125,6 +125,72 @@ class BlockchainController extends Controller
     }
 
 
+    public function getContractFinances()
+    {
+        try {
+            $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+            $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+            $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+            $escrow = new EscrowController();
+
+            $lockedRaw = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $token) {
+                return $escrow->getTotalLockedBalance($rpc, env('ESCROW_CONTRACT'), $network['chainId'], $token['address'], env('ETHERSCAN_API_KEY'));
+            });
+
+            $feesRaw = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $token) {
+                return $escrow->getAccumulatedFees($rpc, env('ESCROW_CONTRACT'), $network['chainId'], $token['address'], env('ETHERSCAN_API_KEY'));
+            });
+
+            $decimals = $token['decimals'] ?? 6;
+
+            return [
+                'token'     => $token,
+                'network'   => $network,
+                'lockedRaw' => $lockedRaw,
+                'feesRaw'   => $feesRaw,
+                'lockedUsd' => (float) $lockedRaw / pow(10, $decimals),
+                'feesUsd'   => (float) $feesRaw  / pow(10, $decimals),
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('🆘 BlockchainController::getContractFinances error', ['message' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    public function withdrawContractFees()
+    {
+        try {
+            $network    = ConfigService::getNetworks(env("BASE_NETWORK"));
+            $token      = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+            $rpcUrls    = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+            $escrow     = new EscrowController();
+            $arbiterKey = decryptValue(env('ESCROW_ARBITER_KEY'));
+
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $arbiterKey, $network, $token) {
+                return $escrow->withdrawFees(
+                    $rpc,
+                    $arbiterKey,
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $token['address'],
+                    env('ETHERSCAN_API_KEY')
+                );
+            });
+
+            $explorerBase = $network['explorers'][0]['url'] ?? '';
+
+            return [
+                'tx_hash'  => $txHash,
+                'explorer' => "{$explorerBase}/tx/{$txHash}",
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('🆘 BlockchainController::withdrawContractFees error', ['message' => $e->getMessage()]);
+            return null;
+        }
+    }
+
     private function getPriceFromLlama($config)
     {
         $chainName = strtolower($config['chain'] ?? $config['name']);
