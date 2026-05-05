@@ -20,6 +20,7 @@ use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\Laravel\Http\Controllers\LaravelController;
 use Modules\Laravel\Services\TextService;
 use Modules\ZentroTraderBot\Entities\Offers;
+use Modules\ZentroTraderBot\Http\Controllers\SupportController;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -61,6 +62,17 @@ class ZentroTraderBotController extends JsonsController
         $locale = $user->language ?? substr($payload['message']['from']['language_code'], 0, 2);
         app()->setLocale($locale);
         */
+
+        // Mensajes del grupo de soporte → retransmitir al cliente correspondiente
+        $supportGroupId = env('TRADER_BOT_SUPPORT');
+        if (
+            $supportGroupId &&
+            (string) ($this->message['chat']['id'] ?? '') === (string) $supportGroupId &&
+            isset($this->message['message_thread_id'])
+        ) {
+            $controller = new SupportController();
+            return $controller->relayToUser($this);
+        }
 
         // Analizando comando recibido ----------------------------------------------------
         $array = $this->getCommand($this->message["text"]);
@@ -654,6 +666,19 @@ class ZentroTraderBotController extends JsonsController
                 return ["text" => ""];
             };
 
+        // Ticket de soporte — abre un nuevo topic en el grupo de soporte
+        $this->strategies["/support"] = $this->strategies["support"] =
+            function () {
+                $controller = new SupportController();
+                return $controller->openTicket($this);
+            };
+
+        $this->strategies["/exitsupportchat"] =
+            function () {
+                $controller = new SupportController();
+                return $controller->exitSupportChat($this);
+            };
+
         // Internal anonymous chat between buyer and seller
         $this->strategies["/startchat"] =
             function () use ($array) {
@@ -826,6 +851,10 @@ class ZentroTraderBotController extends JsonsController
                 ]
             ]);
 
+
+        array_push($menu, [
+            ["text" => "🎫 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.support.btn_open_ticket")), "callback_data" => "/support"],
+        ]);
 
         return $this->getMainMenu(
             $suscriptor,

@@ -120,6 +120,24 @@ return [
         "unsupported_media" => "(Contenido multimedia no compatible con el chat interno)",
     ],
 
+    // =========================================================
+    // SUPPORT TICKET — Chat directo con el equipo de soporte
+    // =========================================================
+
+    "support" => [
+        "btn_open_ticket"    => "Soporte",
+        "ticket_opened"      => "Tu ticket de soporte ha sido creado. Escríbenos tu consulta.",
+        "chat_line2"         => "Todo lo que envíes llegará a nuestro equipo de soporte.",
+        "chat_line3"         => "Usa el botón para cerrar el ticket.",
+        "exit_btn"           => "Cerrar ticket de soporte",
+        "exited"             => "Has cerrado el ticket de soporte.",
+        "message_sent"       => "Mensaje enviado a soporte.",
+        "already_open"       => "Ya tienes un ticket de soporte abierto. Escribe tu consulta directamente.",
+        "new_ticket_intro"   => "Nuevo ticket de soporte de",
+        "error_no_group"     => "El grupo de soporte no está configurado. Contacta al administrador.",
+        "error_create_ticket" => "No se pudo crear el ticket. Inténtalo más tarde.",
+    ],
+
     "prompts" => [
         "clienturl" => [
             "header" => "Su URL de cliente es la siguiente",

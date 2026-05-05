@@ -267,6 +267,18 @@ trait UsesTelegramBot
                 ->{$wizard['method']}($this);
         }
 
+        // En modo chat con soporte?
+        $supportChatKey = "support_chat_{$this->tenant->key}_{$this->actor->user_id}";
+        if (Cache::has($supportChatKey)) {
+            if (($this->message['_update_type'] ?? '') === 'callback_query') {
+                app()->make(\Modules\ZentroTraderBot\Http\Controllers\SupportController::class)
+                    ->exitSupportChat($this);
+            } else {
+                return app()->make(\Modules\ZentroTraderBot\Http\Controllers\SupportController::class)
+                    ->relayToSupport($this);
+            }
+        }
+
         // En modo chat interno con la contraparte?
         $chatKey = "chat_{$this->tenant->key}_{$this->actor->user_id}";
         if (Cache::has($chatKey)) {
