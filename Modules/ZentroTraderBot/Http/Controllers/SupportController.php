@@ -27,25 +27,46 @@ class SupportController extends Controller
             ];
         }
 
-        // Si ya tiene un ticket abierto, simplemente notificamos que ya está en chat
+        // Si ya está en modo chat activo, recordarle y mostrar botón de salida
         $chatKey = "support_chat_{$botTenant->key}_{$userId}";
         if (Cache::has($chatKey)) {
             return [
                 "text" => "ℹ️ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.support.already_open")),
                 "reply_markup" => json_encode([
-                    "inline_keyboard" => [
-                        [
-                            ["text" => "🚪 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.support.exit_btn")), "callback_data" => "/exitsupportchat"],
-                        ]
-                    ],
+                    "inline_keyboard" => [[
+                        ["text" => "🚪 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.support.exit_btn")), "callback_data" => "/exitsupportchat"],
+                    ]],
                 ]),
             ];
         }
 
-        // Nombre del topic: TICKET_Ymd_userId
+        $username = $bot->actor->data['telegram']['username'] ?? null;
+        $userLabel = $username ? "@{$username}" : "ID: {$userId}";
+
+        // Verificar si el usuario ya tiene un topic previo (ticket persistente)
+        $userTicketKey = "support_user_ticket_{$botTenant->key}_{$userId}";
+        $existingTicket = Cache::get($userTicketKey);
+
+        if ($existingTicket && isset($existingTicket['thread_id'])) {
+            // Reutilizar el topic existente — re-entrar en modo chat sin crear uno nuevo
+            $threadId = (int) $existingTicket['thread_id'];
+
+            TelegramController::sendMessage([
+                'message' => [
+                    'chat' => ['id' => $supportGroupId],
+                    'message_thread_id' => $threadId,
+                    'text' => "🔄 " . Lang::get("zentrotraderbot::bot.support.user_reconnected") . " {$userLabel}",
+                    'parse_mode' => 'MarkdownV2',
+                ],
+            ], $botTenant->token);
+
+            $this->enterSupportChatMode($userId, $threadId, $botTenant);
+            return ["text" => ""];
+        }
+
+        // No existe topic previo — crear uno nuevo
         $topicName = "TICKET " . date("Ymd") . "-{$userId}";
 
-        // Crear el forum topic en el grupo de soporte
         $rawTopic = TelegramController::createForumTopic([
             'message' => [
                 'chat' => ['id' => $supportGroupId],
@@ -67,13 +88,14 @@ class SupportController extends Controller
 
         $threadId = (int) $topicData['result']['message_thread_id'];
 
-        // Guardar la relación thread_id → user_id (para cuando soporte responda)
+        // Guardar relación thread_id → user_id (para cuando soporte responda)
         $ticketKey = "support_ticket_{$botTenant->key}_{$threadId}";
         Cache::put($ticketKey, ['user_id' => $userId], now()->addDays(30));
 
-        // Enviar mensaje de bienvenida al topic en el grupo de soporte
-        $username = $bot->actor->data['telegram']['username'] ?? null;
-        $userLabel = $username ? "@{$username}" : "ID: {$userId}";
+        // Guardar relación user_id → thread_id (para reutilizar en próximas sesiones)
+        Cache::put($userTicketKey, ['thread_id' => $threadId], now()->addDays(30));
+
+        // Enviar mensaje de bienvenida al topic
         TelegramController::sendMessage([
             'message' => [
                 'chat' => ['id' => $supportGroupId],
@@ -83,7 +105,7 @@ class SupportController extends Controller
             ],
         ], $botTenant->token);
 
-        // Poner al usuario en modo chat de soporte y enviarle el mensaje de confirmación
+        // Poner al usuario en modo chat de soporte
         $this->enterSupportChatMode($userId, $threadId, $botTenant);
 
         return ["text" => ""];

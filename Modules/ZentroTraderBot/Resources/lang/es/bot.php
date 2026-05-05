@@ -134,6 +134,7 @@ return [
         "message_sent" => "Mensaje enviado a soporte.",
         "already_open" => "Ya tienes un ticket de soporte abierto. Escribe tu consulta directamente.",
         "new_ticket_intro" => "Nuevo ticket de soporte de",
+        "user_reconnected" => "El usuario se ha reconectado al ticket:",
         "error_no_group" => "El grupo de soporte no está configurado. Contacta al administrador.",
         "error_create_ticket" => "No se pudo crear el ticket. Inténtalo más tarde.",
     ],
