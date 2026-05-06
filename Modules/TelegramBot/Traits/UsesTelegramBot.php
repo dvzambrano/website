@@ -93,7 +93,7 @@ trait UsesTelegramBot
         $this->actor = $this->ActorsController->suscribe($bot, $this->message["from"]["id"], $textinfo["message"]);
 
         // Modo mantenimiento: solo admins (nivel 1) pueden usar el bot
-        if (env('TRADER_BOT_MAINTENANCE_MODE', false) && !$this->actor->isLevel(1, $bot->code)) {
+        if (env('BOT_MAINTENANCE_MODE', false) && !$this->actor->isLevel(1, $bot->code)) {
             $this->reply = ["text" => "🔧 " . Lang::get("telegrambot::bot.maintenance.message")];
         } else {
             // Finalmente se procesa la peticion recibida
