@@ -98,7 +98,7 @@ trait UsesTelegramBot
 
         // Modo mantenimiento: admins operan normal; al resto se les muestra la respuesta sin botones y con aviso
         if (env('BOT_MAINTENANCE_MODE', false)) {
-            $this->reply["text"] = ($this->reply["text"] ?? "") . "\n\n🔧 " . TextService::mdv2(Lang::get("telegrambot::bot.maintenance.message"));
+            $this->reply["text"] = ($this->reply["text"] ?? "") . "\n\n🔧 *" . TextService::mdv2(Lang::get("telegrambot::bot.maintenance.message")) . "*";
             if (!$this->actor->isLevel(1, $bot->code))
                 unset($this->reply["reply_markup"]);
         }

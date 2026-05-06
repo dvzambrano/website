@@ -2,7 +2,7 @@
 
 return [
     "maintenance" => [
-        "message" => "El bot se encuentra en mantenimiento. Disculpe las molestias, pronto estaremos de vuelta.",
+        "message" => "El bot se encuentra en mantenimiento.",
     ],
     "mainmenu" => [
         "salutation" => "Bienvenido al :bot_name",
