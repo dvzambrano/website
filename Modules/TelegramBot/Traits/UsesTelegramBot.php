@@ -3,6 +3,7 @@
 namespace Modules\TelegramBot\Traits;
 
 use Illuminate\Support\Facades\Log;
+use Modules\Laravel\Services\TextService;
 use Modules\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
@@ -96,9 +97,10 @@ trait UsesTelegramBot
         $this->reply = $this->processMessage();
 
         // Modo mantenimiento: admins operan normal; al resto se les muestra la respuesta sin botones y con aviso
-        if (env('BOT_MAINTENANCE_MODE', false) && !$this->actor->isLevel(1, $bot->code)) {
-            $this->reply["text"] = ($this->reply["text"] ?? "") . "\n\n🔧 " . Lang::get("telegrambot::bot.maintenance.message");
-            unset($this->reply["reply_markup"]);
+        if (env('BOT_MAINTENANCE_MODE', false)) {
+            $this->reply["text"] = ($this->reply["text"] ?? "") . "\n\n🔧 " . TextService::mdv2(Lang::get("telegrambot::bot.maintenance.message"));
+            if (!$this->actor->isLevel(1, $bot->code))
+                unset($this->reply["reply_markup"]);
         }
 
         // Valorando casos q no requieren respuesta
