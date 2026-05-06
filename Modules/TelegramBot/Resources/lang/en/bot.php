@@ -1,6 +1,9 @@
 <?php
 
 return [
+    "maintenance" => [
+        "message" => "The bot is currently under maintenance. We apologize for the inconvenience, we will be back soon.",
+    ],
     "mainmenu" => [
         "salutation" => "Welcome to :bot_name",
         "referral" => "Referral link",

@@ -92,8 +92,13 @@ trait UsesTelegramBot
         // Obteniendo al actor suscrito o suscribiedolo si no lo esta
         $this->actor = $this->ActorsController->suscribe($bot, $this->message["from"]["id"], $textinfo["message"]);
 
-        // Finalmente se procesa la peticion recibida
-        $this->reply = $this->processMessage();
+        // Modo mantenimiento: solo admins (nivel 1) pueden usar el bot
+        if (env('TRADER_BOT_MAINTENANCE_MODE', false) && !$this->actor->isLevel(1, $bot->code)) {
+            $this->reply = ["text" => "🔧 " . Lang::get("telegrambot::bot.maintenance.message")];
+        } else {
+            // Finalmente se procesa la peticion recibida
+            $this->reply = $this->processMessage();
+        }
 
         // Valorando casos q no requieren respuesta
         if (
