@@ -4,12 +4,17 @@ namespace Modules\ZentroTraderBot\Listeners;
 
 use Modules\Web3\Events\WalletActivityDetected;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
+use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
+use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Lang;
 use Modules\Web3\Services\ConfigService;
 use Illuminate\Support\Facades\Cache;
 use Modules\Laravel\Services\NumberService;
+use Modules\Laravel\Services\TextService;
 use Modules\Laravel\Services\BehaviorService;
 
 class ProcessWalletActivity
@@ -54,16 +59,7 @@ class ProcessWalletActivity
             }
         */
 
-        // 1. Filtro de Confirmación: Si no esta confirmada la desechamos
-        if (!($data['confirmed'] ?? false)) {
-            if (env("DEBUG_MODE", false))
-                Log::debug("🐞 ProcessWalletActivity handle escaped by !confirmed: ", [
-                    "data" => $data,
-                ]);
-            return;
-        }
-
-        // 2. Normalización de Token Nativo (MATIC, BNB, ETH...)
+        // 1. Normalización de Token Nativo (MATIC, BNB, ETH...)
         if (empty($data['token_symbol']) && is_numeric($data['network_id'])) {
             try {
                 $network = ConfigService::getNetworks((int) $data['network_id']);
@@ -88,7 +84,7 @@ class ProcessWalletActivity
             }
         }
 
-        // 3. Filtro Anti-Scam (Solo para Tokens ERC20)
+        // 2. Filtro Anti-Scam (Solo para Tokens ERC20)
         if (!empty($data['token_address'])) {
             // CASO A: Es un Token (ERC20). 
             // Si no existe en el listado oficial provisto por 1inch lo desechamos
@@ -124,8 +120,7 @@ class ProcessWalletActivity
             }
         }
 
-
-        // 4. Identificar el Bot/Tenant
+        // 3. Identificar el Bot/Tenant (necesario para ambos paths)
         $bot = BehaviorService::cache('tenant_' . $data['tenant_code'], function () use ($data) {
             return TelegramBots::where('key', $data['tenant_code'])->first();
         });
@@ -139,7 +134,28 @@ class ProcessWalletActivity
         }
         $bot->connectToThisTenant();
 
-        // 5. Buscar al suscriptor usando la dirección estandarizada
+        // PATH A: Transferencia ERC20 saliente desde una wallet registrada (incluso sin confirmar)
+        // Se ejecuta antes del filtro de confirmación para reaccionar lo antes posible.
+        if ($data['type'] === 'erc20_transfer' && !empty($data['from'])) {
+            $fromAddress = strtolower($data['from']);
+            $fromSuscriptor = Suscriptions::on('tenant')
+                ->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(data, "$.wallet.address"))) = ?', [$fromAddress])
+                ->first();
+            if ($fromSuscriptor) {
+                $this->handleOutgoingTransfer($fromSuscriptor, $data, $bot);
+            }
+        }
+
+        // PATH B: Notificación de depósito entrante (solo transacciones confirmadas)
+        if (!($data['confirmed'] ?? false)) {
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 ProcessWalletActivity handle escaped by !confirmed: ", [
+                    "data" => $data,
+                ]);
+            return;
+        }
+
+        // 4. Buscar al suscriptor destinatario
         $toAddress = strtolower($data['to']);
         $suscriptor = Suscriptions::on('tenant')
             ->whereRaw('LOWER(JSON_UNQUOTE(JSON_EXTRACT(data, "$.wallet.address"))) = ?', [$toAddress])
@@ -153,9 +169,8 @@ class ProcessWalletActivity
             return;
         }
 
-        //  Validación de duplicidad: Verificar si el tx_hash ya fue procesado
+        // Idempotencia Atómica: Evita procesar 2 veces el mismo depósito
         $cacheKey = 'tx_processed_' . $data['tx_hash'];
-        // 1. Idempotencia Atómica (Evita procesar 2 veces el mismo Hash)
         // Cache::add solo retorna true si la llave NO existía.
         if (!Cache::add($cacheKey, true, now()->addDays(2))) {
             if (env("DEBUG_MODE", false))
@@ -167,7 +182,6 @@ class ProcessWalletActivity
         }
 
         try {
-            //$botController = new ZentroTraderBotController();
             $botController = app(ZentroTraderBotController::class);
             $botController->notifyDepositConfirmed(
                 $suscriptor,
@@ -186,6 +200,115 @@ class ProcessWalletActivity
                 "message" => $e->getMessage()
             ]);
         }
+    }
 
+    /**
+     * Detecta una salida de BASE_TOKEN y cancela las ofertas OPEN del vendedor
+     * que ya no están respaldadas por saldo suficiente. Se ejecuta incluso para
+     * transacciones no confirmadas para proteger al comprador potencial lo antes posible.
+     */
+    private function handleOutgoingTransfer(Suscriptions $suscriptor, array $data, $bot): void
+    {
+        // Solo actuar sobre el token base del sistema (USDC)
+        $baseToken = strtolower(env('BASE_TOKEN', ''));
+        if (!empty($baseToken) && strtolower($data['token_address']) !== $baseToken)
+            return;
+
+        $transferAmount = (float) ($data['value'] ?? 0);
+        if ($transferAmount <= 0)
+            return;
+
+        // Idempotencia: procesar la salida una sola vez (primer pass: unconfirmed)
+        $cacheKey = 'outgoing_transfer_handled_' . $data['tx_hash'];
+        if (!Cache::add($cacheKey, true, now()->addDays(2)))
+            return;
+
+        // Balance actual en blockchain (aún no descontada la transferencia)
+        try {
+            $walletCtrl = new TraderWalletController();
+            $currentBalance = (float) $walletCtrl->getBalance($suscriptor);
+        } catch (\Throwable $th) {
+            $currentBalance = 0.0;
+        }
+
+        $balanceAfter = max(0.0, $currentBalance - $transferAmount);
+
+        // Obtener ofertas SELL en estado OPEN, de más nueva a más antigua
+        $openOffers = Offers::on('tenant')
+            ->where('user_id', $suscriptor->user_id)
+            ->where('type', 'sell')
+            ->where('status', 'open')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($openOffers->isEmpty())
+            return;
+
+        $openSum = (float) $openOffers->sum('amount');
+        if ($balanceAfter >= $openSum)
+            return; // El balance posterior cubre todas las ofertas, nada que cancelar
+
+        // Cancelar las ofertas más nuevas hasta cubrir el déficit
+        $deficit = $openSum - $balanceAfter;
+        $toCancel = [];
+        foreach ($openOffers as $offer) {
+            if ($deficit <= 0)
+                break;
+            $toCancel[] = $offer;
+            $deficit -= (float) $offer->amount;
+        }
+
+        if (empty($toCancel))
+            return;
+
+        $cancelledCodes = [];
+        foreach ($toCancel as $offer) {
+            // Eliminar del canal de Telegram
+            if (isset($offer->data['channel']['message_id'])) {
+                try {
+                    TelegramController::deleteMessage([
+                        'message' => [
+                            'chat' => ['id' => env('TRADER_BOT_CHANNEL')],
+                            'id' => $offer->data['channel']['message_id'],
+                        ]
+                    ], $bot->token);
+                } catch (\Throwable $th) {
+                }
+            }
+
+            $offer->updateStatus('CANCELLED', ['updated_at' => now()]);
+            $cancelledCodes[] = $offer->code;
+        }
+
+        // Notificar al usuario por DM
+        $count = count($cancelledCodes);
+        $codesText = implode(', ', array_map(fn($c) => "`{$c}`", $cancelledCodes));
+        $amountText = number_format($transferAmount, 2);
+
+        $msg = "⚠️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.cancelled_by_withdrawal.title")) . "*\n"
+            . "💸 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.cancelled_by_withdrawal.reason", ['amount' => $amountText])) . "\n\n"
+            . "📴 " . TextService::mdv2(Lang::choice("zentrotraderbot::bot.offer.cancelled_by_withdrawal.offers", $count, ['count' => $count])) . "\n"
+            . $codesText . "\n\n"
+            . "ℹ️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.cancelled_by_withdrawal.info")) . "_";
+
+        try {
+            TelegramController::sendMessage([
+                'message' => [
+                    'chat' => ['id' => $suscriptor->user_id],
+                    'text' => $msg,
+                    'parse_mode' => 'MarkdownV2',
+                ]
+            ], $bot->token);
+        } catch (\Throwable $th) {
+        }
+
+        Log::info("✅ Ofertas auto-canceladas por retiro externo: ", [
+            'user_id' => $suscriptor->user_id,
+            'from' => $data['from'],
+            'tx_hash' => $data['tx_hash'],
+            'transfer_amount' => $transferAmount,
+            'balance_after' => $balanceAfter,
+            'cancelled' => $cancelledCodes,
+        ]);
     }
 }

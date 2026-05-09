@@ -1,6 +1,9 @@
 <?php
 
 return [
+    "maintenance" => [
+        "message" => "O bot está em manutenção no momento.",
+    ],
     "mainmenu" => [
         "salutation" => "Bem-vindo ao :bot_name",
         "referral" => "Link de indicação",

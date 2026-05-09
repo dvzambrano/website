@@ -3,6 +3,7 @@
 namespace Modules\TelegramBot\Traits;
 
 use Illuminate\Support\Facades\Log;
+use Modules\Laravel\Services\TextService;
 use Modules\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
@@ -20,6 +21,9 @@ trait UsesTelegramBot
     public $ActorsController;
     public $TelegramController;
     public $strategies = [];
+
+    /** parse_mode por defecto para todos los mensajes enviados por este bot. */
+    public $parseMode = "Markdown";
 
     public function receiveMessage($bot, $update)
     {
@@ -65,6 +69,7 @@ trait UsesTelegramBot
             $this->message = $update['callback_query']["message"];
             $this->message["from"]["id"] = $update['callback_query']["from"]["id"];
             $this->message["text"] = $update['callback_query']["data"];
+            $this->message["_update_type"] = "callback_query";
             if (isset($update['callback_query']["from"]["username"])) {
                 $this->message["from"]["username"] = $update['callback_query']["from"]["username"];
             }
@@ -91,6 +96,13 @@ trait UsesTelegramBot
         // Finalmente se procesa la peticion recibida
         $this->reply = $this->processMessage();
 
+        // Modo mantenimiento: admins operan normal; al resto se les muestra la respuesta sin botones y con aviso
+        if (env('BOT_MAINTENANCE_MODE', false)) {
+            $this->reply["text"] = ($this->reply["text"] ?? "") . "\n\n🔧 *" . TextService::mdv2(Lang::get("telegrambot::bot.maintenance.message")) . "*";
+            if (!$this->actor->isLevel(1, $bot->code))
+                unset($this->reply["reply_markup"]);
+        }
+
         // Valorando casos q no requieren respuesta
         if (
             isset($this->message["pinned_message"]) // solo se esta tratando de pinear un mensaje
@@ -99,6 +111,20 @@ trait UsesTelegramBot
             || $this->message['chat']['type'] == 'web' // es una simulacion desde la web
         )
             return response()->json(["message" => "OK"], 200);
+
+        // Cuando el reply indica eliminar el mensaje actual (p.ej. botón NO sin accion definida)
+        if (!empty($this->reply["deletecurrent"])) {
+            try {
+                TelegramController::deleteMessage([
+                    "message" => [
+                        "id" => $this->message["message_id"],
+                        "chat" => ["id" => $this->message["chat"]["id"]],
+                    ],
+                ], $this->tenant->token);
+            } catch (\Throwable $th) {
+            }
+            return response()->json(["message" => "OK"], 200);
+        }
 
         $log = "TelegramBotController {$type} reply from " . $this->tenant->code;
         Log::info("✅ {$log} to {$logfrom}" . json_encode($this->reply) . "\n");
@@ -110,6 +136,7 @@ trait UsesTelegramBot
                 "chat" => array(
                     "id" => $this->message["chat"]["id"],
                 ),
+                "parse_mode" => $this->reply["parse_mode"] ?? $this->parseMode,
                 "reply_to_message_id" => isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) ? false : $this->message["message_id"], // responder al mensaje q origino esta interaccion del bot si no es dvzambrano
                 "reply_markup" => isset($this->reply["reply_markup"]) ? $this->reply["reply_markup"] : false,
             ),
@@ -120,18 +147,82 @@ trait UsesTelegramBot
         $cacheKey = "lastmessage_{$this->tenant->key}_{$this->actor->user_id}";
         if (isset($this->reply["autodestroy"]) && $this->reply["autodestroy"] > 0)
             $autodestroy = $this->reply["autodestroy"];
+
         if (isset($this->reply["photo"])) {
+            // Las fotos no se pueden editar a texto ni viceversa: en chat limpio se borra el mensaje previo del bot y se envía la foto nueva
+            if (isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])) {
+                $lastBotMessage = Cache::get($cacheKey);
+                if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
+                    try {
+                        TelegramController::deleteMessage([
+                            "message" => [
+                                "id" => $lastBotMessage["message_id"],
+                                "chat" => ["id" => $this->message["chat"]["id"]],
+                            ],
+                        ], $this->tenant->token);
+                    } catch (\Throwable $th) {
+                    }
+                }
+            }
             $response = TelegramController::sendPhoto($array, $this->tenant->token, $autodestroy);
         } else {
             // solo se envia un mensaje si tiene text
             // antes estaba $this->message["text"] pero lo cambie para q mandara el error cuando mandan la captura de un pago sin nombre y cantidad
             if (isset($this->reply["text"]) && $this->reply["text"] != "") {
                 if (isset($this->reply["editprevious"]) && $this->reply["editprevious"] > 0) {
+                    // El comando pide explícitamente editar el mensaje anterior del bot
                     $lastmessage = Cache::get($cacheKey);
                     $array["message"]["message_id"] = $lastmessage["message_id"];
                     $response = TelegramController::editMessageText($array, $this->tenant->token);
-                } else
+                } elseif (
+                    isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) &&
+                    $autodestroy == 0
+                ) {
+                    // Chat limpio: editar el mensaje previo del bot en lugar de borrar+reenviar
+                    // Condición autodestroy == 0: si hay autodestroy, se necesita un mensaje nuevo para programar su borrado
+                    $lastBotMessage = Cache::get($cacheKey);
+                    if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
+                        if (isset($lastBotMessage["reply_to_message"])) {
+                            // El mensaje cacheado fue enviado como reply: Telegram no permite quitar ese indicador al editar.
+                            // Borrar ese mensaje y enviar uno nuevo limpio; a partir de aquí todos los ciclos editarán sin indicador.
+                            try {
+                                TelegramController::deleteMessage([
+                                    "message" => [
+                                        "id" => $lastBotMessage["message_id"],
+                                        "chat" => ["id" => $this->message["chat"]["id"]],
+                                    ],
+                                ], $this->tenant->token);
+                            } catch (\Throwable $th) {
+                            }
+                            $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
+                        } else {
+                            $editArray = $array;
+                            $editArray["message"]["message_id"] = $lastBotMessage["message_id"];
+                            $editResponse = TelegramController::editMessageText($editArray, $this->tenant->token);
+                            $editData = json_decode($editResponse, true);
+                            if ($editData['ok'] ?: false) {
+                                $response = $editResponse;
+                            } else {
+                                // Fallback: el edit falló — borrar el anterior y enviar nuevo para mantener el chat limpio
+                                try {
+                                    TelegramController::deleteMessage([
+                                        "message" => [
+                                            "id" => $lastBotMessage["message_id"],
+                                            "chat" => ["id" => $this->message["chat"]["id"]],
+                                        ],
+                                    ], $this->tenant->token);
+                                } catch (\Throwable $th) {
+                                }
+                                $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
+                            }
+                        }
+                    } else {
+                        // Sin mensaje previo en caché (primera interacción), enviar nuevo normalmente
+                        $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
+                    }
+                } else {
                     $response = TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
+                }
             }
         }
         if ($response) {
@@ -141,11 +232,12 @@ trait UsesTelegramBot
             }
         }
 
-        // eliminar el mensaje q origino esta interaccion del bot
+        // eliminar el mensaje de texto que originó esta interacción
+        // Para callback_query NO hay mensaje del usuario: $this->message es el propio mensaje del bot (el que tenía el teclado)
         if (
             $this->message["message_id"] != "" &&
             isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) &&
-            empty($this->reply["editprevious"])
+            ($this->message['_update_type'] ?? '') !== 'callback_query'
         ) {
             try {
                 $array = array(
@@ -183,10 +275,41 @@ trait UsesTelegramBot
                 ->{$wizard['method']}($this);
         }
 
+        // En modo chat con soporte?
+        $supportChatKey = "support_chat_{$this->tenant->key}_{$this->actor->user_id}";
+        if (Cache::has($supportChatKey)) {
+            if (($this->message['_update_type'] ?? '') === 'callback_query') {
+                app()->make(\Modules\ZentroTraderBot\Http\Controllers\SupportController::class)
+                    ->exitSupportChat($this);
+            } else {
+                return app()->make(\Modules\ZentroTraderBot\Http\Controllers\SupportController::class)
+                    ->relayToSupport($this);
+            }
+        }
+
+        // En modo chat interno con la contraparte?
+        $chatKey = "chat_{$this->tenant->key}_{$this->actor->user_id}";
+        if (Cache::has($chatKey)) {
+            if (($this->message['_update_type'] ?? '') === 'callback_query') {
+                // Botón pulsado estando en chat: salir del chat y ejecutar el callback normalmente
+                app()->make(\Modules\ZentroTraderBot\Http\Controllers\OffersController::class)
+                    ->exitChat($this);
+            } else {
+                return app()->make(\Modules\ZentroTraderBot\Http\Controllers\OffersController::class)
+                    ->chatRelay($this);
+            }
+        }
+
         // preparando respuesta generica para un texto no reconocido en el bot
+        /*
         $reply = [
             "text" => "🙇🏻 " . Lang::get("telegrambot::bot.errors.unrecognizedcommand.text", ["text" => $this->message["text"]]) .
                 ".\n " . Lang::get("telegrambot::bot.errors.unrecognizedcommand.hint") . ".",
+        ];
+        */
+        // haciendo q no haya respuesta
+        $reply = [
+            "text" => "",
         ];
 
         if (!$array)
@@ -442,7 +565,11 @@ trait UsesTelegramBot
                 break;
 
             case "confirmation":
-                $reply = $this->getAreYouSurePrompt($array["pieces"][1], $array["pieces"][2]);
+                $reply = $this->getAreYouSurePrompt($array["pieces"][1], $array["pieces"][2] ?? null);
+                break;
+
+            case "deleteconfirmation":
+                $reply = ["deletecurrent" => true];
                 break;
 
             default:
@@ -512,7 +639,7 @@ trait UsesTelegramBot
     {
         $reply = [];
 
-        $text = "👋 *" . Lang::get("telegrambot::bot.mainmenu.salutation", ["bot_name" => $this->tenant->code]) . "*!\n" . $description;
+        $text = "👋 *" . Lang::get("telegrambot::bot.mainmenu.salutation", ["bot_name" => $this->tenant->code]) . "*\!\n" . $description;
         if ($referral) {
             if (isset($actor->data[$this->tenant->code]["parent_id"]) && $actor->data[$this->tenant->code]["parent_id"] > 0) {
                 $parent = $this->ActorsController->getFirst(Actors::class, "user_id", "=", $actor->data[$this->tenant->code]["parent_id"]);
@@ -570,7 +697,7 @@ trait UsesTelegramBot
         array_push($menu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]);
 
         $reply = [
-            "text" => "👮‍♂️ *" . Lang::get("telegrambot::bot.adminmenu.header") . "*!\n_" . Lang::get("telegrambot::bot.adminmenu.warning") . "_\n\n👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
+            "text" => "👮‍♂️ *" . Lang::get("telegrambot::bot.adminmenu.header") . "*\!\n_" . Lang::get("telegrambot::bot.adminmenu.warning") . "_\n\n👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
             "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
@@ -591,9 +718,9 @@ trait UsesTelegramBot
 
         // Opciones para todos los usuarios:
         if (isset($array[$this->tenant->code]["config_delete_prev_messages"])) {
-            array_push($menu, [["text" => "🟢 " . Lang::get("telegrambot::bot.options.keepprevmessages"), "callback_data" => "configdeleteprevmessages"]]);
+            array_push($menu, [["text" => "🟢 " . Lang::get("telegrambot::bot.configmenu.chat_clean_active"), "callback_data" => "configdeleteprevmessages"]]);
         } else {
-            array_push($menu, [["text" => "🔴 " . Lang::get("telegrambot::bot.options.deleteprevmessages"), "callback_data" => "configdeleteprevmessages"]]);
+            array_push($menu, [["text" => "⚫ " . Lang::get("telegrambot::bot.configmenu.chat_clean_disabled"), "callback_data" => "configdeleteprevmessages"]]);
         }
 
         $timezone = "UTC";
@@ -605,7 +732,7 @@ trait UsesTelegramBot
         array_push($menu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]);
 
         $reply = [
-            "text" => "⚙️ *" . Lang::get("telegrambot::bot.configmenu.header") . "*!\n_" . Lang::get("telegrambot::bot.configmenu.warning") . "_\n\n👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
+            "text" => "⚙️ *" . Lang::get("telegrambot::bot.configmenu.header") . "*\!\n_" . Lang::get("telegrambot::bot.configmenu.warning") . "_\n\n👇 " . Lang::get("telegrambot::bot.prompts.whatsnext"),
             "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
@@ -614,7 +741,7 @@ trait UsesTelegramBot
         return $reply;
     }
 
-    public function getAreYouSurePrompt($yes_method, $no_method, $message = false, $showwarning = true)
+    public function getAreYouSurePrompt($yes_method, $no_method = null, $message = false, $showwarning = true)
     {
         $text = "⚠️ *" . Lang::get("telegrambot::bot.prompts.areyousure.header") . "*\n";
         if ($message)
@@ -624,13 +751,17 @@ trait UsesTelegramBot
 
         $text .= "👇 " . Lang::get("telegrambot::bot.prompts.areyousure.text");
 
+        $no_callback = $no_method;
+        if (!$no_method || strtolower($no_method) == "none")
+            $no_callback = "deleteconfirmation";
+
         return array(
             "text" => $text,
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
                         ["text" => "👍 " . Lang::get("telegrambot::bot.options.yes"), "callback_data" => "{$yes_method}"],
-                        ["text" => "❌ " . Lang::get("telegrambot::bot.options.no"), "callback_data" => "{$no_method}"],
+                        ["text" => "❌ " . Lang::get("telegrambot::bot.options.no"), "callback_data" => "{$no_callback}"],
                     ],
                 ],
             ]),

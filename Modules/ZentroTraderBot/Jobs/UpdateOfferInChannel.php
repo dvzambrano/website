@@ -16,6 +16,7 @@ use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
 use Modules\Laravel\Services\BehaviorService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Laravel\Services\TextService;
+use Illuminate\Support\Facades\Cache;
 
 class UpdateOfferInChannel implements ShouldQueue
 {
@@ -72,8 +73,14 @@ class UpdateOfferInChannel implements ShouldQueue
                     "text" => $messageData['message']['text'],
                 ]
             ];
-            if (isset($messageData['message']['reply_markup']))
+
+            // Si hay una aplicación en curso (lock activo), mantener el botón desactivado
+            // aunque el status siga siendo 'open' para evitar race conditions.
+            if ($offer->status === 'open' && Cache::has("applying_offer_lock_{$this->code}")) {
+                $payload["message"]["reply_markup"] = json_encode(["inline_keyboard" => []]);
+            } elseif (isset($messageData['message']['reply_markup'])) {
                 $payload["message"]["reply_markup"] = $messageData['message']['reply_markup'];
+            }
 
             // Editamos el mensaje (esto quita el botón si el estado cambió a 'taken')
             TelegramController::editMessageText($payload, $tenant->token);

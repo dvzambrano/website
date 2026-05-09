@@ -1,6 +1,9 @@
 <?php
 
 return [
+    "maintenance" => [
+        "message" => "El bot se encuentra en mantenimiento.",
+    ],
     "mainmenu" => [
         "salutation" => "Bienvenido al :bot_name",
         "referral" => "Enlace de referido",
@@ -13,6 +16,8 @@ return [
     "configmenu" => [
         "header" => "Menú de configuraciones",
         "warning" => "Aquí encontrará ajustes del comportamiento del bot",
+        "chat_clean_active" => "Chat limpio: activo",
+        "chat_clean_disabled" => "Chat limpio: desactivado",
     ],
     "role" => [
         "admin" => "Admin",

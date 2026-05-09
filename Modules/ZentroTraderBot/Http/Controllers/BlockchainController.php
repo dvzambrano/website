@@ -23,12 +23,24 @@ class BlockchainController extends Controller
             $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
             $escrow = new EscrowController();
 
-            // 1. Obtener Gas Price en WEI (unidad mínima)
-            $gasPriceWei = $this->rpcCallWithFallback($rpcUrls, function ($rpc) {
-                $gasPriceHex = $this->rpcCall($rpc, 'eth_gasPrice', [], true);
-                return hexdec($gasPriceHex);
+            // 1. EIP-1559: calcular maxFeePerGas con el mismo modelo que EscrowController::broadcastTransaction
+            // maxFeePerGas = (baseFee × 2) + max(priorityFee, 30 Gwei)
+            $feeData = $this->rpcCallWithFallback($rpcUrls, function ($rpc) {
+                $latestBlock = $this->rpcCall($rpc, 'eth_getBlockByNumber', ['latest', false], true);
+                $baseFeeWei = hexdec(str_replace('0x', '', $latestBlock['baseFeePerGas'] ?? '0x0'));
+
+                $priorityFeeWei = $this->getPriorityFeeHistory($rpc);
+                $effectivePriorityFee = max($priorityFeeWei, 30_000_000_000); // 30 Gwei floor, igual que broadcastTransaction
+
+                return [
+                    'baseFeeWei' => $baseFeeWei,
+                    'priorityFeeWei' => $effectivePriorityFee,
+                    'maxFeePerGasWei' => $baseFeeWei * 2 + $effectivePriorityFee,
+                ];
             });
-            $gasPriceGwei = $gasPriceWei / 1000000000;
+
+            $maxFeePerGasWei = $feeData['maxFeePerGasWei'];
+            $gasPriceGwei = $maxFeePerGasWei / 1_000_000_000;
 
             $nativePrice = $this->getPriceFromLlama($network);
 
@@ -40,10 +52,11 @@ class BlockchainController extends Controller
                 return $escrow->getTradeTimeout($rpc, env('ESCROW_CONTRACT'), $network['chainId'], env('ETHERSCAN_API_KEY'));
             });
 
-            // 3. CÁLCULO DE COSTO (Corregido)
-            $gasEstimated = env("ESCROW_GAS_ESTIMATED", 600000); // Gas de Funciones Operativas del Escrow: se obtiene del reporte "forge test --gas-report" en el 
-            // (Gas * GasPrice en Wei) / 10^18 (para obtener POL/ETH) * Precio USD
-            $costInUsd = ($gasEstimated * $gasPriceWei / pow(10, 18)) * $nativePrice;
+            // 3. CÁLCULO DE COSTO
+            // Gas base del forge gas-report + buffer del 20% (idéntico al aplicado en broadcastTransaction)
+            $gasEstimated = (int) (env("ESCROW_GAS_ESTIMATED", 600000) * 1.2);
+            // (Gas × maxFeePerGas en Wei) / 10^18 × Precio USD
+            $costInUsd = ($gasEstimated * $maxFeePerGasWei / pow(10, 18)) * $nativePrice;
 
             // 4. Diagnóstico MinFee (Corregido)
             $currentMinFeeRaw = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $token) {
@@ -83,11 +96,13 @@ class BlockchainController extends Controller
             $array = [
                 "network" => $network,
                 "token" => $token,
-                "gasPriceGwei" => $gasPriceGwei,
+                "baseFeeGwei" => $feeData['baseFeeWei'] / 1_000_000_000,
+                "priorityFeeGwei" => $feeData['priorityFeeWei'] / 1_000_000_000,
+                "gasPriceGwei" => $gasPriceGwei,  // maxFeePerGas = (baseFee×2)+tip
                 "nativePrice" => $nativePrice,
                 "feePercentage" => (int) $feePercentage,
                 "tradeTimeout" => (int) $tradeTimeout,
-                "gasEstimated" => $gasEstimated,
+                "gasEstimated" => $gasEstimated,  // unidades de gas con buffer 1.2×
                 "costInUsd" => $costInUsd,
                 "currentMinFeeRaw" => $currentMinFeeRaw,
                 "currentMinFeeUsd" => $currentMinFeeUsd,
@@ -109,6 +124,72 @@ class BlockchainController extends Controller
         }
     }
 
+
+    public function getContractFinances()
+    {
+        try {
+            $network = ConfigService::getNetworks(env("BASE_NETWORK"));
+            $token = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+            $rpcUrls = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+            $escrow = new EscrowController();
+
+            $lockedRaw = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $token) {
+                return $escrow->getTotalLockedBalance($rpc, env('ESCROW_CONTRACT'), $network['chainId'], $token['address'], env('ETHERSCAN_API_KEY'));
+            });
+
+            $feesRaw = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $network, $token) {
+                return $escrow->getAccumulatedFees($rpc, env('ESCROW_CONTRACT'), $network['chainId'], $token['address'], env('ETHERSCAN_API_KEY'));
+            });
+
+            $decimals = $token['decimals'] ?? 6;
+
+            return [
+                'token'     => $token,
+                'network'   => $network,
+                'lockedRaw' => $lockedRaw,
+                'feesRaw'   => $feesRaw,
+                'lockedUsd' => (float) $lockedRaw / pow(10, $decimals),
+                'feesUsd'   => (float) $feesRaw  / pow(10, $decimals),
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('🆘 BlockchainController::getContractFinances error', ['message' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    public function withdrawContractFees()
+    {
+        try {
+            $network    = ConfigService::getNetworks(env("BASE_NETWORK"));
+            $token      = ConfigService::getToken(env('BASE_TOKEN'), $network["chainId"]);
+            $rpcUrls    = array_filter($network['rpc'] ?? [], fn($url) => str_starts_with($url, 'https'));
+            $escrow     = new EscrowController();
+            $arbiterKey = decryptValue(env('ESCROW_ARBITER_KEY'));
+
+            $txHash = $this->rpcCallWithFallback($rpcUrls, function ($rpc) use ($escrow, $arbiterKey, $network, $token) {
+                return $escrow->withdrawFees(
+                    $rpc,
+                    $arbiterKey,
+                    env('ESCROW_CONTRACT'),
+                    $network['chainId'],
+                    $token['address'],
+                    env('ETHERSCAN_API_KEY')
+                );
+            });
+
+            $explorerBase = $network['explorers'][0]['url'] ?? '';
+
+            return [
+                'tx_hash'  => $txHash,
+                'explorer' => "{$explorerBase}/tx/{$txHash}",
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('🆘 BlockchainController::withdrawContractFees error', ['message' => $e->getMessage()]);
+            return null;
+        }
+    }
 
     private function getPriceFromLlama($config)
     {

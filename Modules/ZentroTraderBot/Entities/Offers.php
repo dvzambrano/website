@@ -3,10 +3,32 @@
 namespace Modules\ZentroTraderBot\Entities;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Services\DateService;
+use Modules\Laravel\Services\TextService;
 use Modules\Laravel\Traits\TenantTrait;
 use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property int|null $user_id
+ * @property string $buyer_address
+ * @property string $seller_address
+ * @property string|null $winner_address
+ * @property float $amount
+ * @property string $currency
+ * @property float $price_per_usd
+ * @property string $payment_method
+ * @property string|null $payment_details
+ * @property string $status
+ * @property string $type
+ * @property string|null $tx_hash_deposit
+ * @property string|null $tx_hash_release
+ * @property array|null $data
+ * @property string $code
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class Offers extends Model
 {
     use TenantTrait;
@@ -71,10 +93,54 @@ class Offers extends Model
         $this->update(array_merge(["status" => $status], $extra));
     }
 
-    public function renderAsTelegramMessage($title = "", $owner = false, $stars = "")
+    /**
+     * Registra en data['blockchain_events'] el ciclo de vida de un evento on-chain.
+     * Persiste 'pending_at' en el primer pass (unconfirmed) y 'confirmed_at' en el segundo.
+     * No cambia offer->status, por lo que el Observer no dispara.
+     */
+    public function recordBlockchainEvent(string $eventName, string $txHash, bool $confirmed): void
     {
-        $total = number_format(($this->amount * $this->price_per_usd), 2);
-        $amount = number_format($this->amount, 2);
+        $data = $this->data ?? [];
+        $entry = $data['blockchain_events'][$eventName] ?? [];
+
+        if (!$confirmed) {
+            $entry = [
+                'tx_hash' => $txHash,
+                'pending_at' => now()->format("Y-m-d H:i:s"),
+                'confirmed_at' => null,
+            ];
+        } else {
+            $entry['tx_hash'] = $txHash; // actualizar hash por si hubo reorg
+            $entry['confirmed_at'] = now()->format("Y-m-d H:i:s");
+        }
+
+        $data['blockchain_events'][$eventName] = $entry;
+        $this->update(['data' => $data]);
+    }
+
+    /**
+     * True si el evento fue detectado como unconfirmed (ya notificamos "pending").
+     */
+    public function isEventPending(string $eventName): bool
+    {
+        return !empty($this->data['blockchain_events'][$eventName]['pending_at']);
+    }
+
+    /**
+     * True si el evento ya fue confirmado en la red.
+     */
+    public function isEventConfirmed(string $eventName): bool
+    {
+        return !empty($this->data['blockchain_events'][$eventName]['confirmed_at']);
+    }
+
+    public function renderAsTelegramMessage($title = "", $owner = false, $stars = "", $v2 = false)
+    {
+        $esc = fn($val) => $v2 ? TextService::mdv2($val) : $val;
+
+        $total = $esc(number_format(($this->amount * $this->price_per_usd), 2));
+        $amount = $esc(number_format($this->amount, 2));
+        $price = $esc($this->price_per_usd);
         $isSell = strtolower($this->type) == "sell";
 
         $text = "{$title}\n";
@@ -86,7 +152,7 @@ class Offers extends Model
             $text .= "💵 Se compra: *{$amount} USD*\n";
         }
 
-        $text .= "🔖 Tasa: *{$this->price_per_usd} {$this->currency}/USD*\n";
+        $text .= "🔖 Tasa: *{$price} {$this->currency}/USD*\n";
 
         if ($isSell) {
             if ($owner) {
@@ -98,11 +164,8 @@ class Offers extends Model
             $text .= Offers::getTypeEmoji("sell")["icon"] . " Ud entrega: *{$total} {$this->currency}*\n";
         }
 
-        $text .= "💳 Medio de pago: *{$this->payment_method}*\n";
-        $text .= "🗓 Creada: *{$this->created_at}*\n\n";
-
-        //$created_at = $actor->getLocalDateTime($this->created_at, $tenant->code);
-        //$this->created_at
+        $text .= "💳 Medio de pago: *" . $esc($this->payment_method) . "*\n";
+        $text .= "🗓 Creada: *" . $esc($this->created_at) . "*\n\n";
 
         return $text;
     }
@@ -149,7 +212,10 @@ class Offers extends Model
                     "inline_keyboard" => [
                         [
                             ["text" => "👉 Aplicar a esta oferta", 'url' => "https://t.me/" . $botName . "?start=offer_{$this->code}"]
-                        ]
+                        ],
+                        [
+                            ["text" => "👤 Ver Perfil", 'url' => "https://t.me/" . $botName . "?start=profile_{$this->code}"]
+                        ],
                     ],
                 ];
                 break;
@@ -230,26 +296,22 @@ class Offers extends Model
 
     public static function getStatusTitle($status, $diff)
     {
-        $title = "";
-        // Solo si está abierta calculamos los prefijos de tiempo
-        if ($diff['days'] == 0 && $diff['hours'] < 1) {
-            $title = "¡NUEVA OFERTA";
-        } elseif ($diff['days'] == 0) {
-            $title = "OFERTA RECIENTE";
-        } else {
-            $title = "OFERTA DISPONIBLE";
-        }
+        $openTitle = match (true) {
+            $diff['days'] == 0 && $diff['hours'] < 1 => Lang::get("zentrotraderbot::bot.show_offer.status_title.new"),
+            $diff['days'] == 0                        => Lang::get("zentrotraderbot::bot.show_offer.status_title.recent"),
+            default                                   => Lang::get("zentrotraderbot::bot.show_offer.status_title.available"),
+        };
 
         return match (strtoupper($status)) {
-            'OPEN' => $title,
-            'CANCELLED' => "OFERTA FINALIZADA",
-            'COMPLETED' => "OFERTA FINALIZADA",
-            'LOCKED' => "OFERTA EN CURSO",   // Fondos en Escrow
-            'SIGNED' => "OFERTA EN CURSO",   // Una parte ya firmó
-            'DISPUTED' => "OFERTA EN CURSO", // En disputa
-            'SOLVED' => "OFERTA FINALIZADA",
-            'EXPIRED' => "OFERTA FINALIZADA",  // Tiempo agotado
-            default => "OFERTA ACTUALIZADA",
+            'OPEN'      => $openTitle,
+            'CANCELLED' => Lang::get("zentrotraderbot::bot.show_offer.status_title.cancelled"),
+            'COMPLETED' => Lang::get("zentrotraderbot::bot.show_offer.status_title.completed"),
+            'LOCKED'    => Lang::get("zentrotraderbot::bot.show_offer.status_title.locked"),
+            'SIGNED'    => Lang::get("zentrotraderbot::bot.show_offer.status_title.signed"),
+            'DISPUTED'  => Lang::get("zentrotraderbot::bot.show_offer.status_title.disputed"),
+            'SOLVED'    => Lang::get("zentrotraderbot::bot.show_offer.status_title.solved"),
+            'EXPIRED'   => Lang::get("zentrotraderbot::bot.show_offer.status_title.expired"),
+            default     => Lang::get("zentrotraderbot::bot.show_offer.status_title.default"),
         };
     }
 
@@ -259,11 +321,11 @@ class Offers extends Model
             'OPEN' => ["icon" => '⬜️', "color" => "⬜️"],
             'CANCELLED' => ["icon" => '❌', "color" => "🟫"],
             'COMPLETED' => ["icon" => '✅', "color" => "🟩"],
-            'LOCKED' => ["icon" => '🔒', "color" => "🟧"],   // Fondos en Escrow
-            'SIGNED' => ["icon" => '✍️', "color" => "🟨"],   // Una parte ya firmó
+            'LOCKED' => ["icon" => '🔒', "color" => "🟧"], // Fondos en Escrow
+            'SIGNED' => ["icon" => '✍️', "color" => "🟨"], // Una parte ya firmó
             'DISPUTED' => ["icon" => '⚖️', "color" => "🟪"], // En disputa
             'SOLVED' => ["icon" => '☑️', "color" => "🟪"],
-            'EXPIRED' => ["icon" => '⏱️', "color" => "🟦"],  // Tiempo agotado
+            'EXPIRED' => ["icon" => '⏱️', "color" => "🟦"], // Tiempo agotado
             default => ["icon" => '▫️', "color" => "⬜️"],
         };
     }
