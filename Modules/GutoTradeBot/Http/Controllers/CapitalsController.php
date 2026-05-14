@@ -5,6 +5,8 @@ namespace Modules\GutoTradeBot\Http\Controllers;
 use Modules\Laravel\Http\Controllers\FileController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Lang;
+use Modules\Laravel\Services\TextService;
 use Illuminate\Support\Facades\Log;
 use Modules\GutoTradeBot\Entities\Capitals;
 use Modules\GutoTradeBot\Entities\Moneys;
@@ -274,10 +276,10 @@ class CapitalsController extends MoneysController
         $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $tenant->code);
 
         $reply = array(
-            "text" => "💰 *Reportar aporte de capital*\n\n_Para reportar un aporte de capital, ud debe enviar una captura y poner como descripción de la misma, el nombre y apellidos del remitente y el monto enviado._\n\nEjemplo:    *Juan Perez 1200*\n_Así estaríamos informando que Juan Perez ha enviado 1200 USDT_\n\n👇 Envíe la captura del aporte de capital realizado:",
+            "text" => "💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.report_prompt.header')) . "*\n\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.report_prompt.instructions')) . "_\n\nEjemplo:    *Juan Perez 1200*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.report_prompt.example_text')) . "_\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.capital.report_prompt.prompt')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✋ Cancelar", "callback_data" => "menu"]],
+                    [["text" => "✋ " . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), "callback_data" => "menu"]],
                 ],
             ]),
         );
@@ -294,13 +296,13 @@ class CapitalsController extends MoneysController
         if ($actor) {
             //array_push($menu, [["text" => "💰 Reportar aporte de capital realizado", "callback_data" => "sendercapitalmenu"]]);
             array_push($menu, [
-                ["text" => "🤷🏻‍♂️ Sin confirmar", "callback_data" => "getadminunconfirmedcapitalsmenu"],
+                ["text" => "🤷🏻‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.mainmenu.unconfirmed')), "callback_data" => "getadminunconfirmedcapitalsmenu"],
             ]);
-            array_push($menu, [["text" => "📝 Exportar aportes de capital", "callback_data" => "getadminallcapitalsmenu"]]);
-            array_push($menu, [["text" => "↖️ Volver al menú de administrador", "callback_data" => "adminmenu"]]);
+            array_push($menu, [["text" => "📝 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.export_capitals')), "callback_data" => "getadminallcapitalsmenu"]]);
+            array_push($menu, [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtoadminmenu')), "callback_data" => "adminmenu"]]);
 
             $reply = array(
-                "text" => "💰 *Menú de aportes de capital*!\n_Aquí encontrará las opciones sobre los aportes de capital realizados_\n\n👇 Qué desea hacer ahora?",
+                "text" => "💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.menu.header')) . "*!\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.menu.description')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
                 "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
@@ -319,14 +321,14 @@ class CapitalsController extends MoneysController
             $to_id = $user_id;
         }
 
-        $text = "👍 *No hay aportes de capital pendientes*\n_Ud no tiene aportes de capital pendientes por confirmar._";
+        $text = "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.empty')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.empty_self')) . "_";
         $menu = [
-            [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]],
+            [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
         ];
         if ($user_id != $to_id) {
-            $text = "👍 *No hay aportes de capital pendientes*\n_El usuario no tiene aportes de capital pendientes por confirmar._";
+            $text = "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.empty')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.empty_user')) . "_";
             $menu = [
-                [["text" => "↖️ Volver al menú de usuarios", "callback_data" => "getadminunconfirmedcapitalsmenu"]],
+                [["text" => "↖️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.backtousersmenu')), "callback_data" => "getadminunconfirmedcapitalsmenu"]],
             ];
         }
         $reply = array(
@@ -350,19 +352,19 @@ class CapitalsController extends MoneysController
                     $pendingmenu = $this->getOptionsMenuForThisOne($bot, $capital, 1);
                     if ($capital->supervisor_id && $capital->supervisor_id > 0) {
                         array_unshift($pendingmenu, [
-                            ["text" => "⚠️ Solicitar confirmación", "callback_data" => "requestcapitalconfirmation-{$capital->id}"],
+                            ["text" => "⚠️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.request_confirmation')), "callback_data" => "requestcapitalconfirmation-{$capital->id}"],
                         ]);
                     }
                 } else {
                     array_unshift($pendingmenu, [
-                        ["text" => "⚠️ Solicitar confirmación", "callback_data" => "requestcapitalconfirmation-{$capital->id}"],
+                        ["text" => "⚠️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.request_confirmation')), "callback_data" => "requestcapitalconfirmation-{$capital->id}"],
                     ]);
                 }
 
                 $capital->sendAsTelegramMessage(
                     $bot,
                     $actor,
-                    "Aporte de capital pendiente",
+                    TextService::mdv2(Lang::get('gutotradebot::bot.capital.pending_title')),
                     false,
                     $user_id == "all" ? $capital->sender_id : false,
                     $pendingmenu
@@ -375,18 +377,18 @@ class CapitalsController extends MoneysController
             $array = $this->export($bot, $capitals, $actor);
             $xlspath = request()->root() . "/report/" . $array["extension"] . "/" . $array["filename"];
 
-            $text = "👆 *Aportes de capital pendientes*\n_Estos son {$count} aportes de capital reportados por Ud y que aún no han sido confirmados._\n*Total: {$amount}* 💰\n\n" . $bot->getReportFileText($xlspath);
+            $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.self', ['count' => $count])) . "_\n*Total: {$amount}* 💰\n\n" . $bot->getReportFileText($xlspath);
             if ($isadmin) {
-                $text = "👆 *Aportes de capital pendientes*\n_Estos {$count} aportes de capital han sido reportados y aún no han sido confirmados._\n*Total: {$amount}* 💰\n\n" . $bot->getReportFileText($xlspath);
+                $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.admin', ['count' => $count])) . "_\n*Total: {$amount}* 💰\n\n" . $bot->getReportFileText($xlspath);
             }
             $menu = [
-                [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]],
+                [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
             ];
 
             if ($user_id != $to_id) {
-                $text = "👆 *Aportes de capital pendientes*\n_Estos {$count} aportes de capital han sido reportados y aún no han sido confirmados._\n*Total: {$amount}* 💰\n\n" . $bot->getReportFileText($xlspath);
+                $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.admin', ['count' => $count])) . "_\n*Total: {$amount}* 💰\n\n" . $bot->getReportFileText($xlspath);
                 $menu = [
-                    [["text" => "↖️ Volver al menú de usuarios", "callback_data" => "getadminunconfirmedcapitalsmenu"]],
+                    [["text" => "↖️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.backtousersmenu')), "callback_data" => "getadminunconfirmedcapitalsmenu"]],
                 ];
             }
 
@@ -415,18 +417,18 @@ class CapitalsController extends MoneysController
         ], $tenant->code);
         $menu = array();
         array_push($menu, [
-            ["text" => "👥 Todos", "callback_data" => "unconfirmedcapitals-all"],
+            ["text" => "👥 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.all')), "callback_data" => "unconfirmedcapitals-all"],
         ]);
         foreach ($senders as $sender) {
             $suscriptor = $bot->AgentsController->getSuscriptor($bot, $sender->user_id, true);
             array_push($menu, [["text" => $suscriptor->getTelegramInfo($bot, "full_name"), "callback_data" => "unconfirmedcapitals-{$sender->user_id}"]]);
         }
         array_push($menu, [
-            ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+            ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
         ]);
 
         $reply = array(
-            "text" => "💰 *Aportes de capital sin confirmar por usuarios*\n_Aquí puede obtener el reporte de aportes de capital sin confirmar de uno o todos los usuarios_\n\n👇 De quién desea ver?",
+            "text" => "💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_menu.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_menu.desc')) . "_\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.who_to_see')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
@@ -450,18 +452,18 @@ class CapitalsController extends MoneysController
         ], $tenant->code);
         $menu = array();
         array_push($menu, [
-            ["text" => "👥 Todos", "callback_data" => "allcapitals-all"],
+            ["text" => "👥 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.all')), "callback_data" => "allcapitals-all"],
         ]);
         foreach ($senders as $sender) {
             $suscriptor = $bot->AgentsController->getSuscriptor($bot, $sender->user_id, true);
             array_push($menu, [["text" => $suscriptor->getTelegramInfo($bot, "full_name"), "callback_data" => "allcapitals-{$sender->user_id}"]]);
         }
         array_push($menu, [
-            ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+            ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
         ]);
 
         $reply = array(
-            "text" => "💰 *Aportes de capital por usuarios*\n_Aquí puede obtener el reporte de aportes de capital de uno o todos los usuarios_\n\n👇 De quién desea ver?",
+            "text" => "💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.all_menu.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.all_menu.desc')) . "_\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.who_to_see')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => $menu,
             ]),
@@ -479,14 +481,14 @@ class CapitalsController extends MoneysController
             $to_id = $user_id;
         }
 
-        $text = "👍 *No hay aportes*\n_Ud no tiene aportes de capital reportados._";
+        $text = "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.all_list.empty')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.all_list.empty_self')) . "_";
         $menu = [
-            [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]],
+            [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
         ];
         if ($user_id != $to_id) {
-            $text = "👍 *No hay aportes*\n_El usuario no tiene aportes de capital reportados._";
+            $text = "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.all_list.empty')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.all_list.empty_user')) . "_";
             $menu = [
-                [["text" => "↖️ Volver al menú de usuarios", "callback_data" => "getadminallcapitalsmenu"]],
+                [["text" => "↖️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.backtousersmenu')), "callback_data" => "getadminallcapitalsmenu"]],
             ];
         }
         $reply = array(
@@ -511,14 +513,14 @@ class CapitalsController extends MoneysController
             $array = $this->export($bot, $capitals, $actor);
             $xlspath = request()->root() . "/report/" . $array["extension"] . "/" . $array["filename"];
 
-            $text = "👆 *Aportes de capital*\n_Estos son {$count} aportes reportados por Ud.";
+            $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.all_list.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.all_list.self', ['count' => $count]));
             $menu = [
-                [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]],
+                [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
             ];
             if ($isadmin || $user_id != $to_id) {
-                $text = "👆 *Aportes de capital*\n_Estos {$count} aportes han sido reportados.";
+                $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.all_list.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.all_list.admin', ['count' => $count]));
                 $menu = [
-                    [["text" => "↖️ Volver al menú de usuarios", "callback_data" => "getadminallcapitalsmenu"]],
+                    [["text" => "↖️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.backtousersmenu')), "callback_data" => "getadminallcapitalsmenu"]],
                 ];
             }
 
@@ -542,7 +544,7 @@ class CapitalsController extends MoneysController
         $capital->sendAsTelegramMessage(
             $bot,
             $actor,
-            "Nuevo aporte de capital",
+            TextService::mdv2(Lang::get('gutotradebot::bot.capital.new_title')),
             false,
             true,
             $supervisorsmenu
@@ -573,12 +575,12 @@ class CapitalsController extends MoneysController
         $capital->sendAsTelegramMessage(
             $bot,
             $actor,
-            "Aporte de capital confirmado",
-            "✅ _El siguiente aporte de capital reportado por Ud ha sido recibido en nuestras cuentas_",
+            TextService::mdv2(Lang::get('gutotradebot::bot.capital.confirmed_title')),
+            "✅ _" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.confirm.to_owner')) . "_",
             false,
             [
                 [
-                    ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                    ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                 ],
 
             ]
@@ -592,11 +594,11 @@ class CapitalsController extends MoneysController
         $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "", $tenant->code);
 
         $reply = array(
-            "text" => "✅ *Aporte de capital confirmado*\n_Ud ha confirmado satisfactoriamente el aporte de capital recibido_\n\nSe le ha enviado notificación a quien reportó este aporte de capital para que esté al tanto de esta confirmación.\n\n👇 Qué desea hacer ahora?",
+            "text" => "✅ *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.confirmed_title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.confirm.to_admin')) . "_\n\n" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.confirm.notification_sent')) . "\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                     ],
 
                 ],
@@ -611,11 +613,11 @@ class CapitalsController extends MoneysController
         // obteniendo datos del usuario de telegram
         $suscriptor = $bot->AgentsController->getSuscriptor($bot, $user_id, true);
         $reply = array(
-            "text" => "🆗 *Aporte de capital asignado*\n\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n\n👇 Qué desea hacer ahora?",
+            "text" => "🆗 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.assigned_title')) . "*\n\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                     ],
 
                 ],
@@ -630,8 +632,8 @@ class CapitalsController extends MoneysController
         $capital->sendAsTelegramMessage(
             $bot,
             $actor,
-            "Aporte de capital",
-            "⚠️ _Se ha solicitado actualización de estado del siguiente aporte de capital:_",
+            TextService::mdv2(Lang::get('gutotradebot::bot.capital.status_title')),
+            "⚠️ _" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.status_request.to_supervisor')) . "_",
             true,
             $supervisorsmenu
         );
@@ -644,12 +646,12 @@ class CapitalsController extends MoneysController
         $capital->sendAsTelegramMessage(
             $bot,
             $actor,
-            "Aporte de capital",
-            "🤷🏻‍♂️ _Su aporte de capital aún no ha sido recibido:_",
+            TextService::mdv2(Lang::get('gutotradebot::bot.capital.status_title')),
+            "🤷🏻‍♂️ _" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.not_yet.to_owner')) . "_",
             false,
             [
                 [
-                    ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                    ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                 ],
 
             ]
@@ -659,11 +661,11 @@ class CapitalsController extends MoneysController
     public function notifyStatusNotYetToAdmin()
     {
         $reply = array(
-            "text" => "👍 *Respuesta enviada*\n_Se le ha notificado al usuario que su aporte de capital aún no ha sido recibido._\n\n👇 Qué desea hacer ahora?",
+            "text" => "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.not_yet.replied_title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.not_yet.replied')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                     ],
 
                 ],
@@ -676,11 +678,11 @@ class CapitalsController extends MoneysController
     public function notifyAfterStatusRequest()
     {
         $reply = array(
-            "text" => "👍 *Solicitud de confirmación*\n_Se ha enviado solicitud de confirmación del aporte de capital a las personas encargadas de procesarlo.\nPor favor, sea paciente, le notificaremos lo antes posible._\n\n👇 Qué desea hacer ahora?",
+            "text" => "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.status_request.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.status_request.to_sender')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                     ],
 
                 ],
@@ -705,15 +707,15 @@ class CapitalsController extends MoneysController
                         $bot,
                         $capital,
                         $capital->sender_id,
-                        "Aporte de capital recibido",
-                        "✅ _Se ha solicitado a los GESTORES confimación de recepción de su aporte de capital en nuestras cuentas.\nSe le notificará automáticamente por esta vía._",
+                        TextService::mdv2(Lang::get('gutotradebot::bot.capital.received_title')),
+                        "✅ _" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.confirm.gestors_notify')) . "_",
                         false,
                         [
                             [
-                                ["text" => "💰 Reportar otro aporte de capital", "callback_data" => "sendercapitalmenu"],
+                                ["text" => "💰 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.report_another_capital')), "callback_data" => "sendercapitalmenu"],
                             ],
                             [
-                                ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                                ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                             ],
 
                         ]
@@ -724,15 +726,15 @@ class CapitalsController extends MoneysController
                         $bot,
                         $capital,
                         $capital->sender_id,
-                        "Recepción de aporte de capital completada",
+                        TextService::mdv2(Lang::get('gutotradebot::bot.capital.reception_completed')),
                         false,
                         false,
                         [
                             [
-                                ["text" => "👍 Reportar otra recepción de capital", "callback_data" => "supervisorcapitalmenu"],
+                                ["text" => "👍 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.report_another_capital_reception')), "callback_data" => "supervisorcapitalmenu"],
                             ],
                             [
-                                ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                                ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                             ],
 
                         ]

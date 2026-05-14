@@ -4,6 +4,8 @@ namespace Modules\GutoTradeBot\Http\Controllers;
 
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Illuminate\Support\Facades\Lang;
+use Modules\Laravel\Services\TextService;
 
 class AgentsController extends ActorsController
 {
@@ -50,63 +52,63 @@ class AgentsController extends ActorsController
 
         switch ($role_id) {
             case 0:
-                $array["role"] = "😳 Sin rol";
+                $array["role"] = "😳 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.no_role'));
                 $array["menu"] = [
                     [
-                        ["text" => "💶 REMESADOR", "callback_data" => "promote2-{$user_id}"],
-                        ["text" => "👍 RECEPTOR", "callback_data" => "promote3-{$user_id}"],
+                        ["text" => "💶 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.remesador')), "callback_data" => "promote2-{$user_id}"],
+                        ["text" => "👍 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.receptor')), "callback_data" => "promote3-{$user_id}"],
                     ],
                     [
-                        ["text" => "👮‍♂️ GESTOR", "callback_data" => "promote1-{$user_id}"],
-                        ["text" => "👮‍♂️ CAPITAL", "callback_data" => "promote4-{$user_id}"],
+                        ["text" => "👮‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.gestor')), "callback_data" => "promote1-{$user_id}"],
+                        ["text" => "👮‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.capital')), "callback_data" => "promote4-{$user_id}"],
                     ],
                 ];
                 break;
             case 1:
-                $array["role"] = "👮‍♂️ GESTOR";
+                $array["role"] = "👮‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.gestor'));
                 $array["menu"] = [
                     [
-                        ["text" => "💶 REMESADOR", "callback_data" => "promote2-{$user_id}"],
-                        ["text" => "👍 RECEPTOR", "callback_data" => "promote3-{$user_id}"],
+                        ["text" => "💶 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.remesador')), "callback_data" => "promote2-{$user_id}"],
+                        ["text" => "👍 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.receptor')), "callback_data" => "promote3-{$user_id}"],
                     ],
                     [
-                        ["text" => "👮‍♂️ CAPITAL", "callback_data" => "promote4-{$user_id}"],
+                        ["text" => "👮‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.capital')), "callback_data" => "promote4-{$user_id}"],
                     ],
                 ];
                 break;
             case 2:
-                $array["role"] = "💶 REMESADOR";
+                $array["role"] = "💶 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.remesador'));
                 $array["menu"] = [
                     [
-                        ["text" => "👍 RECEPTOR", "callback_data" => "promote3-{$user_id}"],
+                        ["text" => "👍 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.receptor')), "callback_data" => "promote3-{$user_id}"],
                     ],
                     [
-                        ["text" => "👮‍♂️ GESTOR", "callback_data" => "promote1-{$user_id}"],
-                        ["text" => "👮‍♂️ CAPITAL", "callback_data" => "promote4-{$user_id}"],
+                        ["text" => "👮‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.gestor')), "callback_data" => "promote1-{$user_id}"],
+                        ["text" => "👮‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.capital')), "callback_data" => "promote4-{$user_id}"],
                     ],
                 ];
                 break;
             case 3:
-                $array["role"] = "👍 RECEPTOR";
+                $array["role"] = "👍 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.receptor'));
                 $array["menu"] = [
                     [
-                        ["text" => "💶 REMESADOR", "callback_data" => "promote2-{$user_id}"],
+                        ["text" => "💶 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.remesador')), "callback_data" => "promote2-{$user_id}"],
                     ],
                     [
-                        ["text" => "👮‍♂️ GESTOR", "callback_data" => "promote1-{$user_id}"],
-                        ["text" => "👮‍♂️ CAPITAL", "callback_data" => "promote4-{$user_id}"],
+                        ["text" => "👮‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.gestor')), "callback_data" => "promote1-{$user_id}"],
+                        ["text" => "👮‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.capital')), "callback_data" => "promote4-{$user_id}"],
                     ],
                 ];
                 break;
             case 4:
-                $array["role"] = "👮‍♂️ CAPITAL";
+                $array["role"] = "👮‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.capital'));
                 $array["menu"] = [
                     [
-                        ["text" => "💶 REMESADOR", "callback_data" => "promote2-{$user_id}"],
-                        ["text" => "👍 RECEPTOR", "callback_data" => "promote3-{$user_id}"],
+                        ["text" => "💶 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.remesador')), "callback_data" => "promote2-{$user_id}"],
+                        ["text" => "👍 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.receptor')), "callback_data" => "promote3-{$user_id}"],
                     ],
                     [
-                        ["text" => "👮‍♂️ GESTOR", "callback_data" => "promote1-{$user_id}"],
+                        ["text" => "👮‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.gestor')), "callback_data" => "promote1-{$user_id}"],
                     ],
                 ];
                 break;
