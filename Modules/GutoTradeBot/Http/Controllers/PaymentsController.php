@@ -704,8 +704,8 @@ class PaymentsController extends MoneysController
 
         $text = "💶 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_menu.title')) . "*\n" .
             "_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_menu.desc')) . "_\n\n" .
-            "*Total*: " . Moneys::format($total) . " 💶\n" .
-            "*" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.equivalents')) . "*: " . Moneys::format($bot->ProfitsController->getUSDTtoSendWithActiveRate($total)) . " 💵";
+            "*Total*: " . TextService::mdv2(Moneys::format($total)) . " 💶\n" .
+            "*" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.equivalents')) . "*: " . TextService::mdv2(Moneys::format($bot->ProfitsController->getUSDTtoSendWithActiveRate($total))) . " 💵";
         if (count($menu) == 1) {
             $text .= "\n\n😎 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_menu.empty')) . "*";
         } else {
@@ -820,8 +820,8 @@ class PaymentsController extends MoneysController
                     $text .= "\n\n😳 " . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unliquidated_list.penalty_notice'));
                 }
                 foreach ($penalized as $penalty) {
-                    $penalized_amount = Moneys::format(NumberService::round($penalty["payment"]->amount - ($penalty["payment"]->amount * $penalty["amount"] / 100)));
-                    $text .= "\n🆔 `" . $penalty["payment"]->id . "`:     ▪️ *{$penalized_amount}* 💶   /   ▫️ _" . Moneys::format($penalty["payment"]->amount) . "_ 💶";
+                    $penalized_amount = TextService::mdv2(Moneys::format(NumberService::round($penalty["payment"]->amount - ($penalty["payment"]->amount * $penalty["amount"] / 100))));
+                    $text .= "\n🆔 `" . $penalty["payment"]->id . "`:     ▪️ *{$penalized_amount}* 💶   /   ▫️ _" . TextService::mdv2(Moneys::format($penalty["payment"]->amount)) . "_ 💶";
                 }
 
                 if (
@@ -905,8 +905,8 @@ class PaymentsController extends MoneysController
 
         $text = "💶 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unliquidated_menu.title')) . "*\n" .
             "_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unliquidated_menu.desc')) . "_\n\n" .
-            "*Total*: " . Moneys::format($total) . " 💶\n" .
-            "*" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.equivalents')) . "*: " . Moneys::format($bot->ProfitsController->getUSDTtoSendWithActiveRate($total)) . " 💵";
+            "*Total*: " . TextService::mdv2(Moneys::format($total)) . " 💶\n" .
+            "*" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.equivalents')) . "*: " . TextService::mdv2(Moneys::format($bot->ProfitsController->getUSDTtoSendWithActiveRate($total))) . " 💵";
         if (count($menu) == 1) {
             $text .= "\n\n😎 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unliquidated_menu.empty')) . "*";
         } else {
