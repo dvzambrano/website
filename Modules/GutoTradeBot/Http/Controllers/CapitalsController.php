@@ -302,7 +302,7 @@ class CapitalsController extends MoneysController
             array_push($menu, [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtoadminmenu')), "callback_data" => "adminmenu"]]);
 
             $reply = array(
-                "text" => "💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.menu.header')) . "*!\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.menu.description')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
+                "text" => "💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.menu.header')) . "*\!\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.menu.description')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
                 "reply_markup" => json_encode([
                     "inline_keyboard" => $menu,
                 ]),
