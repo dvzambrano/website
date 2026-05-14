@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Http\Controllers\Controller;
 use Modules\Laravel\Services\TextService;
+use Modules\TelegramBot\Entities\Actors;
 use Modules\TelegramBot\Http\Controllers\WizardController;
 
 class ScreenshotWizardController extends Controller
@@ -43,7 +44,7 @@ class ScreenshotWizardController extends Controller
             'method'      => 'wizard',
             'initialData' => ['type' => $type, 'sender' => $sender, 'moneysType' => $moneysType],
             'onComplete'  => fn($b, $s) => $self->finish($b, $s),
-            'onCancel'    => fn($b) => $self->cancelResponse($b),
+            'onCancel'    => fn($b) => $self->cancelResponse(),
         ]);
     }
 
@@ -105,7 +106,7 @@ class ScreenshotWizardController extends Controller
         // Comando de navegación: cancelar el wizard limpiamente y dejar el comando libre
         if (str_starts_with($text, '/') && $text !== '/wizardcancel' && $text !== '/wizardprevious') {
             Cache::forget("wizard_{$bot->tenant->key}_{$bot->actor->user_id}");
-            return $this->commandDuringWizardResponse($bot);
+            return $this->commandDuringWizardResponse();
         }
 
         $result = $bot->PaymentsController->processCaption($text);
@@ -148,9 +149,33 @@ class ScreenshotWizardController extends Controller
         $sender     = $data['sender']     ?? 2;
         $moneysType = $data['moneysType'] ?? 2;
 
+        // notifyAfterReceived() decide qué template mostrar leyendo last_bot_callback_data.
+        // El wizard no usa ese campo, así que hay que escribirlo antes de llamar a processMoney()
+        // para que la respuesta de confirmación se construya correctamente.
+        $bot->ActorsController->updateData(
+            Actors::class,
+            'user_id',
+            $bot->actor->user_id,
+            'last_bot_callback_data',
+            $this->getCallbackDataKey($sender, $moneysType),
+            $bot->tenant->code
+        );
+
         return $moneysType == 1
             ? $bot->CapitalsController->processMoney($bot, $sender, $moneysType)
             : $bot->PaymentsController->processMoney($bot, $sender, $moneysType);
+    }
+
+    private function getCallbackDataKey(int $sender, int $moneysType): string
+    {
+        if ($moneysType == 1) {
+            return $sender == 1 ? 'getsupervisorcapitalscreenshot' : 'getsendercapitalscreenshot';
+        }
+        return match ($sender) {
+            1       => 'getforwardedpaymentscreenshot',
+            3       => 'getsupervisorpaymentscreenshot',
+            default => 'getsenderpaymentscreenshot',
+        };
     }
 
     // -------------------------------------------------------------------------
@@ -219,7 +244,7 @@ class ScreenshotWizardController extends Controller
         ];
     }
 
-    private function commandDuringWizardResponse($bot): array
+    private function commandDuringWizardResponse(): array
     {
         return [
             'text'         => "✋ *" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.cancelled')) . "*\n\n"
@@ -230,7 +255,7 @@ class ScreenshotWizardController extends Controller
         ];
     }
 
-    private function cancelResponse($bot): array
+    private function cancelResponse(): array
     {
         return [
             'text'         => "✋ *" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.cancelled')) . "*",
