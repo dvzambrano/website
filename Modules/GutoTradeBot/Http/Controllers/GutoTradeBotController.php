@@ -76,12 +76,14 @@ class GutoTradeBotController extends JsonsController
             $this->strategies["/ayuda"] =
             $this->strategies["ayuda"] =
             function () use ($tenant) {
-                $text = "📖 *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.header')) . "*.\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.intro')) . "_\n\n";
+                $manualUrl = request()->root() . "/Bot.pdf";
+                $termsUrl  = request()->root() . "/TermsAndConditions.pdf";
+                $text = "📖 *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.header')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.intro')) . "_\n\n";
                 $text .= "1️⃣ *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.mainmenu_title')) . "*: /menu\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.mainmenu_desc')) . "_\n";
                 $text .= "2️⃣ *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.search_title')) . "*: /buscar\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.search_desc')) . " /buscar 1234_\n";
                 $text .= "3️⃣ *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.timezone_title')) . "*: /utc\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.timezone_desc')) . "_\n\n";
-                $text .= "📚 *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.manual_title')) . "*:\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.manual_desc')) . "_ [" . request()->root() . "/Bot.pdf]\n\n";
-                $text .= "👮‍♂️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.terms_title')) . "*:\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.terms_desc')) . "_ [" . request()->root() . "/TermsAndConditions.pdf]\n*" . TextService::mdv2(Lang::get('gutotradebot::bot.help.terms_implicit')) . "*";
+                $text .= "📚 *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.manual_title')) . "*:\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.manual_desc')) . "_ [" . TextService::mdv2($manualUrl) . "](" . $manualUrl . ")\n\n";
+                $text .= "👮‍♂️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.terms_title')) . "*:\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.terms_desc')) . "_ [" . TextService::mdv2($termsUrl) . "](" . $termsUrl . ")\n*" . TextService::mdv2(Lang::get('gutotradebot::bot.help.terms_implicit')) . "*";
                 return [
                     "text" => $text,
                     "reply_markup" => json_encode([
