@@ -18,6 +18,7 @@ use Modules\GutoTradeBot\Entities\Moneys;
 use Modules\Laravel\Http\Controllers\TextController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\Laravel\Services\TextService;
 
 class CheckEmails implements ShouldQueue
 {
@@ -161,11 +162,12 @@ class CheckEmails implements ShouldQueue
                         ];
                         $filename = GraphsController::generateComprobantGraph($transaction, true);
                         $url = "https://dev.micalme.com" . FileController::$AUTODESTROY_DIR . "/{$filename}";
-                        $text = $name . " " . $value["amount"];
+                        $text = TextService::mdv2($name) . " " . TextService::mdv2((string)$value["amount"]);
                         $array = array(
                             "message" => array(
                                 "text" => $text,
                                 "photo" => $url,
+                                "parse_mode" => "MarkdownV2",
                                 "chat" => array(
                                     "id" => env("TELEGRAM_GROUP_GUTO_TRADE_BOT"),
                                 ),

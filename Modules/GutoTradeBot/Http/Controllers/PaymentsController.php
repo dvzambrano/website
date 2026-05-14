@@ -1379,6 +1379,7 @@ class PaymentsController extends MoneysController
                     $to_id,
                 );
 
+                $array["message"]["parse_mode"] = "MarkdownV2";
                 if (isset($array["message"]["photo"]) && $array["message"]["photo"] && !$screenshot) {
                     TelegramController::sendPhoto($array, $tenant->token);
                     $screenshot = true;

@@ -33,6 +33,7 @@ class GutoTradeBotController extends JsonsController
 {
     use UsesTelegramBot;
 
+    public $parseMode = "MarkdownV2";
 
     public $PaymentsController;
     public $CapitalsController;
@@ -647,6 +648,7 @@ class GutoTradeBotController extends JsonsController
                                 $array = array(
                                     "message" => $reply,
                                 );
+                                $array["message"]["parse_mode"] = "MarkdownV2";
                                 $array["message"]["reply_markup"] = $array["message"]["reply_markup"];
                                 TelegramController::sendPhoto($array, $tenant->token);
                             }

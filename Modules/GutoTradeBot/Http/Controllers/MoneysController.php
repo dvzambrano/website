@@ -679,13 +679,13 @@ class MoneysController extends JsonsController
 
         $clase = get_class($money);
         if (stripos($clase, "payment") > -1) {
-            $text .= "*🪪 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.on_behalf_of')) . "\n👤 {$money->comment}: {$money->amount} 💶*\n";
+            $text .= "*🪪 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.on_behalf_of')) . "\n👤 " . TextService::mdv2($money->comment) . ": " . TextService::mdv2((string)$money->amount) . " 💶*\n";
         }
         if (stripos($clase, "capital") > -1) {
-            $text .= "*🖍 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.movement')) . "\n🛬 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.receives')) . " {$money->comment} 💰\n🛫 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.will_send')) . " {$money->amount} 💶*\n";
+            $text .= "*🖍 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.movement')) . "\n🛬 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.receives')) . " " . TextService::mdv2($money->comment) . " 💰\n🛫 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.will_send')) . " " . TextService::mdv2((string)$money->amount) . " 💶*\n";
         }
 
-        $text .= "📅 *" . TextService::mdv2(Lang::get('gutotradebot::bot.money.date')) . "*: {$money->created_at}\n\n";
+        $text .= "📅 *" . TextService::mdv2(Lang::get('gutotradebot::bot.money.date')) . "*: " . TextService::mdv2((string)$money->created_at) . "\n\n";
 
         if ($show_owner_id) {
             $suscriptor = $bot->AgentsController->getSuscriptor($bot, $money->sender_id, true);

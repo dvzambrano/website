@@ -38,6 +38,7 @@ class AgentsController extends ActorsController
         }
 
         $array["message"]["text"] = $text;
+        $array["message"]["parse_mode"] = "MarkdownV2";
         //var_dump($array["message"]["photo"]);
         if (isset($array["message"]["photo"])) {
             TelegramController::sendPhoto($array, $tenant->token);

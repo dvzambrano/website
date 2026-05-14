@@ -65,12 +65,13 @@ class CommentsController extends JsonsController
         }
 
         $created_at = $actor->getLocalDateTime($comment->created_at, $tenant->code);
-        $text = $fullname . " 💬\n📅 {$created_at}\n\n" . $comment->comment;
+        $text = TextService::mdv2($fullname) . " 💬\n📅 " . TextService::mdv2($created_at) . "\n\n" . TextService::mdv2($comment->comment);
 
         return array(
             "message" => array(
                 "text" => $text,
                 "photo" => $comment->screenshot ? $comment->screenshot : false,
+                "parse_mode" => "MarkdownV2",
                 "chat" => array(
                     "id" => $to_id,
                 ),
