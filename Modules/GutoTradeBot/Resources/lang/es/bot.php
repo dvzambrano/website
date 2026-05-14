@@ -332,6 +332,25 @@ return [
         "prompt" => "Envíe la nueva captura:",
         "updated_desc" => "Así ha quedado el pago luego de actualizar su captura",
     ],
+    "screenshot_wizard" => [
+        "payment" => [
+            "step1_title" => "Reportar pago",
+        ],
+        "capital" => [
+            "step1_title" => "Reportar aporte de capital",
+        ],
+        "step1_instructions" => "Envíe la captura del comprobante. Puede incluir la descripción directamente en la imagen como caption.",
+        "step1_prompt" => "Adjunte la captura de pantalla:",
+        "caption_hint" => "Si incluye caption, use el formato",
+        "step2_title" => "Descripción requerida",
+        "step2_instructions" => "La captura no incluía descripción. Escríbala ahora con el nombre del remitente y el monto.",
+        "step2_format" => "Formato",
+        "step2_example" => "Ejemplo",
+        "caption_error_title" => "Descripción inválida",
+        "caption_error_desc" => "El texto no tiene el formato correcto. Debe ser el Nombre y Apellidos del remitente seguido del monto.",
+        "received" => "Recibido",
+        "cancelled" => "Envío cancelado",
+    ],
     "money" => [
         "revalue_title" => "Ajustar cantidad del envio",
         "revalue_prompt" => "Escriba el nuevo valor:",

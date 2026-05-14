@@ -25,6 +25,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Conditional;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Services\TextService;
 
@@ -179,20 +180,20 @@ class GutoTradeBotController extends JsonsController
 
         $this->strategies["senderpaymentmenu"] =
             function () use ($tenant) {
-                return $this->PaymentsController->getPrompt($this, "getsenderpaymentscreenshot");
+                return (new ScreenshotWizardController())->startWizard($this, 'payment', 2, 2);
             };
         $this->strategies["sendercapitalmenu"] =
             function () use ($tenant) {
-                return $this->CapitalsController->getPrompt($this, "getsendercapitalscreenshot");
+                return (new ScreenshotWizardController())->startWizard($this, 'capital', 4, 1);
             };
 
         $this->strategies["supervisorpaymentmenu"] =
             function () use ($tenant) {
-                return $this->PaymentsController->getPrompt($this, "getsupervisorpaymentscreenshot");
+                return (new ScreenshotWizardController())->startWizard($this, 'payment', 3, 2);
             };
         $this->strategies["supervisorcapitalmenu"] =
             function () use ($tenant) {
-                return $this->CapitalsController->getPrompt($this, "getsupervisorcapitalscreenshot");
+                return (new ScreenshotWizardController())->startWizard($this, 'capital', 1, 1);
             };
 
         $this->strategies["getadminunconfirmedcapitalsmenu"] =
@@ -1277,27 +1278,20 @@ class GutoTradeBotController extends JsonsController
             // para poder analizar fotos y documentos para procesarlos como pago debe existir el actor previamente
             // si es una animacion no es un pago, es un mal manejo
             if ($this->actor && $this->actor->id > 0 && !isset($this->message["animation"])) {
-                $command = "";
-                if (isset($this->actor->data[$tenant->code]["last_bot_callback_data"]))
-                    $command = $this->actor->data[$tenant->code]["last_bot_callback_data"];
-                $array = $this->getCommand($command);
-                //Log::info("✅ GutoTradeBotController photo or document with command='{$command}' " . json_encode($array));
+
+                // Si hay un wizard activo, enrutar la foto directamente al paso correspondiente
+                $wizardCacheKey = "wizard_{$this->tenant->key}_{$this->actor->user_id}";
+                if (Cache::has($wizardCacheKey)) {
+                    $wizard = Cache::get($wizardCacheKey);
+                    return app()->make($wizard['controller'])->{$wizard['method']}($this);
+                }
+
+                $command = $this->actor->data[$tenant->code]["last_bot_callback_data"] ?? "";
+                $array   = $this->getCommand($command);
 
                 switch ($array["command"]) {
-                    case "getsenderpaymentscreenshot":
-                        $reply = $this->PaymentsController->processMoney($this, 2, 2);
-                        break;
-                    case "getsupervisorpaymentscreenshot":
-                        $reply = $this->PaymentsController->processMoney($this, 3, 2);
-                        break;
-                    case "getsendercapitalscreenshot":
-                        $reply = $this->CapitalsController->processMoney($this, 4, 1);
-                        break;
-                    case "getsupervisorcapitalscreenshot":
-                        $reply = $this->CapitalsController->processMoney($this, 1, 1);
-                        break;
                     case "getnewpaymentscreenshot":
-                        // Guardar la captura y devolver la ruta
+                        // Actualizar solo la captura de un pago existente, sin wizard (no requiere caption)
                         $path = $this->getScreenshotPath();
 
                         $payment = $this->PaymentsController->getFirst(Payments::class, "id", "=", $array["pieces"][1]);
@@ -1316,39 +1310,19 @@ class GutoTradeBotController extends JsonsController
                             ]
                         );
                         break;
-                    case "":
-                        // NO BORRAR ESTE CASE: Sirve para reenviar pagos desde otras cuentas de telegram
-                        $message = request()->input('message', []);
 
-                        //Log::info("✅ GutoTradeBotController getforwardedpaymentscreenshot message = " . json_encode($message));
-
-                        unset($message["text"]);
-                        if (!isset($message["message_id"]))
-                            $message["message_id"] = "0";
-                        if (!isset($message["caption"]))
-                            $message["caption"] = "SIN DATOS 0";
-                        if (isset($message["forward_from"]))
-                            $message["from"]["id"] = $message["forward_from"]["id"];
-
-
-                        request()->merge(['message' => $message]);
-
-                        $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "getforwardedpaymentscreenshot", $tenant->code);
-
-                        if ($this->actor->isLevel(1, $tenant->code))
-                            $reply = $this->PaymentsController->processMoney($this, 1);
-                        if ($this->actor->isLevel(2, $tenant->code))
-                            $reply = $this->PaymentsController->processMoney($this);
-                        if (
-                            $this->actor->isLevel(3, $tenant->code) ||
-                            $this->actor->isLevel(4, $tenant->code)
-                        )
-                            $reply = $this->PaymentsController->processMoney($this, 3);
-
-                        break;
                     default:
-                        // intentando resolver llamadas previas para el nuevo intento de reenviar un pago
-                        $this->ActorsController->updateData(Actors::class, "user_id", $this->actor->user_id, "last_bot_callback_data", "", $tenant->code);
+                        // Para todos los demás casos (comandos legacy o foto enviada sin contexto)
+                        // iniciar el wizard de captura según el rol del usuario
+                        $screenshotWizard = new ScreenshotWizardController();
+                        if ($this->actor->isLevel(1, $tenant->code))
+                            $reply = $screenshotWizard->startWizard($this, 'payment', 1, 2);
+                        elseif ($this->actor->isLevel(2, $tenant->code))
+                            $reply = $screenshotWizard->startWizard($this, 'payment', 2, 2);
+                        elseif ($this->actor->isLevel(3, $tenant->code))
+                            $reply = $screenshotWizard->startWizard($this, 'payment', 3, 2);
+                        elseif ($this->actor->isLevel(4, $tenant->code))
+                            $reply = $screenshotWizard->startWizard($this, 'payment', 3, 2);
                         break;
                 }
 
