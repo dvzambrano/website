@@ -77,7 +77,7 @@ class GutoTradeBotController extends JsonsController
             $this->strategies["ayuda"] =
             function () use ($tenant) {
                 $manualUrl = request()->root() . "/Bot.pdf";
-                $termsUrl  = request()->root() . "/TermsAndConditions.pdf";
+                $termsUrl = request()->root() . "/TermsAndConditions.pdf";
                 $text = "📖 *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.header')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.intro')) . "_\n\n";
                 $text .= "1️⃣ *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.mainmenu_title')) . "*: /menu\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.mainmenu_desc')) . "_\n";
                 $text .= "2️⃣ *" . TextService::mdv2(Lang::get('gutotradebot::bot.help.search_title')) . "*: /buscar\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.help.search_desc')) . " /buscar 1234_\n";
@@ -1151,6 +1151,8 @@ class GutoTradeBotController extends JsonsController
                 //$comment, $screenshot, $sender_id, $payment_id, $data = array()
                 $this->CommentsController->create($this->message["text"], $payment->screenshot, $this->actor->user_id, $array["pieces"][1]);
 
+                $commentQuote = ">" . implode("\n>", explode("\n", TextService::mdv2($this->message["text"])));
+
                 switch ($this->actor->data[$tenant->code]["admin_level"]) {
                     // si lo ha escrito un remesador se notifica a los supervisores o a los admin4
                     case "2":
@@ -1166,19 +1168,19 @@ class GutoTradeBotController extends JsonsController
                                     $this,
                                     $supervisor,
                                     TextService::mdv2(Lang::get('gutotradebot::bot.comment.on')),
-                                    $this->message["text"],
+                                    $commentQuote,
                                     true,
                                     $menu
                                 );
                             } else {
-                                $this->PaymentsController->notifyToCapitals($this, $payment, $this->message["text"], TextService::mdv2(Lang::get('gutotradebot::bot.comment.on')));
+                                $this->PaymentsController->notifyToCapitals($this, $payment, $commentQuote, TextService::mdv2(Lang::get('gutotradebot::bot.comment.on')));
                             }
                         }
                         if (
                             isset($tenant->data["notifications"]["comments"]["new"]["togestors"]) &&
                             $tenant->data["notifications"]["comments"]["new"]["togestors"] == 1
                         ) {
-                            $this->PaymentsController->notifyToGestors($this, $payment, $this->message["text"], TextService::mdv2(Lang::get('gutotradebot::bot.comment.on')));
+                            $this->PaymentsController->notifyToGestors($this, $payment, $commentQuote, TextService::mdv2(Lang::get('gutotradebot::bot.comment.on')));
                         }
                         break;
                     // si lo ha escrito cualquier otro se le notifica al remesador
@@ -1190,7 +1192,7 @@ class GutoTradeBotController extends JsonsController
                                 $this,
                                 $sender,
                                 TextService::mdv2(Lang::get('gutotradebot::bot.comment.on')),
-                                $this->message["text"],
+                                $commentQuote,
                                 true,
                                 $menu
                             );
@@ -1290,7 +1292,7 @@ class GutoTradeBotController extends JsonsController
                 }
 
                 $command = $this->actor->data[$tenant->code]["last_bot_callback_data"] ?? "";
-                $array   = $this->getCommand($command);
+                $array = $this->getCommand($command);
 
                 switch ($array["command"]) {
                     case "getnewpaymentscreenshot":
