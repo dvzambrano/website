@@ -344,7 +344,7 @@ return [
         "caption_hint" => "Si incluye caption, use el formato",
         "step2_title" => "Descripción requerida",
         "step2_instructions" => "La captura no incluía descripción. Escríbala ahora con el nombre del remitente y el monto.",
-        "step2_format" => "Formato",
+        "step2_format" => "Formato: Nombre Apellido Monto",
         "step2_example" => "Ejemplo",
         "caption_error_title" => "Descripción inválida",
         "caption_error_desc" => "El texto no tiene el formato correcto. Debe indicar el Nombre y Apellidos del remitente seguido del monto.",

@@ -36,15 +36,15 @@ class ScreenshotWizardController extends Controller
         $self = $this;
         $steps = [
             ['name' => 'STEP_SCREENSHOT', 'handler' => fn($b, $s) => $self->stepScreenshot($b, $s)],
-            ['name' => 'STEP_CAPTION',    'handler' => fn($b, $s) => $self->stepCaption($b, $s)],
+            ['name' => 'STEP_CAPTION', 'handler' => fn($b, $s) => $self->stepCaption($b, $s)],
         ];
 
         return (new WizardController())->run($bot, $steps, [
-            'controller'  => static::class,
-            'method'      => 'wizard',
+            'controller' => static::class,
+            'method' => 'wizard',
             'initialData' => ['type' => $type, 'sender' => $sender, 'moneysType' => $moneysType],
-            'onComplete'  => fn($b, $s) => $self->finish($b, $s),
-            'onCancel'    => fn($b) => $self->cancelResponse(),
+            'onComplete' => fn($b, $s) => $self->finish($b, $s),
+            'onCancel' => fn($b) => $self->cancelResponse(),
         ]);
     }
 
@@ -54,24 +54,28 @@ class ScreenshotWizardController extends Controller
 
     private function stepScreenshot($bot, array $state): array
     {
-        $message    = $bot->message;
+        $message = $bot->message;
         $moneysType = $state['data']['moneysType'] ?? 2;
 
-        if (isset($message['photo']) || isset($message['document'])) {
-            $path        = $bot->getScreenshotPath();
+        // Los callback_query son clics en botones: el mensaje base puede tener foto (p.ej.
+        // el template del pago anterior), pero NO es una foto enviada por el usuario.
+        $isCallback = ($message['_update_type'] ?? '') === 'callback_query';
+
+        if (!$isCallback && (isset($message['photo']) || isset($message['document']))) {
+            $path = $bot->getScreenshotPath();
             $captionText = $message['caption'] ?? null;
 
             $merge = [
-                'screenshot_path'  => $path,
+                'screenshot_path' => $path,
                 'original_message' => $message,
             ];
 
             if ($captionText !== null) {
                 $result = $bot->PaymentsController->processCaption($captionText);
 
-                if ($result['success'] && (float)($result['amount'] ?? 0) > 0) {
-                    $merge['fullname']     = $result['fullname'];
-                    $merge['amount']       = $result['amount'];
+                if ($result['success'] && (float) ($result['amount'] ?? 0) > 0) {
+                    $merge['fullname'] = $result['fullname'];
+                    $merge['amount'] = $result['amount'];
                     $merge['caption_text'] = $captionText;
                     return ['__advance' => true, 'merge' => $merge];
                 }
@@ -91,12 +95,12 @@ class ScreenshotWizardController extends Controller
     private function stepCaption($bot, array $state): array
     {
         // Si el caption ya fue recibido y validado junto a la foto, saltar este paso
-        if (isset($state['data']['fullname']) && (float)($state['data']['amount'] ?? 0) > 0) {
+        if (isset($state['data']['fullname']) && (float) ($state['data']['amount'] ?? 0) > 0) {
             return ['__advance' => true, 'merge' => []];
         }
 
         $moneysType = $state['data']['moneysType'] ?? 2;
-        $text       = $bot->message['text'] ?? null;
+        $text = $bot->message['text'] ?? null;
 
         // Sin texto (foto enviada en este paso, o mensaje sin texto) → repetir prompt
         if (!$text) {
@@ -112,16 +116,19 @@ class ScreenshotWizardController extends Controller
         $result = $bot->PaymentsController->processCaption($text);
 
         // Válido solo si hay nombre Y monto > 0
-        if ($result['success'] && (float)($result['amount'] ?? 0) > 0) {
-            return ['__advance' => true, 'merge' => [
-                'fullname'     => $result['fullname'],
-                'amount'       => $result['amount'],
-                'caption_text' => $text,
-            ]];
+        if ($result['success'] && (float) ($result['amount'] ?? 0) > 0) {
+            return [
+                '__advance' => true,
+                'merge' => [
+                    'fullname' => $result['fullname'],
+                    'amount' => $result['amount'],
+                    'caption_text' => $text,
+                ]
+            ];
         }
 
         // Determinar si el problema es solo el monto o el formato completo
-        $missingAmount = $result['success'] && (float)($result['amount'] ?? 0) == 0;
+        $missingAmount = $result['success'] && (float) ($result['amount'] ?? 0) == 0;
         return $this->invalidCaptionResponse($text, $moneysType, $missingAmount);
     }
 
@@ -131,7 +138,7 @@ class ScreenshotWizardController extends Controller
 
     private function finish($bot, array $state): array
     {
-        $data            = $state['data'];
+        $data = $state['data'];
         $originalMessage = $data['original_message'];
 
         // Añadir el caption (puede haber venido con la foto o en el paso 2)
@@ -146,7 +153,7 @@ class ScreenshotWizardController extends Controller
         request()->merge(['message' => $originalMessage]);
         $bot->message = $originalMessage;
 
-        $sender     = $data['sender']     ?? 2;
+        $sender = $data['sender'] ?? 2;
         $moneysType = $data['moneysType'] ?? 2;
 
         // notifyAfterReceived() decide qué template mostrar leyendo last_bot_callback_data.
@@ -172,8 +179,8 @@ class ScreenshotWizardController extends Controller
             return $sender == 1 ? 'getsupervisorcapitalscreenshot' : 'getsendercapitalscreenshot';
         }
         return match ($sender) {
-            1       => 'getforwardedpaymentscreenshot',
-            3       => 'getsupervisorpaymentscreenshot',
+            1 => 'getforwardedpaymentscreenshot',
+            3 => 'getsupervisorpaymentscreenshot',
             default => 'getsenderpaymentscreenshot',
         };
     }
@@ -184,7 +191,7 @@ class ScreenshotWizardController extends Controller
 
     private function screenshotPrompt(int $moneysType): array
     {
-        $icon    = $moneysType == 1 ? '💰' : '💶';
+        $icon = $moneysType == 1 ? '💰' : '💶';
         $titleKey = $moneysType == 1
             ? 'gutotradebot::bot.screenshot_wizard.capital.step1_title'
             : 'gutotradebot::bot.screenshot_wizard.payment.step1_title';
@@ -196,10 +203,14 @@ class ScreenshotWizardController extends Controller
             . "💬 " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.caption_hint')) . ": {$example}";
 
         return [
-            'text'         => $text,
-            'reply_markup' => json_encode(['inline_keyboard' => [[
-                ['text' => '✋ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), 'callback_data' => '/wizardcancel'],
-            ]]]),
+            'text' => $text,
+            'reply_markup' => json_encode([
+                'inline_keyboard' => [
+                    [
+                        ['text' => '✋ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), 'callback_data' => '/wizardcancel'],
+                    ]
+                ]
+            ]),
         ];
     }
 
@@ -209,15 +220,19 @@ class ScreenshotWizardController extends Controller
 
         $text = "✍️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.step2_title')) . "*\n\n"
             . "_" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.step2_instructions')) . "_\n\n"
-            . "📝 " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.step2_format')) . ": `Nombre Apellido monto`\n"
+            . "📝 " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.step2_format')) . "\n"
             . "💡 " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.step2_example')) . ": {$example}\n\n"
             . "👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.step2_prompt'));
 
         return [
-            'text'         => $text,
-            'reply_markup' => json_encode(['inline_keyboard' => [[
-                ['text' => '✋ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), 'callback_data' => '/wizardcancel'],
-            ]]]),
+            'text' => $text,
+            'reply_markup' => json_encode([
+                'inline_keyboard' => [
+                    [
+                        ['text' => '✋ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), 'callback_data' => '/wizardcancel'],
+                    ]
+                ]
+            ]),
         ];
     }
 
@@ -231,37 +246,49 @@ class ScreenshotWizardController extends Controller
 
         $text = "❌ *" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.caption_error_title')) . "*\n\n"
             . "_" . TextService::mdv2(Lang::get($errorKey)) . "_\n\n"
-            . "📝 " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.step2_format')) . ": `Nombre Apellido monto`\n"
+            . "📝 " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.step2_format')) . "\n"
             . "💡 " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.step2_example')) . ": {$example}\n"
             . "❌ " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.received')) . ": `" . TextService::mdv2($badCaption) . "`\n\n"
             . "👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.retry_prompt'));
 
         return [
-            'text'         => $text,
-            'reply_markup' => json_encode(['inline_keyboard' => [[
-                ['text' => '✋ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), 'callback_data' => '/wizardcancel'],
-            ]]]),
+            'text' => $text,
+            'reply_markup' => json_encode([
+                'inline_keyboard' => [
+                    [
+                        ['text' => '✋ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), 'callback_data' => '/wizardcancel'],
+                    ]
+                ]
+            ]),
         ];
     }
 
     private function commandDuringWizardResponse(): array
     {
         return [
-            'text'         => "✋ *" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.cancelled')) . "*\n\n"
+            'text' => "✋ *" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.cancelled')) . "*\n\n"
                 . "_" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.cancelled_by_command')) . "_",
-            'reply_markup' => json_encode(['inline_keyboard' => [[
-                ['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu'],
-            ]]]),
+            'reply_markup' => json_encode([
+                'inline_keyboard' => [
+                    [
+                        ['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu'],
+                    ]
+                ]
+            ]),
         ];
     }
 
     private function cancelResponse(): array
     {
         return [
-            'text'         => "✋ *" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.cancelled')) . "*",
-            'reply_markup' => json_encode(['inline_keyboard' => [[
-                ['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu'],
-            ]]]),
+            'text' => "✋ *" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot_wizard.cancelled')) . "*",
+            'reply_markup' => json_encode([
+                'inline_keyboard' => [
+                    [
+                        ['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu'],
+                    ]
+                ]
+            ]),
         ];
     }
 }
