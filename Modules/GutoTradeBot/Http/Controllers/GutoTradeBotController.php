@@ -1739,7 +1739,7 @@ class GutoTradeBotController extends JsonsController
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "🔃 Volver a cargar", "callback_data" => "/flow"],
+                        ["text" => "🔃 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.reload')), "callback_data" => "/flow"],
                     ],
                     [
                         ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtoadminmenu')), "callback_data" => "adminmenu"],
@@ -1853,7 +1853,7 @@ class GutoTradeBotController extends JsonsController
         $array = explode(".", $filename);
         $xlspath = request()->root() . "/report/" . $array[1] . "/" . $array[0];
 
-        $text = "📋 *Datos del sistema*\n_Estos son los datos registrado hasta el momento._";
+        $text = "📋 *" . TextService::mdv2(Lang::get('gutotradebot::bot.system.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.system.desc')) . "_";
         $menu = [
             [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
         ];

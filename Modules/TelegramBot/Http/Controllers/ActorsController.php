@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Modules\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Lang;
+use Modules\Laravel\Services\TextService;
 
 class ActorsController extends JsonsController
 {
@@ -202,7 +204,7 @@ class ActorsController extends JsonsController
         // obteniendo datos del usuario de telegram
         $suscriptor = $this->getSuscriptor($bot, $user_id, true);
         $reply = [
-            "text" => "🆗 *Rol de usuario modificado*\n\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n" . $array["role"] . "\n\n👇 Qué desea hacer ahora?",
+            "text" => "🆗 *Rol de usuario modificado*\n\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n" . $array["role"] . "\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => $array["menu"],
             ]),
@@ -216,7 +218,7 @@ class ActorsController extends JsonsController
         // notificar al usuario modificado de nu nuevo rol
         $array = [
             "message" => [
-                "text" => "ℹ️ *Su rol ha sido modificado*\n\n_Le recomendamos volver al /menu para verificar sus nuevas opciones_\n\n👇 Qué desea hacer ahora?",
+                "text" => "ℹ️ *Su rol ha sido modificado*\n\n_Le recomendamos volver al /menu para verificar sus nuevas opciones_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
                 "chat" => [
                     "id" => $user_id,
                 ],
@@ -253,7 +255,7 @@ class ActorsController extends JsonsController
         $now = Carbon::now()->addHours(intval($timezone));
         $date = $now->format("Y-m-d H:i:s");
         $reply = [
-            "text" => "⏰ *Zona horaria actualizada*\n_Se ha actualizado su zona horaria satisfactoriamente._\n\nAhora son las {$date}.\n\n👇 Qué desea hacer ahora?",
+            "text" => "⏰ *Zona horaria actualizada*\n_Se ha actualizado su zona horaria satisfactoriamente._\n\nAhora son las {$date}.\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
@@ -270,7 +272,7 @@ class ActorsController extends JsonsController
     public function notifyBadUTCValue($text)
     {
         $reply = [
-            "text" => "⏰ *Zona con error*\n_No se puede establecer la zona horaria “{$text}”_\nRevise q haya enviado un número válido con el que se pueda ajustar la hora.\n\n👇 Qué desea hacer ahora?",
+            "text" => "⏰ *Zona con error*\n_No se puede establecer la zona horaria “{$text}”_\nRevise q haya enviado un número válido con el que se pueda ajustar la hora.\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
@@ -306,7 +308,7 @@ class ActorsController extends JsonsController
     public function notifyAfterMetadataChange($user_id)
     {
         $reply = array(
-            "text" => "🏷 *Metadato actualizado*\n_Se ha actualizado el metadato del suscriptor satisfactoriamente._\n\n👇 Qué desea hacer ahora?",
+            "text" => "🏷 *Metadato actualizado*\n_Se ha actualizado el metadato del suscriptor satisfactoriamente._\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [

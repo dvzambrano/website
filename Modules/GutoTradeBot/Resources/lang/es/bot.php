@@ -351,6 +351,7 @@ return [
         "reported_by" => "Reportado por:",
         "assigned_to" => "Asignado a:",
         "date" => "Fecha",
+        "updated_at" => "Actualizado",
         "on_behalf_of" => "A nombre de:",
         "movement" => "Movimiento:",
         "receives" => "Se reciben:",

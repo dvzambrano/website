@@ -522,7 +522,7 @@ class PaymentsController extends MoneysController
             "text" => "💶 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.send_prompt.header')) . "*\n\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.send_prompt.instructions')) . "_\n\nEjemplo:    `Juan Perez 20`\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.send_prompt.example_text')) . "_\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.payment.send_prompt.prompt')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✋ Cancelar", "callback_data" => "menu"]],
+                    [["text" => "✋ " . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), "callback_data" => "menu"]],
                 ],
             ]),
         );
@@ -558,7 +558,7 @@ class PaymentsController extends MoneysController
                 default:
                     break;
             }
-            array_push($menu, [["text" => "📝 Exportar pagos", "callback_data" => "getadminallpaymentsmenu"]]);
+            array_push($menu, [["text" => "📝 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.export_payments')), "callback_data" => "getadminallpaymentsmenu"]]);
             array_push($menu, [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtoadminmenu')), "callback_data" => "adminmenu"]]);
 
             $reply = array(
@@ -591,12 +591,12 @@ class PaymentsController extends MoneysController
             $to_id = $user_id;
         }
 
-        $text = "👍 *No hay pagos pendientes*\n_Ud no tiene pagos pendientes por confirmar._";
+        $text = "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_list.empty')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_list.empty_self')) . "_";
         $menu = [
             [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
         ];
         if ($user_id != $to_id) {
-            $text = "👍 *No hay pagos pendientes*\n_{$response['result']['full_name']} no tiene pagos pendientes por confirmar._";
+            $text = "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_list.empty')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_list.empty_user', ['name' => $response['result']['full_name']])) . "_";
             $menu = [
                 [["text" => "↖️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.backtousersmenu')), "callback_data" => "/confirm"]],
             ];
@@ -740,12 +740,12 @@ class PaymentsController extends MoneysController
             $to_id = $user_id;
         }
 
-        $text = "👍 *No hay pagos pendientes*\n_Ud no tiene pagos pendientes por liquidar._";
+        $text = "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unliquidated_list.empty')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unliquidated_list.empty_self')) . "_";
         $menu = [
             [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
         ];
         if ($user_id != $to_id) {
-            $text = "👍 *No hay pagos pendientes*\n_" . $response["result"]["full_name"] . " NO TIENE pagos pendientes por liquidar._";
+            $text = "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unliquidated_list.empty')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unliquidated_list.empty_user', ['name' => $response["result"]["full_name"]])) . "_";
             $menu = [
                 [["text" => "↖️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.backtousersmenu')), "callback_data" => "/liquidate"]],
             ];
@@ -1356,7 +1356,7 @@ class PaymentsController extends MoneysController
     {
         $tenant = app('active_bot');
 
-        $text = "👍 *No hay comentarios*\n_No existen comentarios sobre este pago._";
+        $text = "👍 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.comments.empty')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.comments.empty_desc')) . "_";
         $menu = [
             [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
         ];
@@ -1388,9 +1388,9 @@ class PaymentsController extends MoneysController
                 $count += 1;
             }
 
-            $text = "👆 *Comentarios sobre el pago*\n_Estos son {$count} comentarios sobre el pago seleccionado._";
+            $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.comments.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.comments.desc', ['count' => $count])) . "_";
             $menu = [
-                [["text" => "🔃 Mostrar nuevamente el Pago", "callback_data" => "/buscar {$payment_id}"]],
+                [["text" => "🔃 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.show_payment')), "callback_data" => "/buscar {$payment_id}"]],
                 [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
             ];
 
@@ -1873,7 +1873,7 @@ class PaymentsController extends MoneysController
             "text" => "⚠️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.capitalization.expired')) . "*\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "📋 Crear uno nuevo", "callback_data" => "/capital"]],
+                    [["text" => "📋 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.create_new')), "callback_data" => "/capital"]],
                     [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
                 ],
             ]),
