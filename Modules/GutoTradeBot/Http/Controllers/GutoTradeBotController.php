@@ -33,8 +33,6 @@ class GutoTradeBotController extends JsonsController
 {
     use UsesTelegramBot;
 
-    public $parseMode = "MarkdownV2";
-
     public $PaymentsController;
     public $CapitalsController;
     public $AccountsController;
@@ -49,6 +47,7 @@ class GutoTradeBotController extends JsonsController
 
     public function __construct()
     {
+        $this->parseMode = "MarkdownV2";
         $this->tenant = app('active_bot');
 
         $this->ActorsController = new ActorsController();
