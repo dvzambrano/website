@@ -65,7 +65,9 @@ class CommentsController extends JsonsController
         }
 
         $created_at = $actor->getLocalDateTime($comment->created_at, $tenant->code);
-        $text = TextService::mdv2($fullname) . " 💬\n📅 " . TextService::mdv2($created_at) . "\n\n" . TextService::mdv2($comment->comment);
+
+        $commentQuote = ">" . implode("\n>", explode("\n", TextService::mdv2($comment->comment)));
+        $text = TextService::mdv2($fullname) . " 💬\n📅 " . TextService::mdv2($created_at) . "\n\n" . $commentQuote;
 
         return array(
             "message" => array(
