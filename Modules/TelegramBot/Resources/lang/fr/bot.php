@@ -164,4 +164,8 @@ return [
     "wizard" => [
         "cancelled" => "Wizard annule.",
     ],
+    "deleted" => [
+        "title" => "Enregistrement supprimé",
+        "desc"  => "L'enregistrement a été supprimé de la base de données avec succès.",
+    ],
 ];

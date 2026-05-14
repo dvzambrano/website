@@ -164,4 +164,8 @@ return [
     "wizard" => [
         "cancelled" => "Wizard cancelled.",
     ],
+    "deleted" => [
+        "title" => "Record deleted",
+        "desc"  => "The record has been successfully deleted from the database.",
+    ],
 ];

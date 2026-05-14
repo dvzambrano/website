@@ -794,7 +794,7 @@ class GutoTradeBotController extends JsonsController
                 //$tenant, $actor, $title, $message = false, $show_owner_id = true, $menu = false, $demo = false
                 $payment->delete();
 
-                $reply = $this->PaymentsController->notifyAfterDelete();
+                $reply = $this->notifyAfterDelete();
                 return $reply;
             };
 
@@ -873,7 +873,7 @@ class GutoTradeBotController extends JsonsController
                 $capital = $this->CapitalsController->getFirst(Capitals::class, "id", "=", $array["pieces"][1]);
                 $capital->delete();
 
-                $reply = $this->CapitalsController->notifyAfterDelete();
+                $reply = $this->notifyAfterDelete();
                 return $reply;
             };
 

@@ -166,4 +166,8 @@ return [
     "wizard" => [
         "cancelled" => "Wizard cancelado.",
     ],
+    "deleted" => [
+        "title" => "Registro eliminado",
+        "desc"  => "Se ha eliminado el registro de la base de datos satisfactoriamente.",
+    ],
 ];
