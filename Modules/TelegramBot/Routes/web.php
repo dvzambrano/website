@@ -17,7 +17,7 @@ Route::prefix('telegrambot')->group(function () {
 
 Route::prefix('telegram')->group(function () {
     Route::post('/bot/{key}', 'TelegramBotController@handle')
-        ->middleware('tenant.detector')
+        ->middleware(['tenant.detector', 'telegram.async'])
         ->name('telegram-bot-webhhok');
 
     // Ruta para servir avatares de Telegram a través de nuestro servidor
@@ -54,7 +54,7 @@ Route::prefix('telegram')->group(function () {
                     'user_id' => '816767995',
                     'name' => 'Donel Vazquez Zambrano',
                     'username' => 'dvzambrano',
-                    'photo_url' => 'assets/img/avatar.jpg'
+                    //'photo_url' => 'assets/img/avatar.jpg'
                 ]
             ]);
             return redirect('/dashboard')->with('info', 'Sesión de desarrollo iniciada');

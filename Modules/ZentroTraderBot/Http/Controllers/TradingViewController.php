@@ -11,6 +11,7 @@ use Modules\TelegramBot\Http\Controllers\TelegramBotController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Entities\Positions;
+use Modules\Laravel\Services\TextService;
 
 class TradingViewController extends TelegramBotController
 {
@@ -46,7 +47,8 @@ class TradingViewController extends TelegramBotController
         if (isset($request["user"]))
             $text .= " " . $request["user"];
         $text .= ": ";
-        Log::debug("🐞  " . $text, $data);
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 " . $text, $data);
 
         $bot = new ZentroTraderBotController("ZentroTraderBot");
 
@@ -165,7 +167,8 @@ class TradingViewController extends TelegramBotController
         $balanceAvailable = (float) ($assets[$quote] ?? 0);
 
         if ($balanceAvailable <= 0) {
-            Log::debug("🐞  TradingViewController openLongPosition: Saldo insuficiente de $quote.");
+            if (env("DEBUG_MODE", false))
+                Log::debug("🐞 TradingViewController openLongPosition: Saldo insuficiente de $quote.");
             return response()->json(['status' => 'skipped', 'message' => "Sin saldo en $quote"]);
         }
 
@@ -175,10 +178,11 @@ class TradingViewController extends TelegramBotController
         TelegramController::sendMessage(
             array(
                 "message" => array(
-                    "text" => "📈 *LONG*: _Cambiando $amount $quote a $asset..._",
+                    "text" => "📈 *LONG*: _Cambiando " . TextService::mdv2($amount) . " {$quote} a {$asset}\.\.\._",
                     "chat" => array(
                         "id" => $userId,
                     ),
+                    "parse_mode" => "MarkdownV2",
                 ),
             ),
             $bot->tenant->token,
@@ -235,10 +239,11 @@ class TradingViewController extends TelegramBotController
         TelegramController::sendMessage(
             array(
                 "message" => array(
-                    "text" => "📈 *LONG: $price*\n💱 _$amount $quote 🟰 " . $result['amount_received'] . " $asset _\n✅ *Completado!*",
+                    "text" => "📈 *LONG: " . TextService::mdv2($price) . "*\n💱 _" . TextService::mdv2($amount) . " {$quote} 🟰 " . TextService::mdv2($result['amount_received']) . " {$asset} _\n✅ *Completado\!*",
                     "chat" => array(
                         "id" => $userId,
                     ),
+                    "parse_mode" => "MarkdownV2",
                 ),
             ),
             $bot->tenant->token
@@ -273,10 +278,11 @@ class TradingViewController extends TelegramBotController
         TelegramController::sendMessage(
             array(
                 "message" => array(
-                    "text" => "📉 *EXIT LONG*: _Cerrando " . $openPositions->count() . " órdenes acumuladas: $targetSellAmount $asset..._",
+                    "text" => "📉 *EXIT LONG*: _Cerrando " . $openPositions->count() . " órdenes acumuladas: " . TextService::mdv2($targetSellAmount) . " {$asset}\.\.\._",
                     "chat" => array(
                         "id" => $userId,
                     ),
+                    "parse_mode" => "MarkdownV2",
                 ),
             ),
             $bot->tenant->token,
@@ -337,17 +343,18 @@ class TradingViewController extends TelegramBotController
         // mandarle mensaje directamente al suscriptor
         $targetSpendedAmount = $openPositions->sum('amount_in');
         $profit = $result['amount_received'] - $targetSpendedAmount;
-        $text = "+$profit 🟢";
+        $text = TextService::mdv2("+$profit") . " 🟢";
         if ($profit < 0)
-            $text = "$profit 🔴";
+            $text = TextService::mdv2("$profit") . " 🔴";
         $price = $amountToSell / $result['amount_received'];
         TelegramController::sendMessage(
             array(
                 "message" => array(
-                    "text" => "📉 *EXIT LONG: $price*\n💱 _$amountToSell $asset 🟰 " . $result['amount_received'] . " $quote _\n✅ *Completado!* $text",
+                    "text" => "📉 *EXIT LONG: " . TextService::mdv2($price) . "*\n💱 _" . TextService::mdv2($amountToSell) . " {$asset} 🟰 " . TextService::mdv2($result['amount_received']) . " {$quote} _\n✅ *Completado\!* {$text}",
                     "chat" => array(
                         "id" => $userId,
                     ),
+                    "parse_mode" => "MarkdownV2",
                 ),
             ),
             $bot->tenant->token

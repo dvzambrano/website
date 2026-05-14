@@ -3,8 +3,6 @@ namespace Modules\TelegramBot\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\QueryException;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\Laravel\Traits\DatabaseCommandTrait;
 

@@ -6,7 +6,7 @@ use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\TelegramBot\Traits\UsesTelegramBot;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\ZentroOwnerBot\Services\SecurityService;
 use Illuminate\Support\Facades\Lang;
 
 use Modules\Laravel\Entities\sfSecurity;
@@ -38,7 +38,7 @@ class ZentroOwnerBotController extends JsonsController
                 $key = strtolower($array["message"]);
                 $demo = false;
                 //$demo = isset($request["demo"]);
-                $hash = $this->generateHash($this->actor->user_id, $key, 20, $demo);
+                $hash = SecurityService::generateHash($this->actor->user_id, $key, 20, $demo);
                 return array(
                     "text" =>
                         "🔐 *" . strtoupper($key) . " hash:*\n" .
@@ -47,6 +47,18 @@ class ZentroOwnerBotController extends JsonsController
                     "autodestroy" => ZentroOwnerBotController::$AUTODESTROY_TIME_IN_MINS,
                 );
             };
+
+        $this->strategies["/h"] = function () use ($array) {
+            $key = strtolower($array["message"]);
+            $hash = SecurityService::derivePassword($key, $this->actor->user_id);
+            return array(
+                "text" =>
+                    "🔐 *" . strtoupper($key) . " hash:*\n" .
+                    "`{$hash}`\n" .
+                    "_" . Lang::choice("zentroownerbot::bot.prompts.password.warning", ZentroOwnerBotController::$AUTODESTROY_TIME_IN_MINS, ['count' => ZentroOwnerBotController::$AUTODESTROY_TIME_IN_MINS]) . "_",
+                "autodestroy" => ZentroOwnerBotController::$AUTODESTROY_TIME_IN_MINS,
+            );
+        };
 
         $this->strategies["/f"] =
             function () use ($array) {
@@ -85,6 +97,120 @@ class ZentroOwnerBotController extends JsonsController
                 }
             };
 
+
+        // Kashio Commmands -------------------------------------------------------------------------------
+
+        if ($this->actor->isLevel(1, $this->tenant->code)) {
+            $this->strategies["/arbiter"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->proposeArbiter($array["pieces"][1]);
+                        return array(
+                            "text" =>
+                                "✅ proposeArbiter `" . $array["pieces"][1] . "` DONE:\n" .
+                                "`{$hash}`",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+
+            $this->strategies["/dispute"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->resolveDispute($array["pieces"][1], $array["pieces"][2]);
+                        return array(
+                            "text" =>
+                                "✅ resolveDispute `" . $array["pieces"][1] . "` DONE:\n" .
+                                "🥇 Winner=`" . $array["pieces"][2] . "`\n" .
+                                "`{$hash}`",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+
+            $this->strategies["/rescue"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->rescueTokens($array["pieces"][1]);
+                        return array(
+                            "text" =>
+                                "✅ rescueTokens `" . $array["pieces"][1] . "` DONE:\n" .
+                                "`{$hash}`",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+
+            $this->strategies["/percentagefee"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->setFee($array["pieces"][1]);
+                        return array(
+                            "text" =>
+                                "✅ setFee `" . $array["pieces"][1] . "` DONE:\n" .
+                                "`{$hash}`",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+
+            $this->strategies["/tokenfee"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->setMinFeePerToken($array["pieces"][1]);
+                        if ($hash)
+                            return array(
+                                "text" =>
+                                    "✅ setMinFeePerToken `" . $array["pieces"][1] . "` DONE:\n" .
+                                    "`{$hash}`",
+                            );
+                        return array(
+                            "text" =>
+                                "❌ setMinFeePerToken `" . $array["pieces"][1] . "`",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+
+
+            $this->strategies["/withdraw"] =
+                function () use ($array) {
+                    try {
+                        $controller = new EscrowController();
+                        $hash = $controller->withdrawFees();
+                        return array(
+                            "text" =>
+                                "✅ withdrawFees DONE:\n" .
+                                "`{$hash}`",
+                        );
+                    } catch (\Exception $e) {
+                        return array(
+                            "text" => "❌ *ERROR:* " . $array["message"] . ":\n" . $e->getMessage(),
+                        );
+                    }
+                };
+        }
+
         return $this->getProcessedMessage();
     }
 
@@ -114,35 +240,6 @@ class ZentroOwnerBotController extends JsonsController
         }
 
         return $iniciales;
-    }
-
-    private function generateHash($text, $key, $length = false, $debug = false)
-    {
-        $key = strtolower($key);
-        if ($debug) {
-            echo $text . "\n" . $key . "\n";
-        }
-        $hash = hash_hmac('sha256', $text, $key);
-        if ($length) {
-            if ($length > 64) {
-                $length = 64;
-            }
-            $hash = substr($hash, 0, $length);
-        }
-        // Convertir la primera letra del hash a mayúscula (si existe)
-        $hash = preg_replace_callback(
-            '/[a-z]/', // Busca la primera letra minúscula
-            function ($matches) {
-                return strtoupper($matches[0]); // Convierte a mayúscula
-            },
-            $hash,
-            1// Solo la primera ocurrencia
-        );
-        if ($debug) {
-            die($hash);
-        }
-
-        return $hash;
     }
 
     public function generateZentroLicence($request)

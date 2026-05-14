@@ -1,36 +1,58 @@
 {
-    "GutoTradeBot": { "admin_level": 1, "last_bot_callback_data": "" },
-    "ZentroTraderBot": {
-        "exchanges": {
-            "bingx": {
-                "api_key": "F3pw0O44pv5QhGGuKzY9AyHZq60NYf3THq5QlfIaq98sS1KBIROzeLB2aUI7U7bUqUSnjMDfw3licUQDdhcbQ",
-                "secret_key": "DzLfyysYVDVQYVtEDe4z8AixcI0eDfNbBuYt4gJBm68jdR3D7PoCCxLG4PRnIokZEOyvl11PtuQBg06ORQ",
-                "base_order_size": 10
-            },
-            "apexpromainnet": {
-                "account_id": "582636658558500973",
-                "api_key": "7db9ecef-ae49-919c-1846-d940915038f3",
-                "api_key_passphrase": "LE28zjRYnLxCg6gSwNt6",
-                "api_key_secret": "vaDMMnqqpaAw2zuM8PFLz7APToQ0u67HmIIaoaCg",
-                "stark_key_private": "0x075ad444fa7b1192d97a7d70d41e0e84aecb5ab24e94cfd66ff132c6fa080371",
-                "stark_key_public": "0x02ca7badf2d37abdc8e3b750f4f73a817e0a6baf309fb668d00b96e840cb58ed",
-                "stark_key_public_key_y_coordinate": "0x04b45a88a2c5f7692ce9f1bb025fb182300925d3111e903d68d72fea660fb668",
-                "base_order_size": 1
-            },
-            "apexprotestnet": {
-                "account_id": "582635608690655601",
-                "api_key": "2e705f3e-1b37-3224-9977-9cfa5b17b1c2",
-                "api_key_passphrase": "MBQBXf9WXwKDB991TGGh",
-                "api_key_secret": "2AhyVMp8ZZ2SI6NeJlQq7tw65-hj8PxfkR2MNZ_P",
-                "stark_key_private": "0x07ead10517457b1a57f17bda2a7253962457e39ce22d4b469468f1f6dde1434b",
-                "stark_key_public": "0x0678a0b412a405b276ff2ce43c5bab96f49a86a7be1e9bde0941e5b3a37070f1",
-                "stark_key_public_key_y_coordinate": "0x05cf53cfd299bb9452bf0f750de4935e672500fa11474acfb042fce4d1f1f2d3",
-                "base_order_size": 5
-            },
-            "active": ["apexprotestnet", "apexpromainnet", "bingx"]
+    "code": { "prefix": "Q", "suffix": "C" },
+    "channel": [],
+    "apply": { "user_id": 7682020688 },
+    "blockchain_events": {
+        "TRADECREATED": {
+            "tx_hash": "0x64560c2b1d7217bff75486e600c6997f386c6c53c8f56e9f37169d41133ac995",
+            "pending_at": "2026-04-27 20:24:16",
+            "confirmed_at": "2026-04-27 20:25:36"
         },
-        "admin_level": 2,
-        "suscription_level": 2,
-        "last_bot_callback_data": ""
-    }
+        "TRADESIGNED": {
+            "tx_hash": "0x616403be41c2022e0f00ceb884886c3b5598bce2c269e90f0e3f1bd448be6025",
+            "pending_at": "2026-04-27 20:28:40",
+            "confirmed_at": "2026-04-27 20:31:11"
+        },
+        "TRADECLOSED": {
+            "tx_hash": "0x616403be41c2022e0f00ceb884886c3b5598bce2c269e90f0e3f1bd448be6025",
+            "pending_at": "2026-04-27 20:28:40",
+            "confirmed_at": "2026-04-27 20:31:11"
+        }
+    },
+    "last_status_messages": { "816767995": 7207, "7682020688": 7208 },
+    "evidence": {
+        "7682020688": [
+            "AgACAgEAAxkBAAIcG2nvxq5IIj9z6AoSF3JfDAhQXyMMAAJ5DGsb2YiAR_31EZBWIkHIAQADAgADeQADOwQ"
+        ]
+    },
+    "audit": [
+        {
+            "user_id": 7682020688,
+            "role": "buyer",
+            "action": "proof_submitted",
+            "callback": "proofdone Q000010C",
+            "at": "2026-04-27 20:27:29",
+            "details": { "code": "Q000010C", "image_count": 1 }
+        },
+        {
+            "user_id": 816767995,
+            "role": "seller",
+            "action": "payment_rejected",
+            "callback": "\/notreceived Q000010C",
+            "at": "2026-04-27 20:28:26",
+            "details": { "code": "Q000010C" }
+        },
+        {
+            "user_id": 816767995,
+            "role": "seller",
+            "action": "payment_confirmed",
+            "callback": "\/signoffer Q000010C",
+            "at": "2026-04-27 20:28:37",
+            "details": {
+                "code": "Q000010C",
+                "tx_hash": "0x616403be41c2022e0f00ceb884886c3b5598bce2c269e90f0e3f1bd448be6025"
+            }
+        }
+    ],
+    "signer": "0xd4b4e6dd4134ce09d910aaa3583bbe5d1172220d"
 }

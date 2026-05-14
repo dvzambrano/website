@@ -5,6 +5,7 @@ namespace Modules\TelegramBot\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Modules\TelegramBot\Entities\TelegramBots;
+use Modules\Laravel\Services\BehaviorService;
 
 class TelegramBotDataMiddleware
 {
@@ -13,7 +14,9 @@ class TelegramBotDataMiddleware
         $key = $request->route('key');
 
         // 1. Buscamos el bot por la 'key' única (no por el username público)
-        $bot = TelegramBots::where('key', $key)->first();
+        $bot = BehaviorService::cache('tenant_' . $key, function () use ($key) {
+            return TelegramBots::where('key', $key)->first();
+        });
 
         if (!$bot) {
             return redirect('/')->with('error', 'Acceso no autorizado.');

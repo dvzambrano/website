@@ -5,7 +5,21 @@ namespace Modules\ZentroTraderBot\Entities;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Laravel\Traits\TenantTrait;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property string $order_id
+ * @property int $bot_id
+ * @property int $user_id
+ * @property float $amount
+ * @property string $currency
+ * @property string $status
+ * @property array|null $raw_data
+ * @property string $statusemoji
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class Ramporders extends Model
 {
     use TenantTrait;

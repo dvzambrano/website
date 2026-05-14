@@ -5,6 +5,8 @@ namespace Modules\GutoTradeBot\Http\Controllers;
 use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\GutoTradeBot\Entities\Comments;
 use Modules\TelegramBot\Entities\Actors;
+use Illuminate\Support\Facades\Lang;
+use Modules\Laravel\Services\TextService;
 
 class CommentsController extends JsonsController
 {
@@ -54,7 +56,7 @@ class CommentsController extends JsonsController
                 break;
             case 3:
             case "3":
-                $fullname = "🤵 Supervisor";
+                $fullname = "🤵 " . TextService::mdv2(Lang::get('gutotradebot::bot.roles.supervisor'));
                 break;
 
             default:
@@ -63,12 +65,15 @@ class CommentsController extends JsonsController
         }
 
         $created_at = $actor->getLocalDateTime($comment->created_at, $tenant->code);
-        $text = $fullname . " 💬\n📅 {$created_at}\n\n" . $comment->comment;
+
+        $commentQuote = ">" . implode("\n>", explode("\n", TextService::mdv2($comment->comment)));
+        $text = TextService::mdv2($fullname) . " 💬\n📅 " . TextService::mdv2($created_at) . "\n\n" . $commentQuote;
 
         return array(
             "message" => array(
                 "text" => $text,
                 "photo" => $comment->screenshot ? $comment->screenshot : false,
+                "parse_mode" => "MarkdownV2",
                 "chat" => array(
                     "id" => $to_id,
                 ),
@@ -79,11 +84,11 @@ class CommentsController extends JsonsController
     public function notifyAfterComment()
     {
         $reply = array(
-            "text" => "💬 *Comentario enviado*\n_Se ha enviado su comentario satisfactoriamente._\n\n👇 Qué desea hacer ahora?",
+            "text" => "💬 *" . TextService::mdv2(Lang::get('gutotradebot::bot.comment.sent_title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.comment.sent_desc')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                     ],
 
                 ],

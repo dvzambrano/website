@@ -4,6 +4,7 @@ namespace Modules\TelegramBot\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
 use Modules\Laravel\Http\Controllers\Controller;
+use Modules\TelegramBot\Events\TelegramUpdateReceived;
 
 class TelegramBotController extends Controller
 {
@@ -15,17 +16,17 @@ class TelegramBotController extends Controller
     {
         // El Middleware 'tenant.detector' ya hizo el trabajo sucio 
         // de configurar la DB 'tenant' antes de llegar aquí.
-        $update = request()->all();
         $tenant = app('active_bot'); // Recuperamos lo que guardó el Middleware
-
         // Validación básica
         if (!$tenant || !isset($tenant->module)) {
             Log::error('🆘 TelegramBotController handle: Active bot not found or invalid module', ['tenant' => $tenant]);
-            abort(404, 'Bot handle controller not found');
+            return response()->json(['ok' => false], 404);
         }
 
-        $controller = $this->getController($tenant->module, $tenant->module);
-        return $this->callControllerMethod($controller, 'receiveMessage', [$tenant, $update], 'Bot handle controller not found');
+        // El middleware 'telegram.async' dispara el evento TelegramUpdateReceived el método terminate().
+
+        // Respondemos a Telegram
+        return response()->json(['ok' => true], 200);
     }
 
     /**
@@ -62,7 +63,7 @@ class TelegramBotController extends Controller
                 'instance' => $instance
             ]);
         }
-        Log::error("🆘  TelegramBotController getController Error: Controller $controller not found ", ['botname' => $botname, 'instance' => $instance]);
+        Log::error("🆘 TelegramBotController getController Error: Controller $controller not found ", ['botname' => $botname, 'instance' => $instance]);
         return false;
     }
 
@@ -110,22 +111,25 @@ class TelegramBotController extends Controller
      * @param array $logContext
      * @return mixed|null
      */
-    private function callControllerMethod($controller, $method, $params = [], $abortMsg = null, $logContext = [])
+    public function callControllerMethod($controller, $method, $params = [], $abortMsg = null, $logContext = [])
     {
         if ($controller && method_exists($controller, $method)) {
             try {
                 return call_user_func_array([$controller, $method], $params);
             } catch (\Throwable $e) {
-                Log::error("🆘  TelegramBotController callControllerMethod: Error executing $method", array_merge($logContext, [
+                /*
+                Log::error("🆘 TelegramBotController callControllerMethod: Error executing $method", array_merge($logContext, [
+                    'controller' => $controller,
                     'exception' => $e->getMessage(),
                     'trace' => $e->getTraceAsString()
                 ]));
+                */
                 if ($abortMsg)
                     abort(500, $abortMsg);
                 return null;
             }
         }
-        Log::error("🆘  TelegramBotController callControllerMethod: Method $method not found in controller", $logContext);
+        Log::error("🆘 TelegramBotController callControllerMethod: Method $method not found in controller", $logContext);
         if ($abortMsg)
             abort(404, $abortMsg);
         return null;

@@ -2,12 +2,14 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
+use Illuminate\Container\Attributes\Config;
 use Modules\Laravel\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -56,23 +58,13 @@ class TransakController extends Controller implements RampProviderInterface
         return Redirect::to($widgetUrl);
     }
 
-    public function processWebhook1(Request $request): JsonResponse
-    {
-
-        // Si el soporte de Transak está probando el endpoint, 
-        // esto responderá con éxito antes de intentar procesar lógica compleja.
-        return response()->json([
-            'status' => 'success',
-            'timestamp' => now()->toIso8601String()
-        ], 200);
-    }
-
     public function processWebhook(Request $request): array
     {
         $array = array();
         $payload = $request->all();
         // Logueamos siempre para auditoría interna
-        Log::debug("🐞  TransakController processWebhook: Evento recibido " . json_encode($payload));
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 TransakController processWebhook: Evento recibido " . json_encode($payload));
 
         try {
             $token = $request->getContent();
@@ -101,7 +93,8 @@ class TransakController extends Controller implements RampProviderInterface
                 $array["status"] = $data['status'];
                 $array["payload"] = $payload;
 
-                Log::debug("🐞  TransakController processWebhook: ORDER Update - User: " . $array["userId"] . " - Order: " . $array["orderId"] . "" . " - Status: " . $array["status"]);
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 TransakController processWebhook: ORDER Update - User: " . $array["userId"] . " - Order: " . $array["orderId"] . "" . " - Status: " . $array["status"]);
             }
 
             // Los eventos de KYC empiezan por "USER_" (ej: USER_KYC_APPROVED)
@@ -110,12 +103,13 @@ class TransakController extends Controller implements RampProviderInterface
                 $array["userId"] = $data['partnerCustomerId'];
                 $array["status"] = $data['kycStatus'];
 
-                Log::debug("🐞  TransakController processWebhook: KYC Update - User: " . $array["userId"] . " - Status: " . $array["status"]);
+                if (env("DEBUG_MODE", false))
+                    Log::debug("🐞 TransakController processWebhook: KYC Update - User: " . $array["userId"] . " - Status: " . $array["status"]);
             }
 
 
         } catch (\Exception $e) {
-            Log::error("🆘  TransakController processWebhook Error: " . $e->getMessage());
+            Log::error("🆘 TransakController processWebhook Error: " . $e->getMessage());
         }
 
         return $array;
@@ -147,9 +141,9 @@ class TransakController extends Controller implements RampProviderInterface
                 }
             }
 
-            Log::error("🆘  TransakController getAccessToken Error: " . $response->body());
+            Log::error("🆘 TransakController getAccessToken Error: " . $response->body());
         } catch (\Exception $e) {
-            Log::error("🆘  TransakController getAccessToken Exception: " . $e->getMessage());
+            Log::error("🆘 TransakController getAccessToken Exception: " . $e->getMessage());
         }
 
         return null;
@@ -171,6 +165,8 @@ class TransakController extends Controller implements RampProviderInterface
 
         $wallet = $suscriptor->data["wallet"]["address"];
 
+        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+
         $response = Http::withHeaders([
             'accept' => 'application/json',
             'access-token' => $accessToken,
@@ -181,7 +177,7 @@ class TransakController extends Controller implements RampProviderInterface
                         'referrerDomain' => request()->getHost(),
                         //'defaultCryptoAmount' => 1,
                         //'cryptoAmount' => 1,
-                        'cryptoCurrencyCode' => 'USDC',
+                        'cryptoCurrencyCode' => $token["symbol"],
                         'network' => 'polygon',
                         //'networks' => 'ethereum, polygon,terra, mainnet',
                         'walletAddress' => $wallet,
@@ -206,7 +202,7 @@ class TransakController extends Controller implements RampProviderInterface
                 ]);
 
         if ($response->failed()) {
-            Log::error("🆘  TransakController getWidgetUrl Error: " . $response->body());
+            Log::error("🆘 TransakController getWidgetUrl Error: " . $response->body());
             return null;
         }
 

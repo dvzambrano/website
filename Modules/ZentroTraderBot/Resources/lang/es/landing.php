@@ -1,356 +1,458 @@
 <?php
 
 return [
-    'title' => 'Kashio',
+    "title" => "Kashio",
 
-    'meta' => [
-        'title' => 'Tu cuenta personal en USD',
-        'description' => 'Gestiona tu capital en dólares digitales de forma segura, estable y sin complicaciones.',
+    "meta" => [
+        "title" => "Tu dinero, tus reglas",
+        "description" => "Mueve tu capital sin fronteras, sin bancos y sin esperas. La libertad financiera que necesitas, directamente en tu Telegram.",
     ],
 
-    'menu' => [
-        'home' => 'Inicio',
-        'about' => '¿Qué es?',
-        'features' => 'Características',
-        'steps' => 'Servicios',
-        'wallet' => 'Planes',
-        'contact' => 'Contacto',
-        'get_started' => 'Empezar ahora',
-        'user' => [
-            'identifiedas' => 'Identificado como',
-            'myaccount' => 'Mi cuenta',
-            'greeting' => 'Hola :name',
-            'balance' => 'Balance',
-            'logout' => 'Salir',
-            'refresh' => 'Actualizar',
-            'photo_alt' => 'Foto de usuario',
-            'nooperations' => 'No hay operaciones recientes',
-            'lastoperations' => ':count operación realizada|Últimas :count operaciones',
-            'openbot' => 'ENVIAR',
-            'wallet' => [
-                'receive' => [
-                    'header' => 'Recibir saldo en :name',
-                    'scaninfo' => 'Escanee este código o copie su enlace de pago',
-                    'share' => 'Compartir',
-                    'button' => 'RECIBIR',
-                    'copied' => 'Dirección copiada al portapapeles',
-                    'shareinfo' => 'También puede enviar este enlace a otra persona para que complete el depósito por Ud',
-                    'share_menu' => [
-                        'title' => 'Compartir dirección de pago',
-                        'whatsapp' => 'WhatsApp',
-                        'facebook' => 'Facebook',
-                        'twitter' => 'X',
-                        'email' => 'Email',
-                        'sms' => 'SMS',
-                        'telegram' => 'Telegram',
-                        'message' => 'Mi dirección de pago en :name:',
+    "menu" => [
+        "home" => "Inicio",
+        "about" => "¿Por qué :name?",
+        "features" => "Libertad",
+        "steps" => "Cómo funciona",
+        "wallet" => "Planes",
+        "contact" => "Ayuda",
+        "get_started" => "Tomar el control",
+        "user" => [
+            "identifiedas" => "Identificado como",
+            "myaccount" => "Mi panel",
+            "greeting" => "Hola, :name",
+            "balance" => "Balance",
+            "logout" => "Cerrar sesión",
+            "refresh" => "Actualizar saldo",
+            "photo_alt" => "Avatar de usuario",
+            "nooperations" => "Sin movimientos aún",
+            "lastoperations" => ":count operación realizada|Tus últimas :count operaciones",
+            "openbot" => "IR AL BOT",
+            "wallet" => [
+                "receive" => [
+                    "header" => "Recibir fondos en :name",
+                    "scaninfo" => "Muestra este código o comparte tu enlace de cobro",
+                    "share" => "Enviar enlace",
+                    "button" => "RECIBIR",
+                    "copied" => "Enlace copiado",
+                    "shareinfo" => "Envía este enlace para recibir pagos de cualquier persona, sin importar dónde se encuentre.",
+                    "share_menu" => [
+                        "title" => "Compartir mi enlace de cobro",
+                        "whatsapp" => "WhatsApp",
+                        "facebook" => "Facebook",
+                        "twitter" => "X",
+                        "email" => "Correo",
+                        "sms" => "Mensaje",
+                        "telegram" => "Telegram",
+                        "message" => "Puedes enviarme el pago aquí a través de :name:",
                     ],
                 ],
             ],
         ],
     ],
-    'hero' => [
-        'title' => 'Tu cuenta personal en dólares',
-        'subtitle' => 'Envía, recibe y protege tu dinero sin fronteras. La billetera diseñada para mover tu capital de forma segura, rápida y sin complicaciones.',
-        'cta' => 'Crear una cuenta',
+    "hero" => [
+        "title" => "Una cuenta en dólares",
+        "subtitle" => "Integrada en tu Telegram, diseñada para la libertad total. Envía, recibe y gestiona tu capital globalmente sin pedir permiso a nadie.",
+        "cta" => "Empezar ahora",
     ],
-    'about' => [
-        'title' => '¿Qué es :name?',
-        'subtitle' => 'Aliados y Tecnología que respaldan tu cuenta',
-        'description' => ':name es una billetera digital integrada en Telegram.',
-        'card_1' => [
-            'title' => 'Balance en USD',
-            'text1' => 'Mantén tus ahorros en activos estables protegidos de la volatilidad del mercado local.',
-            'text2' => 'Está diseñada para mantener la simplicidad  de mantener dólares digitales y disponer de ellos sin restricciones y de manera desentralizada; de forma que siempre tengas el control de tu capital.',
+    "about" => [
+        "title" => "La evolución de tu dinero",
+        "subtitle" => "Tecnología que permite que seas tu propio banco",
+        "description" => ":name elimina los intermediarios para que mover tu capital sea tan fácil como enviar un mensaje.",
+        "card_1" => [
+            "title" => "Sin Fronteras",
+            "text1" => "Mueve tus dólares a cualquier parte del mundo al instante, sin las trabas de la banca tradicional.",
+            "text2" => [
+                "line1" => "Imagina un mundo donde tu capital no entiende de horarios bancarios ni fronteras geográficas.",
+                "case1" => "🇪🇺 Si estás en Europa y usas SEPA",
+                "text1" => ":name es tu puente para mover fondos fuera del sistema euro hacia oportunidades globales sin las esperas de una transferencia internacional tradicional.",
+                "case2" => "🇺🇸 Si estás en Estados Unidos",
+                "text2" => "Puedes transformar tus transferencias ACH en activos digitales que se mueven a la velocidad de la luz, permitiéndote enviar dinero a cualquier país sin los costos abusivos de los giros bancarios.",
+                "case3" => "🇦🇷 Si estás en Argentina",
+                "text3" => ":name es tu salvavidas: puedes salir de una moneda que pierde valor cada hora usando tu banco local para entrar en dólares digitales.",
+                "final" => "En los tres casos, dejas de ser un espectador de tus finanzas para tener el control absoluto: holdea tus ahorros de forma segura, muévelos libremente para pagar servicios globales o haz crecer tu capital conectándolo con estrategias de rendimiento inteligente. Todo sin dar explicaciones y con disponibilidad inmediata.",
+            ],
         ],
-        'card_2' => [
-            'title' => 'Disponibilidad 24/7',
-            'text' => 'Accede a tus fondos, consulta tu balance y gestiona tus dólares en cualquier momento y desde cualquier lugar.',
+        "card_2" => [
+            "title" => "Disponibilidad Absoluta",
+            "text" => "Tu dinero no está atrapado en un horario de oficina. Transacciona cuando quieras, desde donde quieras y con quien quieras.",
         ],
     ],
-    'features' => [
-        'title' => 'Todo lo que necesitas para gestionar tu capital',
-        'list' => [
-            'feature_1' => 'Cero volatilidad manteniendo tu saldo en activos estables (Stablecoins).',
-            'feature_2' => 'Interfaz intuitiva',
-            'feature_3' => 'Historial detallado de cada movimiento y cambio de balance en tu cuenta.',
-            'feature_4' => 'Seguridad de grado bancario',
-            'feature_4header' => 'Seguridad de Fondos',
+    "features" => [
+        "title" => "Tu dinero no tiene por qué ser público",
+        "list" => [
+            "feature_1" => "Tú decides cuándo y dónde.",
+            "feature_2" => "Lo que haces con tu capital es asunto tuyo.",
+            'feature_4' => 'Seguridad de vanguardia',
+            "feature_5" => "Tú decides quién sabe qué sobre tus finanzas.",
+            "feature_3" => "Sin algoritmos bloqueando tus fondos por 'actividad inusual'",
+        ],
+    ],
+    "payments" => [
+        "tab1" => "Cargar capital",
+        "topup" => [
+            "title" => "Conectamos tu dinero local con el mundo digital a través de puentes seguros:",
+            "step_1" => "Decide qué cantidad de capital quieres mover.",
+            "step_2" => "Usa integraciones para convertir tu moneda en dólares.",
+            "step_3" => "Intercambia saldo con otros usuarios de la comunidad de forma segura.",
+        ],
+        "tab2" => "Sin límites",
+        "limitless" => [
+            "title" => "Tu dinero no está atrapado en un horario de oficina. Transacciona cuando quieras, desde donde quieras y con quien quieras.",
+            "step_1" => "Las barreras del horario bancario desaparecen por completo.",
+            "step_2" => "Tu ubicación geográfica deja de ser un límite para convertirse en una ventaja.",
+            "step_3" => "La verdadera soberanía financiera es poder elegir el destino de tus fondos sin pedir autorización.",
+        ],
+        "tab3" => "Puentes Globales",
+        "bridges" => [
+            "title" => "Conectando tu economía local con el mundo digital.",
+            "step_1" => "Tienes una puerta de salida hacia una economía abierta, estable y sin fronteras.",
+            "step_2" => "Diseñamos puentes para que el proceso de 'recargar' saldo a tu cuenta bancaria o 'retirar' tus dólares hacia tu moneda local sea un camino fluido.",
+            "step_3" => "Fomentamos una red global que funciona 24/7, impulsada por personas pero aseguradas por la tecnología.",
+        ],
+        "subtitle" => "¿Cómo mover tu dinero?",
+    ],
 
-            'feature_5' => 'Soporte prioritario',
-            'feature_6' => 'Acceso multi-dispositivo',
-            'tab3' => ':name no retiene tu dinero durante el proceso de compra; Transak liquida directamente a tu balance personal.',
+    "counts" => [
+        "users" => "Usuarios",
+        "trans" => "Transacciones realizadas",
+        "tickets" => "Tickets de soporte",
+    ],
+    "faq" => [
+        "title" => "Preguntas sobre tu Libertad",
+        "questions" => [
+            [
+                "question" => "¿Por qué es mejor que un banco?",
+                "answer" => "Porque no dependes de horarios, sucursales físicas ni aprobaciones burocráticas. Tú controlas tus dólares digitales y los mueves con la rapidez de un mensaje de Telegram."
+            ],
+            [
+                "question" => "¿Cómo convierto mi moneda local a dólares?",
+                "answer" => "Utilizamos puentes globales (OnRamp) que te permiten pagar en tu moneda local a través de transferencias o tarjetas y recibir dólares digitales en tu billetera de forma casi instantánea."
+            ],
+            [
+                "question" => "¿Puedo enviar dinero a cualquier persona?",
+                "answer" => "Sí. Si tienen Telegram o una dirección digital compatible, puedes enviarles fondos en segundos, eliminando las fronteras geográficas y las esperas de la banca internacional."
+            ],
+            [
+                "question" => "¿Qué tan privado es mi dinero?",
+                "answer" => "Al operar de forma descentralizada, tú eres el único dueño de tu información y capital. No reportamos tus movimientos a entidades bancarias tradicionales ni compartimos tus datos financieros."
+            ],
+            [
+                "question" => "¿Tengo que pagar por mantener mi cuenta?",
+                "answer" => "No. En :name creemos en el acceso libre. No existen cargos por mantenimiento, saldos mínimos ni comisiones ocultas; solo pagas una pequeña tarifa por operación realizada."
+            ],
+            [
+                "question" => "¿Quién garantiza que el sistema funcione?",
+                "answer" => "La tecnología blockchain respalda cada operación utilizando la seguridad inmutable para que tus fondos y transacciones sean verificables y permanentes."
+            ],
+            [
+                "question" => "¿Necesito descargar una aplicación especial?",
+                "answer" => "No. :name funciona íntegramente a través de Telegram. Esto te ahorra espacio en tu teléfono y te permite gestionar tus finanzas desde cualquier dispositivo donde tengas tu cuenta de chat."
+            ],
+            [
+                "question" => "¿Qué es el sistema P2P de :name?",
+                "answer" => "Es un mercado de persona a persona donde puedes intercambiar saldo directamente con otros usuarios de la comunidad, acordando métodos de pago locales de forma segura y privada."
+            ],
+            [
+                "question" => "¿Es seguro usar Telegram para mover dinero?",
+                "answer" => "Totalmente. Combinamos el cifrado de Telegram con protocolos adicionales de confirmación y seguridad blockchain. Tus fondos no residen en el chat, sino en una infraestructura digital protegida."
+            ],
+            [
+                "question" => "¿Puedo retirar mis dólares a mi cuenta bancaria local?",
+                "answer" => "Sí. A través de nuestros socios de salida (OffRamp) o del mercado P2P, puedes convertir tus dólares digitales a la moneda de tu país y recibirlos en tu banco cuando lo necesites."
+            ],
+            [
+                "question" => "¿Qué sucede si pierdo mi acceso a Telegram?",
+                "answer" => "Tu capital está vinculado a tu identidad digital en la red. Siempre que recuperes tu número de teléfono o acceso a Telegram, podrás volver a interactuar con el bot de :name y gestionar tus fondos."
+            ],
+            [
+                "question" => "¿Hay límites en la cantidad de dinero que puedo mover?",
+                "answer" => "No. :name está diseñado para la libertad total, por lo que no imponemos límites arbitrarios. Sin embargo, ten en cuenta que las plataformas de intercambio y los puentes pueden tener sus propias restricciones según la región o el método de pago."
+            ],
+            [
+                "question" => "¿En qué países está disponible :name?",
+                "answer" => ":name es global. Puedes usarlo desde cualquier lugar del mundo donde Telegram esté disponible, facilitando especialmente las transacciones en España, Estados Unidos y Latinoamérica."
+            ],
+            [
+                "question" => "¿Puedo usar :name para pagar en comercios?",
+                "answer" => "Sí, siempre que el comercio acepte dólares digitales o sea parte de la red :name. Solo necesitas el contacto o el código del receptor para realizar el pago al instante."
+            ],
+            [
+                "question" => "¿Qué son los 'dólares digitales' que usa :name?",
+                "answer" => "Utilizamos stablecoins (como USDC), que son activos digitales cuyo valor está anclado 1:1 con el dólar estadounidense, dándote la estabilidad del dólar con la agilidad de la tecnología cripto."
+            ],
+            [
+                "question" => "¿Cómo se protege el sistema contra fraudes en el P2P?",
+                "answer" => ":name actúa como mediador en las transacciones P2P, reteniendo los fondos de forma segura hasta que ambas partes confirman que el intercambio se ha realizado correctamente."
+            ],
+            [
+                "question" => "¿Puedo programar pagos automáticos?",
+                "answer" => "Actualmente estamos trabajando en integraciones avanzadas. En fases próximas, podrás automatizar ciertos movimientos y conectar APIs para gestionar pagos de negocios."
+            ],
+            [
+                "question" => "¿:name ofrece algún tipo de interés por mis ahorros?",
+                "answer" => "En las fases T2 y T3, integraremos opciones de trading automático y generación de rendimientos para quienes deseen que su capital crezca de forma pasiva."
+            ],
+            [
+                "question" => "¿Qué soporte recibo si tengo un problema?",
+                "answer" => "Contamos con un canal de soporte directo dentro de Telegram donde nuestro equipo te ayudará con cualquier duda técnica o problema con tus transacciones en tiempo real."
+            ],
+            [
+                "question" => "¿:name es una criptomoneda?",
+                "answer" => "No, :name es la interfaz y el ecosistema que te facilita el uso de tecnología financiera avanzada. Tú usas dólares de forma sencilla; nosotros nos encargamos de la complejidad técnica."
+            ],
+            [
+                "question" => "¿Qué pasa si envío dinero a un contacto equivocado?",
+                "answer" => "Debido a la naturaleza inmutable de la tecnología que utilizamos, las transacciones confirmadas no se pueden revertir. Por eso, el bot siempre te pedirá una confirmación final mostrando los datos del receptor antes de ejecutar cualquier movimiento."
+            ],
+            [
+                "question" => "¿Necesito tener conocimientos de criptomonedas o blockchain?",
+                "answer" => "Absolutamente ninguno. :name está diseñado para que veas y manejes dólares (USD) de forma tradicional. Nosotros nos encargamos de toda la complejidad técnica en el trasfondo para que tú solo veas saldo y mensajes."
+            ],
+            [
+                "question" => "¿Cómo puedo estar seguro de que mi saldo está respaldado?",
+                "answer" => ":name utiliza stablecoins auditadas que mantienen una reserva real de 1:1 con el dólar físico. Además, puedes verificar tus transacciones en el explorador de la red en cualquier momento, garantizando que tu dinero existe y es tuyo."
+            ],
+            [
+                "question" => "¿Puedo usar :name si mi cuenta de Telegram no tiene nombre de usuario (@usuario)?",
+                "answer" => "No. :name requiere que tu cuenta de Telegram tenga un nombre de usuario configurado para poder operar correctamente."
+            ],
+            [
+                "question" => "¿Qué comisiones cobra :name por el servicio?",
+                "answer" => ":name mantiene una estructura de costos mínima y transparente. Las comisiones varían según la red y el método (P2P o Pasarela), pero siempre verás el desglose exacto antes de confirmar cualquier operación. Sin sorpresas al final."
+            ],
+            [
+                "question" => "¿Puedo integrar :name en mi propio negocio o sitio web?",
+                "answer" => "Sí. Contamos con APIs preparadas para que otros negocios puedan recibir pagos o gestionar nóminas utilizando nuestra infraestructura de Telegram, permitiendo una integración financiera rápida y moderna."
+            ]
+        ]
+    ],
+    "footer" => [
+        "title" => "Sé parte de la nueva economía",
+        "subtitle" => "Entérate de cómo optimizar tu capital y moverte por el mundo sin ataduras.",
+        "contact" => "Contacto",
+        "email" => "Tu correo de contacto",
+        "suscribeme" => "Unirme",
+        "description" => "Empoderando a las personas para gestionar su capital sin intermediarios, con el respaldo de ZentroTrader.",
+        "terms" => "Términos",
+        "policy" => "Privacidad",
+        "faq" => "Preguntas",
+        "support" => [
+            "title" => "Soporte :name",
+            "subtitle" => " Libertad con respaldo real",
+            "email" => " Email:",
+            "contact" => "support@kashio.com",
         ],
+        "rights" => "- Tu dinero, en tus manos.",
     ],
-    'payments' => [
-        'tab1' => 'Depósito',
-        'tab2' => 'Seguridad',
-        'tab3' => 'Transak',
-        'subtitle' => '¿Cómo fondear tu cuenta?',
-        'transak_notice' => ':name utiliza la pasarela de Transak para garantizar depósitos seguros y directos.',
-        'transak_h4' => 'Integración con Transak',
-        'step_1_header' => 'Selecciona el monto a depositar',
-        'step_1' => 'Selecciona el monto a depositar',
-        'step_2_header' => 'Carga Directa',
-        'step_2' => 'Paga con tu moneda local vía Transak',
-        'step_3' => 'Recibe tus dólares en tu balance de :name',
-    ],
-
-    'counts' => [
-        'users' => 'Usuarios',
-        'trans' => 'Transacciones',
-        'security' => 'Seguridad',
-    ],
-    'faq' => [
-        'title' => 'Preguntas Frecuentes',
-        'questions' => [
+    "pricing" => [
+        "title" => "Planes a la medida",
+        "currency" => "$",
+        "time" => "Mes",
+        "recommended" => "Recomendado",
+        "plans" => [
             [
-                'id' => '1',
-                'question' => '¿Qué es exactamente una cuenta?',
-                'answer' => 'Es un espacio seguro donde tu capital se mantiene en dólares digitales para evitar la devaluación. Es la evolución de tu billetera personal respaldada por ZentroTrader.'
+                "name" => "Básico",
+                "price" => "0",
+                "color" => "#65c600",
+                "img" => "assets/img/pricing-starter.png",
+                "button" => "Seleccionar",
+                "featured" => true,
+                "features" => ["Billetera Global USD", "Acceso al P2P", "Soporte de la comunidad", "Acceso a API"],
+                "na" => []
             ],
             [
-                'id' => '2',
-                'question' => '¿Cómo cargo saldo en mi cuenta?',
-                'answer' => 'El proceso es simple: utilizas nuestra integración con Transak para comprar USD con tu moneda local. El balance se actualiza automáticamente en tu perfil una vez confirmada la operación.'
+                "name" => "Negocios",
+                "price" => "5",
+                "color" => "#ff901c",
+                "img" => "assets/img/pricing-business.png",
+                "button" => "Seleccionar",
+                "featured" => false,
+                "features" => ["Todo lo del plan Básico", "Operaciones masivas", "Soporte Prioritario", "Reportes Avanzados"],
+                "na" => []
             ],
             [
-                'id' => '3',
-                'question' => '¿Es seguro operar con Transak?',
-                'answer' => 'Sí, Transak es una plataforma líder regulada. Nosotros nunca almacenamos tus datos bancarios; solo recibimos el depósito final para acreditarlo a tu cuenta.'
-            ],
-            [
-                'id' => '4',
-                'question' => '¿Tengo disponibilidad inmediata de mis fondos?',
-                'answer' => '¡Totalmente! Tus fondos están disponibles 24/7. Puedes gestionar y consultar tu balance en cualquier momento desde tu panel personal de forma transparente.'
-            ],
-            [
-                'id' => '5',
-                'question' => '¿Hay comisiones de mantenimiento?',
-                'answer' => 'Contamos con un plan básico gratuito para que protejas tu dinero sin costos fijos. Solo aplicamos comisiones mínimas en operaciones de gestión de capital avanzadas.'
-            ],
-            [
-                'id' => '6',
-                'question' => '¿Qué respaldo tiene mi dinero?',
-                'answer' => 'Tu dinero está respaldado por tecnología blockchain en activos estables (Stablecoins) y cuenta con la infraestructura de seguridad de grado bancario de ZentroTrader.'
+                "name" => "Empresarial",
+                "price" => "50",
+                "color" => "#ff0071",
+                "img" => "assets/img/pricing-ultimate.png",
+                "button" => "Seleccionar",
+                "featured" => false,
+                "features" => ["Todo lo del plan de Negocios", "Gestión de Activos Pro", "Asesoría Personalizada", "Integraciones a Medida"],
+                "na" => []
             ],
         ]
     ],
-    'footer' => [
-        'title' => 'Suscríbete a nuestro boletín',
-        'subtitle' => 'Recibe actualizaciones sobre el ecosistema :name y nuevas formas de proteger tu capital.',
-        'contact' => 'Contáctenos',
-        'email' => 'Tu correo electrónico',
-        'suscribeme' => 'Suscribirme',
-        'description' => 'La plataforma líder para la gestión de tus activos digitales respaldada por ZentroTrader.',
-        'terms' => 'Términos de servicio',
-        'policy' => 'Política de privacidad',
-        'faq' => 'Preguntas Frecuentes',
-        'support' => [
-            'title' => 'Soporte Global :name',
-            'subtitle' => ' Respaldado por ZentroTrader',
-            'email' => ' Email:',
-            'contact' => 'soporte@kashio.com',
+    "blog" => [
+        "title" => "Cultura de Libertad",
+        "read_more" => "Explorar",
+        "posts" => [
+            [
+                "date" => "Septiembre 2025",
+                "title" => "Adiós a los bancos: Cómo mover tu dinero por el mundo.",
+                "img" => "assets/img/blog/blog-1.jpg",
+                "link" => "#",
+            ],
+            [
+                "date" => "Diciembre 2025",
+                "title" => "Cobrar servicios al extranjero nunca fue tan fácil.",
+                "img" => "assets/img/blog/blog-2.jpg",
+                "link" => "#",
+            ],
+            [
+                "date" => "Enero 2026",
+                "title" => "Privacidad financiera en la era digital.",
+                "img" => "assets/img/blog/blog-3.jpg",
+                "link" => "#",
+            ],
+        ]
+    ],
+    "team" => [
+        "title" => "El equipo que rompe las fronteras",
+        "members" => [
+            [
+                "name" => "Juan Pérez",
+                "role" => "Arquitecto de Sistemas",
+                "desc" => "Construyendo el puente hacia la libertad financiera.",
+                "img" => "assets/img/team/team-1.jpg",
+                "twitter" => "#",
+                "linkedin" => "#",
+                "facebook" => "#",
+                "instagram" => "#"
+            ],
+            [
+                "name" => "María García",
+                "role" => "Gestión de Operaciones",
+                "desc" => "Asegurando que cada envío llegue a su destino sin fricciones.",
+                "img" => "assets/img/team/team-2.jpg",
+                "twitter" => "#",
+                "linkedin" => "#",
+                "facebook" => "#",
+                "instagram" => "#"
+            ],
+            [
+                "name" => "Mariano Aristizabal",
+                "role" => "Seguridad",
+                "desc" => "Custodiando la integridad de tus activos con tecnología de punta.",
+                "img" => "assets/img/team/team-3.jpg",
+                "twitter" => "#",
+                "linkedin" => "#",
+                "facebook" => "#",
+                "instagram" => "#"
+            ],
+        ]
+    ],
+    "testimonials" => [
+        "title" => "Esto dicen nuestros protagonistas",
+        "items" => [
+            [
+                "quote" => "Por fin puedo enviar dinero a mi familia en minutos, sin que un banco me pregunte para qué es o me cobre comisiones absurdas.",
+                "name" => "Ricardo M.",
+                "role" => "Usuario Global",
+                "img" => "assets/img/testimonials/testimonials-1.jpg",
+                "stars" => 5
+            ],
+            [
+                "quote" => "Trabajo para empresas de todo el mundo y esta apliación es mi puerta de entrada preferida. Cobro y muevo mi dinero como quiero.",
+                "name" => "Sara W.",
+                "role" => "Freelancer Internacional",
+                "img" => "assets/img/testimonials/testimonials-2.jpg",
+                "stars" => 5
+            ],
+            [
+                "quote" => "La simplicidad de Telegram sumada al poder de una cuenta en dólares real. No vuelvo a pisar una sucursal bancaria.",
+                "name" => "Juan K.",
+                "role" => "Emprendedor Digital",
+                "img" => "assets/img/testimonials/testimonials-3.jpg",
+                "stars" => 5
+            ],
+            [
+                "quote" => "Necesitaba mover capital rápido para una inversión y el sistema de carga local funcionó perfectamente. Control total.",
+                "name" => "Matt B.",
+                "role" => "Inversor",
+                "img" => "assets/img/testimonials/testimonials-4.jpg",
+                "stars" => 5
+            ],
+        ]
+    ],
+    "portfolio" => [
+        "title" => "Tu panel de control financiero",
+        "filters" => [
+            "all" => "General",
+            "app" => "Telegram Bot",
+            "card" => "Tu Balance",
+            "web" => "Intercambio",
         ],
-        'rights' => 'Todos los derechos reservados.',
-    ],
-    'pricing' => [
-        'title' => 'Planes y Beneficios',
-        'currency' => '$',
-        'recommended' => 'Recomendado',
-        'plans' => [
+        "items" => [
             [
-                'name' => 'Básico',
-                'price' => '0',
-                'color' => '#07d5c0',
-                'img' => 'assets/img/pricing-free.png',
-                'button' => 'Empezar Gratis',
-                'featured' => false,
-                'features' => ['Cuenta Personal USD', 'Depósitos vía Transak', 'Historial de movimientos'],
-                'na' => ['Soporte Prioritario', 'Análisis Avanzado']
+                "title" => "Chatea con tu dinero",
+                "category" => "filter-app",
+                "category_label" => "Interfaz",
+                "img" => "assets/img/portfolio/portfolio-1.jpg",
+                "desc" => "Mueve fondos desde tu chat"
             ],
             [
-                'name' => 'Starter',
-                'price' => '19',
-                'color' => '#65c600',
-                'img' => 'assets/img/pricing-starter.png',
-                'button' => 'Seleccionar',
-                'featured' => true,
-                'features' => ['Cuenta Personal USD', 'Depósitos vía Transak', 'Historial de movimientos', 'Soporte 24/7'],
-                'na' => ['Análisis Avanzado']
+                "title" => "Entrada de capital ágil",
+                "category" => "filter-web",
+                "category_label" => "Puente Local",
+                "img" => "assets/img/portfolio/portfolio-2.jpg",
+                "desc" => "Sin bancos de por medio"
             ],
             [
-                'name' => 'Business',
-                'price' => '29',
-                'color' => '#ff901c',
-                'img' => 'assets/img/pricing-business.png',
-                'button' => 'Seleccionar',
-                'featured' => false,
-                'features' => ['Cuenta Personal USD', 'Depósitos vía Transak', 'Historial de movimientos', 'Soporte Prioritario', 'Análisis de Mercado'],
-                'na' => []
-            ],
-            [
-                'name' => 'Ultimate',
-                'price' => '49',
-                'color' => '#ff0071',
-                'img' => 'assets/img/pricing-ultimate.png',
-                'button' => 'Seleccionar',
-                'featured' => false,
-                'features' => ['Todo lo anterior', 'Límites extendidos', 'Acceso VIP ZentroTrader', 'Gestión de Activos', 'Asesoría Personalizada'],
-                'na' => []
+                "title" => "Transparencia total",
+                "category" => "filter-card",
+                "category_label" => "Activos",
+                "img" => "assets/img/portfolio/portfolio-4.jpg",
+                "desc" => "Tus dólares siempre listos"
             ],
         ]
     ],
-    'blog' => [
-        'title' => 'Aprende a proteger tu capital',
-        'read_more' => 'Leer más',
-        'posts' => [
-            [
-                'date' => '15 de Febrero, 2026',
-                'title' => '¿Qué son los Dólares Digitales y por qué son el refugio ideal?',
-                'img' => 'assets/img/blog/blog-1.jpg',
-                'link' => '#',
-            ],
-            [
-                'date' => '10 de Febrero, 2026',
-                'title' => 'Guía paso a paso: Cómo fondear tu cuenta usando Transak.',
-                'img' => 'assets/img/blog/blog-2.jpg',
-                'link' => '#',
-            ],
-            [
-                'date' => '05 de Febrero, 2026',
-                'title' => 'Seguridad Blockchain: Cómo protegemos tus activos.',
-                'img' => 'assets/img/blog/blog-3.jpg',
-                'link' => '#',
-            ],
-        ]
-    ],
-    'team' => [
-        'title' => 'El equipo detrás de :name',
-        'members' => [
-            [
-                'name' => 'John Doe',
-                'role' => 'Founder & Lead Developer',
-                'desc' => 'Arquitecto principal.',
-                'img' => 'assets/img/team/team-1.jpg',
-                'twitter' => '#',
-                'linkedin' => '#',
-                'facebook' => '#',
-                'instagram' => '#'
-            ],
-            [
-                'name' => 'Jane Smith',
-                'role' => 'Atención al Cliente',
-                'desc' => 'Equipo dedicado a asistirte en tus procesos de carga y gestión de balance en tiempo real.',
-                'img' => 'assets/img/team/team-2.jpg',
-                'twitter' => '#',
-                'linkedin' => '#',
-                'facebook' => '#',
-                'instagram' => '#'
-            ],
-            [
-                'name' => 'Micalme',
-                'role' => 'Infraestructura & Seguridad',
-                'desc' => 'Especialistas en tecnología blockchain encargados de la custodia y seguridad de tus activos digitales.',
-                'img' => 'assets/img/team/team-3.jpg',
-                'twitter' => '#',
-                'linkedin' => '#',
-                'facebook' => '#',
-                'instagram' => '#'
-            ],
-        ]
-    ],
-    'testimonials' => [
-        'title' => 'Lo que dicen nuestros usuarios',
-        'items' => [
-            [
-                'quote' => 'Desde que uso este sistema, no me preocupo por la devaluación. Tener mis ahorros en USD digitales me da una tranquilidad que no tenía antes.',
-                'name' => 'Ricardo M.',
-                'role' => 'Usuario Particular',
-                'img' => 'assets/img/testimonials/testimonials-1.jpg',
-                'stars' => 5
-            ],
-            [
-                'quote' => 'Increíble lo fácil que es recargar con Transak. En pocos minutos pasé mi moneda local a dólares en mi cuenta.',
-                'name' => 'Sara W.',
-                'role' => 'Freelancer',
-                'img' => 'assets/img/testimonials/testimonials-2.jpg',
-                'stars' => 5
-            ],
-            [
-                'quote' => 'La interfaz es muy limpia. Puedo ver mi balance en USD al instante y sé que mi capital está respaldado por la tecnología de ZentroTrader.',
-                'name' => 'Juan K.',
-                'role' => 'Comerciante',
-                'img' => 'assets/img/testimonials/testimonials-3.jpg',
-                'stars' => 5
-            ],
-            [
-                'quote' => 'Como emprendedor, necesitaba una cuenta en USD que fuera rápida. La integración con Transak funciona de maravilla.',
-                'name' => 'Matt B.',
-                'role' => 'Emprendedor',
-                'img' => 'assets/img/testimonials/testimonials-4.jpg',
-                'stars' => 4
-            ],
-        ]
-    ],
-    'portfolio' => [
-        'title' => 'Conoce la interfaz de tu cuenta :name',
-        'filters' => [
-            'all' => 'Todo',
-            'app' => 'App Móvil',
-            'card' => 'Panel USD',
-            'web' => 'Depósitos',
+    "services" => [
+        "title" => "Tu centro financiero, ahora en la palma de tu mano",
+        "aplications" => [
+            "title" => "Sin nuevas aplicaciones",
+            "text" => ":name vive donde ya estás tú: en Telegram. Al usar una interfaz familiar, ya sabes cómo gestionar tus dólares digitales.",
         ],
-        'items' => [
-            [
-                'title' => 'Gestión Móvil',
-                'category' => 'filter-app',
-                'category_label' => 'App',
-                'img' => 'assets/img/portfolio/portfolio-1.jpg',
-                'desc' => 'Tu balance siempre contigo'
-            ],
-            [
-                'title' => 'Recargas Seguras',
-                'category' => 'filter-web',
-                'category_label' => 'Transak',
-                'img' => 'assets/img/portfolio/portfolio-2.jpg',
-                'desc' => 'Compra USD con tu moneda local'
-            ],
-            [
-                'title' => 'Balance en Tiempo Real',
-                'category' => 'filter-card',
-                'category_label' => 'USD Digital',
-                'img' => 'assets/img/portfolio/portfolio-4.jpg',
-                'desc' => 'Control total de tus activos'
-            ],
-            // Puedes añadir más elementos aquí siguiendo la misma estructura
+        "commands" => [
+            "title" => "Comandos intuitivos y naturales",
+            "text" => "A través de menús claros y botones interactivos, puedes consultar tu saldo, generar una orden de pago o solicitar una recarga en segundos.",
+        ],
+        "notifications" => [
+            "title" => "Notificaciones en tiempo real",
+            "text" => "Telegram es el rey de la inmediatez. Cada vez que recibas saldo, se complete una transferencia P2P o se procese un retiro, recibirás una notificación instantánea.",
+        ],
+        "security" => [
+            "title" => "Seguridad de nivel empresarial",
+            "text" => "Aprovechamos la robusta infraestructura de cifrado de Telegram combinada con nuestras propias capas de seguridad blockchain.",
+        ],
+        "contactlist" => [
+            "title" => "Integración nativa con tus contactos",
+            "text" => "No más copiar y pegar números de cuenta kilométricos. Puedes enviar capital a un usuario es tan fácil como seleccionar su contacto en tu lista y escribir el monto.",
+        ],
+        "support" => [
+            "title" => "Soporte y comunidad a un clic",
+            "text" => "A diferencia de los bancos tradicionales donde esperarías horas en una línea telefónica, en :name el equipo y la comunidad están a un solo mensaje de distancia.",
         ]
     ],
-    'services' => [
-        'support' => 'Soporte Técnico',
-        'history' => 'Historial Detallado',
-        'no_volatility' => 'Cero Volatilidad',
-    ],
-    'contact' => [
-        'title' => '¿Tienes dudas sobre tu cuenta USD?',
-        'info' => [
-            'address_title' => 'Sede Central',
-            'address_text' => 'Micalme, Soporte Global',
-            'phone_title' => 'Llámanos',
-            'phone_text' => '+1 234 567 890',
-            'email_title' => 'Escríbenos',
-            'email_text' => 'soporte@kashio.com',
-            'hours_title' => 'Horario de Atención',
-            'hours_text' => 'Lunes - Viernes: 9:00AM - 06:00PM',
+    "contact" => [
+        "title" => "¿Listo para liberar tu capital?",
+        "info" => [
+            "address_title" => "Sede Digital",
+            "address_text" => "1940 NW 70th Ave, Miami, FL 33126",
+            "phone_title" => "Canal Directo",
+            "phone_text" => "+1 832-234-8105",
+            "email_title" => "Escríbenos",
+            "email_text" => "support@kashio.com",
+            "hours_title" => "Disponibilidad",
+            "hours_text" => "Tu dinero no descansa, nosotros tampoco.",
         ],
-        'form' => [
-            'name' => 'Tu Nombre',
-            'email' => 'Tu Correo',
-            'subject' => 'Asunto',
-            'message' => 'Cuéntanos cómo podemos ayudarte con tu cuenta',
-            'button' => 'Enviar Mensaje',
-            'loading' => 'Cargando...',
-            'sent' => 'Tu mensaje ha sido enviado. ¡Gracias!',
+        "form" => [
+            "name" => "Nombre",
+            "email" => "Email",
+            "subject" => "¿Cómo podemos ayudarte?",
+            "message" => "Escribe aquí tus dudas sobre libertad financiera",
+            "button" => "Contactar ahora",
+            "loading" => "Abriendo puertas...",
+            "sent" => "¡Mensaje recibido! Nos pondremos en contacto pronto.",
         ]
     ],
 ];

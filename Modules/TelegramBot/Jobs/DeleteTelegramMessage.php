@@ -26,12 +26,16 @@ class DeleteTelegramMessage implements ShouldQueue
 
     public function handle()
     {
-        // Llamamos directamente al controlador
-        TelegramController::deleteMessage([
-            "message" => [
-                "chat" => ["id" => $this->chatId],
-                "id" => $this->messageId // Tu controlador usa "id" para borrar
-            ]
-        ], $this->token);
+        try {
+            // Llamamos directamente al controlador
+            TelegramController::deleteMessage([
+                "message" => [
+                    "chat" => ["id" => $this->chatId],
+                    "id" => $this->messageId // Tu controlador usa "id" para borrar
+                ]
+            ], $this->token);
+        } catch (\Throwable $th) {
+
+        }
     }
 }

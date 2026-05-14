@@ -5,6 +5,8 @@ namespace Modules\GutoTradeBot\Http\Controllers;
 use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\GutoTradeBot\Entities\Profits;
 use Modules\TelegramBot\Entities\Actors;
+use Illuminate\Support\Facades\Lang;
+use Modules\Laravel\Services\TextService;
 
 class ProfitsController extends JsonsController
 {
@@ -24,14 +26,14 @@ class ProfitsController extends JsonsController
         $profit = $this->getFirst(Profits::class, "name", "=", "profit");
 
         $reply = array(
-            "text" => "🤑 *Ajustar ganancias*\n_Aquí se define la la relación de salario:ganancia expresado porcentualmente._\n\n" .
+            "text" => "🤑 *" . TextService::mdv2(Lang::get('gutotradebot::bot.profits.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.profits.desc')) . "_\n\n" .
                 "*Ejemplo:* `1:7`\n_1% de salario y 7% de ganancias_\n\n" .
-                "*Actualmente configurado:* `" . $salary->value . ":" . $profit->value . "`\n_" . $salary->value . "% de salario y " . $profit->value . "% de ganancias_\n" .
-                "Los envios se realizan a un " . ($salary->value + $profit->value) . "%\n\n" .
-                "👇 Escriba salario:ganancia",
+                "*" . TextService::mdv2(Lang::get('gutotradebot::bot.profits.current')) . "* `" . $salary->value . ":" . $profit->value . "`\n_" . TextService::mdv2((string)$salary->value) . TextService::mdv2(Lang::get('gutotradebot::bot.profits.salary_label')) . TextService::mdv2((string)$profit->value) . TextService::mdv2(Lang::get('gutotradebot::bot.profits.profit_label')) . "\n" .
+                TextService::mdv2(Lang::get('gutotradebot::bot.profits.total_rate')) . TextService::mdv2((string)($salary->value + $profit->value)) . "%_\n\n" .
+                "👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.profits.prompt')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✋ Cancelar", "callback_data" => "adminmenu"]],
+                    [["text" => "✋ " . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), "callback_data" => "adminmenu"]],
                 ],
             ]),
         );
@@ -42,11 +44,11 @@ class ProfitsController extends JsonsController
     public function notifyAfterChange()
     {
         $reply = array(
-            "text" => "🤑 *Ganancias actualizadas*\n_Se han actualizado las ganancias satisfactoriamente._\n\n👇 Qué desea hacer ahora?",
+            "text" => "🤑 *" . TextService::mdv2(Lang::get('gutotradebot::bot.profits.updated_title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.profits.updated_desc')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "↖️ Volver al menú de administrador", "callback_data" => "adminmenu"],
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtoadminmenu')), "callback_data" => "adminmenu"],
                     ],
 
                 ],

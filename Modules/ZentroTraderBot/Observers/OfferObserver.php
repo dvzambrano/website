@@ -3,8 +3,22 @@
 namespace Modules\ZentroTraderBot\Observers;
 
 use Modules\ZentroTraderBot\Entities\Offers;
-use Modules\ZentroTraderBot\Entities\OffersAlerts; // Asumiendo que OffersAlerts también está en el módulo
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Modules\ZentroTraderBot\Entities\Suscriptions;
+use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
+use Modules\Laravel\Services\DateService;
+use Carbon\Carbon;
+use Modules\ZentroTraderBot\Jobs\UpdateOfferInChannel;
+use Illuminate\Support\Facades\Lang;
+use Modules\TelegramBot\Entities\Actors;
+use Modules\TelegramBot\Http\Controllers\ActorsController;
+use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
+use Modules\ZentroTraderBot\Jobs\SendRecoverReminder;
+use Modules\ZentroTraderBot\Http\Controllers\OffersController;
+use Modules\Laravel\Services\TextService;
+use Illuminate\Support\Facades\Log;
+use Modules\ZentroTraderBot\Http\Controllers\OffersAlertsController;
+use Illuminate\Support\Facades\Cache;
 
 class OfferObserver
 {
@@ -13,56 +27,514 @@ class OfferObserver
      */
     public function created(Offers $offer): void
     {
-        // Buscamos las alertas que coincidan
-        $matchingAlerts = OffersAlerts::where('type', $offer->type)
-            ->where('payment_method', $offer->payment_method)
-            ->where('is_active', true)
-            ->get();
+        $bot = app('active_bot');
 
-        // mandarlo al canal y al grupo
+        UpdateOfferInChannel::dispatch($bot->key, $offer->code);
 
-        // mandarlo a los usurios q estan buscando algo asi
-        foreach ($matchingAlerts as $alert) {
-            // Validamos que el usuario tenga un telegram_id antes de intentar enviar
-            if ($alert->user && $alert->user->telegram_id) {
-                /*
-                Telegram::sendMessage([
-                    'chat_id' => $alert->user->telegram_id,
-                    'text' => "🚀 Nueva oferta detectada: {$offer->amount} USD vía {$offer->payment_method}"
-                ]);
-                */
+        OffersAlertsController::notifyMatchingAlerts($offer, $bot->token);
+        OffersAlertsController::notifyBestSellMatches($offer, $bot->token);
+    }
 
-                // Enviar notificación directamente (evita usar variables indefinidas en closure)
-                $communityChat = config('metadata.system.app.zentrotraderbot.telegram.community.group');
-                $botToken = config('metadata.system.app.zentrotraderbot.telegram.bot_token') ?? null;
+    /**
+     * Manejar el evento "updated" de la Oferta.
+     */
+    public function updated(Offers $offer): void
+    {
+        // Solo actuamos si el status ha cambiado
+        if (!$offer->isDirty('status')) {
+            return;
+        }
+        if (strtolower($offer->status) === strtolower($offer->getOriginal('status'))) {
+            return;
+        }
 
-                $text = "🚀 Nueva oferta detectada: {$offer->amount} USD vía {$offer->payment_method}";
-                $payload = [
-                    'message' => [
-                        'chat' => ['id' => $communityChat],
-                        'text' => $text,
+        $bot = app('active_bot');
+
+        $newStatus = $offer->status;
+        $amount = number_format($offer->amount, 2);
+
+        $blockchain = new BlockchainController();
+        $status = $blockchain->getStatus();
+        $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), Carbon::now()->addSeconds($status["tradeTimeout"])->getTimestamp());
+        $result = $offer->getNetProceeds($status);
+        $net = $result['net'];
+
+        switch (strtoupper($newStatus)) {
+
+            case 'LOCKED':
+                $amount = number_format($offer->amount, 2);
+                $price = number_format($offer->amount * $offer->price_per_usd, 2);
+                $payMethodEsc = TextService::mdv2($offer->payment_method);
+                $payDetailsEsc = TextService::mdv2($offer->payment_details);
+
+                // Mensaje al COMPRADOR
+                $text = "🛡 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.title")) . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "🔒 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.buyer.funds_blocked", ['amount' => $amount])) . "\n"
+                    . "💵 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.buyer.you_receive", ['net' => $net])) . "_\n\n"
+                    . "🟢 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.buyer.proceed")) . "*\n"
+                    . "💳 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.buyer.make_payment", ['price' => $price, 'currency' => $offer->currency])) . "\n"
+                    . "🏦 {$payMethodEsc}: `{$offer->payment_details}`\n"
+                    . "👉 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.buyer.then_proof")) . "\n\n"
+                    . "⏱️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.buyer.time_margin", ['time' => $diff["legible"]])) . "*\n"
+                    . "_" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.buyer.after_timeout")) . "_";
+
+                $this->notifyByAddress(
+                    $offer->buyer_address,
+                    $text,
+                    $bot->token,
+                    [
+                        [["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer " . $offer->code]],
+                        [["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_seller"), "callback_data" => "/startchat {$offer->code}"]],
+                        [["text" => "👤 " . Lang::get("zentrotraderbot::bot.options.view_profile_seller"), "callback_data" => "/viewprofile {$offer->code}"]],
+                        [["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/canceloffer " . $offer->code]],
                     ],
-                ];
+                    $offer
+                );
 
-                // Intentamos enviar si tenemos token configurado
-                if ($botToken) {
-                    TelegramController::sendMessage($payload, $botToken);
-                } else {
-                    // Fallback: intentar enviar al usuario directamente si no hay token global
-                    $userChat = $alert->user->telegram_id;
-                    if ($userChat) {
-                        $personalPayload = [
-                            'message' => [
-                                'chat' => ['id' => $userChat],
-                                'text' => $text,
-                            ],
-                        ];
-                        TelegramController::sendMessage($personalPayload, $botToken);
+                // Mensaje al VENDEDOR — sin botón de reclamar; se envía via job cuando expire el plazo
+                $text = "🛡 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.title")) . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "🔒 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.seller.funds_blocked", ['amount' => $amount])) . "\n\n"
+                    . "💳 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.seller.buyer_will_pay", ['price' => $price, 'currency' => $offer->currency])) . "_\n"
+                    . "🏦 _{$payMethodEsc}: {$payDetailsEsc}_\n"
+                    . "📋 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.seller.then_proof")) . "_\n\n"
+                    . "🚨 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.locked.seller.never_confirm", ['price' => $price, 'currency' => $offer->currency])) . "*";
+
+                $this->notifyByAddress($offer->seller_address, $text, $bot->token, [
+                    [["text" => "💬 " . Lang::get("zentrotraderbot::bot.options.message_buyer"), "callback_data" => "/startchat {$offer->code}"]],
+                    [["text" => "👤 " . Lang::get("zentrotraderbot::bot.options.view_profile_buyer"), "callback_data" => "/viewprofile {$offer->code}"]],
+                ], $offer);
+
+                // Guardar el timestamp exacto en que el vendedor podrá reclamar
+                $currentData = $offer->data ?? [];
+                $currentData['timeout_at'] = now()->addSeconds($status["tradeTimeout"])->timestamp;
+                $offer->updateQuietly(['data' => $currentData]);
+
+                // Despachar recordatorio con el botón de reclamar para cuando expire el plazo
+                $sellerSub = Suscriptions::findByAddress($offer->seller_address);
+                if ($sellerSub && $sellerSub->user_id) {
+                    SendRecoverReminder::dispatch($bot->key, $offer->code, (int) $sellerSub->user_id)
+                        ->delay(now()->addSeconds($status["tradeTimeout"]));
+                }
+                break;
+
+            case 'COMPLETED':
+                $isDispute = !empty($offer->winner_address);
+
+                // Registrar timestamp de cierre y actualizar estadísticas del vendedor
+                $completedData = $offer->data ?? [];
+                $completedData['completed_at'] = now()->timestamp;
+                $offer->updateQuietly(['data' => $completedData]);
+
+                if (!$isDispute) {
+                    $sellerSub = Suscriptions::findByAddress($offer->seller_address);
+                    if ($sellerSub) {
+                        $sellerSub->updateStats($completedData);
                     }
                 }
 
+                // Mensaje al VENDEDOR
+                if ($isDispute) {
+                    $msgSeller = "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.title_dispute")) . "*\n"
+                        . "🆔 `{$offer->code}`\n"
+                        . "⚖️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.finalized_by_arbitrage")) . "_\n"
+                        . "📦 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.seller_dispute_status")) . "*";
+                } else {
+                    $msgSeller = "🎉 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.title")) . "*\n"
+                        . "🆔 `{$offer->code}`\n"
+                        . "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.success")) . "\n"
+                        . "💵 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.deducted_from_seller", ['amount' => $amount])) . "_";
+                }
 
+                // Mensaje al COMPRADOR
+                if ($isDispute) {
+                    $msgBuyer = "✅ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.title_dispute")) . "*\n"
+                        . "🆔 `{$offer->code}`\n"
+                        . "⚖️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.finalized_by_arbitrage")) . "_\n"
+                        . "💰 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.buyer_dispute_status")) . "*";
+                } else {
+                    $msgBuyer = "🎉 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.title")) . "*\n"
+                        . "🆔 `{$offer->code}`\n"
+                        . "✅ " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.success")) . "\n"
+                        . "💵 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.released_to_buyer", ['net' => $net])) . "_";
+                }
+
+                $msgeval = "🙏 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.rate_invite")) . "\n"
+                    . "👇 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.completed.rate_instruction"));
+                $msgSeller .= "\n\n{$msgeval}";
+                $msgBuyer .= "\n\n{$msgeval}";
+
+                $evalMenu = [
+                    ['text' => '😡', 'callback_data' => "/rateoffer {$offer->code} 1"],
+                    ['text' => '😟', 'callback_data' => "/rateoffer {$offer->code} 2"],
+                    ['text' => '😐', 'callback_data' => "/rateoffer {$offer->code} 3"],
+                    ['text' => '🙂', 'callback_data' => "/rateoffer {$offer->code} 4"],
+                    ['text' => '🤩', 'callback_data' => "/rateoffer {$offer->code} 5"],
+                ];
+
+                $this->notifyByAddress(
+                    $offer->seller_address,
+                    $msgSeller,
+                    $bot->token,
+                    [$evalMenu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
+                    $offer
+                );
+                $this->notifyByAddress(
+                    $offer->buyer_address,
+                    $msgBuyer,
+                    $bot->token,
+                    [$evalMenu, [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
+                    $offer
+                );
+                break;
+
+            case 'DISPUTED':
+
+                $generaltext = "🙇🏻 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.title")) . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "👉 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.claim_started")) . "_\n";
+
+                $offersController = new OffersController();
+                $cancelMenu = [[["text" => "❌ " . Lang::get("zentrotraderbot::bot.options.cancel"), "callback_data" => "/wizardcancel"]]];
+                $wizardText = $offersController->buildEvidenceWizardPromptText($offer, 'dispute');
+
+                foreach ([$offer->seller_address, $offer->buyer_address] as $address) {
+                    $sub = Suscriptions::findByAddress($address);
+                    if ($sub && $sub->user_id) {
+                        $offersController->seedEvidenceWizard($bot->key, (int) $sub->user_id, $offer->code);
+                    }
+                }
+
+                $this->notifyByAddress($offer->seller_address, $wizardText, $bot->token, $cancelMenu, $offer);
+                $this->notifyByAddress($offer->buyer_address, $wizardText, $bot->token, $cancelMenu, $offer);
+
+                // Crear foro de disputa y reenviar evidencias existentes
+                $this->openDisputeThread($offer, $bot);
+
+                // Notificar a los administradores
+                $controller = new ActorsController();
+                $admins = $controller->getData(Actors::class, [
+                    ["contain" => true, "name" => "admin_level", "value" => [1, "1"]],
+                ], $bot->code);
+                foreach ($admins as $admin) {
+                    TelegramController::sendMessage([
+                        "message" => [
+                            "text" => $generaltext,
+                            "chat" => ["id" => $admin->user_id],
+                            "parse_mode" => "MarkdownV2",
+                            "reply_markup" => json_encode([
+                                "inline_keyboard" => [
+                                    [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]
+                                ],
+                            ]),
+                        ],
+                    ], $bot->token);
+                }
+                break;
+
+            case 'CANCELLED':
+                // Notifications sent in the unconfirmed pass (ProcessContractActivity::sendPendingNotification)
+                break;
+
+            case 'SIGNED':
+                $json = $offer->data;
+                $signer = strtolower($json['signer'] ?? '');
+
+                // Si quien firmó fue el COMPRADOR, el vendedor ya recibió el botón de confirmar
+                // en el pass unconfirmed de TRADESIGNED. No duplicamos el mensaje.
+                if ($signer !== strtolower($offer->seller_address)) {
+                    // Registrar cuándo el comprador envió su comprobante de pago
+                    $signedData = $offer->data ?? [];
+                    $signedData['signed_at'] = now()->timestamp;
+                    $offer->updateQuietly(['data' => $signedData]);
+                    break;
+                }
+
+                // Si quien firmó fue el VENDEDOR, el comprador aún necesita enviar su comprobante
+                $text = "⚠️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.signed.pending_title")) . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "👍 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.signed.counterpart_confirmed")) . "\n\n"
+                    . "☑️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.signed.proceed_confirm")) . "*\n"
+                    . "⏳ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.signed.waiting")) . "_";
+                $menu = [[["text" => "🧾 " . Lang::get("zentrotraderbot::bot.options.send_proof"), "callback_data" => "/comprobantoffer {$offer->code}"]]];
+                $this->notifyByAddress($offer->buyer_address, $text, $bot->token, $menu, $offer);
+                break;
+
+            case 'SOLVED':
+                $winner = $offer->buyer_address;
+                $looser = $offer->seller_address;
+                if (strtolower($offer->winner_address) == strtolower($offer->seller_address)) {
+                    $winner = $offer->seller_address;
+                    $looser = $offer->buyer_address;
+                }
+
+                $textBase = "👩‍💻 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.solved.title")) . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "⚖️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.solved.admin_reviewed")) . "_\n";
+
+                $this->notifyByAddress(
+                    $winner,
+                    $textBase
+                    . "🏆 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.solved.winner")) . "*\n\n"
+                    . "💵 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.solved.funds_released", ['net' => $net])) . "_\n"
+                    . "🙏 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.solved.thanks")) . "_\n",
+                    $bot->token,
+                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
+                    null
+                );
+                $this->notifyByAddress(
+                    $looser,
+                    $textBase
+                    . "🛑 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.solved.loser")) . "*\n\n"
+                    . "🤝 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.solved.contact_support")) . "_\n"
+                    . "🙏 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.solved.thanks")) . "_\n",
+                    $bot->token,
+                    [
+                        [["text" => "👩‍💻 " . Lang::get("zentrotraderbot::bot.options.talk_arbiter"), "callback_data" => "menu"]],
+                        [["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]],
+                    ],
+                    null
+                );
+                $offer->updateStatus('COMPLETED', ['updated_at' => now()]);
+                break;
+
+            case 'EXPIRED':
+                $text = "⏱️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.expired.title")) . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "👉 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.expired.seller_reported", ['time' => $diff["legible"]])) . "_\n"
+                    . "🚨 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.expired.auto_dispute")) . "*\n\n"
+                    . "🔒 _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.expired.funds_frozen")) . "_";
+
+                $this->notifyByAddress(
+                    $offer->buyer_address,
+                    $text,
+                    $bot->token,
+                    [[["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"]]],
+                    $offer
+                );
+                $offer->updateStatus('DISPUTED', ['updated_at' => now()]);
+                break;
+        }
+
+        UpdateOfferInChannel::dispatch($bot->key, $offer->code, $offer->updated_at->getTimestamp());
+    }
+
+    // =========================================================
+    // DISPUTE THREAD — Forum topic de arbitraje
+    // =========================================================
+
+    private function openDisputeThread(Offers $offer, $bot): void
+    {
+        $supportChatId = env('TRADER_BOT_SUPPORT');
+        if (!$supportChatId) {
+            return;
+        }
+
+        $topicResp = TelegramController::createForumTopic([
+            'message' => [
+                'chat' => ['id' => $supportChatId],
+                'name' => 'DISPUTE ' . $offer->code,
+            ],
+        ], $bot->token);
+
+        $topicData = json_decode($topicResp, true);
+        $threadId = $topicData['result']['message_thread_id'] ?? null;
+
+        if (!$threadId) {
+            Log::warning('⚠️ OfferObserver: no se pudo crear el forum topic para ' . $offer->code);
+            return;
+        }
+
+        // Persistir thread_id en data del trade
+        $data = $offer->data ?? [];
+        $data['dispute']['thread_id'] = (int) $threadId;
+        $offer->data = $data;
+        $offer->saveQuietly();
+
+        // Encabezado del topic
+        $amount = number_format($offer->amount, 2);
+        $total = number_format($offer->amount * $offer->price_per_usd, 2);
+        $buyerShort = substr($offer->buyer_address, 0, 6) . '...' . substr($offer->buyer_address, -4);
+        $sellerShort = substr($offer->seller_address, 0, 6) . '...' . substr($offer->seller_address, -4);
+
+        TelegramController::sendMessage([
+            'message' => [
+                'chat' => ['id' => $supportChatId],
+                'message_thread_id' => $threadId,
+                'parse_mode' => 'MarkdownV2',
+                'text' =>
+                    "⚖️ *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.forum_header")) . "*\n"
+                    . "🆔 `{$offer->code}`\n"
+                    . "💰 " . TextService::mdv2($amount) . " USDT → " . TextService::mdv2($total) . " {$offer->currency}\n"
+                    . "🟢 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.forum_buyer")) . ": `{$buyerShort}`\n"
+                    . "🔴 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.forum_seller")) . ": `{$sellerShort}`\n"
+                    . "📅 " . TextService::mdv2(now()->format('d M Y H:i')) . " UTC",
+                "reply_markup" => json_encode([
+                    'inline_keyboard' => [
+                        [
+                            ['text' => '🏅 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_buyer'), 'callback_data' => "confirmation|solvedispute-{$offer->code}-buyer|deleteconfirmation"],
+                        ],
+                        [
+                            ['text' => '🎖 ' . Lang::get('zentrotraderbot::bot.offer.disputed.btn_favor_seller'), 'callback_data' => "confirmation|solvedispute-{$offer->code}-seller|deleteconfirmation"],
+                        ],
+                    ],
+                ]),
+
+
+            ],
+        ], $bot->token);
+
+        // Reenviar comprobantes y evidencias previas
+        $this->forwardExistingMediaToThread($offer, (int) $threadId, (string) $supportChatId, $bot->token);
+    }
+
+    private function forwardExistingMediaToThread(Offers $offer, int $threadId, string $supportChatId, string $token): void
+    {
+        $buyerSub = Suscriptions::findByAddress($offer->buyer_address);
+        $sellerSub = Suscriptions::findByAddress($offer->seller_address);
+        $buyerTgId = $buyerSub ? (string) $buyerSub->user_id : null;
+        $sellerTgId = $sellerSub ? (string) $sellerSub->user_id : null;
+
+        // ── Comprobantes y evidencias ───────────────────────────────────────
+        $evidence = $offer->data['evidence'] ?? [];
+        $hasEvidence = !empty(array_filter($evidence));
+
+        TelegramController::sendMessage([
+            'message' => [
+                'chat' => ['id' => $supportChatId],
+                'message_thread_id' => $threadId,
+                'parse_mode' => 'MarkdownV2',
+                'text' => "📋 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.proofs_section")) . "*",
+            ],
+        ], $token);
+
+        if ($hasEvidence) {
+            foreach ($evidence as $userId => $fileIds) {
+                if (empty($fileIds)) {
+                    continue;
+                }
+                $label = $this->roleLabel((string) $userId, $buyerTgId, $sellerTgId);
+                TelegramController::sendMessage([
+                    'message' => ['chat' => ['id' => $supportChatId], 'message_thread_id' => $threadId, 'parse_mode' => 'MarkdownV2', 'text' => $label],
+                ], $token);
+                $this->sendFilesToThread($fileIds, $supportChatId, $threadId, $token, $offer->code, (string) $userId);
             }
+        } else {
+            TelegramController::sendMessage([
+                'message' => [
+                    'chat' => ['id' => $supportChatId],
+                    'message_thread_id' => $threadId,
+                    'parse_mode' => 'MarkdownV2',
+                    'text' => "⚠️ _" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.no_proofs")) . "_",
+                ],
+            ], $token);
+        }
+    }
+
+    private function roleLabel(string $userId, ?string $buyerTgId, ?string $sellerTgId): string
+    {
+        if ($buyerTgId && $userId === $buyerTgId) {
+            return "🟢 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.by_buyer")) . "*";
+        }
+        if ($sellerTgId && $userId === $sellerTgId) {
+            return "🔴 *" . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.by_seller")) . "*";
+        }
+        return "👤 ID: `{$userId}`";
+    }
+
+    private function sendFilesToThread(array $fileIds, string $chatId, int $threadId, string $token, string $code = '', string $userId = ''): void
+    {
+        if (empty($fileIds)) {
+            return;
+        }
+        $base = ['chat' => ['id' => $chatId], 'message_thread_id' => $threadId, 'text' => ''];
+        if (count($fileIds) === 1) {
+            TelegramController::sendPhoto(['message' => array_merge($base, ['photo' => $fileIds[0]])], $token);
+        } else {
+            $media = array_map(fn($fid) => ['type' => 'photo', 'media' => $fid], $fileIds);
+            TelegramController::sendMediaGroup(['message' => array_merge($base, ['media' => $media])], $token);
+        }
+        if ($code && $userId) {
+            TelegramController::sendMessage([
+                'message' => array_merge($base, [
+                    'text' => "👆 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.offer.disputed.arbiter_actions")),
+                    'parse_mode' => 'MarkdownV2',
+                    'reply_markup' => OffersController::arbiterButtons($code, $userId),
+                ])
+            ], $token);
+        }
+    }
+
+    // =========================================================
+
+    /**
+     * Helper para enviar mensajes directos vía TelegramController.
+     * Elimina el mensaje de estado anterior del usuario (si existe) antes de enviar el nuevo,
+     * y almacena el message_id resultante en offer->data['last_status_messages'].
+     */
+    private function notifyUser($telegramId, $text, $token, $menu = [], ?Offers $offer = null): void
+    {
+        if (!$telegramId || !$token)
+            return;
+
+        // Sincronizar ambos sistemas de tracking para mantener un único mensaje activo en el chat
+        $bot = app('active_bot');
+        $cacheMsgKey = $bot ? "lastmessage_{$bot->key}_{$telegramId}" : null;
+        $cachedMsg = $cacheMsgKey ? Cache::get($cacheMsgKey) : null;
+        $cachedMsgId = (int) ($cachedMsg['message_id'] ?? 0);
+
+        $prevTradeMsgId = 0;
+        if ($offer) {
+            $prevTradeMsgId = (int) ($offer->data['last_status_messages'][$telegramId] ?? 0);
+            if ($prevTradeMsgId > 0) {
+                DeleteTelegramMessage::dispatch($token, (int) $telegramId, $prevTradeMsgId);
+            }
+        }
+
+        // Borrar también el mensaje de respuesta de menú si es diferente al último mensaje del trade
+        if ($cachedMsgId > 0 && $cachedMsgId !== $prevTradeMsgId) {
+            DeleteTelegramMessage::dispatch($token, (int) $telegramId, $cachedMsgId);
+        }
+
+        $payload = [
+            'message' => [
+                'chat' => ['id' => $telegramId],
+                'text' => $text,
+                'parse_mode' => 'MarkdownV2',
+            ],
+        ];
+        if (count($menu) > 0)
+            $payload["message"]["reply_markup"] = json_encode(["inline_keyboard" => $menu]);
+
+        $response = TelegramController::sendMessage($payload, $token);
+
+        // Guardar el message_id en ambos sistemas de tracking.
+        // Se usa saveQuietly() para evitar re-disparar el Observer mientras syncOriginal() aún
+        // no ha sido invocado por el save() padre (evita recursión y spam de mensajes).
+        $arr = json_decode($response, true);
+        $msgId = (int) ($arr['result']['message_id'] ?? 0);
+        if ($msgId > 0) {
+            if ($offer) {
+                $data = $offer->data ?? [];
+                $data['last_status_messages'][$telegramId] = $msgId;
+                $offer->data = $data;
+                $offer->saveQuietly();
+            }
+            if ($cacheMsgKey) {
+                Cache::forever($cacheMsgKey, $arr['result']);
+            }
+        }
+    }
+
+    /**
+     * Helper para notificar buscando al usuario por su wallet address
+     */
+    private function notifyByAddress($address, $text, $token, $menu = [], ?Offers $offer = null): void
+    {
+        $suscriptor = Suscriptions::findByAddress($address);
+        if ($suscriptor && $suscriptor->user_id) {
+            $this->notifyUser($suscriptor->user_id, $text, $token, $menu, $offer);
         }
     }
 }

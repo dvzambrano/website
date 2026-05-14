@@ -5,6 +5,8 @@ namespace Modules\GutoTradeBot\Http\Controllers;
 use Modules\Laravel\Http\Controllers\JsonsController;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Lang;
+use Modules\Laravel\Services\TextService;
 use Modules\GutoTradeBot\Entities\Capitals;
 use Modules\GutoTradeBot\Entities\Payments;
 use Modules\TelegramBot\Entities\Actors;
@@ -116,12 +118,12 @@ class MoneysController extends JsonsController
         switch ($type) {
             case 1:
                 $icon = "💰";
-                $text = "🤔 *Reporte de capital incompleto*\n\n_Su reporte de aporte de capital no tiene el formato adecuando en la descripción.\nDebe escribir el Nombre y Apellidos de la persona que envía y seguido la cantidad de USDT enviados separados por un espacio._\n\n1️⃣ Ejemplo:    *Eduardo Perez 20*\n2️⃣ Ejemplo:    *Anibal Cobo Lopez 190*\n\n❌ Recibido: {$bad_caption}\n\n👇 Qué desea hacer ahora?";
+                $text = "🤔 *" . TextService::mdv2(Lang::get('gutotradebot::bot.money.caption_error_capital.title')) . "*\n\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.money.caption_error_capital.desc')) . "_\n\n1️⃣ Ejemplo:    *Eduardo Perez 20*\n2️⃣ Ejemplo:    *Anibal Cobo Lopez 190*\n\n❌ Recibido: {$bad_caption}\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext'));
                 $callback_data = "sendercapitalmenu";
                 break;
 
             default:
-                $text = "🤔 *Reporte de pago incompleto*\n\n_Su reporte de pago no tiene el formato adecuando en la descripción.\nDebe escribir el Nombre y Apellidos de la persona que envía y seguido la cantidad de euros enviados separados por un espacio._\n\n1️⃣ Ejemplo:    *Eduardo Perez 20*\n2️⃣ Ejemplo:    *Anibal Cobo Lopez 190*\n\n❌ Recibido: {$bad_caption}\n\n👇 Qué desea hacer ahora?";
+                $text = "🤔 *" . TextService::mdv2(Lang::get('gutotradebot::bot.money.caption_error_payment.title')) . "*\n\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.money.caption_error_payment.desc')) . "_\n\n1️⃣ Ejemplo:    *Eduardo Perez 20*\n2️⃣ Ejemplo:    *Anibal Cobo Lopez 190*\n\n❌ Recibido: {$bad_caption}\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext'));
                 $callback_data = "senderpaymentmenu";
                 break;
         }
@@ -131,8 +133,8 @@ class MoneysController extends JsonsController
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "{$icon} Intentar nuevamente", "callback_data" => $callback_data],
-                        ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                        ["text" => $icon . " " . TextService::mdv2(Lang::get('gutotradebot::bot.money.retry')), "callback_data" => $callback_data],
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                     ],
 
                 ],
@@ -236,7 +238,7 @@ class MoneysController extends JsonsController
                                         isset($bot->tenant->data["notifications"]["payments"]["new"]["fromremesador"]["tocapitals"]) &&
                                         $bot->tenant->data["notifications"]["payments"]["new"]["fromremesador"]["tocapitals"] == 1
                                     )
-                                        $bot->PaymentsController->notifyToCapitals($bot, $payment, $similar_message, "Nuevo reporte de pago");
+                                        $bot->PaymentsController->notifyToCapitals($bot, $payment, $similar_message, TextService::mdv2(Lang::get('gutotradebot::bot.payment.new_report_title')));
                                     // si es sospechoso se notifica ademas a los admin1
                                     if (
                                         (
@@ -245,7 +247,7 @@ class MoneysController extends JsonsController
                                         ) ||
                                         $similar_message != ""
                                     ) {
-                                        $bot->PaymentsController->notifyToGestors($bot, $payment, $similar_message, "Nuevo reporte de pago");
+                                        $bot->PaymentsController->notifyToGestors($bot, $payment, $similar_message, TextService::mdv2(Lang::get('gutotradebot::bot.payment.new_report_title')));
                                     }
                                     break;
                                 // Si es enviado por un RECEPTOR o un admin4 se notifica a los admins1 por si hay q machearlo
@@ -257,7 +259,7 @@ class MoneysController extends JsonsController
                                         isset($bot->tenant->data["notifications"]["payments"]["new"]["fromcapital"]["togestors"]) &&
                                         $bot->tenant->data["notifications"]["payments"]["new"]["fromcapital"]["togestors"] == 1
                                     )
-                                        $bot->PaymentsController->notifyToGestors($bot, $payment, false, "Nuevo reporte de pago");
+                                        $bot->PaymentsController->notifyToGestors($bot, $payment, false, TextService::mdv2(Lang::get('gutotradebot::bot.payment.new_report_title')));
                                     break;
                                 default:
                                     break;
@@ -272,11 +274,11 @@ class MoneysController extends JsonsController
                 } catch (\Throwable $th) {
                     Log::error("🆘 MoneysController processMoney ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()} TraceAsString: " . $th->getTraceAsString());
                     $reply = [
-                        "text" => "😬 *Ha ocurrido un error {$th->getCode()}*\n_{$th->getMessage()}_",
+                        "text" => "😬 *" . TextService::mdv2(Lang::get('gutotradebot::bot.money.error', ['code' => $th->getCode()])) . "*\n_{$th->getMessage()}_",
                         "reply_markup" => json_encode([
                             "inline_keyboard" => [
                                 [
-                                    ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                                    ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                                 ],
 
                             ],
@@ -287,7 +289,7 @@ class MoneysController extends JsonsController
                 $reply = $this->badCaptionReply($bot, request("message")["caption"], $type);
             }
         } else {
-            $reply = $this->badCaptionReply($bot, "Sin descripción", $type);
+            $reply = $this->badCaptionReply($bot, TextService::mdv2(Lang::get('gutotradebot::bot.money.no_caption')), $type);
         }
 
         //Log::debug("🐞 MoneysController processMoney reply " . json_encode($reply) . "\n");
@@ -509,7 +511,7 @@ class MoneysController extends JsonsController
 
             if ($role == 1 && $money->sender_id != null && $money->isConfirmed() && !$money->isLiquidated()) {
                 array_push($menu, [
-                    ["text" => "⚠️ Liquidar", "callback_data" => "liquidate{$type}-{$money->id}"],
+                    ["text" => "⚠️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.liquidate')), "callback_data" => "liquidate{$type}-{$money->id}"],
                 ]);
             }
 
@@ -521,41 +523,41 @@ class MoneysController extends JsonsController
 
         if (!$money->isConfirmed() && ($role == 2 || (($role == 1 || $role == 4) && ($money->supervisor_id && $money->supervisor_id > 0)))) {
             array_unshift($menu, [
-                ["text" => "⚠️ Solicitar confirmación", "callback_data" => "request{$type}confirmation-{$money->id}"],
+                ["text" => "⚠️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.request_confirmation')), "callback_data" => "request{$type}confirmation-{$money->id}"],
             ]);
         }
 
         if (!$money->isConfirmed() && ($role == 1 || $role == 3 || $role == 4)) {
             // Confirmarlo por el propio admin o supervisor
             array_push($menu, [
-                ["text" => "👍 Confirmarlo", "callback_data" => "confirm{$type}-{$money->id}"],
-                ["text" => "🤷🏻‍♂️ Nada aún", "callback_data" => "notyet{$type}-{$money->id}"],
+                ["text" => "👍 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.confirmit')), "callback_data" => "confirm{$type}-{$money->id}"],
+                ["text" => "🤷🏻‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.nothing_yet')), "callback_data" => "notyet{$type}-{$money->id}"],
             ]);
         }
 
         // Ver si es el dueño o admin1 o REMESADOR
         if ($role == 1 || $role == 2) {
             array_push($menu, [
-                ["text" => "🎆 Cambiar captura", "callback_data" => "change{$type}screenshot-{$money->id}"],
+                ["text" => "🎆 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.change_screenshot')), "callback_data" => "change{$type}screenshot-{$money->id}"],
             ]);
         }
 
         $commentsmenu = [
-            ["text" => "💬 Comentar", "callback_data" => "comment{$type}-{$money->id}"],
+            ["text" => "💬 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.comment')), "callback_data" => "comment{$type}-{$money->id}"],
         ];
         if ($money && $money->hasComments()) {
-            array_push($commentsmenu, ["text" => "🗣 Ver comentarios", "callback_data" => "request{$type}comments-{$money->id}"]);
+            array_push($commentsmenu, ["text" => "🗣 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.view_comments')), "callback_data" => "request{$type}comments-{$money->id}"]);
         }
         array_unshift($menu, $commentsmenu);
 
         if ($role == 1) {
             // Opcion para q pueda ajustarse el nombre del money
             $ajustmentsmenu = array(
-                ["text" => "✒ Renombrar", "callback_data" => "promptmoneycomment-{$money->id}"]
+                ["text" => "✒ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.rename')), "callback_data" => "promptmoneycomment-{$money->id}"]
             );
             // Opcion para q pueda ajustarse el monto del money si no esta liquidado
             if (!$money->isLiquidated())
-                array_push($ajustmentsmenu, ["text" => "🎲 Revalorizar", "callback_data" => "promptmoneyamount-{$money->id}"]);
+                array_push($ajustmentsmenu, ["text" => "🎲 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.revalue')), "callback_data" => "promptmoneyamount-{$money->id}"]);
             array_push($menu, $ajustmentsmenu);
 
             // Si el pago no esta confirmado se puede hacer match con un flotante
@@ -634,7 +636,7 @@ class MoneysController extends JsonsController
                 if ($money->sender_id != null) {
                     if (!$money->isLiquidated())
                         array_push($menu, [
-                            ["text" => "♨️ Desconfirmar", "callback_data" => "confirmation|unconfirm{$type}-{$money->id}|menu"],
+                            ["text" => "♨️ " . TextService::mdv2(Lang::get('gutotradebot::bot.options.unconfirm')), "callback_data" => "confirmation|unconfirm{$type}-{$money->id}|menu"],
                         ]);
                 }
             }
@@ -642,11 +644,11 @@ class MoneysController extends JsonsController
             // Opcion para q un admin1 pueda eliminar un money si no ha sido confirmado
             if (!$money->isConfirmed())
                 array_push($menu, [
-                    ["text" => "❌ Eliminar", "callback_data" => "confirmation|delete{$type}-{$money->id}|menu"],
+                    ["text" => "❌ " . TextService::mdv2(Lang::get('telegrambot::bot.options.delete')), "callback_data" => "confirmation|delete{$type}-{$money->id}|menu"],
                 ]);
         }
 
-        array_push($menu, [["text" => "🔃 Volver a cargar", "callback_data" => "/findbyid {$money->id}"]]);
+        array_push($menu, [["text" => "🔃 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.reload')), "callback_data" => "/findbyid {$money->id}"]]);
 
         // si me pasan por parametros opciones adicionales las incluyo antes de VOLVER AL MENU PRINCIPAL
         if ($extra_options) {
@@ -656,7 +658,7 @@ class MoneysController extends JsonsController
         }
 
         array_push($menu, [
-            ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+            ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
         ]);
 
         return $menu;
@@ -677,28 +679,28 @@ class MoneysController extends JsonsController
 
         $clase = get_class($money);
         if (stripos($clase, "payment") > -1) {
-            $text .= "*🪪 A nombre de:\n👤 {$money->comment}: {$money->amount} 💶*\n";
+            $text .= "*🪪 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.on_behalf_of')) . "\n👤 " . TextService::mdv2($money->comment) . ": " . TextService::mdv2((string)$money->amount) . " 💶*\n";
         }
         if (stripos($clase, "capital") > -1) {
-            $text .= "*🖍 Movimiento:\n🛬 Se reciben: {$money->comment} 💰\n🛫 Se enviarán: {$money->amount} 💶*\n";
+            $text .= "*🖍 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.movement')) . "\n🛬 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.receives')) . " " . TextService::mdv2($money->comment) . " 💰\n🛫 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.will_send')) . " " . TextService::mdv2((string)$money->amount) . " 💶*\n";
         }
 
-        $text .= "📅 *Fecha*: {$money->created_at}\n\n";
+        $text .= "📅 *" . TextService::mdv2(Lang::get('gutotradebot::bot.money.date')) . "*: " . TextService::mdv2((string)$money->created_at) . "\n\n";
 
         if ($show_owner_id) {
             $suscriptor = $bot->AgentsController->getSuscriptor($bot, $money->sender_id, true);
             if ($suscriptor && $suscriptor->id > 0)
-                $text .= "👨🏻‍💻 Reportado por:\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n";
+                $text .= "👨🏻‍💻 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.reported_by')) . "\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n";
 
             if ($money->supervisor_id && $money->supervisor_id > 0) {
                 $suscriptor = $bot->AgentsController->getSuscriptor($bot, $money->supervisor_id, true);
                 if ($suscriptor && $suscriptor->id > 0)
-                    $text .= "🕵️‍♂️ Asignado a:\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n";
+                    $text .= "🕵️‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.money.assigned_to')) . "\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n";
             }
         }
 
         if ($menu && count($menu) > 0) {
-            $text .= "👇 Qué desea hacer?";
+            $text .= "👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext'));
         }
 
         return array(
@@ -953,10 +955,10 @@ class MoneysController extends JsonsController
         $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $tenant->code);
 
         $reply = array(
-            "text" => "🎆 *Cambiar captura*\n\n_Para cambiar la captura Ud solo debe enviar la nueva a continuación.\nNo es necesario agregar texto en la descripción._\n\n👇 Envíe la nueva captura:",
+            "text" => "🎆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot.title')) . "*\n\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot.desc')) . "_\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot.prompt')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✋ Cancelar", "callback_data" => "menu"]],
+                    [["text" => "✋ " . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), "callback_data" => "menu"]],
                 ],
             ]),
         );
@@ -970,7 +972,7 @@ class MoneysController extends JsonsController
         $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $tenant->code);
 
         $reply = array(
-            "text" => "🔎 *Buscar registro en la BD*\n_Ud puede escribir el ID, la cantidad, o parte del nombre del remitente para buscarlo. Tenga en cuenta que criterios muy cortos pueden generar muchos resultados._\n\n👇 Escriba el valor por el que desea buscar:",
+            "text" => "🔎 *" . TextService::mdv2(Lang::get('gutotradebot::bot.search.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.search.desc')) . "_\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.search.prompt')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [$backoption],
@@ -987,7 +989,7 @@ class MoneysController extends JsonsController
         $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $tenant->code);
 
         $reply = array(
-            "text" => "🔎 *Buscar registros en la BD*\n_Es posible buscar registros con cierta cantidad de días de antigüedad. Si escribe un valor positivo, se sumará esa cantidad de días a le fecha actual; si por el contrario el número escrito es negativo, se resta a la fecha actual los días especificados._\n\n👇 Escriba cuántos días desea buscar:",
+            "text" => "🔎 *" . TextService::mdv2(Lang::get('gutotradebot::bot.search.days_title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.search.days_desc')) . "_\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.search.days_prompt')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [$backoption],
@@ -1004,10 +1006,10 @@ class MoneysController extends JsonsController
         $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "promptmoneyamount2-{$money_id}", $tenant->code);
 
         $reply = array(
-            "text" => "🎲 *Ajustar cantidad del envio*\n\n👇 Escriba el nuevo valor:",
+            "text" => "🎲 *" . TextService::mdv2(Lang::get('gutotradebot::bot.money.revalue_title')) . "*\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.revalue_prompt')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✋ Cancelar", "callback_data" => "menu"]],
+                    [["text" => "✋ " . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), "callback_data" => "menu"]],
                 ],
             ]),
         );
@@ -1021,10 +1023,10 @@ class MoneysController extends JsonsController
         $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "promptmoneycomment2-{$money_id}", $tenant->code);
 
         $reply = array(
-            "text" => "✒ *Ajustar el nombre del remitente*\n\n👇 Escriba el nuevo valor:",
+            "text" => "✒ *" . TextService::mdv2(Lang::get('gutotradebot::bot.money.rename_title')) . "*\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.rename_prompt')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✋ Cancelar", "callback_data" => "menu"]],
+                    [["text" => "✋ " . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), "callback_data" => "menu"]],
                 ],
             ]),
         );
@@ -1037,10 +1039,10 @@ class MoneysController extends JsonsController
         $bot->ActorsController->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "prompt{$type}comment-{$money_id}", $tenant->code);
 
         $reply = array(
-            "text" => "💬 *Comentar sobre este registro*\n\n👇 Escriba el texto que desee a continuación:",
+            "text" => "💬 *" . TextService::mdv2(Lang::get('gutotradebot::bot.comment.prompt_title')) . "*\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.comment.prompt_text')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✋ Cancelar", "callback_data" => "menu"]],
+                    [["text" => "✋ " . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), "callback_data" => "menu"]],
                 ],
             ]),
         );
@@ -1078,9 +1080,9 @@ class MoneysController extends JsonsController
         $array = $bot->PaymentsController->exportCashFlow($results);
         $xlspath = request()->root() . "/report/" . $array["extension"] . "/" . $array["filename"];
 
-        $text = "🧮 *Flujo de caja*\n_Estos son los movimientos hasta el momento.";
+        $text = "🧮 *" . TextService::mdv2(Lang::get('gutotradebot::bot.cashflow.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.cashflow.desc'));
         $menu = [
-            [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]],
+            [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
         ];
         $text .= "_\n\n" . $bot->getReportFileText($xlspath);
 

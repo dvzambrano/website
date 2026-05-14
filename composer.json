@@ -9,34 +9,31 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
+        "dvzambrano/laravel": "dev-main",
+        "dvzambrano/web3": "dev-main",
         "laravel/framework": "^12.0",
-        "laravel/socialite": "^5.21",
-        "laravel/tinker": "^2.10.1",
-        "nwidart/laravel-modules": "^8.6",
-        "pragmarx/google2fa-laravel": "^2.3",
-        "socialiteproviders/google": "^4.1",
+        "laravel/tinker": "^2.10|^3.0",
+        "nwidart/laravel-modules": "^12.0",
+        "pragmarx/google2fa-laravel": "^3.0",
+        "webklex/laravel-imap": "^6.2",
         "wikimedia/composer-merge-plugin": "^2.1"
     },
     "require-dev": {
-        "dvzambrano/laravel": "dev-main as 1.0.0",
-        "dvzambrano/web3": "dev-main as 1.0.0",
         "fakerphp/faker": "^1.23",
-        "laravel/breeze": "^2.3",
-        "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.24",
-        "laravel/sail": "^1.41",
+        "laravel/pail": "^1.2.5",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
+        "orchestra/testbench": "^10.0",
         "phpunit/phpunit": "^11.5.50"
     },
     "repositories": [
         {
-            "type": "vcs",
+            "type": "git",
             "url": "git@github.com:dvzambrano/laravel.git"
         },
         {
-            "type": "vcs",
+            "type": "git",
             "url": "git@github.com:dvzambrano/web3.git"
         }
     ],
@@ -45,13 +42,7 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
-            "Modules\\Zentro\\": "Modules/Zentro/",
-            "Modules\\TelegramBot\\": "Modules/TelegramBot/",
-            "Modules\\GutoTradeBot\\": "Modules/GutoTradeBot/",
-            "Modules\\ZentroCriptoBot\\": "Modules/ZentroCriptoBot/",
-            "Modules\\ZentroOwnerBot\\": "Modules/ZentroOwnerBot/",
-            "Modules\\ZentroTraderBot\\": "Modules/ZentroTraderBot/",
-            "Modules\\ZentroPackageBot\\": "Modules/ZentroPackageBot/"
+            "Modules\\": "Modules/"
         },
         "exclude-from-classmap": [
             "Modules/**/Database/Migrations"
@@ -83,9 +74,6 @@
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
         ],
-        "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-        ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ],
@@ -101,17 +89,6 @@
     "extra": {
         "laravel": {
             "dont-discover": []
-        },
-        "merge-plugin": {
-            "include": [
-                "Modules/*/composer.json"
-            ],
-            "recurse": true,
-            "replace": false,
-            "ignore-duplicates": false,
-            "merge-dev": true,
-            "merge-extra": false,
-            "merge-scripts": false
         }
     },
     "config": {
@@ -124,6 +101,6 @@
             "wikimedia/composer-merge-plugin": true
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }

@@ -5,6 +5,8 @@ namespace Modules\GutoTradeBot\Http\Controllers;
 use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\GutoTradeBot\Entities\Accounts;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Illuminate\Support\Facades\Lang;
+use Modules\Laravel\Services\TextService;
 
 class AccountsController extends JsonsController
 {
@@ -38,10 +40,10 @@ class AccountsController extends JsonsController
     public function getOperationsPrompt()
     {
         $reply = array(
-            "text" => "🎲 *Ajustar operaciones restantes*\n\n👇 Escriba cuántas operaciones restan en esta cuenta:",
+            "text" => "🎲 *" . TextService::mdv2(Lang::get('gutotradebot::bot.accounts.ops_prompt_title')) . "*\n\n👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.accounts.ops_prompt')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✋ Cancelar", "callback_data" => "menu"]],
+                    [["text" => "✋ " . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), "callback_data" => "menu"]],
                 ],
             ]),
         );
@@ -70,20 +72,20 @@ class AccountsController extends JsonsController
             if (isset($account["data"])) {
                 $data = $account["data"];
                 if (isset($data["remain_operations"])) {
-                    array_push($menu, [["text" => "🎲 {$data['remain_operations']} Operaciones", "callback_data" => "promptaccountoperations-{$account['id']}"]]);
+                    array_push($menu, [["text" => "🎲 " . $data['remain_operations'] . " " . TextService::mdv2(Lang::get('gutotradebot::bot.accounts.ops_button')), "callback_data" => "promptaccountoperations-{$account['id']}"]]);
                 }
             }
             array_push($menu, [
-                ["text" => "🔴 Desactivar", "callback_data" => "accountactivation-{$account['id']}-false"],
+                ["text" => "🔴 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.deactivate')), "callback_data" => "accountactivation-{$account['id']}-false"],
             ]);
         } else {
             array_push($menu, [
-                ["text" => "🟢 Activar", "callback_data" => "accountactivation-{$account['id']}-true"],
+                ["text" => "🟢 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.activate')), "callback_data" => "accountactivation-{$account['id']}-true"],
             ]);
         }
 
         if ($show_whattodo && count($menu) > 0) {
-            $text .= "👇 Qué desea hacer?";
+            $text .= "👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext'));
         }
 
         return array(
@@ -132,7 +134,7 @@ class AccountsController extends JsonsController
                         $amount++;
                     }
                 }
-                $text = "👆 *Cuentas configuradas*\n_Estas son {$amount} cuentas configuradas para recibir pagos._\n\n";
+                $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.accounts.configured_title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.accounts.configured_desc', ['amount' => $amount])) . "_\n\n";
                 break;
             default:
                 // para cualquier otro mando un solo mensaje con el texto de todas las cuentas
@@ -160,7 +162,7 @@ class AccountsController extends JsonsController
                             $account_content .= $account_number;
 
                             if (isset($account["data"]) && isset($account["data"]["remain_operations"])) {
-                                $account_content .= "🎲 {$account['data']['remain_operations']} operaciones restantes\n🧏 _Es un estimado y no se actualiza en tiempo real_\n";
+                                $account_content .= "🎲 " . TextService::mdv2(Lang::get('gutotradebot::bot.accounts.ops_remaining', ['count' => $account['data']['remain_operations']])) . "\n🧏 _" . TextService::mdv2(Lang::get('gutotradebot::bot.accounts.ops_estimate')) . "_\n";
                             }
                             if ($account['detail'] != null) {
                                 $account_content .= "📌 `{$account['detail']}`\n";
@@ -173,7 +175,7 @@ class AccountsController extends JsonsController
                         }
                     }
                     if ($account_content != "") {
-                        $text .= "🏦 *Si tu cliente es {$bank}*:\n";
+                        $text .= "🏦 *" . TextService::mdv2(Lang::get('gutotradebot::bot.accounts.bank_header', ['bank' => $bank])) . "*\n";
                         $text .= $account_content;
                         $text .= "===================================\n\n";
                     }
@@ -181,13 +183,13 @@ class AccountsController extends JsonsController
                 break;
         }
         $menu = [];
-        array_push($menu, [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]]);
+        array_push($menu, [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]]);
 
         if (count($active_accounts) == 0) {
-            $text .= "❌ *No existen cuentas activas en este momento*\n";
+            $text .= "❌ *" . TextService::mdv2(Lang::get('gutotradebot::bot.accounts.none_active')) . "*\n";
         }
 
-        $text .= "👇 Qué desea hacer ahora?";
+        $text .= "👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext'));
 
         $reply = [
             "text" => $text,

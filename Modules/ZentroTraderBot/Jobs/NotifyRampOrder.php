@@ -3,6 +3,7 @@
 namespace Modules\ZentroTraderBot\Jobs;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Container\Attributes\Config;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Modules\Laravel\Services\TextService;
+use Modules\Web3\Services\ConfigService;
 
 class NotifyRampOrder implements ShouldQueue
 {
@@ -27,32 +30,35 @@ class NotifyRampOrder implements ShouldQueue
 
     public function handle()
     {
+        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+
         // Usamos los datos del array
         $orderId = $this->order['order_id'];
         $status = strtoupper($this->order['status']);
         $amount = number_format($this->order['amount'], 2);
-        $currency = $this->order['currency'] ?? 'USDC';
+        $currency = $this->order['currency'] ?? $token["symbol"];
         $userId = $this->order['user_id'];
         $statusemoji = $this->order['statusemoji'];
         $createdAt = $this->order['created_at'];
 
-        $token = $this->bot['token'];
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 NotifyRampOrder handle bot: " . json_encode($this->bot) . " order: " . json_encode($this->order));
 
-        Log::debug("🐞  NotifyRampOrder handle bot: " . json_encode($this->bot) . " order: " . json_encode($this->order));
+        $t = fn(string $key, array $r = []) => TextService::mdv2(Lang::get($key, $r));
 
         // Construimos un mensaje atractivo
-        $message = "🔔 *" . Lang::get("zentrotraderbot::bot.prompts.buy.update.header") . "* \n\n";
+        $message = "🔔 *" . $t("zentrotraderbot::bot.prompts.buy.update.header") . "* \n\n";
         $message .= "🆔 `{$orderId}`\n";
-        $message .= "💰 *{$amount} {$currency}*\n";
+        $message .= "💰 *" . TextService::mdv2($amount) . " {$currency}*\n";
         $message .= "{$statusemoji} {$status}\n\n";
-        $message .= "📅 " . $createdAt . "\n\n";
+        $message .= "📅 " . TextService::mdv2($createdAt) . "\n\n";
 
         if ($status === 'COMPLETED') {
-            $message .= "✅ " . Lang::get("zentrotraderbot::bot.prompts.buy.update.completed");
+            $message .= "✅ " . $t("zentrotraderbot::bot.prompts.buy.update.completed");
         } elseif ($status === 'FAILED') {
-            $message .= "❌ " . Lang::get("zentrotraderbot::bot.prompts.buy.update.failed");
+            $message .= "❌ " . $t("zentrotraderbot::bot.prompts.buy.update.failed");
         } else {
-            $message .= "⏳ " . Lang::get("zentrotraderbot::bot.prompts.buy.update.processing");
+            $message .= "⏳ " . $t("zentrotraderbot::bot.prompts.buy.update.processing");
         }
 
         TelegramController::sendMessage(
@@ -62,9 +68,10 @@ class NotifyRampOrder implements ShouldQueue
                     "chat" => array(
                         "id" => $userId,
                     ),
+                    "parse_mode" => "MarkdownV2",
                 ),
             ),
-            $token
+            $this->bot['token']
         );
     }
 }

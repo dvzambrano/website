@@ -8,6 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Laravel\Traits\ModuleTrait;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property array|null $data
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class Actors extends Model
 {
     use ModuleTrait;
@@ -106,11 +113,11 @@ class Actors extends Model
         return $data;
     }
 
-    public function getLocalDateTime($date, $botname)
+    public function getLocalDateTime($date, $botname, $format = "Y-m-d H:i:s")
     {
         if ($date && isset($this->data[$botname]["time_zone"])) {
             // Log::info("✅ Actors getLocalDateTime time_zone='" . $this->data[$botname]["time_zone"] . "'");
-            $date = Carbon::createFromFormat("Y-m-d H:i:s", $date)->addHours(intval($this->data[$botname]["time_zone"]))->format("Y-m-d H:i:s");
+            $date = Carbon::createFromFormat("Y-m-d H:i:s", $date)->addHours(intval($this->data[$botname]["time_zone"]))->format($format);
         }
         return $date;
     }
@@ -133,86 +140,86 @@ class Actors extends Model
             "role" => 1,
         ),
         /*
-    "Roger" => array(
-    "user_id" => 5482646491,
-    "role" => 4,
-    ),
-    "Dayami" => array(
-    "user_id" => 6277250767,
-    "role" => 3,
-    ),
-    "Arquimides" => array(
-    "user_id" => 347888105,
-    "role" => 2,
-    ),
-    "DrLimonta" => array(
-    "user_id" => 1419502564,
-    "role" => 2,
-    ),
-    "AZOR79" => array(
-    "user_id" => 1269084609,
-    "role" => 2,
-    ),
-    "GermanDavid" => array(
-    "user_id" => 873754229,
-    "role" => 2,
-    ),
-    "Yander.ron" => array(
-    "user_id" => 613173575,
-    "role" => 2,
-    ),
-    "Anibal" => array(
-    "user_id" => 1358852792,
-    "role" => 2,
-    ),
-    "TheSon_ofGod" => array(
-    "user_id" => 1256079990,
-    "role" => 2,
-    ),
-    "Locol2023" => array(
-    "user_id" => 6211414111,
-    "role" => 2,
-    ),
-    "Lixandro" => array(
-    "user_id" => 5919527201,
-    "role" => 2,
-    ),
-    "criptodev1981" => array(
-    "user_id" => 1741391257,
-    "role" => 2,
-    ),
-    "GerardGames" => array(
-    "user_id" => 895670352,
-    "role" => 2,
-    ),
-    "Deivys2000" => array(
-    "user_id" => 5508220560,
-    "role" => 2,
-    ),
-    "EL_Lobo_DPEPDE" => array(
-    "user_id" => 5328142807,
-    "role" => 2,
-    ),
-    "KarimB99" => array(
-    "user_id" => 5219069448,
-    "role" => 2,
-    ),
-    "Alej1961" => array(
-    "user_id" => 6549567189,
-    "role" => 2,
-    ),
-    "EdutroLL" => array(
-    "user_id" => 1562139660,
-    "role" => 2,
-    ),
-    "chichifuentes" => array(
-    "user_id" => 1705333263,
-    "role" => 2,
-    ),
-    "Jalvaro98" => array(
-    "user_id" => 1314081227,
-    "role" => 2,
-    ),
-     */
+        "Roger" => array(
+        "user_id" => 5482646491,
+        "role" => 4,
+        ),
+        "Dayami" => array(
+        "user_id" => 6277250767,
+        "role" => 3,
+        ),
+        "Arquimides" => array(
+        "user_id" => 347888105,
+        "role" => 2,
+        ),
+        "DrLimonta" => array(
+        "user_id" => 1419502564,
+        "role" => 2,
+        ),
+        "AZOR79" => array(
+        "user_id" => 1269084609,
+        "role" => 2,
+        ),
+        "GermanDavid" => array(
+        "user_id" => 873754229,
+        "role" => 2,
+        ),
+        "Yander.ron" => array(
+        "user_id" => 613173575,
+        "role" => 2,
+        ),
+        "Anibal" => array(
+        "user_id" => 1358852792,
+        "role" => 2,
+        ),
+        "TheSon_ofGod" => array(
+        "user_id" => 1256079990,
+        "role" => 2,
+        ),
+        "Locol2023" => array(
+        "user_id" => 6211414111,
+        "role" => 2,
+        ),
+        "Lixandro" => array(
+        "user_id" => 5919527201,
+        "role" => 2,
+        ),
+        "criptodev1981" => array(
+        "user_id" => 1741391257,
+        "role" => 2,
+        ),
+        "GerardGames" => array(
+        "user_id" => 895670352,
+        "role" => 2,
+        ),
+        "Deivys2000" => array(
+        "user_id" => 5508220560,
+        "role" => 2,
+        ),
+        "EL_Lobo_DPEPDE" => array(
+        "user_id" => 5328142807,
+        "role" => 2,
+        ),
+        "KarimB99" => array(
+        "user_id" => 5219069448,
+        "role" => 2,
+        ),
+        "Alej1961" => array(
+        "user_id" => 6549567189,
+        "role" => 2,
+        ),
+        "EdutroLL" => array(
+        "user_id" => 1562139660,
+        "role" => 2,
+        ),
+        "chichifuentes" => array(
+        "user_id" => 1705333263,
+        "role" => 2,
+        ),
+        "Jalvaro98" => array(
+        "user_id" => 1314081227,
+        "role" => 2,
+        ),
+        */
     );
 }

@@ -5,6 +5,8 @@ namespace Modules\GutoTradeBot\Entities;
 use Modules\GutoTradeBot\Entities\Jsons;
 use Modules\TelegramBot\Http\Controllers\TelegramBotController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Illuminate\Support\Facades\Lang;
+use Modules\Laravel\Services\TextService;
 
 class Moneys extends Jsons
 {
@@ -54,7 +56,7 @@ class Moneys extends Jsons
             isset($this->data["rate"]) &&
             isset($this->data["rate"]["internal"])
         ) {
-            $text .= " {$this->data["rate"]["internal"]}➗";
+            $text .= " " . TextService::mdv2((string)$this->data["rate"]["internal"]) . "➗";
         }
 
         $text .= "\n\n";
@@ -65,23 +67,23 @@ class Moneys extends Jsons
 
         $clase = get_class($this);
         if (stripos($clase, "payment") > -1) {
-            $text .= "*🪪 A nombre de:\n👤 {$this->comment}: {$this->amount} 💶*\n";
+            $text .= "*🪪 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.on_behalf_of')) . "\n👤 " . TextService::mdv2($this->comment) . ": " . TextService::mdv2((string)$this->amount) . " 💶*\n";
         }
         if (stripos($clase, "capital") > -1) {
-            $text .= "*🖍 Movimiento:\n🛬 Se reciben: {$this->comment} 💰\n🛫 Se enviarán: {$this->amount} 💶*\n";
+            $text .= "*🖍 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.movement')) . "\n🛬 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.receives')) . " " . TextService::mdv2($this->comment) . " 💰\n🛫 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.will_send')) . " " . TextService::mdv2((string)$this->amount) . " 💶*\n";
         }
 
         if ($actor && $actor->id > 0) {
             // Personalizando fecha y hora en dependencia de la zona horaria del actor
             $created_at = $actor->getLocalDateTime($this->created_at, $tenant->code);
             $updated_at = $actor->getLocalDateTime($this->updated_at, $tenant->code);
-            $text .= "📅 *Fecha*: {$created_at}\n\n";
+            $text .= "📅 *" . TextService::mdv2(Lang::get('gutotradebot::bot.money.date')) . "*: " . TextService::mdv2($created_at) . "\n\n";
 
             if ($show_owner_id) {
                 if ($this->sender_id && $this->sender_id > 0) {
                     $suscriptor = $bot->AgentsController->getSuscriptor($bot, $this->sender_id, true);
                     if ($suscriptor && $suscriptor->id > 0)
-                        $text .= "👨🏻‍💻 Reportado por:\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n";
+                        $text .= "👨🏻‍💻 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.reported_by')) . "\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n";
                 }
 
                 if (
@@ -94,13 +96,13 @@ class Moneys extends Jsons
                 ) {
                     $suscriptor = $bot->AgentsController->getSuscriptor($bot, $this->supervisor_id, true);
                     if ($suscriptor && $suscriptor->id > 0)
-                        $text .= "🕵️‍♂️ Asignado a:\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n";
+                        $text .= "🕵️‍♂️ " . TextService::mdv2(Lang::get('gutotradebot::bot.money.assigned_to')) . "\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n\n";
                 }
             }
-            $text .= "🗓 *Actualizado*: {$updated_at}\n\n";
+            $text .= "🗓 *" . TextService::mdv2(Lang::get('gutotradebot::bot.money.updated_at')) . "*: " . TextService::mdv2($updated_at) . "\n\n";
 
             if ($menu && count($menu) > 0) {
-                $text .= "👇 Qué desea hacer?";
+                $text .= "👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext'));
             }
 
             if (isset($this->data["previous_screenshot"])) {
@@ -125,8 +127,8 @@ class Moneys extends Jsons
                         $array[] = array(
                             "type" => "photo",
                             "media" => $screenshot,
-                            "caption" => "🆔 {$this->id} 👤 *{$this->comment}*: {$this->amount} 💶\n📅 Fecha: {$created_at}",
-                            "parse_mode" => "Markdown",
+                            "caption" => "🆔 {$this->id} 👤 *" . TextService::mdv2($this->comment) . "*: " . TextService::mdv2((string)$this->amount) . " 💶\n📅 " . TextService::mdv2(Lang::get('gutotradebot::bot.money.date')) . ": " . TextService::mdv2($created_at),
+                            "parse_mode" => "MarkdownV2",
                         );
                     }
                 }
@@ -145,6 +147,7 @@ class Moneys extends Jsons
                     "demo" => $demo ? true : null,
                     "message" => array(
                         "text" => $text,
+                        "parse_mode" => "MarkdownV2",
                         "chat" => array(
                             "id" => $actor->user_id,
                         ),
@@ -163,6 +166,7 @@ class Moneys extends Jsons
                     "message" => array(
                         "text" => $text,
                         "photo" => $this->screenshot,
+                        "parse_mode" => "MarkdownV2",
                         "chat" => array(
                             "id" => $actor->user_id,
                         ),
