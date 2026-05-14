@@ -635,7 +635,7 @@ class PaymentsController extends MoneysController
             $xlspath = request()->root() . "/report/" . $array["extension"] . "/" . $array["filename"];
             $amount = Moneys::format($amount);
 
-            $fileinfo = "*Total: {$amount}* 💶\n\n" . $bot->getReportFileText($xlspath);
+            $fileinfo = "*Total: " . TextService::mdv2($amount) . "* 💶\n\n" . $bot->getReportFileText($xlspath);
             $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_list.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_list.self', ['count' => $count])) . "_\n\n{$fileinfo}";
             if ($isadmin) {
                 $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_list.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.unconfirmed_list.user', ['count' => $count, 'name' => $response['result']['full_name']])) . "_\n\n{$fileinfo}";
@@ -965,7 +965,7 @@ class PaymentsController extends MoneysController
             $xlspath = request()->root() . "/report/" . $array["extension"] . "/" . $array["filename"];
 
             $amount = Moneys::format($amount);
-            $fileinfo = "*Total: {$amount}* 💶\n\n" . $bot->getReportFileText($xlspath);
+            $fileinfo = "*Total: " . TextService::mdv2($amount) . "* 💶\n\n" . $bot->getReportFileText($xlspath);
             $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.floating_list.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.payment.floating_list.self', ['count' => $count])) . "_\n\n{$fileinfo}";
             $menu = [
                 [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
@@ -1077,7 +1077,7 @@ class PaymentsController extends MoneysController
                 ];
             }
 
-            $text .= "_\n\n*Total: {$amount}* 💶\n\n" . $bot->getReportFileText($xlspath);
+            $text .= "_\n\n*Total: " . TextService::mdv2($amount) . "* 💶\n\n" . $bot->getReportFileText($xlspath);
 
             $reply = array(
                 "text" => $text,

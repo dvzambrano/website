@@ -1850,7 +1850,7 @@ class GutoTradeBotController extends JsonsController
         $pieces = explode("/", $path);
         $diff = DateService::getTimeDifference(Carbon::now()->getTimestamp(), $pieces[count($pieces) - 1]);
         $text = "📎 " . TextService::mdv2(Lang::get('gutotradebot::bot.system.file_generated')) . "\n" .
-            $path . "\n" .
+            "[" . TextService::mdv2($path) . "](" . $path . ")\n" .
             "_" . TextService::mdv2(Lang::get('gutotradebot::bot.system.file_available', ['time' => $diff["legible"]])) . "_";
         return $text;
     }

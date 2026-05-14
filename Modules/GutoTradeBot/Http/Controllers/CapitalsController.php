@@ -376,6 +376,7 @@ class CapitalsController extends MoneysController
 
             $array = $this->export($bot, $capitals, $actor);
             $xlspath = request()->root() . "/report/" . $array["extension"] . "/" . $array["filename"];
+            $amount = TextService::mdv2(Moneys::format($amount));
 
             $text = "👆 *" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.capital.unconfirmed_list.self', ['count' => $count])) . "_\n*Total: {$amount}* 💰\n\n" . $bot->getReportFileText($xlspath);
             if ($isadmin) {
@@ -524,7 +525,7 @@ class CapitalsController extends MoneysController
                 ];
             }
 
-            $amount = Moneys::format($amount);
+            $amount = TextService::mdv2(Moneys::format($amount));
             $text .= "_\n*Total: {$amount}* 💶\n\n" . $bot->getReportFileText($xlspath);
 
             $reply = array(
