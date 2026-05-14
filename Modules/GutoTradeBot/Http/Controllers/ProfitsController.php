@@ -28,8 +28,8 @@ class ProfitsController extends JsonsController
         $reply = array(
             "text" => "🤑 *" . TextService::mdv2(Lang::get('gutotradebot::bot.profits.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.profits.desc')) . "_\n\n" .
                 "*Ejemplo:* `1:7`\n_1% de salario y 7% de ganancias_\n\n" .
-                "*" . TextService::mdv2(Lang::get('gutotradebot::bot.profits.current')) . "* `" . $salary->value . ":" . $profit->value . "`\n_" . $salary->value . TextService::mdv2(Lang::get('gutotradebot::bot.profits.salary_label')) . $profit->value . TextService::mdv2(Lang::get('gutotradebot::bot.profits.profit_label')) . "\n" .
-                TextService::mdv2(Lang::get('gutotradebot::bot.profits.total_rate')) . ($salary->value + $profit->value) . "%\n\n" .
+                "*" . TextService::mdv2(Lang::get('gutotradebot::bot.profits.current')) . "* `" . $salary->value . ":" . $profit->value . "`\n_" . TextService::mdv2((string)$salary->value) . TextService::mdv2(Lang::get('gutotradebot::bot.profits.salary_label')) . TextService::mdv2((string)$profit->value) . TextService::mdv2(Lang::get('gutotradebot::bot.profits.profit_label')) . "\n" .
+                TextService::mdv2(Lang::get('gutotradebot::bot.profits.total_rate')) . TextService::mdv2((string)($salary->value + $profit->value)) . "%\n\n" .
                 "👇 " . TextService::mdv2(Lang::get('gutotradebot::bot.profits.prompt')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
