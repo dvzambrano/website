@@ -1306,6 +1306,7 @@ class GutoTradeBotController extends JsonsController
                             "🖼 _" . TextService::mdv2(Lang::get('gutotradebot::bot.screenshot.updated_desc')) . "_",
                             false,
                             [
+                                [["text" => "🔃 " . TextService::mdv2(Lang::get('gutotradebot::bot.options.reload')), "callback_data" => "/findbyid {$payment->id}"]],
                                 [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
                             ]
                         );
