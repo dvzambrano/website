@@ -1485,8 +1485,8 @@ class GutoTradeBotController extends JsonsController
         //if ($current_date) {
         $stats .= "🛬 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.received')) . "*: " . TextService::mdv2(Moneys::format($array["received"]["amount"])) . " 💵" .
             "\n🏷 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.tosend')) . "*: " . TextService::mdv2(Moneys::format($array["received"]["tosend"])) . " 💶" .
-            "\n🛫 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.sent')) . "*: " . TextService::mdv2(Moneys::format($array["sent"]["amount"])) . " 💶 (" . TextService::mdv2(Moneys::format($array["sent"]["percent"])) . "%)" .
-            "\n🏭 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.pending')) . "*: " . TextService::mdv2(Moneys::format($array["pending"]["amount"])) . " 💶 (" . TextService::mdv2(Moneys::format($array["pending"]["percent"])) . "%)";
+            "\n🛫 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.sent')) . "*: " . TextService::mdv2(Moneys::format($array["sent"]["amount"])) . " 💶 \(" . TextService::mdv2(Moneys::format($array["sent"]["percent"])) . "%\)" .
+            "\n🏭 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.pending')) . "*: " . TextService::mdv2(Moneys::format($array["pending"]["amount"])) . " 💶 \(" . TextService::mdv2(Moneys::format($array["pending"]["percent"])) . "%\)";
         //}
 
         $stats .= "\n\n🤷🏻‍♂️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.unconfirmed')) . "*: " . TextService::mdv2(Moneys::format($array["unconfirmed"])) . " 💶" .
