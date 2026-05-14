@@ -3,6 +3,7 @@
 namespace Modules\TelegramBot\Http\Controllers;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Http\Controllers\Controller;
 
 class WizardController extends Controller
@@ -49,7 +50,7 @@ class WizardController extends Controller
                 return ($options['onCancel'])($bot);
             }
             return [
-                'text' => '❌ Wizard cancelled.',
+                'text' => '❌ ' . Lang::get('telegrambot::bot.wizard.cancelled'),
                 'chat' => ['id' => $userId],
                 'editprevious' => (isset($bot->callback_query) || ($bot->is_callback ?? false)) ? 1 : 0,
             ];

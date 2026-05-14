@@ -121,10 +121,10 @@ class ActorsController extends JsonsController
         }
 
         $reply = array(
-            "text" => "🫂 *Usuarios suscritos*\n_Estos son los {$count} usuarios que se han suscrito al bot._",
+            "text" => "🫂 *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.subscribers.header')) . "*\n_" . TextService::mdv2(Lang::get('telegrambot::bot.actors.subscribers.body', ['count' => $count])) . "_",
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "↖️ Volver al menú de administrador", "callback_data" => "adminmenu"]],
+                    [["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtoadminmenu'), "callback_data" => "adminmenu"]],
                 ],
             ]),
         );
@@ -145,10 +145,10 @@ class ActorsController extends JsonsController
             }
         } else {
             $reply = [
-                "text" => "🤷🏻‍♂️ *Usuario no encontrado*\n\nEl usuario `{$user_id}` no se encuenta suscrito a este bot.",
+                "text" => "🤷🏻‍♂️ *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.usernotfound.header')) . "*\n\n" . TextService::mdv2(Lang::get('telegrambot::bot.actors.usernotfound.before')) . " \`" . TextService::mdv2($user_id) . "\` " . TextService::mdv2(Lang::get('telegrambot::bot.actors.usernotfound.after')),
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
-                        [["text" => "↖️ Volver al menú principal", "callback_data" => "menu"]],
+                        [["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtomainmenu'), "callback_data" => "menu"]],
                     ],
                 ]),
             ];
@@ -166,8 +166,8 @@ class ActorsController extends JsonsController
         if (isset($suscriptor->data[$bot->tenant->code]))
             $array = $this->getRoleMenu($suscriptor->user_id, $suscriptor->data[$bot->tenant->code]["admin_level"]);
 
-        array_push($array["menu"], [["text" => "🏷 Añadir metadato", "callback_data" => "/usermetadata {$suscriptor->user_id}"]]);
-        array_push($array["menu"], [["text" => "❌ Eliminar", "callback_data" => "confirmation|deleteuser-{$suscriptor->user_id}|adminmenu"]]);
+        array_push($array["menu"], [["text" => "🏷 " . Lang::get('telegrambot::bot.actors.metadata.add'), "callback_data" => "/usermetadata {$suscriptor->user_id}"]]);
+        array_push($array["menu"], [["text" => "❌ " . Lang::get('telegrambot::bot.options.delete'), "callback_data" => "confirmation|deleteuser-{$suscriptor->user_id}|adminmenu"]]);
 
         $text = $suscriptor->getTelegramInfo($bot, "full_info") . "\n" . $array["role"];
 
@@ -204,7 +204,7 @@ class ActorsController extends JsonsController
         // obteniendo datos del usuario de telegram
         $suscriptor = $this->getSuscriptor($bot, $user_id, true);
         $reply = [
-            "text" => "🆗 *Rol de usuario modificado*\n\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n" . $array["role"] . "\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
+            "text" => "🆗 *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.role.modified')) . "*\n\n" . $suscriptor->getTelegramInfo($bot, "full_info") . "\n" . $array["role"] . "\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => $array["menu"],
             ]),
@@ -218,14 +218,14 @@ class ActorsController extends JsonsController
         // notificar al usuario modificado de nu nuevo rol
         $array = [
             "message" => [
-                "text" => "ℹ️ *Su rol ha sido modificado*\n\n_Le recomendamos volver al /menu para verificar sus nuevas opciones_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
+                "text" => "ℹ️ *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.role.changed.header')) . "*\n\n_" . TextService::mdv2(Lang::get('telegrambot::bot.actors.role.changed.body')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
                 "chat" => [
                     "id" => $user_id,
                 ],
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
                         [
-                            ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                            ["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtomainmenu'), "callback_data" => "menu"],
                         ],
                     ],
                 ]),
@@ -239,10 +239,10 @@ class ActorsController extends JsonsController
         $this->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", "/utc2", $bot->tenant->code);
 
         $reply = [
-            "text" => "⏰ *Ajustar zona horaria*\n\n_Definir su zona horaria hará que el bot le personalice las fechas y horas.\nPara establecer su zona horaria de la forma UTC-4 escriba solo -4._\n\n👇 Escriba en qué zona horaria esta ud:",
+            "text" => "⏰ *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.prompt.header')) . "*\n\n_" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.prompt.line1')) . "\n" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.prompt.line2')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.prompt.footer')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✋ Cancelar", "callback_data" => "menu"]],
+                    [["text" => "✋ " . Lang::get('telegrambot::bot.options.cancel'), "callback_data" => "menu"]],
                 ],
             ]),
         ];
@@ -255,13 +255,12 @@ class ActorsController extends JsonsController
         $now = Carbon::now()->addHours(intval($timezone));
         $date = $now->format("Y-m-d H:i:s");
         $reply = [
-            "text" => "⏰ *Zona horaria actualizada*\n_Se ha actualizado su zona horaria satisfactoriamente._\n\nAhora son las {$date}.\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
+            "text" => "⏰ *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.updated.header')) . "*\n_" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.updated.body')) . "_\n\n" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.updated.currenttime')) . " " . TextService::mdv2($date) . "\.\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "↖️ Volver al menú configuraciones", "callback_data" => "configmenu"],
+                        ["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtoconfigmenu'), "callback_data" => "configmenu"],
                     ],
-
                 ],
             ]),
         ];
@@ -272,16 +271,15 @@ class ActorsController extends JsonsController
     public function notifyBadUTCValue($text)
     {
         $reply = [
-            "text" => "⏰ *Zona con error*\n_No se puede establecer la zona horaria “{$text}”_\nRevise q haya enviado un número válido con el que se pueda ajustar la hora.\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
+            "text" => "⏰ *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.error.header')) . "*\n_" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.error.before')) . " " . TextService::mdv2($text) . "_\n" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.error.hint')) . "\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "⏰ Intentar nuevamente", "callback_data" => "/utc"],
+                        ["text" => "⏰ " . Lang::get('telegrambot::bot.actors.utc.retry'), "callback_data" => "/utc"],
                     ],
                     [
-                        ["text" => "↖️ Volver al menú principal", "callback_data" => "menu"],
+                        ["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtomainmenu'), "callback_data" => "menu"],
                     ],
-
                 ],
             ]),
         ];
@@ -294,7 +292,7 @@ class ActorsController extends JsonsController
         $this->updateData(Actors::class, "user_id", $bot->actor->user_id, "last_bot_callback_data", $method, $bot->tenant->code);
 
         $reply = [
-            "text" => "🏷 *Definir metadato al suscriptor*\n\nEj: `wallet:0xFAcD960564531bd336ed94fBBd0911408288FCF2`\n\n👇 Escriba a continuacion:",
+            "text" => "🏷 *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.metadata.define.header')) . "*\n\nEj: `wallet:0xFAcD960564531bd336ed94fBBd0911408288FCF2`\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.actors.metadata.define.footer')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [$backoption],
@@ -308,16 +306,15 @@ class ActorsController extends JsonsController
     public function notifyAfterMetadataChange($user_id)
     {
         $reply = array(
-            "text" => "🏷 *Metadato actualizado*\n_Se ha actualizado el metadato del suscriptor satisfactoriamente._\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
+            "text" => "🏷 *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.metadata.updated.header')) . "*\n_" . TextService::mdv2(Lang::get('telegrambot::bot.actors.metadata.updated.body')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "🔃 Volver a mostrar el suscriptor", "callback_data" => "/user {$user_id}"]
+                        ["text" => "🔃 " . Lang::get('telegrambot::bot.actors.metadata.updated.back'), "callback_data" => "/user {$user_id}"]
                     ],
                     [
-                        ["text" => "↖️ Volver al menú de administrador", "callback_data" => "adminmenu"],
+                        ["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtoadminmenu'), "callback_data" => "adminmenu"],
                     ],
-
                 ],
             ]),
         );

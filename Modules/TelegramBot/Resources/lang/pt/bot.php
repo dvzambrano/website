@@ -34,6 +34,7 @@ return [
         "deleteprevmessages" => "Excluir mensagens anteriores",
         "keepprevmessages" => "Manter mensagens anteriores",
         "timezone" => "Fuso horário :timezone",
+        "backtoconfigmenu" => "Voltar ao menu de configuracoes",
     ],
     "prompts" => [
         "whatsnext" => "O que você deseja fazer agora?",
@@ -110,5 +111,57 @@ return [
         "loadinggps" => "Obtendo localização GPS",
         "gpsdeniedtitle" => "Você deve ativar e conceder permissões para sua localização GPS",
         "retrygps" => "Conceder permissões de GPS",
+    ],
+    "actors" => [
+        "subscribers" => [
+            "header" => "Usuarios inscritos",
+            "body" => "Estes sao os :count usuarios que se inscreveram no bot.",
+        ],
+        "usernotfound" => [
+            "header" => "Usuario nao encontrado",
+            "before" => "O usuario",
+            "after" => "nao esta inscrito neste bot.",
+        ],
+        "role" => [
+            "modified" => "Funcao do usuario modificada",
+            "changed" => [
+                "header" => "Sua funcao foi modificada",
+                "body" => "Recomendamos voltar ao /menu para verificar suas novas opcoes",
+            ],
+        ],
+        "utc" => [
+            "prompt" => [
+                "header" => "Ajustar fuso horario",
+                "line1" => "Definir seu fuso horario permitira ao bot personalizar datas e horas para voce.",
+                "line2" => "Para definir seu fuso horario no formato UTC-4, escreva apenas -4.",
+                "footer" => "Informe o fuso horario em que voce esta:",
+            ],
+            "updated" => [
+                "header" => "Fuso horario atualizado",
+                "body" => "Seu fuso horario foi atualizado com sucesso.",
+                "currenttime" => "Agora sao",
+            ],
+            "error" => [
+                "header" => "Erro de fuso horario",
+                "before" => "Nao e possivel definir o fuso horario",
+                "hint" => "Verifique que voce enviou um numero valido para ajustar o horario.",
+            ],
+            "retry" => "Tentar novamente",
+        ],
+        "metadata" => [
+            "add" => "Adicionar metadados",
+            "define" => [
+                "header" => "Definir metadados do inscrito",
+                "footer" => "Digite abaixo:",
+            ],
+            "updated" => [
+                "header" => "Metadados atualizados",
+                "body" => "Os metadados do inscrito foram atualizados com sucesso.",
+                "back" => "Mostrar inscrito novamente",
+            ],
+        ],
+    ],
+    "wizard" => [
+        "cancelled" => "Wizard cancelado.",
     ],
 ];
