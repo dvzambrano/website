@@ -355,11 +355,11 @@ class GutoTradeBotController extends JsonsController
 
                     $text = "ℹ️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.market.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.market.desc')) . "_\n\n" .
                         "💰  *100\.00* 💶 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.initial')) . "_\n" .
-                        "{$symbol}  " . TextService::mdv2(Moneys::format($rate["inverse"], 4)) . " 💱 _" . TextService::mdv2((string)$rate["direct"]) . "_\n" .
+                        "{$symbol}  " . TextService::mdv2(Moneys::format($rate["inverse"], 4)) . " 💱 _" . TextService::mdv2((string) $rate["direct"]) . "_\n" .
                         "🛬  *" . TextService::mdv2(Moneys::format($flow["arrival"])) . "* 💵 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.nets')) . "_\n" .
-                        "➰    \- " . TextService::mdv2(Moneys::format($flow["waste"]["amount"])) . " 💵 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.expenses')) . " " . TextService::mdv2((string)$flow["waste"]["percent"]) . "%_\n" .
+                        "➰    \- " . TextService::mdv2(Moneys::format($flow["waste"]["amount"])) . " 💵 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.expenses')) . " " . TextService::mdv2((string) $flow["waste"]["percent"]) . "%_\n" .
                         "🏭  *" . TextService::mdv2(Moneys::format($flow["capital"])) . "* 💵 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.workable')) . "_\n" .
-                        "➿   " . TextService::mdv2($outputsymbol) . TextService::mdv2(Moneys::format($flow["output"]["amount"])) . " 💱 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.client')) . " " . TextService::mdv2((string)$flow["output"]["percent"]) . "%_\n" .
+                        "➿   " . TextService::mdv2($outputsymbol) . TextService::mdv2(Moneys::format($flow["output"]["amount"])) . " 💱 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.client')) . " " . TextService::mdv2((string) $flow["output"]["percent"]) . "%_\n" .
                         "🛫  *" . TextService::mdv2(Moneys::format($flow["profit"]["amount"])) . "* 💶 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.result')) . "_ *" . TextService::mdv2(Moneys::format($flow["profit"]["percent"])) . "%*\n\n";
 
                     $dates = [];
