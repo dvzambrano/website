@@ -1483,25 +1483,25 @@ class GutoTradeBotController extends JsonsController
 
         $stats = "";
         //if ($current_date) {
-        $stats .= "🛬 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.received')) . "*: " . Moneys::format($array["received"]["amount"]) . " 💵" .
-            "\n🏷 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.tosend')) . "*: " . Moneys::format($array["received"]["tosend"]) . " 💶" .
-            "\n🛫 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.sent')) . "*: " . Moneys::format($array["sent"]["amount"]) . " 💶 (" . Moneys::format($array["sent"]["percent"]) . "%)" .
-            "\n🏭 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.pending')) . "*: " . Moneys::format($array["pending"]["amount"]) . " 💶 (" . Moneys::format($array["pending"]["percent"]) . "%)";
+        $stats .= "🛬 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.received')) . "*: " . TextService::mdv2(Moneys::format($array["received"]["amount"])) . " 💵" .
+            "\n🏷 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.tosend')) . "*: " . TextService::mdv2(Moneys::format($array["received"]["tosend"])) . " 💶" .
+            "\n🛫 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.sent')) . "*: " . TextService::mdv2(Moneys::format($array["sent"]["amount"])) . " 💶 (" . TextService::mdv2(Moneys::format($array["sent"]["percent"])) . "%)" .
+            "\n🏭 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.pending')) . "*: " . TextService::mdv2(Moneys::format($array["pending"]["amount"])) . " 💶 (" . TextService::mdv2(Moneys::format($array["pending"]["percent"])) . "%)";
         //}
 
-        $stats .= "\n\n🤷🏻‍♂️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.unconfirmed')) . "*: " . Moneys::format($array["unconfirmed"]) . " 💶" .
-            "\n🫰🏻 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.unsettled')) . "*: " . Moneys::format($array["unsettled"]) . " 💶";
+        $stats .= "\n\n🤷🏻‍♂️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.unconfirmed')) . "*: " . TextService::mdv2(Moneys::format($array["unconfirmed"])) . " 💶" .
+            "\n🫰🏻 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.unsettled')) . "*: " . TextService::mdv2(Moneys::format($array["unsettled"])) . " 💶";
 
         switch (strtolower($this->tenant->code)) {
             case "gutotradebot":
-                $stats .= "\n\n💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.usdt')) . "*: " . Moneys::format($array["stock"]) . " 💵";
+                $stats .= "\n\n💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.usdt')) . "*: " . TextService::mdv2(Moneys::format($array["stock"])) . " 💵";
 
                 $value = $array["stock"] + $this->ProfitsController->getProfit($array["stock"]);
 
-                $stats .= "\n💱 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.equivalents')) . "*: " . Moneys::format($value) . " 💶";
+                $stats .= "\n💱 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.equivalents')) . "*: " . TextService::mdv2(Moneys::format($value)) . " 💶";
 
                 if ($actor->isLevel(1, $this->tenant->code)) {
-                    $stats .= "\n\n☑ *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.should')) . "*: " . Moneys::format($array["should"]) . " 💵";
+                    $stats .= "\n\n☑ *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.should')) . "*: " . TextService::mdv2(Moneys::format($array["should"])) . " 💵";
                     if ($array["having"] >= $array["should"]) {
                         $stats .= "\n✅ ";
                     } else {
@@ -1512,7 +1512,7 @@ class GutoTradeBotController extends JsonsController
                         }
                     }
 
-                    $stats .= "*" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.having')) . "*: " . Moneys::format($array["having"]) . " 💵";
+                    $stats .= "*" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.having')) . "*: " . TextService::mdv2(Moneys::format($array["having"])) . " 💵";
                 }
                 break;
 
@@ -1648,11 +1648,11 @@ class GutoTradeBotController extends JsonsController
 
         $stats = "";
 
-        $stats .= "💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.usdt')) . "*: " . Moneys::format($array["stock"]) . " 💵";
+        $stats .= "💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.usdt')) . "*: " . TextService::mdv2(Moneys::format($array["stock"])) . " 💵";
 
         $value = $array["stock"] + $this->ProfitsController->getProfit($array["stock"]);
 
-        $stats .= "\n💱 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.equivalents')) . "*: " . Moneys::format($value) . " 💶";
+        $stats .= "\n💱 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.equivalents')) . "*: " . TextService::mdv2(Moneys::format($value)) . " 💶";
 
         $records = $this->PaymentsController->getRecords($from_date, $to_date);
         //dd($records);
@@ -1670,8 +1670,8 @@ class GutoTradeBotController extends JsonsController
             $records["receivedprom"][$i] = $receivedamount / ($i + 1);
         }
 
-        $stats .= "\n\n🛬 *" . TextService::mdv2(Lang::get('gutotradebot::bot.flow.avg_received')) . "*: " . Moneys::format($records["receivedprom"][count($records["receivedprom"]) - 1]) . " 💵";
-        $stats .= "\n🛫 *" . TextService::mdv2(Lang::get('gutotradebot::bot.flow.avg_sent')) . "*: " . Moneys::format($records["sentprom"][count($records["sentprom"]) - 1]) . " 💶";
+        $stats .= "\n\n🛬 *" . TextService::mdv2(Lang::get('gutotradebot::bot.flow.avg_received')) . "*: " . TextService::mdv2(Moneys::format($records["receivedprom"][count($records["receivedprom"]) - 1])) . " 💵";
+        $stats .= "\n🛫 *" . TextService::mdv2(Lang::get('gutotradebot::bot.flow.avg_sent')) . "*: " . TextService::mdv2(Moneys::format($records["sentprom"][count($records["sentprom"]) - 1])) . " 💶";
 
         if (count($records["dates"]) == 0) {
             array_push($records["dates"], Carbon::now()->subDays(1)->toDateString());
