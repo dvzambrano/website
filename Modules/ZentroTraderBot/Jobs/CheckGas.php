@@ -84,8 +84,8 @@ class CheckGas implements ShouldQueue
                 $msg = "☢️ *CATÁSTROFE DE RED*\n";
                 $msg .= "⛽️ Gas prohibitivo: 💲*" . TextService::mdv2(number_format($costInUsd, 2)) . "*\n";
                 $msg .= "💡 Basado en trades promedio de: 💲*" . TextService::mdv2(number_format($referenceTrade, 2)) . "*\n";
-                $msg .= "🔺 `feePercentage` \= `" . $suggestedBps . "` (*" . TextService::mdv2($suggestedBps / 100) . "%*)\n";
-                $msg .= "🔺 `setMinFeePerToken` \= `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (💲*" . TextService::mdv2(number_format($idealMinFeeUsd, 2)) . "*)";
+                $msg .= "🔺 `feePercentage` \= `" . $suggestedBps . "` \(*" . TextService::mdv2($suggestedBps / 100) . "%*\)\n";
+                $msg .= "🔺 `setMinFeePerToken` \= `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` \(💲*" . TextService::mdv2(number_format($idealMinFeeUsd, 2)) . "*\)";
                 // Ajustar el valor automaticamente
                 ManageScrow::dispatch(
                     $this->userId,
@@ -97,7 +97,7 @@ class CheckGas implements ShouldQueue
                 $msg .= "⛽️ Gas " . TextService::mdv2(number_format($costInUsd, 4)) . " \> " . TextService::mdv2(number_format($currentMinFeeUsd, 4)) . " \(MinFee\)\n";
                 $msg .= "💡 Basado en trades promedio de: 💲*" . TextService::mdv2(number_format($referenceTrade, 2)) . "*\n";
                 $msg .= "💸 *Trades < 💲" . TextService::mdv2(number_format($breakEvenTrade, 2)) . " dan pérdida*\n";
-                $msg .= "🔺 `setMinFeePerToken` \= `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (💲*" . TextService::mdv2(number_format($idealMinFeeUsd, 4)) . "*)";
+                $msg .= "🔺 `setMinFeePerToken` \= `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` \(💲*" . TextService::mdv2(number_format($idealMinFeeUsd, 4)) . "*\)";
                 // Ajustar el valor automaticamente
                 ManageScrow::dispatch(
                     $this->userId,
