@@ -94,7 +94,7 @@ class CheckGas implements ShouldQueue
             } elseif ($costInUsd >= $currentMinFeeUsd) {
                 $alertType = 'critical';
                 $msg = "🔴 *MARGEN PERDIDO*\n";
-                $msg .= "⛽️ Gas " . TextService::mdv2(number_format($costInUsd, 4)) . " > " . TextService::mdv2(number_format($currentMinFeeUsd, 4)) . " \(MinFee\)\n";
+                $msg .= "⛽️ Gas " . TextService::mdv2(number_format($costInUsd, 4)) . " \> " . TextService::mdv2(number_format($currentMinFeeUsd, 4)) . " \(MinFee\)\n";
                 $msg .= "💡 Basado en trades promedio de: 💲*" . TextService::mdv2(number_format($referenceTrade, 2)) . "*\n";
                 $msg .= "💸 *Trades < 💲" . TextService::mdv2(number_format($breakEvenTrade, 2)) . " dan pérdida*\n";
                 $msg .= "🔺 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` (💲*" . TextService::mdv2(number_format($idealMinFeeUsd, 4)) . "*)";
@@ -106,7 +106,7 @@ class CheckGas implements ShouldQueue
             } elseif ($currentMinFeeUsd < $idealMinFeeUsd) {
                 $alertType = 'warning';
                 $msg = "🟠 *MARGEN ESTRECHO*\n";
-                $msg .= "⛽️ Gas " . TextService::mdv2(number_format($costInUsd, 4)) . " < " . TextService::mdv2(number_format($currentMinFeeUsd, 4)) . " \(MinFee\)\n";
+                $msg .= "⛽️ Gas " . TextService::mdv2(number_format($costInUsd, 4)) . " \< " . TextService::mdv2(number_format($currentMinFeeUsd, 4)) . " \(MinFee\)\n";
                 $msg .= "💡 Basado en trades promedio de: 💲*" . TextService::mdv2(number_format($referenceTrade, 2)) . "*\n";
                 $msg .= "💸 *Trades < 💲" . TextService::mdv2(number_format($breakEvenTrade, 2)) . " dan pérdida*\n";
                 $msg .= "🔸 `setMinFeePerToken` = `" . round($idealMinFeeUsd * pow(10, $token["decimals"])) . "` \(*" . TextService::mdv2(number_format($idealMinFeeUsd, 4)) . "*\)";
@@ -138,7 +138,7 @@ class CheckGas implements ShouldQueue
                 // LÓGICA DE RECUPERACIÓN
                 if (Cache::get($statusKey) === 'alert') {
                     $recoveryMsg = "✅ *BLOCKCHAIN RECUPERADA*\n";
-                    $recoveryMsg .= "⛽️ Gas " . TextService::mdv2(number_format($costInUsd, 4)) . " | " . TextService::mdv2(number_format($currentMinFeeUsd, 4)) . " \(MinFee\)\n";
+                    $recoveryMsg .= "⛽️ Gas " . TextService::mdv2(number_format($costInUsd, 4)) . " \| " . TextService::mdv2(number_format($currentMinFeeUsd, 4)) . " \(MinFee\)\n";
                     $recoveryMsg .= "🔻 `setMinFeePerToken` = `" . ($baseMinFeeUsd * pow(10, $token["decimals"])) . "` \(💲*" . TextService::mdv2(number_format($baseMinFeeUsd, 2)) . "*\)\n";
                     $recoveryMsg .= "🔻 `feePercentage` = `" . $baseFeeBps . "` \(*" . TextService::mdv2(number_format(($baseFeeBps / 100), 2)) . "*%\)";
                     TelegramController::sendMessage(["message" => ["text" => $recoveryMsg, "chat" => ["id" => $this->userId], "parse_mode" => "MarkdownV2"]], $tenant->token);

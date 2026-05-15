@@ -34,6 +34,7 @@ return [
         "deleteprevmessages" => "Supprimer les messages précédents",
         "keepprevmessages" => "Conserver les messages précédents",
         "timezone" => "Fuseau horaire :timezone",
+        "backtoconfigmenu" => "Retour au menu de configuration",
     ],
     "prompts" => [
         "whatsnext" => "Que souhaitez-vous faire maintenant ?",
@@ -110,5 +111,61 @@ return [
         "loadinggps" => "Obtention de la position GPS",
         "gpsdeniedtitle" => "Vous devez activer et accorder les permissions pour votre position GPS",
         "retrygps" => "Accorder les permissions GPS",
+    ],
+    "actors" => [
+        "subscribers" => [
+            "header" => "Utilisateurs inscrits",
+            "body" => "Voici les :count utilisateurs qui se sont inscrits au bot.",
+        ],
+        "usernotfound" => [
+            "header" => "Utilisateur introuvable",
+            "before" => "L'utilisateur",
+            "after" => "n'est pas inscrit a ce bot.",
+        ],
+        "role" => [
+            "modified" => "Role de l'utilisateur modifie",
+            "changed" => [
+                "header" => "Votre role a ete modifie",
+                "body" => "Nous vous recommandons de revenir au /menu pour verifier vos nouvelles options",
+            ],
+        ],
+        "utc" => [
+            "prompt" => [
+                "header" => "Ajuster le fuseau horaire",
+                "line1" => "Definir votre fuseau horaire permettra au bot de personnaliser les dates et heures.",
+                "line2" => "Pour definir votre fuseau horaire au format UTC-4, ecrivez seulement -4.",
+                "footer" => "Indiquez votre fuseau horaire:",
+            ],
+            "updated" => [
+                "header" => "Fuseau horaire mis a jour",
+                "body" => "Votre fuseau horaire a ete mis a jour avec succes.",
+                "currenttime" => "Il est maintenant",
+            ],
+            "error" => [
+                "header" => "Erreur de fuseau horaire",
+                "before" => "Impossible de definir le fuseau horaire",
+                "hint" => "Verifiez que vous avez entre un nombre valide pour ajuster l'heure.",
+            ],
+            "retry" => "Reessayer",
+        ],
+        "metadata" => [
+            "add" => "Ajouter des metadonnees",
+            "define" => [
+                "header" => "Definir les metadonnees de l'abonne",
+                "footer" => "Ecrivez ci-dessous:",
+            ],
+            "updated" => [
+                "header" => "Metadonnees mises a jour",
+                "body" => "Les metadonnees de l'abonne ont ete mises a jour avec succes.",
+                "back" => "Afficher a nouveau l'abonne",
+            ],
+        ],
+    ],
+    "wizard" => [
+        "cancelled" => "Wizard annule.",
+    ],
+    "deleted" => [
+        "title" => "Enregistrement supprimé",
+        "desc"  => "L'enregistrement a été supprimé de la base de données avec succès.",
     ],
 ];

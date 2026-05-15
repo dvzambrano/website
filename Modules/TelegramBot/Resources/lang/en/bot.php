@@ -34,6 +34,7 @@ return [
         "deleteprevmessages" => "Delete previous messages",
         "keepprevmessages" => "Keep previous messages",
         "timezone" => "Timezone :timezone",
+        "backtoconfigmenu" => "Back to settings menu",
     ],
     "prompts" => [
         "whatsnext" => "What would you like to do now?",
@@ -110,5 +111,61 @@ return [
         "loadinggps" => "Getting GPS location",
         "gpsdeniedtitle" => "You must activate and grant permissions for your GPS location",
         "retrygps" => "Grant GPS permissions",
+    ],
+    "actors" => [
+        "subscribers" => [
+            "header" => "Subscribed users",
+            "body" => "These are the :count users who have subscribed to the bot.",
+        ],
+        "usernotfound" => [
+            "header" => "User not found",
+            "before" => "User",
+            "after" => "is not subscribed to this bot.",
+        ],
+        "role" => [
+            "modified" => "User role modified",
+            "changed" => [
+                "header" => "Your role has been modified",
+                "body" => "We recommend returning to /menu to verify your new options",
+            ],
+        ],
+        "utc" => [
+            "prompt" => [
+                "header" => "Adjust timezone",
+                "line1" => "Setting your timezone will allow the bot to personalize dates and times for you.",
+                "line2" => "To set your timezone in UTC-4 format, write only -4.",
+                "footer" => "Enter the timezone you are in:",
+            ],
+            "updated" => [
+                "header" => "Timezone updated",
+                "body" => "Your timezone has been updated successfully.",
+                "currenttime" => "It is now",
+            ],
+            "error" => [
+                "header" => "Timezone error",
+                "before" => "Cannot set timezone to",
+                "hint" => "Make sure you entered a valid number to adjust the time.",
+            ],
+            "retry" => "Try again",
+        ],
+        "metadata" => [
+            "add" => "Add metadata",
+            "define" => [
+                "header" => "Set subscriber metadata",
+                "footer" => "Type below:",
+            ],
+            "updated" => [
+                "header" => "Metadata updated",
+                "body" => "The subscriber metadata has been updated successfully.",
+                "back" => "Show subscriber again",
+            ],
+        ],
+    ],
+    "wizard" => [
+        "cancelled" => "Wizard cancelled.",
+    ],
+    "deleted" => [
+        "title" => "Record deleted",
+        "desc"  => "The record has been successfully deleted from the database.",
     ],
 ];

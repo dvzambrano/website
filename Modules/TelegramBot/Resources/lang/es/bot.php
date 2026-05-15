@@ -36,6 +36,7 @@ return [
         "deleteprevmessages" => "Eliminar mensajes previos",
         "keepprevmessages" => "No eliminar mensajes previos",
         "timezone" => "Zona horaria :timezone",
+        "backtoconfigmenu" => "Volver al menú configuraciones",
     ],
     "prompts" => [
         "whatsnext" => "¿Qué desea hacer ahora?",
@@ -112,5 +113,61 @@ return [
         "loadinggps" => "Obteniendo ubicación GPS",
         "gpsdeniedtitle" => "Debe activar y conceder permisos para su ubicación GPS",
         "retrygps" => "Conceder permisos GPS",
+    ],
+    "actors" => [
+        "subscribers" => [
+            "header" => "Usuarios suscritos",
+            "body" => "Estos son los :count usuarios que se han suscrito al bot.",
+        ],
+        "usernotfound" => [
+            "header" => "Usuario no encontrado",
+            "before" => "El usuario",
+            "after" => "no se encuentra suscrito a este bot.",
+        ],
+        "role" => [
+            "modified" => "Rol de usuario modificado",
+            "changed" => [
+                "header" => "Su rol ha sido modificado",
+                "body" => "Le recomendamos volver al /menu para verificar sus nuevas opciones",
+            ],
+        ],
+        "utc" => [
+            "prompt" => [
+                "header" => "Ajustar zona horaria",
+                "line1" => "Definir su zona horaria hara que el bot le personalice las fechas y horas.",
+                "line2" => "Para establecer su zona horaria de la forma UTC-4 escriba solo -4.",
+                "footer" => "Escriba en que zona horaria esta ud:",
+            ],
+            "updated" => [
+                "header" => "Zona horaria actualizada",
+                "body" => "Se ha actualizado su zona horaria satisfactoriamente.",
+                "currenttime" => "Ahora son las",
+            ],
+            "error" => [
+                "header" => "Zona con error",
+                "before" => "No se puede establecer la zona horaria",
+                "hint" => "Revise que haya enviado un numero valido con el que se pueda ajustar la hora.",
+            ],
+            "retry" => "Intentar nuevamente",
+        ],
+        "metadata" => [
+            "add" => "Añadir metadato",
+            "define" => [
+                "header" => "Definir metadato al suscriptor",
+                "footer" => "Escriba a continuacion:",
+            ],
+            "updated" => [
+                "header" => "Metadato actualizado",
+                "body" => "Se ha actualizado el metadato del suscriptor satisfactoriamente.",
+                "back" => "Volver a mostrar el suscriptor",
+            ],
+        ],
+    ],
+    "wizard" => [
+        "cancelled" => "Wizard cancelado.",
+    ],
+    "deleted" => [
+        "title" => "Registro eliminado",
+        "desc"  => "Se ha eliminado el registro de la base de datos satisfactoriamente.",
     ],
 ];

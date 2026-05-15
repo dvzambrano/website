@@ -397,7 +397,7 @@ trait UsesTelegramBot
                     $user->data = $data;
                     $user->save();
 
-                    $reply = $this->ActorsController->notifyAfterDelete();
+                    $reply = $this->notifyAfterDelete();
                 } else
                     $reply = $this->mainMenu($this->actor);
                 break;
@@ -873,6 +873,20 @@ trait UsesTelegramBot
         );
     }
 
+
+    public function notifyAfterDelete()
+    {
+        return [
+            "text" => "👍 *" . TextService::mdv2(Lang::get('telegrambot::bot.deleted.title')) . "*\n_" . TextService::mdv2(Lang::get('telegrambot::bot.deleted.desc')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.prompts.whatsnext')),
+            "reply_markup" => json_encode([
+                "inline_keyboard" => [
+                    [
+                        ["text" => "↖️ " . Lang::get("telegrambot::bot.options.backtomainmenu"), "callback_data" => "menu"],
+                    ],
+                ],
+            ]),
+        ];
+    }
 
     public function initScanner($gpsrequired, $botname, $instance)
     {
