@@ -242,7 +242,7 @@ class BotConfigWizardController extends Controller
         $notifs = $bot->tenant->data['notifications'] ?? [];
 
         $btn = fn(string $langKey, string $path) => [
-            'text' => ($this->getNestedFlag($notifs, $path) ? '🟢 ' : '⚫ ') . TextService::mdv2(Lang::get($langKey)),
+            'text' => ($this->getNestedFlag($notifs, $path) ? '🟢 ' : '⚫ ') . Lang::get($langKey),
             'callback_data' => 'togglenotif-' . $path,
         ];
 
@@ -251,15 +251,12 @@ class BotConfigWizardController extends Controller
                 . "_" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.notifications.desc')) . "_",
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
-                    [['text' => "💰 " . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.notifications.section_capitals')), 'callback_data' => 'botconfignotifications']],
                     [$btn('gutotradebot::bot.botconfig.notifications.capitals_new_togestors', 'capitals.new.togestors')],
                     [$btn('gutotradebot::bot.botconfig.notifications.capitals_noenough_tocapitals', 'capitals.noenough.tocapitals')],
 
-                    [['text' => "💬 " . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.notifications.section_comments')), 'callback_data' => 'botconfignotifications']],
                     [$btn('gutotradebot::bot.botconfig.notifications.comments_new_togestors', 'comments.new.togestors')],
                     [$btn('gutotradebot::bot.botconfig.notifications.comments_new_tosupervisors', 'comments.new.tosupervisors')],
 
-                    [['text' => "💶 " . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.notifications.section_payments')), 'callback_data' => 'botconfignotifications']],
                     [$btn('gutotradebot::bot.botconfig.notifications.payments_new_frombot_togestors', 'payments.new.frombot.togestors')],
                     [$btn('gutotradebot::bot.botconfig.notifications.payments_new_frombot_tocapitals', 'payments.new.frombot.tocapitals')],
                     [$btn('gutotradebot::bot.botconfig.notifications.payments_new_fromcapital_togestors', 'payments.new.fromcapital.togestors')],
