@@ -23,7 +23,7 @@ class BotConfigWizardController extends Controller
                 'inline_keyboard' => [
                     [['text' => "📧 " . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.menu.email')), 'callback_data' => 'botconfigemail']],
                     [['text' => "🔔 " . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.menu.notifications')), 'callback_data' => 'botconfignotifications']],
-                    [['text' => Lang::get('telegrambot::bot.options.backtoadminmenu'), 'callback_data' => 'adminmenu']],
+                    [['text' => "↖️ " . Lang::get('telegrambot::bot.options.backtoadminmenu'), 'callback_data' => 'adminmenu']],
                 ],
             ]),
         ];
@@ -215,7 +215,7 @@ class BotConfigWizardController extends Controller
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [['text' => "⚙️ " . TextService::mdv2(Lang::get('gutotradebot::bot.adminmenu.botconfig')), 'callback_data' => 'botconfigmenu']],
-                    [['text' => Lang::get('telegrambot::bot.options.backtoadminmenu'), 'callback_data' => 'adminmenu']],
+                    [['text' => "↖️ " . Lang::get('telegrambot::bot.options.backtoadminmenu'), 'callback_data' => 'adminmenu']],
                 ],
             ]),
         ];
@@ -228,7 +228,7 @@ class BotConfigWizardController extends Controller
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [['text' => "⚙️ " . TextService::mdv2(Lang::get('gutotradebot::bot.adminmenu.botconfig')), 'callback_data' => 'botconfigmenu']],
-                    [['text' => Lang::get('telegrambot::bot.options.backtoadminmenu'), 'callback_data' => 'adminmenu']],
+                    [['text' => "↖️ " . Lang::get('telegrambot::bot.options.backtoadminmenu'), 'callback_data' => 'adminmenu']],
                 ],
             ]),
         ];
