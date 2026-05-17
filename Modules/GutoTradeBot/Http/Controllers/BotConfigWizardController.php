@@ -251,19 +251,19 @@ class BotConfigWizardController extends Controller
                 . "_" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.notifications.desc')) . "_",
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_fromremesador_togestors', 'payments.new.fromremesador.togestors')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_fromremesador_tocapitals', 'payments.new.fromremesador.tocapitals')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_double_togestors', 'payments.double.togestors')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_double_tocapitals', 'payments.double.tocapitals')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_fromcapital_togestors', 'payments.new.fromcapital.togestors')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_frombot_togestors', 'payments.new.frombot.togestors')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_frombot_tocapitals', 'payments.new.frombot.tocapitals')],
+
                     [$btn('gutotradebot::bot.botconfig.notifications.capitals_new_togestors', 'capitals.new.togestors')],
                     [$btn('gutotradebot::bot.botconfig.notifications.capitals_noenough_tocapitals', 'capitals.noenough.tocapitals')],
 
                     [$btn('gutotradebot::bot.botconfig.notifications.comments_new_togestors', 'comments.new.togestors')],
                     [$btn('gutotradebot::bot.botconfig.notifications.comments_new_tosupervisors', 'comments.new.tosupervisors')],
-
-                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_frombot_togestors', 'payments.new.frombot.togestors')],
-                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_frombot_tocapitals', 'payments.new.frombot.tocapitals')],
-                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_fromcapital_togestors', 'payments.new.fromcapital.togestors')],
-                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_fromremesador_togestors', 'payments.new.fromremesador.togestors')],
-                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_fromremesador_tocapitals', 'payments.new.fromremesador.tocapitals')],
-                    [$btn('gutotradebot::bot.botconfig.notifications.payments_double_togestors', 'payments.double.togestors')],
-                    [$btn('gutotradebot::bot.botconfig.notifications.payments_double_tocapitals', 'payments.double.tocapitals')],
 
                     [['text' => "⚙️ " . TextService::mdv2(Lang::get('gutotradebot::bot.adminmenu.botconfig')), 'callback_data' => 'botconfigmenu']],
                 ],

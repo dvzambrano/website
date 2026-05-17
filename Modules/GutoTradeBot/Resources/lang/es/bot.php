@@ -448,7 +448,7 @@ return [
             "comments_new_tosupervisors" => "Nuevo comentario: notificar a Supervisores",
             "payments_new_frombot_togestors" => "Pago reenviado: notificar a Gestores",
             "payments_new_frombot_tocapitals" => "Pago reenviado: notificar a Admin de Capital",
-            "payments_new_fromcapital_togestors" => "Pago nuevo (capital) → Gestores",
+            "payments_new_fromcapital_togestors" => "Pago flotante: notificar a Gestores",
             "payments_new_fromremesador_togestors" => "Pago nuevo: notificar a Gestores",
             "payments_new_fromremesador_tocapitals" => "Pago nuevo: notificar a Admin de Capital",
             "payments_double_togestors" => "Pago duplicado: notificar a Gestores",
