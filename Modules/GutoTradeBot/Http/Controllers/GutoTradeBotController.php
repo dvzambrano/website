@@ -1268,6 +1268,33 @@ class GutoTradeBotController extends JsonsController
                 return $reply;
             };
 
+        $this->strategies["botconfigmenu"] =
+            function () {
+                if ($this->actor->isLevel(1, $this->tenant->code))
+                    return (new BotConfigWizardController())->configMenu($this);
+                return $this->mainMenu($this->actor);
+            };
+
+        $this->strategies["botconfigemail"] =
+            function () {
+                if ($this->actor->isLevel(1, $this->tenant->code))
+                    return (new BotConfigWizardController())->startEmailWizard($this);
+                return $this->mainMenu($this->actor);
+            };
+
+        $this->strategies["botconfignotifications"] =
+            function () {
+                if ($this->actor->isLevel(1, $this->tenant->code))
+                    return (new BotConfigWizardController())->notificationsMenu($this);
+                return $this->mainMenu($this->actor);
+            };
+
+        $this->strategies["togglenotif"] =
+            function () use ($array) {
+                if ($this->actor->isLevel(1, $this->tenant->code))
+                    return (new BotConfigWizardController())->toggleNotification($this, $array['pieces'][1] ?? '');
+                return $this->mainMenu($this->actor);
+            };
 
 
         if (isset($this->message["text"]) && $this->message["text"] != "") {
@@ -1415,6 +1442,7 @@ class GutoTradeBotController extends JsonsController
                     ["text" => "🧮 " . TextService::mdv2(Lang::get('gutotradebot::bot.adminmenu.cashflow')), "callback_data" => "/cashflow"]
                 ]);
                 array_push($menu, [["text" => "🤑 " . TextService::mdv2(Lang::get('gutotradebot::bot.adminmenu.profits')), "callback_data" => "/profit"]]);
+                array_push($menu, [["text" => "⚙️ " . TextService::mdv2(Lang::get('gutotradebot::bot.adminmenu.botconfig')), "callback_data" => "botconfigmenu"]]);
                 break;
             case "4":
             case 4:

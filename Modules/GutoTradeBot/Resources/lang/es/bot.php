@@ -51,6 +51,7 @@ return [
         "stats" => "Estadísticas",
         "cashflow" => "Flujo de Caja",
         "profits" => "Ajustar ganancias",
+        "botconfig" => "Config del bot",
     ],
     "help" => [
         "header" => "Como usar este bot",
