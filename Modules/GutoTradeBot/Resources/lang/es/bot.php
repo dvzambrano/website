@@ -442,7 +442,7 @@ return [
             "section_capitals" => "Capitales",
             "section_comments" => "Comentarios",
             "section_payments" => "Pagos",
-            "capitals_new_togestors" => "Nuevo capital",
+            "capitals_new_togestors" => "Nuevo capital: notificar a Gestores",
             "capitals_noenough_tocapitals" => "Nivel de capital insuficiente para liquidar",
             "comments_new_togestors" => "Nuevo comentario: notificar a Gestores",
             "comments_new_tosupervisors" => "Nuevo comentario: notificar a Supervisores",
