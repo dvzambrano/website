@@ -47,6 +47,7 @@ class GutoTradeBotController extends JsonsController
 
     public function __construct()
     {
+        $this->cleanChatMode = "delete_and_send";
         $this->parseMode = "MarkdownV2";
         $this->tenant = app('active_bot');
 

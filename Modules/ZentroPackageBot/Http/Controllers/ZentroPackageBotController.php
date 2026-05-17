@@ -16,9 +16,9 @@ class ZentroPackageBotController extends JsonsController
 {
     use UsesTelegramBot;
 
-
     public function __construct()
     {
+        $this->cleanChatMode = "delete_and_send";
         $this->tenant = app('active_bot');
 
         $this->ActorsController = new ActorsController();

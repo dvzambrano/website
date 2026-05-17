@@ -25,12 +25,14 @@ use Modules\ZentroTraderBot\Http\Controllers\SupportController;
 class ZentroTraderBotController extends JsonsController
 {
     use UsesTelegramBot;
+
     public $AgentsController;
     public $engine;
 
 
     public function __construct()
     {
+        $this->cleanChatMode = "delete_and_send";
         $this->parseMode = "MarkdownV2";
         $this->tenant = app('active_bot');
 
