@@ -203,6 +203,7 @@ class BotConfigWizardController extends Controller
 
         $bot->tenant->data = $data;
         $bot->tenant->save();
+        Cache::forget('tenant_' . $bot->tenant->key);
 
         return [
             'text' => "✅ *" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.saved')) . "*\n\n"
@@ -280,6 +281,7 @@ class BotConfigWizardController extends Controller
         $data['notifications'] = $this->setNestedValue($data['notifications'] ?? [], $keys, $current ? 0 : 1);
         $bot->tenant->data = $data;
         $bot->tenant->save();
+        Cache::forget('tenant_' . $bot->tenant->key);
 
         return $this->notificationsMenu($bot);
     }
