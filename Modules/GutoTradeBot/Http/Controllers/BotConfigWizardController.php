@@ -3,6 +3,7 @@
 namespace Modules\GutoTradeBot\Http\Controllers;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Http\Controllers\Controller;
 use Modules\Laravel\Services\TextService;
 use Modules\TelegramBot\Http\Controllers\WizardController;
@@ -16,13 +17,13 @@ class BotConfigWizardController extends Controller
     public function configMenu($bot): array
     {
         return [
-            'text' => "⚙️ *" . TextService::mdv2('Configuración del bot') . "*\n\n"
-                . "_" . TextService::mdv2('Selecciona qué configuración deseas editar:') . "_",
+            'text' => "⚙️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.menu.header')) . "*\n\n"
+                . "_" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.menu.desc')) . "_",
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
-                    [['text' => '📧 Email',           'callback_data' => 'botconfigemail']],
-                    [['text' => '🔔 Notificaciones',  'callback_data' => 'botconfignotifications']],
-                    [['text' => '↩️ Menú admin',      'callback_data' => 'adminmenu']],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.menu.email'),         'callback_data' => 'botconfigemail']],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.menu.notifications'),  'callback_data' => 'botconfignotifications']],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.menu.back_admin'),     'callback_data' => 'adminmenu']],
                 ],
             ]),
         ];
@@ -55,7 +56,7 @@ class BotConfigWizardController extends Controller
             'method'      => 'emailWizard',
             'initialData' => ['current' => $bot->tenant->data['email'] ?? []],
             'onComplete'  => fn($b, $s) => $self->saveEmailConfig($b, $s),
-            'onCancel'    => fn($b) => $self->cancelResponse(),
+            'onCancel'    => $self->cancelResponse(...),
         ]);
     }
 
@@ -70,8 +71,10 @@ class BotConfigWizardController extends Controller
 
         $current = $state['data']['current']['host'] ?? '—';
         return $this->textInputPrompt(
-            '📡', 'Servidor IMAP', $current,
-            'Escribe el host del servidor IMAP (ej. imap.hostinger.com):'
+            '📡',
+            Lang::get('gutotradebot::bot.botconfig.email.host_label'),
+            $current,
+            Lang::get('gutotradebot::bot.botconfig.email.host_prompt')
         );
     }
 
@@ -82,15 +85,17 @@ class BotConfigWizardController extends Controller
 
         if ($text && !$isCallback) {
             if (!is_numeric($text)) {
-                return $this->errorPrompt('El puerto debe ser un número. Intenta de nuevo:');
+                return $this->errorPrompt(Lang::get('gutotradebot::bot.botconfig.email.port_error'));
             }
             return ['__advance' => true, 'merge' => ['port' => (int) $text]];
         }
 
         $current = $state['data']['current']['port'] ?? '—';
         return $this->textInputPrompt(
-            '🔌', 'Puerto', $current,
-            'Escribe el número de puerto (ej. 993, 143):'
+            '🔌',
+            Lang::get('gutotradebot::bot.botconfig.email.port_label'),
+            $current,
+            Lang::get('gutotradebot::bot.botconfig.email.port_prompt')
         );
     }
 
@@ -105,8 +110,10 @@ class BotConfigWizardController extends Controller
 
         $current = $state['data']['current']['username'] ?? '—';
         return $this->textInputPrompt(
-            '👤', 'Usuario (correo)', $current,
-            'Escribe el correo de acceso al buzón:'
+            '👤',
+            Lang::get('gutotradebot::bot.botconfig.email.username_label'),
+            $current,
+            Lang::get('gutotradebot::bot.botconfig.email.username_prompt')
         );
     }
 
@@ -120,9 +127,9 @@ class BotConfigWizardController extends Controller
         }
 
         return [
-            'text' => "🔐 *" . TextService::mdv2('Contraseña') . "*\n\n"
-                . "⚠️ _" . TextService::mdv2('El valor actual no se muestra por seguridad.') . "_\n\n"
-                . TextService::mdv2('Escribe la nueva contraseña de acceso:'),
+            'text' => "🔐 *" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.password_label')) . "*\n\n"
+                . "⚠️ _" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.password_hidden')) . "_\n\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.password_prompt')),
             'reply_markup' => $this->cancelKeyboard(),
         ];
     }
@@ -137,17 +144,17 @@ class BotConfigWizardController extends Controller
 
         $current = $state['data']['current']['encryption'] ?? '—';
         return [
-            'text' => "🔒 *" . TextService::mdv2('Cifrado') . "*\n\n"
-                . TextService::mdv2('Valor actual:') . " `" . TextService::mdv2((string) $current) . "`\n\n"
-                . TextService::mdv2('Selecciona el tipo de cifrado:'),
+            'text' => "🔒 *" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.encryption_label')) . "*\n\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.common.current_value')) . " `" . TextService::mdv2((string) $current) . "`\n\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.encryption_prompt')),
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [
-                        ['text' => 'SSL',     'callback_data' => 'ssl'],
-                        ['text' => 'TLS',     'callback_data' => 'tls'],
-                        ['text' => 'Ninguno', 'callback_data' => 'none'],
+                        ['text' => 'SSL', 'callback_data' => 'ssl'],
+                        ['text' => 'TLS', 'callback_data' => 'tls'],
+                        ['text' => Lang::get('gutotradebot::bot.botconfig.email.encryption_none'), 'callback_data' => 'none'],
                     ],
-                    [['text' => '✋ Cancelar', 'callback_data' => '/wizardcancel']],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.common.cancel'), 'callback_data' => '/wizardcancel']],
                 ],
             ]),
         ];
@@ -163,16 +170,16 @@ class BotConfigWizardController extends Controller
         $raw     = $state['data']['current']['cert'] ?? null;
         $current = $raw === true ? 'Sí' : ($raw === false ? 'No' : '—');
         return [
-            'text' => "📋 *" . TextService::mdv2('Verificar certificado SSL') . "*\n\n"
-                . TextService::mdv2('Valor actual:') . " `" . TextService::mdv2($current) . "`\n\n"
-                . TextService::mdv2('¿Verificar el certificado del servidor?'),
+            'text' => "📋 *" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.cert_label')) . "*\n\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.common.current_value')) . " `" . TextService::mdv2($current) . "`\n\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.cert_prompt')),
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [
-                        ['text' => '✅ Sí', 'callback_data' => 'certyes'],
-                        ['text' => '❌ No', 'callback_data' => 'certno'],
+                        ['text' => Lang::get('gutotradebot::bot.botconfig.email.cert_yes'), 'callback_data' => 'certyes'],
+                        ['text' => Lang::get('gutotradebot::bot.botconfig.email.cert_no'),  'callback_data' => 'certno'],
                     ],
-                    [['text' => '✋ Cancelar', 'callback_data' => '/wizardcancel']],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.common.cancel'), 'callback_data' => '/wizardcancel']],
                 ],
             ]),
         ];
@@ -196,16 +203,16 @@ class BotConfigWizardController extends Controller
         $bot->tenant->save();
 
         return [
-            'text' => "✅ *" . TextService::mdv2('Configuración de email guardada.') . "*\n\n"
-                . "📡 " . TextService::mdv2('Host:')    . " `" . TextService::mdv2((string) $d['host'])       . "`\n"
-                . "🔌 " . TextService::mdv2('Puerto:')  . " `" . TextService::mdv2((string) $d['port'])       . "`\n"
-                . "👤 " . TextService::mdv2('Usuario:') . " `" . TextService::mdv2((string) $d['username'])   . "`\n"
-                . "🔒 " . TextService::mdv2('Cifrado:') . " `" . TextService::mdv2((string) $d['encryption']) . "`\n"
-                . "📋 " . TextService::mdv2('Cert:')    . " `" . ($d['cert'] ? 'Sí' : 'No')                   . "`",
+            'text' => "✅ *" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.saved')) . "*\n\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.field_host'))       . " `" . TextService::mdv2((string) $d['host'])       . "`\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.field_port'))       . " `" . TextService::mdv2((string) $d['port'])       . "`\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.field_username'))   . " `" . TextService::mdv2((string) $d['username'])   . "`\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.field_encryption')) . " `" . TextService::mdv2((string) $d['encryption']) . "`\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.field_cert'))       . " `" . ($d['cert'] ? 'Sí' : 'No') . "`",
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
-                    [['text' => '↩️ Config del bot', 'callback_data' => 'botconfigmenu']],
-                    [['text' => '↖️ Menú admin',      'callback_data' => 'adminmenu']],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.menu.back'),       'callback_data' => 'botconfigmenu']],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.common.back_mainmenu'), 'callback_data' => 'adminmenu']],
                 ],
             ]),
         ];
@@ -214,11 +221,11 @@ class BotConfigWizardController extends Controller
     private function cancelResponse(): array
     {
         return [
-            'text' => "✋ *" . TextService::mdv2('Configuración cancelada.') . "*",
+            'text' => "✋ *" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.email.cancelled')) . "*",
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
-                    [['text' => '↩️ Config del bot', 'callback_data' => 'botconfigmenu']],
-                    [['text' => '↖️ Menú admin',      'callback_data' => 'adminmenu']],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.menu.back'),           'callback_data' => 'botconfigmenu']],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.common.back_mainmenu'), 'callback_data' => 'adminmenu']],
                 ],
             ]),
         ];
@@ -232,34 +239,34 @@ class BotConfigWizardController extends Controller
     {
         $notifs = $bot->tenant->data['notifications'] ?? [];
 
-        $btn = fn(string $label, string $path) => [
-            'text'          => ($this->getNestedFlag($notifs, $path) ? '🟢 ' : '⚫ ') . $label,
+        $btn = fn(string $langKey, string $path) => [
+            'text'          => ($this->getNestedFlag($notifs, $path) ? '🟢 ' : '⚫ ') . Lang::get($langKey),
             'callback_data' => 'togglenotif-' . $path,
         ];
 
         return [
-            'text' => "🔔 *" . TextService::mdv2('Notificaciones') . "*\n\n"
-                . "_" . TextService::mdv2('Toca un botón para activar o desactivar la notificación.') . "_",
+            'text' => "🔔 *" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.notifications.header')) . "*\n\n"
+                . "_" . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.notifications.desc')) . "_",
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
-                    [['text' => '— 💰 Capitales —',    'callback_data' => 'botconfignotifications']],
-                    [$btn('Nuevo capital → gestores',         'capitals.new.togestors')],
-                    [$btn('Capital insuficiente → capitales', 'capitals.noenough.tocapitals')],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.notifications.section_capitals'), 'callback_data' => 'botconfignotifications']],
+                    [$btn('gutotradebot::bot.botconfig.notifications.capitals_new_togestors',       'capitals.new.togestors')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.capitals_noenough_tocapitals', 'capitals.noenough.tocapitals')],
 
-                    [['text' => '— 💬 Comentarios —',   'callback_data' => 'botconfignotifications']],
-                    [$btn('Nuevo comentario → gestores',     'comments.new.togestors')],
-                    [$btn('Nuevo comentario → supervisores', 'comments.new.tosupervisors')],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.notifications.section_comments'), 'callback_data' => 'botconfignotifications']],
+                    [$btn('gutotradebot::bot.botconfig.notifications.comments_new_togestors',     'comments.new.togestors')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.comments_new_tosupervisors', 'comments.new.tosupervisors')],
 
-                    [['text' => '— 💶 Pagos —',          'callback_data' => 'botconfignotifications']],
-                    [$btn('Pago nuevo (bot) → gestores',        'payments.new.frombot.togestors')],
-                    [$btn('Pago nuevo (bot) → capitales',       'payments.new.frombot.tocapitals')],
-                    [$btn('Pago nuevo (capital) → gestores',    'payments.new.fromcapital.togestors')],
-                    [$btn('Pago nuevo (remesador) → gestores',  'payments.new.fromremesador.togestors')],
-                    [$btn('Pago nuevo (remesador) → capitales', 'payments.new.fromremesador.tocapitals')],
-                    [$btn('Pago duplicado → gestores',          'payments.double.togestors')],
-                    [$btn('Pago duplicado → capitales',         'payments.double.tocapitals')],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.notifications.section_payments'), 'callback_data' => 'botconfignotifications']],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_frombot_togestors',        'payments.new.frombot.togestors')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_frombot_tocapitals',       'payments.new.frombot.tocapitals')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_fromcapital_togestors',    'payments.new.fromcapital.togestors')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_fromremesador_togestors',  'payments.new.fromremesador.togestors')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_new_fromremesador_tocapitals', 'payments.new.fromremesador.tocapitals')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_double_togestors',             'payments.double.togestors')],
+                    [$btn('gutotradebot::bot.botconfig.notifications.payments_double_tocapitals',            'payments.double.tocapitals')],
 
-                    [['text' => '↩️ Config del bot', 'callback_data' => 'botconfigmenu']],
+                    [['text' => Lang::get('gutotradebot::bot.botconfig.menu.back'), 'callback_data' => 'botconfigmenu']],
                 ],
             ]),
         ];
@@ -267,12 +274,12 @@ class BotConfigWizardController extends Controller
 
     public function toggleNotification($bot, string $dotPath): array
     {
-        $data = $bot->tenant->data ?? [];
-        $keys = explode('.', $dotPath);
+        $data  = $bot->tenant->data ?? [];
+        $keys  = explode('.', $dotPath);
 
-        $current                 = $this->getNestedValue($data['notifications'] ?? [], $keys);
-        $data['notifications']   = $this->setNestedValue($data['notifications'] ?? [], $keys, $current ? 0 : 1);
-        $bot->tenant->data       = $data;
+        $current               = $this->getNestedValue($data['notifications'] ?? [], $keys);
+        $data['notifications'] = $this->setNestedValue($data['notifications'] ?? [], $keys, $current ? 0 : 1);
+        $bot->tenant->data     = $data;
         $bot->tenant->save();
 
         return $this->notificationsMenu($bot);
@@ -286,7 +293,7 @@ class BotConfigWizardController extends Controller
     {
         return [
             'text' => "{$icon} *" . TextService::mdv2($label) . "*\n\n"
-                . TextService::mdv2('Valor actual:') . " `" . TextService::mdv2((string) $current) . "`\n\n"
+                . TextService::mdv2(Lang::get('gutotradebot::bot.botconfig.common.current_value')) . " `" . TextService::mdv2((string) $current) . "`\n\n"
                 . TextService::mdv2($instruction),
             'reply_markup' => $this->cancelKeyboard(),
         ];
@@ -304,7 +311,7 @@ class BotConfigWizardController extends Controller
     {
         return json_encode([
             'inline_keyboard' => [
-                [['text' => '✋ Cancelar', 'callback_data' => '/wizardcancel']],
+                [['text' => Lang::get('gutotradebot::bot.botconfig.common.cancel'), 'callback_data' => '/wizardcancel']],
             ],
         ]);
     }
