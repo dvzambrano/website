@@ -232,19 +232,9 @@ trait UsesTelegramBot
                                 // Sin mensaje previo en caché (primera interacción), enviar nuevo normalmente
                                 $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
                             }
-
                             break;
+
                         default:
-                            // si esta configurado el config_delete_prev_messages por defecto lo q se hace es eliminar el mensaje q origino esta interaccion
-                            $array = array(
-                                "message" => array(
-                                    "id" => $this->message["message_id"],
-                                    "chat" => array(
-                                        "id" => $this->message["chat"]["id"],
-                                    ),
-                                ),
-                            );
-                            TelegramController::deleteMessage($array, $this->tenant->token);
                             break;
                     }
                 } else {
@@ -263,8 +253,8 @@ trait UsesTelegramBot
         // Para callback_query NO hay mensaje del usuario: $this->message es el propio mensaje del bot (el que tenía el teclado)
         if (
             $this->message["message_id"] != "" &&
-            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) &&
-            ($this->message['_update_type'] ?? '') !== 'callback_query'
+            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])
+            // && ($this->message['_update_type'] ?? '') !== 'callback_query'
         ) {
             try {
                 $array = array(
