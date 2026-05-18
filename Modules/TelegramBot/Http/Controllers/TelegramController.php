@@ -554,6 +554,14 @@ class TelegramController extends Controller
             if (isset($json["result"]["last_name"])) {
                 $text .= " " . TelegramController::cleanText4Url($json["result"]["last_name"]);
             }
+            // Fallback when name is empty or contains only non-text characters (e.g. emoji-only names)
+            if (trim($text) === '' || !preg_match('/[\p{L}\p{N}]/u', $text)) {
+                if (isset($json["result"]["username"]) && $json["result"]["username"] !== '') {
+                    $text = "@" . $json["result"]["username"];
+                } else {
+                    $text = (string)$userId;
+                }
+            }
             $json["result"]["full_name"] = $text;
             if (isset($json["result"]["username"])) {
                 $json["result"]["formated_username"] = TelegramController::escapeText4Url($json["result"]["username"]);

@@ -78,6 +78,25 @@ class Actors extends Model
         if (isset($telegram["username"]))
             $telegram["formated_username"] = TelegramController::escapeText4Url($telegram["username"]);
 
+        // Compute full_name if missing from cached data (old format without this field)
+        if (!isset($telegram["full_name"])) {
+            $computed = "";
+            if (isset($telegram["first_name"]))
+                $computed .= TelegramController::cleanText4Url($telegram["first_name"]);
+            if (isset($telegram["last_name"]))
+                $computed .= " " . TelegramController::cleanText4Url($telegram["last_name"]);
+            $telegram["full_name"] = trim($computed);
+        }
+
+        // Fallback when full_name is empty or has no letters/numbers (e.g. emoji-only names like "😉👍")
+        if (trim($telegram["full_name"]) === '' || !preg_match('/[\p{L}\p{N}]/u', $telegram["full_name"])) {
+            if (!empty($telegram["username"])) {
+                $telegram["full_name"] = "@" . $telegram["username"];
+            } else {
+                $telegram["full_name"] = (string)$this->user_id;
+            }
+        }
+
         if (
             $telegram &&
             $key &&
