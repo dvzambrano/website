@@ -124,7 +124,7 @@ class ActorsController extends JsonsController
             "text" => "🫂 *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.subscribers.header')) . "*\n_" . TextService::mdv2(Lang::get('telegrambot::bot.actors.subscribers.body', ['count' => $count])) . "_",
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtoadminmenu'), "callback_data" => "adminmenu"]],
+                    [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtoadminmenu')), "callback_data" => "adminmenu"]],
                 ],
             ]),
         );
@@ -148,7 +148,7 @@ class ActorsController extends JsonsController
                 "text" => "🤷🏻‍♂️ *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.usernotfound.header')) . "*\n\n" . TextService::mdv2(Lang::get('telegrambot::bot.actors.usernotfound.before')) . " \`" . TextService::mdv2($user_id) . "\` " . TextService::mdv2(Lang::get('telegrambot::bot.actors.usernotfound.after')),
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
-                        [["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtomainmenu'), "callback_data" => "menu"]],
+                        [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
                     ],
                 ]),
             ];
@@ -166,8 +166,8 @@ class ActorsController extends JsonsController
         if (isset($suscriptor->data[$bot->tenant->code]))
             $array = $this->getRoleMenu($suscriptor->user_id, $suscriptor->data[$bot->tenant->code]["admin_level"]);
 
-        array_push($array["menu"], [["text" => "🏷 " . Lang::get('telegrambot::bot.actors.metadata.add'), "callback_data" => "/usermetadata {$suscriptor->user_id}"]]);
-        array_push($array["menu"], [["text" => "❌ " . Lang::get('telegrambot::bot.options.delete'), "callback_data" => "confirmation|deleteuser-{$suscriptor->user_id}|adminmenu"]]);
+        array_push($array["menu"], [["text" => "🏷 " . TextService::mdv2(Lang::get('telegrambot::bot.actors.metadata.add')), "callback_data" => "/usermetadata {$suscriptor->user_id}"]]);
+        array_push($array["menu"], [["text" => "❌ " . TextService::mdv2(Lang::get('telegrambot::bot.options.delete')), "callback_data" => "confirmation|deleteuser-{$suscriptor->user_id}|adminmenu"]]);
 
         $text = $suscriptor->getTelegramInfo($bot, "full_info") . "\n" . $array["role"];
 
@@ -225,7 +225,7 @@ class ActorsController extends JsonsController
                 "reply_markup" => json_encode([
                     "inline_keyboard" => [
                         [
-                            ["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtomainmenu'), "callback_data" => "menu"],
+                            ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                         ],
                     ],
                 ]),
@@ -242,7 +242,7 @@ class ActorsController extends JsonsController
             "text" => "⏰ *" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.prompt.header')) . "*\n\n_" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.prompt.line1')) . "\n" . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.prompt.line2')) . "_\n\n👇 " . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.prompt.footer')),
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
-                    [["text" => "✋ " . Lang::get('telegrambot::bot.options.cancel'), "callback_data" => "menu"]],
+                    [["text" => "✋ " . TextService::mdv2(Lang::get('telegrambot::bot.options.cancel')), "callback_data" => "menu"]],
                 ],
             ]),
         ];
@@ -259,7 +259,7 @@ class ActorsController extends JsonsController
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtoconfigmenu'), "callback_data" => "configmenu"],
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtoconfigmenu')), "callback_data" => "configmenu"],
                     ],
                 ],
             ]),
@@ -275,10 +275,10 @@ class ActorsController extends JsonsController
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "⏰ " . Lang::get('telegrambot::bot.actors.utc.retry'), "callback_data" => "/utc"],
+                        ["text" => "⏰ " . TextService::mdv2(Lang::get('telegrambot::bot.actors.utc.retry')), "callback_data" => "/utc"],
                     ],
                     [
-                        ["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtomainmenu'), "callback_data" => "menu"],
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"],
                     ],
                 ],
             ]),
@@ -310,10 +310,10 @@ class ActorsController extends JsonsController
             "reply_markup" => json_encode([
                 "inline_keyboard" => [
                     [
-                        ["text" => "🔃 " . Lang::get('telegrambot::bot.actors.metadata.updated.back'), "callback_data" => "/user {$user_id}"]
+                        ["text" => "🔃 " . TextService::mdv2(Lang::get('telegrambot::bot.actors.metadata.updated.back')), "callback_data" => "/user {$user_id}"]
                     ],
                     [
-                        ["text" => "↖️ " . Lang::get('telegrambot::bot.options.backtoadminmenu'), "callback_data" => "adminmenu"],
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtoadminmenu')), "callback_data" => "adminmenu"],
                     ],
                 ],
             ]),

@@ -7,7 +7,7 @@ use Modules\Laravel\Console\ClearLaravel as BaseClear;
 
 class ClearLaravel extends BaseClear
 {
-    protected $signature = 'laravel:clear {--scrowtest : Inicia la simulación de Escrow} {--clean : Limpia cache de alertas}';
+    protected $signature = 'laravel:clear {--checkgas : Inicia Job de monitoreo de Gas en la red} {--scrowtest : Inicia la simulación de Escrow} {--clean : Limpia cache de alertas}';
     protected $description = 'Ejecuta el Job CheckGas que comienza a monitorear el gas de la red';
 
     public function handle()
@@ -32,11 +32,14 @@ class ClearLaravel extends BaseClear
         $this->call('laravel:unlock');
 
         try {
-            $this->newLine();
-            if ($this->option('clean'))
-                $this->call('zentrotraderbot:reset-gas-alerts');
-            $this->call('zentrotraderbot:start-check-gas');
-            $this->info('☑️  DONE!');
+            if ($this->option('clean') || $this->option('checkgas')) {
+                $this->newLine();
+                if ($this->option('clean'))
+                    $this->call('zentrotraderbot:reset-gas-alerts');
+                if ($this->option('checkgas'))
+                    $this->call('zentrotraderbot:start-check-gas');
+                $this->info('☑️  DONE!');
+            }
         } catch (\Exception $e) {
             $this->warn("⚠️ No se pudo iniciar el monitoreo de gas: " . $e->getMessage());
         }

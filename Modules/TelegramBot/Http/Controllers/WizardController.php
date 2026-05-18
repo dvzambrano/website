@@ -5,6 +5,7 @@ namespace Modules\TelegramBot\Http\Controllers;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Http\Controllers\Controller;
+use Modules\Laravel\Services\TextService;
 
 class WizardController extends Controller
 {
@@ -37,10 +38,10 @@ class WizardController extends Controller
 
         $state = Cache::get($cacheKey, [
             'controller' => $options['controller'] ?? null,
-            'method'     => $options['method'] ?? null,
-            'step'       => 'START',
-            'data'       => $options['initialData'] ?? [],
-            'history'    => [],
+            'method' => $options['method'] ?? null,
+            'step' => 'START',
+            'data' => $options['initialData'] ?? [],
+            'history' => [],
         ]);
 
         // --- CANCEL ---
@@ -50,7 +51,7 @@ class WizardController extends Controller
                 return ($options['onCancel'])($bot);
             }
             return [
-                'text' => '❌ ' . Lang::get('telegrambot::bot.wizard.cancelled'),
+                'text' => '❌ ' . TextService::mdv2(Lang::get('telegrambot::bot.wizard.cancelled')),
                 'chat' => ['id' => $userId],
                 'editprevious' => (isset($bot->callback_query) || ($bot->is_callback ?? false)) ? 1 : 0,
             ];

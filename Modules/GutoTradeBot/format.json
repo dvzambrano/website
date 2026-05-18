@@ -1,45 +1,12 @@
 {
-    "message_id": 3396,
-    "from": {
-        "id": 816767995,
-        "is_bot": false,
-        "first_name": "Donel",
-        "last_name": "Vazquez Zambrano",
-        "username": "dvzambrano",
-        "language_code": "es",
-        "is_premium": true
-    },
-    "chat": {
-        "id": 816767995,
-        "first_name": "Donel",
-        "last_name": "Vazquez Zambrano",
-        "username": "dvzambrano",
-        "type": "private"
-    },
-    "date": 1771434512,
-    "photo": [
-        {
-            "file_id": "AgACAgEAAxkBAAIM-2mV4hXARU_ZzTYdzlIChFsD88UsAAI1DGsbwzyxRJ5pRlSRi1nvAQADAgADcwADOgQ",
-            "file_unique_id": "AQADNQxrG8M8sUR4",
-            "file_size": 897,
-            "width": 73,
-            "height": 90
-        },
-        {
-            "file_id": "AgACAgEAAxkBAAIM-2mV4hXARU_ZzTYdzlIChFsD88UsAAI1DGsbwzyxRJ5pRlSRi1nvAQADAgADbQADOgQ",
-            "file_unique_id": "AQADNQxrG8M8sURy",
-            "file_size": 12940,
-            "width": 258,
-            "height": 320
-        },
-        {
-            "file_id": "AgACAgEAAxkBAAIM-2mV4hXARU_ZzTYdzlIChFsD88UsAAI1DGsbwzyxRJ5pRlSRi1nvAQADAgADeAADOgQ",
-            "file_unique_id": "AQADNQxrG8M8sUR9",
-            "file_size": 14588,
-            "width": 291,
-            "height": 361
+    "notifications": {
+        "payments": {
+            "new": {
+                "frombot": { "togestors": 1, "tocapitals": 1 },
+                "fromcapital": { "togestors": 1 },
+                "fromremesador": { "togestors": 1, "tocapitals": 1 }
+            },
+            "double": { "togestors": 1, "tocapitals": 1 }
         }
-    ],
-    "caption": "Prueba 100",
-    "text": ""
+    }
 }
