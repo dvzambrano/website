@@ -18,7 +18,7 @@ class ZentroPackageBotController extends JsonsController
 
     public function __construct()
     {
-        $this->cleanChatMode = "delete_and_send";
+        $this->cleanChatMode = "keep";
         $this->tenant = app('active_bot');
 
         $this->ActorsController = new ActorsController();
