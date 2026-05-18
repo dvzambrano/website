@@ -157,21 +157,6 @@ trait UsesTelegramBot
             $autodestroy = $this->reply["autodestroy"];
 
         if (isset($this->reply["photo"])) {
-            // Las fotos no se pueden editar a texto ni viceversa: en chat limpio se borra el mensaje previo del bot y se envía la foto nueva
-            if (isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])) {
-                $lastBotMessage = Cache::get($cacheKey);
-                if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
-                    try {
-                        TelegramController::deleteMessage([
-                            "message" => [
-                                "id" => $lastBotMessage["message_id"],
-                                "chat" => ["id" => $this->message["chat"]["id"]],
-                            ],
-                        ], $this->tenant->token);
-                    } catch (\Throwable $th) {
-                    }
-                }
-            }
             $response = TelegramController::sendPhoto($array, $this->tenant->token, $autodestroy);
         } else {
             // solo se envia un mensaje si tiene text
@@ -190,7 +175,8 @@ trait UsesTelegramBot
                     $lastBotMessage = Cache::get($cacheKey);
                     switch ($this->cleanChatMode) {
                         case 'delete_and_send':
-                            // Borrar el mensaje previo del bot y enviar uno nuevo
+                            // Enviar primero para evitar parpadeo visual, luego borrar el previo
+                            $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
                             if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
                                 try {
                                     TelegramController::deleteMessage([
@@ -202,7 +188,6 @@ trait UsesTelegramBot
                                 } catch (\Throwable $th) {
                                 }
                             }
-                            $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
                             break;
 
 
