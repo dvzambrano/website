@@ -1521,32 +1521,28 @@ class GutoTradeBotController extends JsonsController
         $stats .= "\n\n🤷🏻‍♂️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.unconfirmed')) . "*: " . TextService::mdv2(Moneys::format($array["unconfirmed"])) . " 💶" .
             "\n🫰🏻 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.unsettled')) . "*: " . TextService::mdv2(Moneys::format($array["unsettled"])) . " 💶";
 
-        switch (strtolower($this->tenant->code)) {
-            case "gutotradebot":
-                $stats .= "\n\n💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.usdt')) . "*: " . TextService::mdv2(Moneys::format($array["stock"])) . " 💵";
+        $stats .= "\n\n💰 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.usdt')) . "*: " . TextService::mdv2(Moneys::format($array["stock"])) . " 💵";
 
-                $value = $array["stock"] + $this->ProfitsController->getProfit($array["stock"]);
+        $value = $array["stock"] + $this->ProfitsController->getProfit($array["stock"]);
+        $stats .= "\n💱 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.equivalents')) . "*: " . TextService::mdv2(Moneys::format($value)) . " 💶";
 
-                $stats .= "\n💱 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.equivalents')) . "*: " . TextService::mdv2(Moneys::format($value)) . " 💶";
+        if ($actor->isLevel(1, $this->tenant->code)) {
+            $stats .= "\n\n☑ *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.should')) . "*: " . TextService::mdv2(Moneys::format($array["should"])) . " 💵";
+            $stats .= "\n   ↳ 🤷🏻‍♂️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.unconfirmed')) . "*: " . TextService::mdv2(Moneys::format($array["should_unconfirmed"])) . " 💵";
+            $stats .= "\n   ↳ 🫰🏻 *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.unsettled')) . "*: " . TextService::mdv2(Moneys::format($array["unsettled_usdt"])) . " 💵";
 
-                if ($actor->isLevel(1, $this->tenant->code)) {
-                    $stats .= "\n\n☑ *" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.should')) . "*: " . TextService::mdv2(Moneys::format($array["should"])) . " 💵";
-                    if ($array["having"] >= $array["should"]) {
-                        $stats .= "\n✅ ";
-                    } else {
-                        if ($array["having"] >= $array["unsettled"]) {
-                            $stats .= "\n😳 ";
-                        } else {
-                            $stats .= "\n🥵 ";
-                        }
-                    }
+            $delta = $array["having"] - $array["should"];
+            $sign = $delta >= 0 ? "+" : "";
 
-                    $stats .= "*" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.having')) . "*: " . TextService::mdv2(Moneys::format($array["having"])) . " 💵";
-                }
-                break;
+            if ($array["having"] >= $array["should"]) {
+                $stats .= "\n✅ ";
+            } elseif ($array["having"] >= $array["unsettled_usdt"]) {
+                $stats .= "\n😳 ";
+            } else {
+                $stats .= "\n🥵 ";
+            }
 
-            default:
-                break;
+            $stats .= "*" . TextService::mdv2(Lang::get('gutotradebot::bot.stats.having')) . "*: " . TextService::mdv2(Moneys::format($array["having"])) . " 💵  \(" . TextService::mdv2($sign . Moneys::format($delta)) . " 💵\)";
         }
 
         $records = $this->PaymentsController->getRecords($from_date, $to_date);

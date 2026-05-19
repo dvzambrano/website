@@ -840,6 +840,8 @@ class MoneysController extends JsonsController
             "unsettled" => $stats["eur"]["unsettled"],
             "stock" => $stock,
             "should" => $stats["usdt"]["unconfirmed"] + $stats["usdt"]["unsettled"],
+            "should_unconfirmed" => $stats["usdt"]["unconfirmed"],
+            "unsettled_usdt" => $stats["usdt"]["unsettled"],
             "having" => $stock + $stats["usdt"]["unsettled_received"],
         );
     }
