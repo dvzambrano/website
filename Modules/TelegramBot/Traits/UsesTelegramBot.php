@@ -29,8 +29,9 @@ trait UsesTelegramBot
      * Comportamiento del chat limpio (config_delete_prev_messages activo).
      * 'edit'            → edita el mensaje previo del bot en Telegram.
      * 'delete_and_send' → borra el mensaje previo y envía uno nuevo.
+     * 'keep' mantiene el mensaje previo
      */
-    public $cleanChatMode = 'delete_and_send';
+    public $cleanChatMode = 'keep';
 
     public function receiveMessage($bot, $update)
     {
@@ -156,29 +157,14 @@ trait UsesTelegramBot
             $autodestroy = $this->reply["autodestroy"];
 
         if (isset($this->reply["photo"])) {
-            // Las fotos no se pueden editar a texto ni viceversa: en chat limpio se borra el mensaje previo del bot y se envía la foto nueva
-            if (isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])) {
-                $lastBotMessage = Cache::get($cacheKey);
-                if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
-                    try {
-                        TelegramController::deleteMessage([
-                            "message" => [
-                                "id" => $lastBotMessage["message_id"],
-                                "chat" => ["id" => $this->message["chat"]["id"]],
-                            ],
-                        ], $this->tenant->token);
-                    } catch (\Throwable $th) {
-                    }
-                }
-            }
             $response = TelegramController::sendPhoto($array, $this->tenant->token, $autodestroy);
         } else {
             // solo se envia un mensaje si tiene text
             // antes estaba $this->message["text"] pero lo cambie para q mandara el error cuando mandan la captura de un pago sin nombre y cantidad
             if (isset($this->reply["text"]) && $this->reply["text"] != "") {
+                $lastmessage = Cache::get($cacheKey);
                 if (isset($this->reply["editprevious"]) && $this->reply["editprevious"] > 0) {
                     // El comando pide explícitamente editar el mensaje anterior del bot
-                    $lastmessage = Cache::get($cacheKey);
                     $array["message"]["message_id"] = $lastmessage["message_id"];
                     $response = TelegramController::editMessageText($array, $this->tenant->token);
                 } elseif (
@@ -186,62 +172,69 @@ trait UsesTelegramBot
                     $autodestroy == 0
                 ) {
                     // Condición autodestroy == 0: si hay autodestroy se necesita un mensaje nuevo para programar su borrado
-                    $lastBotMessage = Cache::get($cacheKey);
-                    if ($this->cleanChatMode === 'delete_and_send') {
-                        // Borrar el mensaje previo del bot y enviar uno nuevo
-                        if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
-                            try {
-                                TelegramController::deleteMessage([
-                                    "message" => [
-                                        "id" => $lastBotMessage["message_id"],
-                                        "chat" => ["id" => $this->message["chat"]["id"]],
-                                    ],
-                                ], $this->tenant->token);
-                            } catch (\Throwable $th) {
-                            }
-                        }
-                        $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
-                    } else {
-                        // Modo 'edit': editar el mensaje previo del bot
-                        if ($lastBotMessage && isset($lastBotMessage["message_id"])) {
-                            if (isset($lastBotMessage["reply_to_message"])) {
-                                // El mensaje cacheado fue enviado como reply: Telegram no permite quitar ese indicador al editar.
-                                // Borrar ese mensaje y enviar uno nuevo limpio.
+                    switch ($this->cleanChatMode) {
+                        case 'delete_and_send':
+                            // Enviar primero para evitar parpadeo visual, luego borrar el previo
+                            $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
+                            if ($lastmessage && isset($lastmessage["message_id"])) {
                                 try {
                                     TelegramController::deleteMessage([
                                         "message" => [
-                                            "id" => $lastBotMessage["message_id"],
+                                            "id" => $lastmessage["message_id"],
                                             "chat" => ["id" => $this->message["chat"]["id"]],
                                         ],
                                     ], $this->tenant->token);
                                 } catch (\Throwable $th) {
                                 }
-                                $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
-                            } else {
-                                $editArray = $array;
-                                $editArray["message"]["message_id"] = $lastBotMessage["message_id"];
-                                $editResponse = TelegramController::editMessageText($editArray, $this->tenant->token);
-                                $editData = json_decode($editResponse, true);
-                                if ($editData['ok'] ?: false) {
-                                    $response = $editResponse;
-                                } else {
-                                    // Fallback: el edit falló — borrar el anterior y enviar nuevo
+                            }
+                            break;
+
+                        case 'edit':
+                            // Modo 'edit': editar el mensaje previo del bot
+                            if ($lastmessage && isset($lastmessage["message_id"])) {
+                                if (isset($lastmessage["reply_to_message"])) {
+                                    // El mensaje cacheado fue enviado como reply: Telegram no permite quitar ese indicador al editar.
+                                    // Borrar ese mensaje y enviar uno nuevo limpio.
                                     try {
                                         TelegramController::deleteMessage([
                                             "message" => [
-                                                "id" => $lastBotMessage["message_id"],
+                                                "id" => $lastmessage["message_id"],
                                                 "chat" => ["id" => $this->message["chat"]["id"]],
                                             ],
                                         ], $this->tenant->token);
                                     } catch (\Throwable $th) {
                                     }
                                     $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
+                                } else {
+                                    $editArray = $array;
+                                    $editArray["message"]["message_id"] = $lastmessage["message_id"];
+                                    $editResponse = TelegramController::editMessageText($editArray, $this->tenant->token);
+                                    $editData = json_decode($editResponse, true);
+                                    if ($editData['ok'] ?: false) {
+                                        $response = $editResponse;
+                                    } else {
+                                        // Fallback: el edit falló — borrar el anterior y enviar nuevo
+                                        try {
+                                            TelegramController::deleteMessage([
+                                                "message" => [
+                                                    "id" => $lastmessage["message_id"],
+                                                    "chat" => ["id" => $this->message["chat"]["id"]],
+                                                ],
+                                            ], $this->tenant->token);
+                                        } catch (\Throwable $th) {
+                                        }
+                                        $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
+                                    }
                                 }
+                            } else {
+                                // Sin mensaje previo en caché (primera interacción), enviar nuevo normalmente
+                                $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
                             }
-                        } else {
-                            // Sin mensaje previo en caché (primera interacción), enviar nuevo normalmente
+                            break;
+
+                        default:
                             $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
-                        }
+                            break;
                     }
                 } else {
                     $response = TelegramController::sendMessage($array, $this->tenant->token, $autodestroy);
@@ -259,8 +252,8 @@ trait UsesTelegramBot
         // Para callback_query NO hay mensaje del usuario: $this->message es el propio mensaje del bot (el que tenía el teclado)
         if (
             $this->message["message_id"] != "" &&
-            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"]) &&
-            ($this->message['_update_type'] ?? '') !== 'callback_query'
+            isset($this->actor->data[$this->tenant->code]["config_delete_prev_messages"])
+            // && ($this->message['_update_type'] ?? '') !== 'callback_query'
         ) {
             try {
                 $array = array(
