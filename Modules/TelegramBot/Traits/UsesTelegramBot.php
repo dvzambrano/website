@@ -174,9 +174,6 @@ trait UsesTelegramBot
                     // Condición autodestroy == 0: si hay autodestroy se necesita un mensaje nuevo para programar su borrado
                     switch ($this->cleanChatMode) {
                         case 'delete_and_send':
-                            Log::debug("🐞 delete_and_send", [
-                                "array" => $array,
-                            ]);
                             // Enviar primero para evitar parpadeo visual, luego borrar el previo
                             $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
                             if ($lastmessage && isset($lastmessage["message_id"])) {
@@ -192,11 +189,7 @@ trait UsesTelegramBot
                             }
                             break;
 
-
                         case 'edit':
-                            Log::debug("🐞 edit", [
-                                "array" => $array,
-                            ]);
                             // Modo 'edit': editar el mensaje previo del bot
                             if ($lastmessage && isset($lastmessage["message_id"])) {
                                 if (isset($lastmessage["reply_to_message"])) {
@@ -241,9 +234,6 @@ trait UsesTelegramBot
 
                         default:
                             $response = TelegramController::sendMessage($array, $this->tenant->token, 0);
-                            Log::debug("🐞 default", [
-                                "array" => $array,
-                            ]);
                             break;
                     }
                 } else {
