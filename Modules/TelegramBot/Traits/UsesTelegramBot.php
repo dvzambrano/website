@@ -94,6 +94,7 @@ trait UsesTelegramBot
         }
         Log::info("✅ {$log} from {$logfrom}" . json_encode($this->message));
 
+
         // analizando la informacion del texto obtenido en el $request
         // no se hace una validacion de $this->message["text"] vacio pues afecta en elvio de archivos a GutoTradeBot
         $textinfo = $this->getCommand($this->message["text"]);
