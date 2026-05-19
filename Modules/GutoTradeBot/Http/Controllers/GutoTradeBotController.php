@@ -314,7 +314,8 @@ class GutoTradeBotController extends JsonsController
                     $amount = 100;
                     $rate = $this->CoingeckoController->getRate(Carbon::now()->format("Y-m-d"));
 
-                    $flow = $this->ProfitsController->calculateFlow($amount, $rate["inverse"]);
+                    // [Bug 4] Renombrado para que el loop historico no pise este valor
+                    $today_flow = $this->ProfitsController->calculateFlow($amount, $rate["inverse"]);
 
                     $capitals = Capitals::query()
                         ->select([
@@ -322,7 +323,8 @@ class GutoTradeBotController extends JsonsController
                             DB::raw('SUM(amount) as amount'),
                             DB::raw('SUM(comment) as arrival'),
                             DB::raw('COUNT(id) as count'),
-                            DB::raw('JSON_ARRAYAGG(JSON_OBJECT("id", id, "amount", amount, "comment", comment, "screenshot", screenshot, "sender_id", sender_id, "supervisor_id", supervisor_id, "data", data)) as items'),
+                            // [Bug 2 + Propuesta B] ORDER BY DESC garantiza que el primer item con rate sea el mas reciente del dia
+                            DB::raw('JSON_ARRAYAGG(JSON_OBJECT("id", id, "amount", amount, "comment", comment, "screenshot", screenshot, "sender_id", sender_id, "supervisor_id", supervisor_id, "data", data) ORDER BY created_at DESC) as items'),
                         ])
                         ->whereNotNull(DB::raw("JSON_EXTRACT(data, '$.rate')"))
                         ->groupBy(DB::raw('DATE(created_at)'))
@@ -351,17 +353,17 @@ class GutoTradeBotController extends JsonsController
                     }
 
                     $outputsymbol = " ";
-                    if ($flow["output"]["percent"] > 0)
+                    if ($today_flow["output"]["percent"] > 0)
                         $outputsymbol = " +";
 
                     $text = "ℹ️ *" . TextService::mdv2(Lang::get('gutotradebot::bot.market.title')) . "*\n_" . TextService::mdv2(Lang::get('gutotradebot::bot.market.desc')) . "_\n\n" .
                         "💰  *100\.00* 💶 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.initial')) . "_\n" .
                         "{$symbol}  " . TextService::mdv2(Moneys::format($rate["inverse"], 4)) . " 💱 _" . TextService::mdv2((string) $rate["direct"]) . "_\n" .
-                        "🛬  *" . TextService::mdv2(Moneys::format($flow["arrival"])) . "* 💵 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.nets')) . "_\n" .
-                        "➰    \- " . TextService::mdv2(Moneys::format($flow["waste"]["amount"])) . " 💵 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.expenses')) . " " . TextService::mdv2((string) $flow["waste"]["percent"]) . "%_\n" .
-                        "🏭  *" . TextService::mdv2(Moneys::format($flow["capital"])) . "* 💵 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.workable')) . "_\n" .
-                        "➿   " . TextService::mdv2($outputsymbol) . TextService::mdv2(Moneys::format($flow["output"]["amount"])) . " 💱 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.client')) . " " . TextService::mdv2((string) $flow["output"]["percent"]) . "%_\n" .
-                        "🛫  *" . TextService::mdv2(Moneys::format($flow["profit"]["amount"])) . "* 💶 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.result')) . "_ *" . TextService::mdv2(Moneys::format($flow["profit"]["percent"])) . "%*\n\n";
+                        "🛬  *" . TextService::mdv2(Moneys::format($today_flow["arrival"])) . "* 💵 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.nets')) . "_\n" .
+                        "➰    \- " . TextService::mdv2(Moneys::format($today_flow["waste"]["amount"])) . " 💵 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.expenses')) . " " . TextService::mdv2((string) $today_flow["waste"]["percent"]) . "%_\n" .
+                        "🏭  *" . TextService::mdv2(Moneys::format($today_flow["capital"])) . "* 💵 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.workable')) . "_\n" .
+                        "➿   " . TextService::mdv2($outputsymbol) . TextService::mdv2(Moneys::format($today_flow["output"]["amount"])) . " 💱 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.client')) . " " . TextService::mdv2((string) $today_flow["output"]["percent"]) . "%_\n" .
+                        "🛫  *" . TextService::mdv2(Moneys::format($today_flow["profit"]["amount"])) . "* 💶 _" . TextService::mdv2(Lang::get('gutotradebot::bot.market.result')) . "_ *" . TextService::mdv2(Moneys::format($today_flow["profit"]["percent"])) . "%*\n\n";
 
                     $dates = [];
                     $percents = [];
@@ -371,37 +373,34 @@ class GutoTradeBotController extends JsonsController
                     $receiversum = 0;
                     for ($i = 0; $i < count($capitals); $i++) {
                         if (isset($capitals[$i]["data"]["rate"])) {
-                            $symbol = "〰️";
+                            // [Bug 4] Renombrado a $day_symbol para no pisar el $symbol del header
+                            $day_symbol = "〰️";
                             if ($i < count($capitals) - 1) {
                                 $next = $capitals[$i + 1]["data"]["rate"]["oracle"]["inverse"];
                                 if ($capitals[$i]["data"]["rate"]["oracle"]["inverse"] > $next) {
-                                    $symbol = "📈";
+                                    $day_symbol = "📈";
                                 } else {
-                                    $symbol = "📉";
+                                    $day_symbol = "📉";
                                 }
                             }
-                            $flow = $this->ProfitsController->calculateFlow($amount, $capitals[$i]["data"]["rate"]["oracle"]["inverse"], $capitals[$i]["data"]["profit"]["salary"], $capitals[$i]["data"]["profit"]["profit"]);
+                            // [Bug 4] Renombrado a $day_flow para no pisar $today_flow del scope exterior
+                            $day_flow = $this->ProfitsController->calculateFlow($amount, $capitals[$i]["data"]["rate"]["oracle"]["inverse"], $capitals[$i]["data"]["profit"]["salary"], $capitals[$i]["data"]["profit"]["profit"]);
 
                             $dates[] = $capitals[$i]["date"];
-                            $percent = $flow["profit"]["percent"];
+                            $percent = $day_flow["profit"]["percent"];
                             $percents[] = $percent;
 
-                            $sernderamount = $capitals[$i]["amount"] * $percent / 100;
-                            $sendersum += $sernderamount;
-                            $sender[] = $sernderamount;
+                            $sender_amount = $capitals[$i]["amount"] * $percent / 100;
+                            $sendersum += $sender_amount;
+                            $sender[] = $sender_amount;
 
-                            $receiveramount = $capitals[$i]["arrival"] * $flow["waste"]["percent"] / 100;
-                            $receiversum += $receiveramount;
-                            $receiver[] = $receiveramount;
-
-                            //die($capitals[$i]["date"] . " = " . $sernderamount . " / " . $receiveramount);
-    
-                            if ($capitals[$i]["date"] == date("Y-m-d")) {
-                                $found = true;
-                            }
+                            // [Bug 3 + Propuesta C] Usar amount (EUR) en lugar de arrival (USDT): ambas barras quedan en la misma unidad
+                            $receiver_amount = $capitals[$i]["amount"] * $day_flow["waste"]["percent"] / 100;
+                            $receiversum += $receiver_amount;
+                            $receiver[] = $receiver_amount;
 
                             $date = Carbon::createFromDate($capitals[$i]["date"]);
-                            $text .= $symbol . " " . TextService::mdv2($date->format("Y-m-d")) . " 💱 " . TextService::mdv2(Moneys::format($capitals[$i]["data"]["rate"]["oracle"]["inverse"], 4)) . " 👉 " . TextService::mdv2(Moneys::format($percent)) . "%\n";
+                            $text .= $day_symbol . " " . TextService::mdv2($date->format("Y-m-d")) . " 💱 " . TextService::mdv2(Moneys::format($capitals[$i]["data"]["rate"]["oracle"]["inverse"], 4)) . " 👉 " . TextService::mdv2(Moneys::format($percent)) . "%\n";
                         }
                     }
 
@@ -410,6 +409,14 @@ class GutoTradeBotController extends JsonsController
                     $sender = array_reverse($sender);
                     $receiver = array_reverse($receiver);
 
+                    // [Bug 1 + Propuesta A] Si hoy no tiene capital registrado aun, agregar punto con tasa oracle en tiempo real
+                    if (!\in_array(date("Y-m-d"), $dates)) {
+                        $dates[] = date("Y-m-d");
+                        $percents[] = $today_flow["profit"]["percent"];
+                        $sender[] = 0;
+                        $receiver[] = 0;
+                    }
+
                     $filename = false;
                     if (count($dates) > 0) {
                         $filename = GraphsController::generateGroupBarsGraph($dates, [
@@ -417,7 +424,7 @@ class GutoTradeBotController extends JsonsController
                                 "values" => [$percents],
                                 "weight" => 3,
                                 "color" => ["black"],
-                                "label" => ["Percent"],
+                                "label" => ["%"],
                                 "trend" => [
                                     "style" => "solid",
                                     "weight" => 2,
@@ -426,7 +433,8 @@ class GutoTradeBotController extends JsonsController
                             [
                                 "values" => [[$receiver, $sender]],
                                 "color" => [["#fbdfaa", "#aeffae"]],
-                                "label" => [["Waste", "Profit"]],
+                                // [Propuesta C] Labels actualizados: ambas series son EUR
+                                "label" => [["Gasto EUR", "Profit EUR"]],
                                 "y" => true,
                             ],
                         ]);
