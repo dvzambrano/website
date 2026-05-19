@@ -730,9 +730,12 @@ class MoneysController extends JsonsController
         // EUR: euros a enviar luego de procesar.
         $total_euros_a_enviar = (float) $this->getMoneysSumByDate(Capitals::class, "amount", $from_date, $to_date);
 
+        $unconfirmed_payments = $this->getUnconfirmedQuery($bot, Payments::class)->get();
+        $unliquidated_payments = $this->getUnliquidatedQuery($bot, Payments::class)->get();
+
         // EUR
-        $euros_enviados_sin_confirmar = (float) ($this->getUnconfirmedQuery($bot, Payments::class)->sum('amount'));
-        $euros_enviados_sin_liquidar = (float) ($this->getUnliquidatedQuery($bot, Payments::class)->sum('amount'));
+        $euros_enviados_sin_confirmar = (float) $unconfirmed_payments->sum('amount');
+        $euros_enviados_sin_liquidar = (float) $unliquidated_payments->sum('amount');
 
         // EUR
         $euros_pendientes_a_enviar = $total_euros_a_enviar - $cantidad_euros_enviados;
@@ -740,8 +743,11 @@ class MoneysController extends JsonsController
         return array(
             "usdt" => array(
                 "received" => $total_usdt_recibido,
+                // pending no tiene pagos concretos aun: se usa tasa global como estimacion
                 "pending" => $bot->ProfitsController->getSpended($euros_pendientes_a_enviar),
-                "unconfirmed" => $bot->ProfitsController->getSpended($euros_enviados_sin_confirmar),
+                "unconfirmed" => $this->sumSpendedByPayments($unconfirmed_payments, $bot),
+                "unsettled" => $this->sumSpendedByPayments($unliquidated_payments, $bot),
+                "unsettled_received" => $this->sumReceivedByPayments($unliquidated_payments, $bot),
             ),
             "eur" => array(
                 "tosend" => $total_euros_a_enviar,
@@ -751,6 +757,53 @@ class MoneysController extends JsonsController
                 "pending" => $euros_pendientes_a_enviar,
             ),
         );
+    }
+
+    /**
+     * Suma los USDT procesados de una coleccion de pagos usando la tasa individual
+     * de cada pago (data.rate.internal). Si un pago no tiene tasa personalizada
+     * se usa la tasa global via getSpended sin argumentos.
+     */
+    private function sumSpendedByPayments($payments, $bot)
+    {
+        return (float) $payments->sum(function ($payment) use ($bot) {
+            $internal = isset($payment->data['rate']['internal'])
+                ? (float) $payment->data['rate']['internal']
+                : false;
+            return $internal !== false
+                ? $bot->ProfitsController->getSpended($payment->amount, $internal, 0)
+                : $bot->ProfitsController->getSpended($payment->amount);
+        });
+    }
+
+    /**
+     * Suma los USDT recibidos de una coleccion de pagos usando la tasa individual
+     * de cada pago para el capital y la tasa de salario global para la parte
+     * de ganancias (el salario no es configurable por pago).
+     */
+    private function sumReceivedByPayments($payments, $bot)
+    {
+        if ($payments->isEmpty()) return 0.0;
+
+        $salary_rate = (float) $bot->ProfitsController->getSalary();
+
+        return (float) $payments->sum(function ($payment) use ($bot, $salary_rate) {
+            $internal = isset($payment->data['rate']['internal'])
+                ? (float) $payment->data['rate']['internal']
+                : false;
+
+            if ($internal === false) {
+                return $bot->ProfitsController->getUSDTreceived($payment->amount);
+            }
+
+            $spended = $bot->ProfitsController->getSpended($payment->amount, $internal, 0);
+
+            if ($salary_rate == 0) return $spended;
+
+            // replica de getEarned usando el capital calculado con tasa personalizada
+            $total = $spended * 100 / (100 - $salary_rate);
+            return $spended + ($total * $salary_rate / 100);
+        });
     }
 
     public function getInfo($bot, $from_date = false, $to_date = false)
@@ -786,8 +839,8 @@ class MoneysController extends JsonsController
             "unconfirmed" => $stats["eur"]["unconfirmed"],
             "unsettled" => $stats["eur"]["unsettled"],
             "stock" => $stock,
-            "should" => $bot->ProfitsController->getUSDTtoSendWithActiveRate($stats["eur"]["unconfirmed"] + $stats["eur"]["unsettled"]),
-            "having" => $stock + $bot->ProfitsController->getUSDTreceived($stats["eur"]["unsettled"]),
+            "should" => $stats["usdt"]["unconfirmed"] + $stats["usdt"]["unsettled"],
+            "having" => $stock + $stats["usdt"]["unsettled_received"],
         );
     }
 
