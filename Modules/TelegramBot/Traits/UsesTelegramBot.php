@@ -655,7 +655,7 @@ trait UsesTelegramBot
     {
         $reply = [];
 
-        $text = "👋 *" . Lang::get("telegrambot::bot.mainmenu.salutation", ["bot_name" => $this->tenant->code]) . "*\!\n" . $description;
+        $text = "👋 *" . Lang::get("telegrambot::bot.mainmenu.salutation", ["bot_name" => TextService::mdv2($this->tenant->code)]) . "*\!\n" . $description;
         if ($referral) {
             if (isset($actor->data[$this->tenant->code]["parent_id"]) && $actor->data[$this->tenant->code]["parent_id"] > 0) {
                 $parent = $this->ActorsController->getFirst(Actors::class, "user_id", "=", $actor->data[$this->tenant->code]["parent_id"]);
