@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Log;
 use Modules\Laravel\Services\TextService;
 use Modules\TelegramBot\Entities\TelegramBots;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Entities\TronDealerDeposit;
+use Modules\ZentroTraderBot\Services\DepositService;
 
 class NotifySwapResult implements ShouldQueue
 {
@@ -52,6 +54,8 @@ class NotifySwapResult implements ShouldQueue
         $assetIn   = strtoupper($deposit->asset ?? '');
         $chainIn   = strtoupper($deposit->network ?? '');
         $amountOut = number_format((float) $deposit->amount_out, 2);
+        $assetOut  = strtoupper($deposit->asset_out ?? DepositService::assetOut());
+        $chainOut  = ConfigService::getActiveNetwork()['chain'] ?? strtoupper($deposit->chain_out ?? '');
 
         $s = $deposit->status;
 
@@ -66,14 +70,14 @@ class NotifySwapResult implements ShouldQueue
             case 'processing':
                 $title  = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.processing.title'));
                 $body   = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.processing.body', ['amount' => $amountIn, 'asset' => $assetIn]));
-                $footer = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.processing.footer'));
+                $footer = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.processing.footer', ['token' => $assetOut, 'network' => $chainOut]));
                 $msg    = "🔄 *{$title}*\n\n{$body}\n\n_{$footer}_";
                 break;
 
             case 'completed':
                 $title    = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.completed.title'));
                 $sent     = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.completed.sent', ['amount' => $amountIn, 'asset' => $assetIn, 'chain' => $chainIn]));
-                $received = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.completed.received', ['amount_out' => $amountOut]));
+                $received = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.completed.received', ['amount_out' => $amountOut, 'token' => $assetOut, 'network' => $chainOut]));
                 $footer   = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.completed.footer'));
                 $msg      = "✅ *{$title}\\!*\n\n💸 {$sent}\n📥 {$received}\n\n_{$footer}_";
                 break;

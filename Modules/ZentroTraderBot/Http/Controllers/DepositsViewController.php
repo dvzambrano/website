@@ -63,9 +63,10 @@ class DepositsViewController extends Controller
             $chainIn   = strtoupper($deposit->network ?? '');
 
             $msg .= "*" . TextService::mdv2($label) . "*\n";
-            $msg .= "   `{$amountIn} {$assetIn}` \\(" . TextService::mdv2($chainIn) . "\\) → `USDC`\n";
+            $assetOut  = strtoupper($deposit->asset_out ?? DepositService::assetOut());
+            $msg .= "   `{$amountIn} {$assetIn}` \\(" . TextService::mdv2($chainIn) . "\\) → `{$assetOut}`\n";
 
-            if (in_array($deposit->status, DepositService::ACTIVE_STATUSES)) {
+            if (\in_array($deposit->status, DepositService::ACTIVE_STATUSES)) {
                 $address = $deposit->wallet_address ?? '—';
                 $msg .= "   📬 `" . TextService::mdv2($address) . "`\n";
 

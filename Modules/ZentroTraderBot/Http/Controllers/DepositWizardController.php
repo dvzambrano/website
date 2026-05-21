@@ -2,13 +2,14 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Modules\Laravel\Http\Controllers\Controller;
 use Modules\Laravel\Services\TextService;
 use Modules\TelegramBot\Http\Controllers\WizardController;
+use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Jobs\CheckSwapStatus;
 use Modules\ZentroTraderBot\Services\DepositService;
-use Illuminate\Support\Facades\Lang;
 
 
 class DepositWizardController extends Controller
@@ -96,7 +97,10 @@ class DepositWizardController extends Controller
         return [
             'text' => "💱 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.header')) . "*\n\n" .
                 TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.select_pair')) . "\n\n" .
-                "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.polygon_notice')) . "_",
+                "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.polygon_notice', [
+                    'token'   => DepositService::assetOut(),
+                    'network' => ConfigService::getActiveNetwork()['chain'] ?? ConfigService::getActiveNetwork()['shortName'] ?? '',
+                ])) . "_",
             'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
         ];
     }
@@ -213,10 +217,12 @@ class DepositWizardController extends Controller
         $assetIn = strtoupper($quote['asset_in']);
         $chainIn = strtoupper($quote['chain_in']);
         $amountOut = number_format($adjusted, 2);
+        $assetOut = DepositService::assetOut();
+        $chainOutLabel = ConfigService::getActiveNetwork()['chain'] ?? ConfigService::getActiveNetwork()['shortName'] ?? '';
 
         $msg = "📋 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_header')) . "*\n\n";
         $msg .= "📤 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_you_send')) . "* `{$amountIn} {$assetIn}` \\({$chainIn}\\)\n";
-        $msg .= "📥 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_you_receive')) . "* `{$amountOut} USDC` \\(Polygon\\)\n\n";
+        $msg .= "📥 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_you_receive')) . "* `{$amountOut} {$assetOut}` \\(" . TextService::mdv2($chainOutLabel) . "\\)\n\n";
         $msg .= "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_disclaimer')) . "_\n\n";
         $msg .= TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_confirm'));
 

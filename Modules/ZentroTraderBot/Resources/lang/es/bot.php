@@ -785,7 +785,7 @@ return [
         "error_unavailable" => "No hay monedas disponibles en este momento.",
         "header" => "Deposito via Swap",
         "select_pair" => "Selecciona la red y moneda desde donde enviaras los fondos:",
-        "polygon_notice" => "Los fondos llegaran como USDC en Polygon.",
+        "polygon_notice" => "Los fondos llegaran como :token en :network.",
         "min_amount" => "Minimo: :amount :asset",
         "max_amount" => "Maximo: :amount :asset",
         "error_below_min" => "El valor :amount :asset es menor al minimo permitido (:min).",
@@ -883,12 +883,12 @@ return [
         "processing" => [
             "title" => "Procesando swap",
             "body" => "Las confirmaciones de tu deposito de :amount :asset fueron recibidas.",
-            "footer" => "Ejecutando el swap hacia USDC en Polygon. Te avisamos al completarse.",
+            "footer" => "Ejecutando el swap hacia :token en :network. Te avisamos al completarse.",
         ],
         "completed" => [
             "title" => "Swap completado",
             "sent" => "Enviaste :amount :asset (:chain).",
-            "received" => "Recibido en contrato: :amount_out USDC (Polygon).",
+            "received" => "Recibido en contrato: :amount_out :token (:network).",
             "footer" => "Tu saldo estara disponible en breve.",
         ],
         "expired" => [

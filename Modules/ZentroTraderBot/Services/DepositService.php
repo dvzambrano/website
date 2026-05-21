@@ -4,18 +4,28 @@ namespace Modules\ZentroTraderBot\Services;
 
 use Dvzambrano\TronDealer\Facades\TronDealer;
 use Illuminate\Support\Facades\Log;
+use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Entities\TronDealerDeposit;
 
 class DepositService
 {
-    public const ASSET_OUT = 'USDC';
-    public const CHAIN_OUT = 'pol';
-
     // Statuses considered "active" (swap is live and awaiting funds or processing)
     public const ACTIVE_STATUSES = ['waiting_deposit', 'deposit_detected', 'processing'];
 
     // TronDealer terminal statuses
     public const TERMINAL_STATUSES = ['completed', 'expired', 'failed', 'refund_required', 'refunded', 'rejected'];
+
+    public static function assetOut(): string
+    {
+        $token = ConfigService::getToken(env('BASE_TOKEN'), env('BASE_NETWORK'));
+        return strtoupper($token['symbol'] ?? 'USDC');
+    }
+
+    public static function chainOut(): string
+    {
+        $network = ConfigService::getActiveNetwork();
+        return strtolower($network['shortName'] ?? 'pol');
+    }
 
     public function getActiveDeposit(int $userId): ?TronDealerDeposit
     {
@@ -41,8 +51,8 @@ class DepositService
         $pairs = [];
         foreach ($response['pairs'] as $pair) {
             if (
-                strtoupper($pair['asset_out']) === self::ASSET_OUT &&
-                strtolower($pair['chain_out']) === self::CHAIN_OUT
+                strtoupper($pair['asset_out']) === self::assetOut() &&
+                strtolower($pair['chain_out']) === self::chainOut()
             ) {
                 $pairs[] = [
                     'label' => strtoupper($pair['asset_in']) . ' (' . strtoupper($pair['chain_in']) . ')',
@@ -60,7 +70,7 @@ class DepositService
 
     public function getQuote(string $assetIn, string $chainIn, float $amountIn): array
     {
-        return TronDealer::getSwapQuote($assetIn, $chainIn, self::ASSET_OUT, self::CHAIN_OUT, $amountIn);
+        return TronDealer::getSwapQuote($assetIn, $chainIn, self::assetOut(), self::chainOut(), $amountIn);
     }
 
     /**
@@ -94,8 +104,8 @@ class DepositService
             'amount' => $amountIn,
             'asset' => $assetIn,
             'network' => $chainIn,
-            'asset_out' => self::ASSET_OUT,
-            'chain_out' => self::CHAIN_OUT,
+            'asset_out' => self::assetOut(),
+            'chain_out' => self::chainOut(),
             'amount_out' => $amountOut,
             'fee_pct' => $feePct,
             'payout_address' => $payoutAddress,
