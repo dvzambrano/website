@@ -365,12 +365,20 @@ class ZentroTraderBotController extends JsonsController
                     ),
                     "reply_markup" => json_encode([
                         "inline_keyboard" => [
+                            /*
                             [
                                 [
                                     "text" => "🪢 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.prompts.topup.cripto.options.debridge")),
                                     "url" => route('zentrotraderbot.pay', array(
                                         "user" => $this->actor->data["telegram"]["username"],
                                     ))
+                                ]
+                            ],
+                            */
+                            [
+                                [
+                                    "text" => "💱 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.tdeposit.btn_deposit")),
+                                    "callback_data" => "/tdeposit"
                                 ]
                             ],
                             [
@@ -877,13 +885,6 @@ class ZentroTraderBotController extends JsonsController
             [
                 "text" => "🫰 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.topupcripto")),
                 "callback_data" => "/wallet"
-            ]
-        ]);
-
-        array_push($menu, [
-            [
-                "text" => "🔄 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.tdeposit.btn_deposit")),
-                "callback_data" => "/tdeposit"
             ]
         ]);
 

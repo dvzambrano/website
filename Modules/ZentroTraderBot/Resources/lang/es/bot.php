@@ -781,67 +781,67 @@ return [
     // DEPOSIT WIZARD — Asistente de deposito via TronDealer
     // =========================================================
     "deposit_wizard" => [
-        "error_no_pairs"    => "No se pudieron obtener monedas disponibles. Intenta mas tarde.",
+        "error_no_pairs" => "No se pudieron obtener monedas disponibles. Intenta mas tarde.",
         "error_unavailable" => "No hay monedas disponibles en este momento.",
-        "header"            => "Deposito via Swap",
-        "select_pair"       => "Selecciona la red y moneda desde donde enviaras los fondos:",
-        "polygon_notice"    => "Los fondos llegaran como USDC en Polygon.",
-        "min_amount"        => "Minimo: :amount :asset",
-        "max_amount"        => "Maximo: :amount :asset",
-        "error_below_min"   => "El valor :amount :asset es menor al minimo permitido (:min).",
-        "error_above_max"   => "El valor :amount :asset supera el maximo permitido (:max).",
-        "ask_amount"        => "Cuanto :asset deseas enviar?",
-        "selected_network"  => "Red seleccionada: :asset (:chain)",
-        "amount_hint"       => "Escribe el monto a depositar (solo numeros, ej: 50):",
-        "error_quote"       => "No se pudo obtener la cotizacion. Intenta de nuevo.",
-        "error_quote_now"   => "Cotizacion no disponible en este momento.",
-        "quote_header"      => "Resumen del Deposito",
-        "quote_you_send"    => "Envias:",
+        "header" => "Deposito via Swap",
+        "select_pair" => "Selecciona la red y moneda desde donde enviaras los fondos:",
+        "polygon_notice" => "Los fondos llegaran como USDC en Polygon.",
+        "min_amount" => "Minimo: :amount :asset",
+        "max_amount" => "Maximo: :amount :asset",
+        "error_below_min" => "El valor :amount :asset es menor al minimo permitido (:min).",
+        "error_above_max" => "El valor :amount :asset supera el maximo permitido (:max).",
+        "ask_amount" => "Cuanto :asset deseas enviar?",
+        "selected_network" => "Red seleccionada: :asset (:chain)",
+        "amount_hint" => "Escribe el monto a depositar (solo numeros, ej: 50):",
+        "error_quote" => "No se pudo obtener la cotizacion. Intenta de nuevo.",
+        "error_quote_now" => "Cotizacion no disponible en este momento.",
+        "quote_header" => "Resumen del Deposito",
+        "quote_you_send" => "Envias:",
         "quote_you_receive" => "Recibes aprox:",
-        "quote_disclaimer"  => "El monto recibido es estimado e incluye las comisiones del servicio.",
-        "quote_confirm"     => "Confirmas que deseas hacer este deposito?",
-        "error_create"      => "No se pudo crear el deposito. Intenta de nuevo mas tarde.",
-        "success_header"    => "Swap creado exitosamente",
-        "send_to"           => "Envia :amount :asset (:chain) a esta direccion:",
-        "expires_label"     => "Expira:",
-        "monitor_notice"    => "Monitorearemos el deposito automaticamente y te notificaremos al completarse.",
-        "cancelled"         => "Deposito cancelado.",
-        "btn_back"          => "Volver",
-        "btn_cancel"        => "Cancelar",
-        "btn_confirm"       => "Confirmar",
+        "quote_disclaimer" => "El monto recibido es estimado e incluye las comisiones del servicio.",
+        "quote_confirm" => "Confirmas que deseas hacer este deposito?",
+        "error_create" => "No se pudo crear el deposito. Intenta de nuevo mas tarde.",
+        "success_header" => "Swap creado exitosamente",
+        "send_to" => "Envia :amount :asset (:chain) a esta direccion:",
+        "expires_label" => "Expira:",
+        "monitor_notice" => "Monitorearemos el deposito automaticamente y te notificaremos al completarse.",
+        "cancelled" => "Deposito cancelado.",
+        "btn_back" => "Volver",
+        "btn_cancel" => "Cancelar",
+        "btn_confirm" => "Confirmar",
     ],
 
     // =========================================================
     // TDEPOSIT — Vista de swap activo y botones de menu
     // =========================================================
     "tdeposit" => [
-        "active_header" => "Tienes un swap activo",
-        "send_to"       => "Envia :amount :asset (:chain) a:",
+        "active_header" => "Tienes un deposito activo",
+        "send_to" => "Envia :amount :asset (:chain) a:",
         "expires_label" => "Expira:",
         "notify_notice" => "Cuando recibamos los fondos te notificaremos.",
-        "btn_deposit"   => "Depositar via Swap",
-        "btn_myswaps"   => "Mis Swaps",
+        "btn_deposit" => "Depositar otras monedas",
+        "btn_myswaps" => "Mis depositos",
     ],
 
     // =========================================================
     // DEPOSITS VIEW — Lista de swaps del usuario
     // =========================================================
     "deposits_view" => [
-        "header"      => "Mis Swaps",
-        "empty"       => "No tienes swaps registrados.",
-        "expires"     => "Expira:",
+        "header" => "Mis Swaps",
+        "empty" => "No tienes swaps registrados.",
+        "expires" => "Expira:",
         "btn_refresh" => "Actualizar",
         "status" => [
-            "pending"          => "Pendiente",
-            "waiting_deposit"  => "Esperando deposito",
+            "pending" => "Pendiente",
+            "waiting_deposit" => "Esperando deposito",
             "deposit_detected" => "Deposito detectado",
-            "processing"       => "Procesando",
-            "completed"        => "Completado",
-            "expired"          => "Expirado",
-            "failed"           => "Fallido",
-            "refund_required"  => "Requiere reembolso",
-            "refunded"         => "Reembolsado",
-            "rejected"         => "Rechazado",
+            "processing" => "Procesando",
+            "completed" => "Completado",
+            "expired" => "Expirado",
+            "failed" => "Fallido",
+            "refund_required" => "Requiere reembolso",
+            "refunded" => "Reembolsado",
+            "rejected" => "Rechazado",
         ],
     ],
 
@@ -849,8 +849,8 @@ return [
     // AGENTS — Etiquetas de rol
     // =========================================================
     "agents" => [
-        "role_none"  => "Sin rol",
-        "role_user"  => "Usuario",
+        "role_none" => "Sin rol",
+        "role_user" => "Usuario",
         "role_admin" => "Admin",
     ],
 
@@ -858,16 +858,16 @@ return [
     // TRADING — Mensajes de ordenes DCA
     // =========================================================
     "trading" => [
-        "long_opening"  => "Cambiando :amount :quote a :asset...",
-        "completed"     => "Completado",
-        "exit_closing"  => "Cerrando :count ordenes acumuladas: :amount :asset...",
+        "long_opening" => "Cambiando :amount :quote a :asset...",
+        "completed" => "Completado",
+        "exit_closing" => "Cerrando :count ordenes acumuladas: :amount :asset...",
     ],
 
     // =========================================================
     // WALLET ERRORS — Mensajes de error de billetera
     // =========================================================
     "wallet_error" => [
-        "no_wallet"      => "No tienes wallet configurada.",
+        "no_wallet" => "No tienes wallet configurada.",
         "no_wallet_user" => "El usuario :id no tiene wallet configurada.",
     ],
 
