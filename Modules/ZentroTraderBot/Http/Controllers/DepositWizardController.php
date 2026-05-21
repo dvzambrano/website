@@ -8,6 +8,8 @@ use Modules\Laravel\Services\TextService;
 use Modules\TelegramBot\Http\Controllers\WizardController;
 use Modules\ZentroTraderBot\Jobs\CheckSwapStatus;
 use Modules\ZentroTraderBot\Services\DepositService;
+use Illuminate\Support\Facades\Lang;
+
 
 class DepositWizardController extends Controller
 {
@@ -282,7 +284,7 @@ class DepositWizardController extends Controller
             'text' => $msg,
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
-                    [['text' => '↖️ Menú principal', 'callback_data' => 'menu']],
+                    [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
                 ]
             ]),
         ];
@@ -296,7 +298,9 @@ class DepositWizardController extends Controller
             'text' => '❌ ' . TextService::mdv2('Depósito cancelado.'),
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
-                    [['text' => '↖️ Menú principal', 'callback_data' => 'menu']],
+                    [
+                        ["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]
+                    ],
                 ]
             ]),
         ];
