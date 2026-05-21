@@ -16,6 +16,7 @@ class DepositsViewController extends Controller
         'deposit_detected' => '🔵',
         'processing'       => '🔄',
         'completed'        => '✅',
+        'payout_sent'      => '✅',
         'expired'          => '⏰',
         'failed'           => '❌',
         'refund_required'  => '⚠️',

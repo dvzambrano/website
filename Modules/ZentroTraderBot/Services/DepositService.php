@@ -13,7 +13,7 @@ class DepositService
     public const ACTIVE_STATUSES = ['waiting_deposit', 'deposit_detected', 'processing'];
 
     // TronDealer terminal statuses
-    public const TERMINAL_STATUSES = ['completed', 'expired', 'failed', 'refund_required', 'refunded', 'rejected'];
+    public const TERMINAL_STATUSES = ['payout_sent', 'completed', 'expired', 'failed', 'refund_required', 'refunded', 'rejected'];
 
     public static function assetOut(): string
     {
