@@ -71,11 +71,11 @@ class DepositWizardController extends Controller
             $pairs = $this->service->getAvailableInputPairs();
         } catch (\Throwable $e) {
             Log::error('[DepositWizard] getAvailableInputPairs failed', ['error' => $e->getMessage()]);
-            return ['text' => '❌ ' . TextService::mdv2('No se pudieron obtener monedas disponibles. Intenta más tarde.')];
+            return ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.error_no_pairs'))];
         }
 
         if (empty($pairs)) {
-            return ['text' => '❌ ' . TextService::mdv2('No hay monedas disponibles en este momento.')];
+            return ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.error_unavailable'))];
         }
 
         // Build one button per pair, two per row
@@ -91,12 +91,12 @@ class DepositWizardController extends Controller
                 $row = [];
             }
         }
-        $keyboard[] = [['text' => '❌ Cancelar', 'callback_data' => '/wizardcancel']];
+        $keyboard[] = [['text' => '❌ ' . Lang::get('zentrotraderbot::bot.deposit_wizard.btn_cancel'), 'callback_data' => '/wizardcancel']];
 
         return [
-            'text' => "💱 *" . TextService::mdv2('Depósito vía Swap') . "*\n\n" .
-                TextService::mdv2('Selecciona la red y moneda desde donde enviarás los fondos:') . "\n\n" .
-                "_" . TextService::mdv2('Los fondos llegarán como USDC en Polygon.') . "_",
+            'text' => "💱 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.header')) . "*\n\n" .
+                TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.select_pair')) . "\n\n" .
+                "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.polygon_notice')) . "_",
             'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
         ];
     }
@@ -128,8 +128,8 @@ class DepositWizardController extends Controller
             $min = number_format($pairInfo['min'], 2);
             $max = number_format($pairInfo['max'], 2);
             $limitsLine =
-                "🤏 _" . TextService::mdv2("Mínimo: {$min} {$assetIn}") . "_\n" .
-                "🫰 _" . TextService::mdv2("Máximo: {$max} {$assetIn}") . "_\n\n";
+                "🤏 _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.min_amount', ['amount' => $min, 'asset' => $assetIn])) . "_\n" .
+                "🫰 _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.max_amount', ['amount' => $max, 'asset' => $assetIn])) . "_\n\n";
         }
 
         // Validate if user sent a number
@@ -139,12 +139,12 @@ class DepositWizardController extends Controller
             if ($pairInfo) {
                 if ($amount < $pairInfo['min']) {
                     $min = number_format($pairInfo['min'], 2);
-                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} es menor al mínimo permitido ({$min}).") . "_\n";
+                    $error = "⚠️ _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.error_below_min', ['amount' => $amount, 'asset' => $assetIn, 'min' => $min])) . "_\n";
                     return $this->renderEnterAmountStep($assetIn, $chainIn, $limitsLine, $error);
                 }
                 if ($amount > $pairInfo['max']) {
                     $max = number_format($pairInfo['max'], 2);
-                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} supera el máximo permitido ({$max}).") . "_\n";
+                    $error = "⚠️ _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.error_above_max', ['amount' => $amount, 'asset' => $assetIn, 'max' => $max])) . "_\n";
                     return $this->renderEnterAmountStep($assetIn, $chainIn, $limitsLine, $error);
                 }
             }
@@ -158,18 +158,18 @@ class DepositWizardController extends Controller
     private function renderEnterAmountStep(string $assetIn, string $chainIn, string $limitsLine, string $error = ''): array
     {
         return [
-            'text' => "💰 *" . TextService::mdv2("¿Cuánto {$assetIn} deseas enviar?") . "*\n" .
-                "_" . TextService::mdv2("Red seleccionada: {$assetIn} ({$chainIn})") . "_\n\n" .
+            'text' => "💰 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.ask_amount', ['asset' => $assetIn])) . "*\n" .
+                "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.selected_network', ['asset' => $assetIn, 'chain' => $chainIn])) . "_\n\n" .
                 $limitsLine .
                 $error .
-                TextService::mdv2('Escribe el monto a depositar (solo números, ej: 50):'),
+                TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.amount_hint')),
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [
-                        ['text' => '⬅️ Volver', 'callback_data' => '/wizardprevious'],
+                        ['text' => '⬅️ ' . Lang::get('zentrotraderbot::bot.deposit_wizard.btn_back'), 'callback_data' => '/wizardprevious'],
                     ],
                     [
-                        ['text' => '❌ Cancelar', 'callback_data' => '/wizardcancel'],
+                        ['text' => '❌ ' . Lang::get('zentrotraderbot::bot.deposit_wizard.btn_cancel'), 'callback_data' => '/wizardcancel'],
                     ],
                 ]
             ]),
@@ -196,11 +196,11 @@ class DepositWizardController extends Controller
             );
         } catch (\Throwable $e) {
             Log::error('[DepositWizard] getQuote failed', ['error' => $e->getMessage()]);
-            return ['text' => '❌ ' . TextService::mdv2('No se pudo obtener la cotización. Intenta de nuevo.')];
+            return ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.error_quote'))];
         }
 
         if (!($response['success'] ?? false) || empty($response['quote'])) {
-            return ['text' => '❌ ' . TextService::mdv2('Cotización no disponible en este momento.')];
+            return ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.error_quote_now'))];
         }
 
         $quote = $response['quote'];
@@ -214,11 +214,11 @@ class DepositWizardController extends Controller
         $chainIn = strtoupper($quote['chain_in']);
         $amountOut = number_format($adjusted, 2);
 
-        $msg = "📋 *" . TextService::mdv2('Resumen del Depósito') . "*\n\n";
-        $msg .= "📤 *" . TextService::mdv2('Envías:') . "* `{$amountIn} {$assetIn}` \\({$chainIn}\\)\n";
-        $msg .= "📥 *" . TextService::mdv2('Recibes aprox:') . "* `{$amountOut} USDC` \\(Polygon\\)\n\n";
-        $msg .= "_" . TextService::mdv2('El monto recibido es estimado e incluye las comisiones del servicio.') . "_\n\n";
-        $msg .= TextService::mdv2('¿Confirmas que deseas hacer este depósito?');
+        $msg = "📋 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_header')) . "*\n\n";
+        $msg .= "📤 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_you_send')) . "* `{$amountIn} {$assetIn}` \\({$chainIn}\\)\n";
+        $msg .= "📥 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_you_receive')) . "* `{$amountOut} USDC` \\(Polygon\\)\n\n";
+        $msg .= "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_disclaimer')) . "_\n\n";
+        $msg .= TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.quote_confirm'));
 
         return [
             '__update' => true,
@@ -232,11 +232,11 @@ class DepositWizardController extends Controller
                 'reply_markup' => json_encode([
                     'inline_keyboard' => [
                         [
-                            ['text' => '⬅️ Volver', 'callback_data' => '/wizardprevious'],
+                            ['text' => '⬅️ ' . Lang::get('zentrotraderbot::bot.deposit_wizard.btn_back'), 'callback_data' => '/wizardprevious'],
                         ],
                         [
-                            ['text' => '✅ Confirmar', 'callback_data' => 'tdeposit_confirm'],
-                            ['text' => '❌ Cancelar', 'callback_data' => '/wizardcancel'],
+                            ['text' => '✅ ' . Lang::get('zentrotraderbot::bot.deposit_wizard.btn_confirm'), 'callback_data' => 'tdeposit_confirm'],
+                            ['text' => '❌ ' . Lang::get('zentrotraderbot::bot.deposit_wizard.btn_cancel'), 'callback_data' => '/wizardcancel'],
                         ],
                     ]
                 ]),
@@ -262,7 +262,7 @@ class DepositWizardController extends Controller
             );
         } catch (\Throwable $e) {
             Log::error('[DepositWizard] createSwap failed', ['error' => $e->getMessage()]);
-            return ['text' => '❌ ' . TextService::mdv2('No se pudo crear el depósito. Intenta de nuevo más tarde.')];
+            return ['text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.error_create'))];
         }
 
         CheckSwapStatus::dispatch($deposit->id, $bot->tenant->key)
@@ -283,11 +283,11 @@ class DepositWizardController extends Controller
             $expiresAt = TextService::mdv2('~30 min');
         }
 
-        $msg = "✅ *" . TextService::mdv2('Swap creado exitosamente') . "*\n\n";
-        $msg .= "📬 *" . TextService::mdv2("Envía {$amountIn} {$assetIn} ({$chainIn}) a esta dirección:") . "*\n";
+        $msg = "✅ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.success_header')) . "*\n\n";
+        $msg .= "📬 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.send_to', ['amount' => $amountIn, 'asset' => $assetIn, 'chain' => $chainIn])) . "*\n";
         $msg .= "`{$address}`\n\n";
-        $msg .= "⌛ *" . TextService::mdv2('Expira:') . "* {$expiresAt}\n\n";
-        $msg .= "_" . TextService::mdv2('Monitorearemos el depósito automáticamente y te notificaremos al completarse.') . "_";
+        $msg .= "⌛ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.expires_label')) . "* {$expiresAt}\n\n";
+        $msg .= "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.monitor_notice')) . "_";
 
         return [
             'text' => $msg,
@@ -305,7 +305,7 @@ class DepositWizardController extends Controller
     private function onCancel($bot): array
     {
         return [
-            'text' => '❌ ' . TextService::mdv2('Depósito cancelado.'),
+            'text' => '❌ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.cancelled')),
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [

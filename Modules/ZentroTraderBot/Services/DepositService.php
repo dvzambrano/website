@@ -8,14 +8,14 @@ use Modules\ZentroTraderBot\Entities\TronDealerDeposit;
 
 class DepositService
 {
-    const ASSET_OUT = 'USDC';
-    const CHAIN_OUT = 'pol';
+    public const ASSET_OUT = 'USDC';
+    public const CHAIN_OUT = 'pol';
 
     // Statuses considered "active" (swap is live and awaiting funds or processing)
-    const ACTIVE_STATUSES = ['waiting_deposit', 'deposit_detected', 'processing'];
+    public const ACTIVE_STATUSES = ['waiting_deposit', 'deposit_detected', 'processing'];
 
     // TronDealer terminal statuses
-    const TERMINAL_STATUSES = ['completed', 'expired', 'failed', 'refund_required', 'refunded'];
+    public const TERMINAL_STATUSES = ['completed', 'expired', 'failed', 'refund_required', 'refunded', 'rejected'];
 
     public function getActiveDeposit(int $userId): ?TronDealerDeposit
     {

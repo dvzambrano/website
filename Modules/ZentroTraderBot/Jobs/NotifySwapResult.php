@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Modules\Laravel\Services\TextService;
 use Modules\TelegramBot\Entities\TelegramBots;
@@ -17,7 +18,7 @@ class NotifySwapResult implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected int    $depositId;
+    protected int $depositId;
     protected string $tenantKey;
 
     public function __construct(int $depositId, string $tenantKey)
@@ -28,6 +29,12 @@ class NotifySwapResult implements ShouldQueue
 
     public function handle(): void
     {
+        if (env("DEBUG_MODE", false))
+            Log::debug("🐞 [NotifySwapResult] Executing", [
+                'deposit_id' => $this->depositId,
+                'tenant_key' => $this->tenantKey,
+            ]);
+
         $tenant = TelegramBots::where('key', $this->tenantKey)->first();
         if (!$tenant) {
             Log::error('[NotifySwapResult] Tenant not found', ['key' => $this->tenantKey]);
@@ -41,53 +48,79 @@ class NotifySwapResult implements ShouldQueue
             return;
         }
 
-        $t = fn(string $s) => TextService::mdv2($s);
-
         $amountIn  = number_format((float) $deposit->amount, 2);
         $assetIn   = strtoupper($deposit->asset ?? '');
         $chainIn   = strtoupper($deposit->network ?? '');
         $amountOut = number_format((float) $deposit->amount_out, 2);
 
-        switch ($deposit->status) {
+        $s = $deposit->status;
+
+        switch ($s) {
+            case 'deposit_detected':
+                $title  = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.deposit_detected.title'));
+                $body   = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.deposit_detected.body', ['amount' => $amountIn, 'asset' => $assetIn, 'chain' => $chainIn]));
+                $footer = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.deposit_detected.footer'));
+                $msg    = "🔵 *{$title}\\!*\n\n{$body}\n\n_{$footer}_";
+                break;
+
+            case 'processing':
+                $title  = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.processing.title'));
+                $body   = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.processing.body', ['amount' => $amountIn, 'asset' => $assetIn]));
+                $footer = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.processing.footer'));
+                $msg    = "🔄 *{$title}*\n\n{$body}\n\n_{$footer}_";
+                break;
+
             case 'completed':
-                $msg  = "✅ *Swap completado\!*\n\n";
-                $msg .= "💸 Enviaste: `{$amountIn} {$assetIn}` \\({$chainIn}\\)\n";
-                $msg .= "📥 Recibido en contrato: `{$amountOut} USDC` \\(Polygon\\)\n\n";
-                $msg .= "_Tu saldo estará disponible en breve\\._";
+                $title    = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.completed.title'));
+                $sent     = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.completed.sent', ['amount' => $amountIn, 'asset' => $assetIn, 'chain' => $chainIn]));
+                $received = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.completed.received', ['amount_out' => $amountOut]));
+                $footer   = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.completed.footer'));
+                $msg      = "✅ *{$title}\\!*\n\n💸 {$sent}\n📥 {$received}\n\n_{$footer}_";
                 break;
 
             case 'expired':
-                $msg  = "⌛ *Swap expirado*\n\n";
-                $msg .= "No se recibió ningún depósito dentro del tiempo límite para tu swap de `{$amountIn} {$assetIn}`\\.\n\n";
-                $msg .= "_Puedes iniciar un nuevo depósito cuando quieras\\._";
+                $title  = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.expired.title'));
+                $body   = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.expired.body', ['amount' => $amountIn, 'asset' => $assetIn]));
+                $footer = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.expired.footer'));
+                $msg    = "⌛ *{$title}*\n\n{$body}\n\n_{$footer}_";
                 break;
 
             case 'failed':
-                $msg  = "❌ *Swap fallido*\n\n";
-                $msg .= "Hubo un problema procesando tu swap de `{$amountIn} {$assetIn}`\\.\n\n";
-                $msg .= "_Si enviaste fondos, TronDealer los devolverá automáticamente\\. Contacta soporte si no recibes el reembolso\\._";
+                $title  = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.failed.title'));
+                $body   = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.failed.body', ['amount' => $amountIn, 'asset' => $assetIn]));
+                $footer = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.failed.footer'));
+                $msg    = "❌ *{$title}*\n\n{$body}\n\n_{$footer}_";
+                break;
+
+            case 'rejected':
+                $title  = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.rejected.title'));
+                $body   = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.rejected.body', ['amount' => $amountIn, 'asset' => $assetIn]));
+                $footer = TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.rejected.footer'));
+                $msg    = "🚫 *{$title}*\n\n{$body}\n\n_{$footer}_";
                 break;
 
             case 'refund_required':
             case 'refunded':
-                $status = $deposit->status === 'refunded' ? 'realizado' : 'en proceso';
-                $msg  = "🔄 *Reembolso {$status}*\n\n";
-                $msg .= "Tu swap de `{$amountIn} {$assetIn}` no pudo completarse\\.\n\n";
-                $msg .= "_Los fondos serán devueltos a la dirección de origen\\._";
+                $title  = TextService::mdv2(Lang::get("zentrotraderbot::bot.swap.{$s}.title"));
+                $body   = TextService::mdv2(Lang::get("zentrotraderbot::bot.swap.{$s}.body", ['amount' => $amountIn, 'asset' => $assetIn]));
+                $footer = TextService::mdv2(Lang::get("zentrotraderbot::bot.swap.{$s}.footer"));
+                $msg    = "🔄 *{$title}*\n\n{$body}\n\n_{$footer}_";
                 break;
 
             default:
                 return;
         }
 
+        $btnLabel = '↖️ ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.swap.btn_mainmenu'));
+
         TelegramController::sendMessage([
             'message' => [
-                'text'       => $msg,
-                'chat'       => ['id' => $deposit->user_id],
-                'parse_mode' => 'MarkdownV2',
+                'text'         => $msg,
+                'chat'         => ['id' => $deposit->user_id],
+                'parse_mode'   => 'MarkdownV2',
                 'reply_markup' => json_encode([
                     'inline_keyboard' => [[
-                        ['text' => '↖️ Menú principal', 'callback_data' => 'menu'],
+                        ['text' => $btnLabel, 'callback_data' => 'menu'],
                     ]],
                 ]),
             ],

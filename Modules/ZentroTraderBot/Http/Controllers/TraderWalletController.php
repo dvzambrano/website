@@ -2,6 +2,7 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Modules\Web3\Http\Controllers\BlockchainProviderController;
 use Modules\Web3\Http\Controllers\EthersController;
@@ -40,7 +41,7 @@ class TraderWalletController extends WalletController
     {
         // 1. Obtener Wallet
         if (!$suscriptor || !isset($suscriptor->data['wallet']['address'])) {
-            return ['status' => 'error', 'message' => 'No tienes wallet configurada.'];
+            return ['status' => 'error', 'message' => Lang::get('zentrotraderbot::bot.wallet_error.no_wallet')];
         }
 
         $address = $suscriptor->data['wallet']['address'];
@@ -61,7 +62,7 @@ class TraderWalletController extends WalletController
     {
         // 1. Obtener Wallet
         if (!$suscriptor || !isset($suscriptor->data['wallet']['address'])) {
-            return ['status' => 'error', 'message' => 'No tienes wallet configurada.'];
+            return ['status' => 'error', 'message' => Lang::get('zentrotraderbot::bot.wallet_error.no_wallet')];
         }
 
         $address = $suscriptor->data['wallet']['address'];
@@ -84,7 +85,7 @@ class TraderWalletController extends WalletController
         $suscriptor = Suscriptions::where('user_id', $userId)->first();
 
         if (!$suscriptor || !isset($suscriptor->data['wallet']['private_key'])) {
-            throw new \Exception("Usuario $userId no tiene wallet.");
+            throw new \Exception(Lang::get('zentrotraderbot::bot.wallet_error.no_wallet_user', ['id' => $userId]));
         }
 
         $encryptedKey = $suscriptor->data['wallet']['private_key'];

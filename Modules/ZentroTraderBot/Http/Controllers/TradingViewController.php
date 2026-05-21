@@ -3,6 +3,7 @@
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Modules\TelegramBot\Entities\Actors;
 use Modules\TelegramBot\Entities\TelegramNestedNotifications;
@@ -178,7 +179,7 @@ class TradingViewController extends TelegramBotController
         TelegramController::sendMessage(
             array(
                 "message" => array(
-                    "text" => "📈 *LONG*: _Cambiando " . TextService::mdv2($amount) . " {$quote} a {$asset}\.\.\._",
+                    "text" => "📈 *LONG*: _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.trading.long_opening', ['amount' => $amount, 'quote' => $quote, 'asset' => $asset])) . "_",
                     "chat" => array(
                         "id" => $userId,
                     ),
@@ -239,7 +240,7 @@ class TradingViewController extends TelegramBotController
         TelegramController::sendMessage(
             array(
                 "message" => array(
-                    "text" => "📈 *LONG: " . TextService::mdv2($price) . "*\n💱 _" . TextService::mdv2($amount) . " {$quote} 🟰 " . TextService::mdv2($result['amount_received']) . " {$asset} _\n✅ *Completado\!*",
+                    "text" => "📈 *LONG: " . TextService::mdv2($price) . "*\n💱 _" . TextService::mdv2($amount) . " {$quote} 🟰 " . TextService::mdv2($result['amount_received']) . " {$asset} _\n✅ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.trading.completed')) . "\\!*",
                     "chat" => array(
                         "id" => $userId,
                     ),
@@ -278,7 +279,7 @@ class TradingViewController extends TelegramBotController
         TelegramController::sendMessage(
             array(
                 "message" => array(
-                    "text" => "📉 *EXIT LONG*: _Cerrando " . $openPositions->count() . " órdenes acumuladas: " . TextService::mdv2($targetSellAmount) . " {$asset}\.\.\._",
+                    "text" => "📉 *EXIT LONG*: _" . TextService::mdv2(Lang::get('zentrotraderbot::bot.trading.exit_closing', ['count' => $openPositions->count(), 'amount' => $targetSellAmount, 'asset' => $asset])) . "_",
                     "chat" => array(
                         "id" => $userId,
                     ),
@@ -350,7 +351,7 @@ class TradingViewController extends TelegramBotController
         TelegramController::sendMessage(
             array(
                 "message" => array(
-                    "text" => "📉 *EXIT LONG: " . TextService::mdv2($price) . "*\n💱 _" . TextService::mdv2($amountToSell) . " {$asset} 🟰 " . TextService::mdv2($result['amount_received']) . " {$quote} _\n✅ *Completado\!* {$text}",
+                    "text" => "📉 *EXIT LONG: " . TextService::mdv2($price) . "*\n💱 _" . TextService::mdv2($amountToSell) . " {$asset} 🟰 " . TextService::mdv2($result['amount_received']) . " {$quote} _\n✅ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.trading.completed')) . "\\!* {$text}",
                     "chat" => array(
                         "id" => $userId,
                     ),

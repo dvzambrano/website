@@ -10,18 +10,28 @@ use Modules\ZentroTraderBot\Services\DepositService;
 
 class DepositsViewController extends Controller
 {
-    private const STATUS_LABELS = [
-        'pending'          => '⏳ Pendiente',
-        'waiting_deposit'  => '🟡 Esperando depósito',
-        'deposit_detected' => '🔵 Depósito detectado',
-        'processing'       => '🔄 Procesando',
-        'completed'        => '✅ Completado',
-        'expired'          => '⏰ Expirado',
-        'failed'           => '❌ Fallido',
-        'refund_required'  => '⚠️ Requiere reembolso',
-        'refunded'         => '💸 Reembolsado',
-        'rejected'         => '🚫 Rechazado',
+    private static array $STATUS_ICONS = [
+        'pending'          => '⏳',
+        'waiting_deposit'  => '🟡',
+        'deposit_detected' => '🔵',
+        'processing'       => '🔄',
+        'completed'        => '✅',
+        'expired'          => '⏰',
+        'failed'           => '❌',
+        'refund_required'  => '⚠️',
+        'refunded'         => '💸',
+        'rejected'         => '🚫',
     ];
+
+    private function statusLabel(string $status): string
+    {
+        $icon = self::$STATUS_ICONS[$status] ?? '❓';
+        $text = Lang::get("zentrotraderbot::bot.deposits_view.status.{$status}", [], 'es');
+        if (str_starts_with($text, 'zentrotraderbot::')) {
+            return "{$icon} {$status}";
+        }
+        return "{$icon} {$text}";
+    }
 
     public function listDeposits($bot): array
     {
@@ -32,8 +42,8 @@ class DepositsViewController extends Controller
 
         if ($deposits->isEmpty()) {
             return [
-                'text' => "📋 *" . TextService::mdv2('Mis Swaps') . "*\n\n" .
-                    "_" . TextService::mdv2('No tienes swaps registrados.') . "_",
+                'text' => "📋 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposits_view.header')) . "*\n\n" .
+                    "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposits_view.empty')) . "_",
                 'reply_markup' => json_encode([
                     'inline_keyboard' => [
                         [['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu']],
@@ -44,10 +54,10 @@ class DepositsViewController extends Controller
 
         $tzOffset = $bot->actor->data[$bot->tenant->code]['time_zone'] ?? null;
 
-        $msg = "📋 *" . TextService::mdv2('Mis Swaps') . "*\n\n";
+        $msg = "📋 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposits_view.header')) . "*\n\n";
 
         foreach ($deposits as $deposit) {
-            $label     = self::STATUS_LABELS[$deposit->status] ?? ('❓ ' . $deposit->status);
+            $label     = $this->statusLabel($deposit->status);
             $amountIn  = number_format((float) $deposit->amount, 2);
             $assetIn   = strtoupper($deposit->asset ?? '');
             $chainIn   = strtoupper($deposit->network ?? '');
@@ -61,7 +71,7 @@ class DepositsViewController extends Controller
 
                 if ($deposit->expires_at) {
                     $expiresStr = $this->formatDate($deposit->expires_at, $tzOffset);
-                    $msg .= "   ⌛ " . TextService::mdv2('Expira: ' . $expiresStr) . "\n";
+                    $msg .= "   ⌛ " . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposits_view.expires') . ' ' . $expiresStr) . "\n";
                 }
             } else {
                 $dateField = $deposit->confirmed_at ?? $deposit->detected_at ?? $deposit->created_at;
@@ -78,7 +88,7 @@ class DepositsViewController extends Controller
             'text' => rtrim($msg),
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
-                    [['text' => '🔄 ' . TextService::mdv2('Actualizar'), 'callback_data' => '/myswaps']],
+                    [['text' => '🔄 ' . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposits_view.btn_refresh')), 'callback_data' => '/myswaps']],
                     [['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu']],
                 ],
             ]),

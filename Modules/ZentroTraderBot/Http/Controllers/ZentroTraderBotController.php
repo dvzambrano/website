@@ -811,11 +811,11 @@ class ZentroTraderBotController extends JsonsController
                         $expiresAt = TextService::mdv2($localTime);
                     }
 
-                    $msg = "🔄 *" . TextService::mdv2('Tienes un swap activo') . "*\n\n";
-                    $msg .= "📬 *" . TextService::mdv2("Envía {$amountIn} {$assetIn} ({$chainIn}) a:") . "*\n";
+                    $msg = "🔄 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.tdeposit.active_header')) . "*\n\n";
+                    $msg .= "📬 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.tdeposit.send_to', ['amount' => $amountIn, 'asset' => $assetIn, 'chain' => $chainIn])) . "*\n";
                     $msg .= "`{$address}`\n\n";
-                    $msg .= "⌛ *" . TextService::mdv2('Expira:') . "* {$expiresAt}\n\n";
-                    $msg .= "_" . TextService::mdv2('Cuando recibamos los fondos te notificaremos.') . "_";
+                    $msg .= "⌛ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.tdeposit.expires_label')) . "* {$expiresAt}\n\n";
+                    $msg .= "_" . TextService::mdv2(Lang::get('zentrotraderbot::bot.tdeposit.notify_notice')) . "_";
 
                     return [
                         'text' => $msg,
@@ -882,7 +882,7 @@ class ZentroTraderBotController extends JsonsController
 
         array_push($menu, [
             [
-                "text" => "🔄 " . TextService::mdv2("Depositar vía Swap"),
+                "text" => "🔄 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.tdeposit.btn_deposit")),
                 "callback_data" => "/tdeposit"
             ]
         ]);
@@ -913,7 +913,7 @@ class ZentroTraderBotController extends JsonsController
         $hasActiveSwap = (new DepositService())->getActiveDeposit($this->actor->user_id) !== null;
         if ($hasActiveSwap) {
             array_push($menu, [
-                ["text" => "📋 " . TextService::mdv2("Mis Swaps"), "callback_data" => "/myswaps"],
+                ["text" => "📋 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.tdeposit.btn_myswaps")), "callback_data" => "/myswaps"],
             ]);
         }
 

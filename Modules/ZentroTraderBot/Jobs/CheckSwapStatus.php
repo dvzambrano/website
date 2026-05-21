@@ -70,6 +70,7 @@ class CheckSwapStatus implements ShouldQueue
             return;
         }
 
+        $previousStatus = $deposit->status;
         $status = strtolower($swap['status'] ?? $deposit->status);
 
         $updates = ['status' => $status];
@@ -82,9 +83,14 @@ class CheckSwapStatus implements ShouldQueue
         }
         $deposit->update($updates);
 
-        if (in_array($status, DepositService::TERMINAL_STATUSES)) {
+        if (\in_array($status, DepositService::TERMINAL_STATUSES)) {
             NotifySwapResult::dispatch($this->depositId, $this->tenantKey);
             return;
+        }
+
+        // Notify on intermediate state transitions (only once per transition)
+        if ($previousStatus !== $status && \in_array($status, ['deposit_detected', 'processing'])) {
+            NotifySwapResult::dispatch($this->depositId, $this->tenantKey);
         }
 
         $this->reschedule();

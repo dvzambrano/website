@@ -2,6 +2,7 @@
 
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
+use Illuminate\Support\Facades\Lang;
 use Modules\TelegramBot\Http\Controllers\ActorsController;
 use Modules\TelegramBot\Http\Controllers\TelegramController;
 
@@ -36,19 +37,19 @@ class AgentsController extends ActorsController
 
         switch ($role_id) {
             case 0:
-                $array["role"] = "😳 Sin rol";
+                $array["role"] = "😳 " . Lang::get('zentrotraderbot::bot.agents.role_none');
                 $array["menu"] = [
                     [
-                        ["text" => "👤 Usuario", "callback_data" => "promote2-{$user_id}"],
-                        ["text" => "👮‍♂️ Admin", "callback_data" => "promote1-{$user_id}"],
+                        ["text" => "👤 " . Lang::get('zentrotraderbot::bot.agents.role_user'), "callback_data" => "promote2-{$user_id}"],
+                        ["text" => "👮‍♂️ " . Lang::get('zentrotraderbot::bot.agents.role_admin'), "callback_data" => "promote1-{$user_id}"],
                     ],
                 ];
                 break;
             case 1:
-                $array["role"] = "👮‍♂️ Admin";
+                $array["role"] = "👮‍♂️ " . Lang::get('zentrotraderbot::bot.agents.role_admin');
                 $array["menu"] = [
                     [
-                        ["text" => "👤 Usuario", "callback_data" => "promote2-{$user_id}"],
+                        ["text" => "👤 " . Lang::get('zentrotraderbot::bot.agents.role_user'), "callback_data" => "promote2-{$user_id}"],
                     ]
                 ];
                 break;
