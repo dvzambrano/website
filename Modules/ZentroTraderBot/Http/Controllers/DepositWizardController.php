@@ -127,7 +127,7 @@ class DepositWizardController extends Controller
         if ($pairInfo) {
             $min = number_format($pairInfo['min'], 2);
             $max = number_format($pairInfo['max'], 2);
-            $limitsLine = "🤏 _" . TextService::mdv2("Mínimo: {$min} {$assetIn}") . "_ | 🫰 _" . TextService::mdv2("Máximo: {$max} {$assetIn}") . "_\n\n";
+            $limitsLine = "🤏 _" . TextService::mdv2("Mínimo: {$min} {$assetIn}") . "_  🫰 _" . TextService::mdv2("Máximo: {$max} {$assetIn}") . "_\n\n";
         }
 
         // Validate if user sent a number
