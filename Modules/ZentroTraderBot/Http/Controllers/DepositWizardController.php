@@ -93,8 +93,8 @@ class DepositWizardController extends Controller
 
         return [
             'text' => "💱 *" . TextService::mdv2('Depósito vía Swap') . "*\n\n" .
-                "_" . TextService::mdv2('Selecciona la red y moneda desde donde enviarás los fondos:') . "_\n\n" .
-                TextService::mdv2('Los fondos llegarán como USDC en Polygon al contrato de Kashio.'),
+                TextService::mdv2('Selecciona la red y moneda desde donde enviarás los fondos:') . "\n\n" .
+                "_" . TextService::mdv2('Los fondos llegarán como USDC en Polygon.') . "_",
             'reply_markup' => json_encode(['inline_keyboard' => $keyboard]),
         ];
     }
@@ -125,7 +125,7 @@ class DepositWizardController extends Controller
         if ($pairInfo) {
             $min = number_format($pairInfo['min'], 2);
             $max = number_format($pairInfo['max'], 2);
-            $limitsLine = "📊 _" . TextService::mdv2("Mínimo: {$min} {$assetIn}   Máximo: {$max} {$assetIn}") . "_\n\n";
+            $limitsLine = "🤏 _" . TextService::mdv2("Mínimo: {$min} {$assetIn}") . "_ | 🫰 _" . TextService::mdv2("Máximo: {$max} {$assetIn}") . "_\n\n";
         }
 
         // Validate if user sent a number
@@ -135,12 +135,12 @@ class DepositWizardController extends Controller
             if ($pairInfo) {
                 if ($amount < $pairInfo['min']) {
                     $min = number_format($pairInfo['min'], 2);
-                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} es menor al mínimo permitido \\({$min}\\)\\.") . "_\n\n";
+                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} es menor al mínimo permitido ({$min}).") . "_\n\n";
                     return $this->renderEnterAmountStep($assetIn, $chainIn, $limitsLine, $error);
                 }
                 if ($amount > $pairInfo['max']) {
                     $max = number_format($pairInfo['max'], 2);
-                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} supera el máximo permitido \\({$max}\\)\\.") . "_\n\n";
+                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} supera el máximo permitido ({$max}).") . "_\n\n";
                     return $this->renderEnterAmountStep($assetIn, $chainIn, $limitsLine, $error);
                 }
             }
@@ -154,11 +154,11 @@ class DepositWizardController extends Controller
     private function renderEnterAmountStep(string $assetIn, string $chainIn, string $limitsLine, string $error = ''): array
     {
         return [
-            'text' => "💰 *" . TextService::mdv2("¿Cuánto {$assetIn} deseas enviar?") . "*\n\n" .
-                "_" . TextService::mdv2("Red seleccionada: {$assetIn} \\({$chainIn}\\)") . "_\n\n" .
+            'text' => "💰 *" . TextService::mdv2("¿Cuánto {$assetIn} deseas enviar?") . "*\n" .
+                "_" . TextService::mdv2("Red seleccionada: {$assetIn} ({$chainIn})") . "_\n\n" .
                 $limitsLine .
                 $error .
-                TextService::mdv2('Escribe el monto a depositar \\(solo números, ej: 50\\):'),
+                TextService::mdv2('Escribe el monto a depositar (solo números, ej: 50):'),
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [
