@@ -19,15 +19,15 @@ class CheckSwapStatus implements ShouldQueue
 
     const MAX_ATTEMPTS = 30;
 
-    protected int    $depositId;
+    protected int $depositId;
     protected string $tenantKey;
-    protected int    $attempt;
+    protected int $attempt;
 
     public function __construct(int $depositId, string $tenantKey, int $attempt = 0)
     {
         $this->depositId = $depositId;
         $this->tenantKey = $tenantKey;
-        $this->attempt   = $attempt;
+        $this->attempt = $attempt;
     }
 
     public function handle(): void
@@ -62,8 +62,8 @@ class CheckSwapStatus implements ShouldQueue
         } catch (\Throwable $e) {
             Log::error('[CheckSwapStatus] getSwap error', [
                 'deposit_id' => $this->depositId,
-                'attempt'    => $this->attempt,
-                'error'      => $e->getMessage(),
+                'attempt' => $this->attempt,
+                'error' => $e->getMessage(),
             ]);
             // Retry anyway — transient API error
             $this->reschedule();
@@ -81,13 +81,13 @@ class CheckSwapStatus implements ShouldQueue
         $status = $rawApiStatus ?? $deposit->status ?? 'waiting_deposit';
 
         if (env("DEBUG_MODE", false)) {
-            Log::debug('[CheckSwapStatus] Swap polled', [
-                'deposit_id'  => $this->depositId,
-                'attempt'     => $this->attempt,
-                'raw_status'  => $swap['status'] ?? '(missing)',
-                'resolved'    => $status,
+            Log::debug('🐞 [CheckSwapStatus] Swap polled', [
+                'deposit_id' => $this->depositId,
+                'attempt' => $this->attempt,
+                'raw_status' => $swap['status'] ?? '(missing)',
+                'resolved' => $status,
                 'has_tx_hash' => !empty($swap['deposit_tx_hash']),
-                'swap_keys'   => \array_keys($swap),
+                'swap_keys' => \array_keys($swap),
             ]);
         }
 
@@ -99,8 +99,8 @@ class CheckSwapStatus implements ShouldQueue
 
         $updates = ['status' => $status];
         if (!empty($swap['deposit_tx_hash'])) {
-            $updates['tx_hash']      = $swap['deposit_tx_hash'];
-            $updates['detected_at']  = $deposit->detected_at ?? now();
+            $updates['tx_hash'] = $swap['deposit_tx_hash'];
+            $updates['detected_at'] = $deposit->detected_at ?? now();
         }
         if ($status === 'completed' || $status === 'processing') {
             $updates['confirmed_at'] = $deposit->confirmed_at ?? now();
