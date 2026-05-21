@@ -752,7 +752,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/trondealer.git",
-                "reference": "b56b6922f4414fae7e3e0f8d3165dafca1ac32b8"
+                "reference": "cb027376301a2113e2e56d50a041e7ff1db5dc72"
             },
             "require": {
                 "guzzlehttp/guzzle": "^7.0",
@@ -815,7 +815,7 @@
                 "usdt",
                 "webhook"
             ],
-            "time": "2026-05-21T21:46:23+00:00"
+            "time": "2026-05-21T22:12:31+00:00"
         },
         {
             "name": "dvzambrano/web3",
