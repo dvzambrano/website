@@ -21,6 +21,7 @@ use Modules\Laravel\Http\Controllers\LaravelController;
 use Modules\Laravel\Services\TextService;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Http\Controllers\DepositWizardController;
+use Modules\ZentroTraderBot\Http\Controllers\DepositsViewController;
 use Modules\ZentroTraderBot\Http\Controllers\SupportController;
 use Modules\ZentroTraderBot\Services\DepositService;
 
@@ -822,6 +823,12 @@ class ZentroTraderBotController extends JsonsController
                 return $controller->wizard($this);
             };
 
+        $this->strategies["/myswaps"] = $this->strategies["myswaps"] =
+            function () {
+                $controller = new DepositsViewController();
+                return $controller->listDeposits($this);
+            };
+
         return $this->getProcessedMessage();
     }
 
@@ -893,6 +900,13 @@ class ZentroTraderBotController extends JsonsController
                 ]
             ]);
 
+
+        $hasActiveSwap = (new DepositService())->getActiveDeposit($this->actor->user_id) !== null;
+        if ($hasActiveSwap) {
+            array_push($menu, [
+                ["text" => "📋 " . TextService::mdv2("Mis Swaps"), "callback_data" => "/myswaps"],
+            ]);
+        }
 
         array_push($menu, [
             ["text" => "🎫 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.support.btn_open_ticket")), "callback_data" => "/support"],
