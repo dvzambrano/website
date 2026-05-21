@@ -273,9 +273,17 @@ class DepositWizardController extends Controller
         $assetIn = strtoupper($deposit->asset ?? '');
         $chainIn = strtoupper($deposit->network ?? '');
 
-        $expiresAt = $deposit->expires_at
-            ? TextService::mdv2($deposit->expires_at->format('Y-m-d H:i') . ' UTC')
-            : TextService::mdv2('~30 min');
+        if ($deposit->expires_at) {
+            $tzOffset = $bot->actor->data[$bot->tenant->code]['time_zone'] ?? null;
+            if ($tzOffset !== null) {
+                $localTime = $deposit->expires_at->copy()->addHours(intval($tzOffset))->format('Y-m-d H:i');
+                $expiresAt = TextService::mdv2($localTime . ' UTC' . $tzOffset);
+            } else {
+                $expiresAt = TextService::mdv2($deposit->expires_at->format('Y-m-d H:i') . ' UTC');
+            }
+        } else {
+            $expiresAt = TextService::mdv2('~30 min');
+        }
 
         $msg = "✅ *" . TextService::mdv2('Swap creado exitosamente') . "*\n\n";
         $msg .= "📬 *" . TextService::mdv2("Envía {$amountIn} {$assetIn} ({$chainIn}) a esta dirección:") . "*\n";
