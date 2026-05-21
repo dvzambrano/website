@@ -797,13 +797,19 @@ class ZentroTraderBotController extends JsonsController
                 // Idempotency: show active swap if one exists for this user
                 $active = (new DepositService())->getActiveDeposit($this->actor->user_id);
                 if ($active) {
-                    $address   = TextService::mdv2($active->wallet_address);
-                    $amountIn  = number_format((float) $active->amount, 2);
-                    $assetIn   = strtoupper($active->asset ?? '');
-                    $chainIn   = strtoupper($active->network ?? '');
-                    $expiresAt = $active->expires_at
-                        ? TextService::mdv2($active->expires_at->format('Y-m-d H:i') . ' UTC')
-                        : '—';
+                    $address  = TextService::mdv2($active->wallet_address);
+                    $amountIn = number_format((float) $active->amount, 2);
+                    $assetIn  = strtoupper($active->asset ?? '');
+                    $chainIn  = strtoupper($active->network ?? '');
+
+                    $expiresAt = '—';
+                    if ($active->expires_at) {
+                        $tzOffset  = $this->actor->data[$this->tenant->code]['time_zone'] ?? null;
+                        $localTime = $tzOffset !== null
+                            ? $active->expires_at->copy()->addHours(\intval($tzOffset))->format('Y-m-d H:i')
+                            : $active->expires_at->format('Y-m-d H:i');
+                        $expiresAt = TextService::mdv2($localTime);
+                    }
 
                     $msg  = "🔄 *" . TextService::mdv2('Tienes un swap activo') . "*\n\n";
                     $msg .= "📬 *" . TextService::mdv2("Envía {$amountIn} {$assetIn} ({$chainIn}) a:") . "*\n";
@@ -812,7 +818,8 @@ class ZentroTraderBotController extends JsonsController
                     $msg .= "_" . TextService::mdv2('Cuando recibamos los fondos te notificaremos.') . "_";
 
                     return [
-                        'text' => $msg,
+                        'text'  => $msg,
+                        'photo' => 'https://quickchart.io/qr?text=' . urlencode($active->wallet_address) . '&size=300',
                         'reply_markup' => json_encode(['inline_keyboard' => [
                             [['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu']],
                         ]]),

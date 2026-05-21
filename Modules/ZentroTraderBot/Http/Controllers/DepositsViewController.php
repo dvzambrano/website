@@ -88,9 +88,9 @@ class DepositsViewController extends Controller
     private function formatDate($date, ?string $tzOffset): string
     {
         if ($tzOffset !== null) {
-            return $date->copy()->addHours(\intval($tzOffset))->format('Y-m-d H:i') . ' UTC' . $tzOffset;
+            return $date->copy()->addHours(\intval($tzOffset))->format('Y-m-d H:i');
         }
 
-        return $date->format('Y-m-d H:i') . ' UTC';
+        return $date->format('Y-m-d H:i');
     }
 }

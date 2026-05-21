@@ -275,12 +275,10 @@ class DepositWizardController extends Controller
 
         if ($deposit->expires_at) {
             $tzOffset = $bot->actor->data[$bot->tenant->code]['time_zone'] ?? null;
-            if ($tzOffset !== null) {
-                $localTime = $deposit->expires_at->copy()->addHours(intval($tzOffset))->format('Y-m-d H:i');
-                $expiresAt = TextService::mdv2($localTime . ' UTC' . $tzOffset);
-            } else {
-                $expiresAt = TextService::mdv2($deposit->expires_at->format('Y-m-d H:i') . ' UTC');
-            }
+            $localTime = $tzOffset !== null
+                ? $deposit->expires_at->copy()->addHours(\intval($tzOffset))->format('Y-m-d H:i')
+                : $deposit->expires_at->format('Y-m-d H:i');
+            $expiresAt = TextService::mdv2($localTime);
         } else {
             $expiresAt = TextService::mdv2('~30 min');
         }
