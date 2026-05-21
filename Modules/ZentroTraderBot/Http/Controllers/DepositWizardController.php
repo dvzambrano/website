@@ -69,11 +69,11 @@ class DepositWizardController extends Controller
             $pairs = $this->service->getAvailableInputPairs();
         } catch (\Throwable $e) {
             Log::error('[DepositWizard] getAvailableInputPairs failed', ['error' => $e->getMessage()]);
-            return ['text' => '❌ ' . TextService::mdv2('No se pudieron obtener los pares de swap disponibles. Intenta más tarde.')];
+            return ['text' => '❌ ' . TextService::mdv2('No se pudieron obtener monedas disponibles. Intenta más tarde.')];
         }
 
         if (empty($pairs)) {
-            return ['text' => '❌ ' . TextService::mdv2('No hay pares de swap disponibles en este momento.')];
+            return ['text' => '❌ ' . TextService::mdv2('No hay monedas disponibles en este momento.')];
         }
 
         // Build one button per pair, two per row
@@ -258,7 +258,7 @@ class DepositWizardController extends Controller
             );
         } catch (\Throwable $e) {
             Log::error('[DepositWizard] createSwap failed', ['error' => $e->getMessage()]);
-            return ['text' => '❌ ' . TextService::mdv2('No se pudo crear el swap. Intenta de nuevo más tarde.')];
+            return ['text' => '❌ ' . TextService::mdv2('No se pudo crear el depósito. Intenta de nuevo más tarde.')];
         }
 
         CheckSwapStatus::dispatch($deposit->id, $bot->tenant->key)
