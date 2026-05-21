@@ -22,25 +22,25 @@ class DepositWizardController extends Controller
     {
         $steps = [
             [
-                'name'    => 'SELECT_PAIR',
+                'name' => 'SELECT_PAIR',
                 'handler' => fn($bot, $state) => $this->stepSelectPair($bot, $state),
             ],
             [
-                'name'    => 'ENTER_AMOUNT',
+                'name' => 'ENTER_AMOUNT',
                 'handler' => fn($bot, $state) => $this->stepEnterAmount($bot, $state),
             ],
             [
-                'name'    => 'CONFIRM_QUOTE',
+                'name' => 'CONFIRM_QUOTE',
                 'handler' => fn($bot, $state) => $this->stepConfirmQuote($bot, $state),
             ],
         ];
 
         return (new WizardController())->run($bot, $steps, [
-            'controller'  => self::class,
-            'method'      => 'wizard',
+            'controller' => self::class,
+            'method' => 'wizard',
             'initialData' => [],
-            'onComplete'  => fn($bot, $state) => $this->onComplete($bot, $state),
-            'onCancel'    => fn($bot) => $this->onCancel($bot),
+            'onComplete' => fn($bot, $state) => $this->onComplete($bot, $state),
+            'onCancel' => fn($bot) => $this->onCancel($bot),
         ]);
     }
 
@@ -54,10 +54,13 @@ class DepositWizardController extends Controller
         if ($text && str_starts_with($text, 'tdeposit_pair_')) {
             $parts = explode('_', $text); // tdeposit_pair_USDT_bsc
             if (count($parts) === 4) {
-                return ['__advance' => true, 'merge' => [
-                    'asset_in' => strtoupper($parts[2]),
-                    'chain_in' => strtolower($parts[3]),
-                ]];
+                return [
+                    '__advance' => true,
+                    'merge' => [
+                        'asset_in' => strtoupper($parts[2]),
+                        'chain_in' => strtolower($parts[3]),
+                    ]
+                ];
             }
         }
 
@@ -78,7 +81,7 @@ class DepositWizardController extends Controller
         $row = [];
         foreach ($pairs as $i => $pair) {
             $row[] = [
-                'text'          => $pair['label'],
+                'text' => $pair['label'],
                 'callback_data' => "tdeposit_pair_{$pair['asset_in']}_{$pair['chain_in']}",
             ];
             if (count($row) === 2 || $i === count($pairs) - 1) {
@@ -100,49 +103,72 @@ class DepositWizardController extends Controller
 
     private function stepEnterAmount($bot, array $state): array
     {
-        $text  = $bot->message['text'] ?? null;
-        $data  = $state['data'];
+        $data = $state['data'];
+        $assetIn = $data['asset_in'] ?? '';
+        $chainIn = strtoupper($data['chain_in'] ?? '');
+        $text = $bot->message['text'] ?? null;
 
-        if ($text !== null && is_numeric($text)) {
-            $amount = (float) $text;
-
-            // Find min/max for this pair
-            try {
-                $pairs = $this->service->getAvailableInputPairs();
-            } catch (\Throwable $e) {
-                return ['text' => '❌ ' . TextService::mdv2('Error al obtener límites del par. Intenta de nuevo.')];
-            }
-
-            $pairInfo = null;
-            foreach ($pairs as $pair) {
-                if ($pair['asset_in'] === $data['asset_in'] && $pair['chain_in'] === $data['chain_in']) {
+        // Always load pair limits so we can show them and validate
+        $pairInfo = null;
+        try {
+            foreach ($this->service->getAvailableInputPairs() as $pair) {
+                if ($pair['asset_in'] === $assetIn && $pair['chain_in'] === strtolower($data['chain_in'] ?? '')) {
                     $pairInfo = $pair;
                     break;
                 }
             }
+        } catch (\Throwable $e) {
+            Log::error('[DepositWizard] getAvailableInputPairs in stepEnterAmount', ['error' => $e->getMessage()]);
+        }
+
+        $limitsLine = '';
+        if ($pairInfo) {
+            $min = number_format($pairInfo['min'], 2);
+            $max = number_format($pairInfo['max'], 2);
+            $limitsLine = "📊 _" . TextService::mdv2("Mínimo: {$min} {$assetIn}   Máximo: {$max} {$assetIn}") . "_\n\n";
+        }
+
+        // Validate if user sent a number
+        if ($text !== null && is_numeric($text)) {
+            $amount = (float) $text;
 
             if ($pairInfo) {
                 if ($amount < $pairInfo['min']) {
-                    return ['text' => '⚠️ ' . TextService::mdv2("El monto mínimo es {$pairInfo['min']} {$data['asset_in']}. Ingresa un valor mayor.")];
+                    $min = number_format($pairInfo['min'], 2);
+                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} es menor al mínimo permitido \\({$min}\\)\\.") . "_\n\n";
+                    return $this->renderEnterAmountStep($assetIn, $chainIn, $limitsLine, $error);
                 }
                 if ($amount > $pairInfo['max']) {
-                    return ['text' => '⚠️ ' . TextService::mdv2("El monto máximo es {$pairInfo['max']} {$data['asset_in']}. Ingresa un valor menor.")];
+                    $max = number_format($pairInfo['max'], 2);
+                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} supera el máximo permitido \\({$max}\\)\\.") . "_\n\n";
+                    return $this->renderEnterAmountStep($assetIn, $chainIn, $limitsLine, $error);
                 }
             }
 
             return ['__advance' => true, 'merge' => ['amount_in' => $amount]];
         }
 
-        $assetIn = $data['asset_in'] ?? '';
-        $chainIn = strtoupper($data['chain_in'] ?? '');
+        return $this->renderEnterAmountStep($assetIn, $chainIn, $limitsLine);
+    }
 
+    private function renderEnterAmountStep(string $assetIn, string $chainIn, string $limitsLine, string $error = ''): array
+    {
         return [
             'text' => "💰 *" . TextService::mdv2("¿Cuánto {$assetIn} deseas enviar?") . "*\n\n" .
-                "_" . TextService::mdv2("Red seleccionada: {$assetIn} ({$chainIn})") . "_\n\n" .
-                TextService::mdv2('Escribe el monto a depositar (solo números, ej: 50):'),
-            'reply_markup' => json_encode(['inline_keyboard' => [
-                [['text' => '❌ Cancelar', 'callback_data' => '/wizardcancel']],
-            ]]),
+                "_" . TextService::mdv2("Red seleccionada: {$assetIn} \\({$chainIn}\\)") . "_\n\n" .
+                $limitsLine .
+                $error .
+                TextService::mdv2('Escribe el monto a depositar \\(solo números, ej: 50\\):'),
+            'reply_markup' => json_encode([
+                'inline_keyboard' => [
+                    [
+                        ['text' => '⬅️ Volver', 'callback_data' => '/wizardprevious'],
+                    ],
+                    [
+                        ['text' => '❌ Cancelar', 'callback_data' => '/wizardcancel'],
+                    ],
+                ]
+            ]),
         ];
     }
 
@@ -173,18 +199,18 @@ class DepositWizardController extends Controller
             return ['text' => '❌ ' . TextService::mdv2('Cotización no disponible en este momento.')];
         }
 
-        $quote    = $response['quote'];
+        $quote = $response['quote'];
         $adjusted = $this->service->computeAdjustedAmountOut(
             (float) $quote['amount_out'],
             (float) $quote['fee_pct']
         );
 
-        $amountIn  = number_format((float) $quote['amount_in'], 2);
-        $assetIn   = strtoupper($quote['asset_in']);
-        $chainIn   = strtoupper($quote['chain_in']);
+        $amountIn = number_format((float) $quote['amount_in'], 2);
+        $assetIn = strtoupper($quote['asset_in']);
+        $chainIn = strtoupper($quote['chain_in']);
         $amountOut = number_format($adjusted, 2);
 
-        $msg  = "📋 *" . TextService::mdv2('Resumen del Swap') . "*\n\n";
+        $msg = "📋 *" . TextService::mdv2('Resumen del Swap') . "*\n\n";
         $msg .= "📤 *" . TextService::mdv2('Envías:') . "* `{$amountIn} {$assetIn}` \\({$chainIn}\\)\n";
         $msg .= "📥 *" . TextService::mdv2('Recibes aprox:') . "* `{$amountOut} USDC` \\(Polygon\\)\n\n";
         $msg .= "_" . TextService::mdv2('El monto recibido es estimado e incluye las comisiones del servicio.') . "_\n\n";
@@ -192,19 +218,24 @@ class DepositWizardController extends Controller
 
         return [
             '__update' => true,
-            'merge'    => [
-                'quote_id'   => $quote['id'],
+            'merge' => [
+                'quote_id' => $quote['id'],
                 'amount_out' => (float) $quote['amount_out'],
-                'fee_pct'    => (float) $quote['fee_pct'],
+                'fee_pct' => (float) $quote['fee_pct'],
             ],
             'response' => [
                 'text' => $msg,
-                'reply_markup' => json_encode(['inline_keyboard' => [
-                    [
-                        ['text' => '✅ Confirmar', 'callback_data' => 'tdeposit_confirm'],
-                        ['text' => '❌ Cancelar',  'callback_data' => '/wizardcancel'],
-                    ],
-                ]]),
+                'reply_markup' => json_encode([
+                    'inline_keyboard' => [
+                        [
+                            ['text' => '⬅️ Volver', 'callback_data' => '/wizardprevious'],
+                        ],
+                        [
+                            ['text' => '✅ Confirmar', 'callback_data' => 'tdeposit_confirm'],
+                            ['text' => '❌ Cancelar', 'callback_data' => '/wizardcancel'],
+                        ],
+                    ]
+                ]),
             ],
         ];
     }
@@ -233,15 +264,15 @@ class DepositWizardController extends Controller
         CheckSwapStatus::dispatch($deposit->id, $bot->tenant->key)
             ->delay(now()->addMinute());
 
-        $address    = TextService::mdv2($deposit->wallet_address);
-        $amountIn   = number_format((float) $deposit->amount, 2);
-        $assetIn    = strtoupper($deposit->asset ?? '');
-        $chainIn    = strtoupper($deposit->network ?? '');
-        $expiresAt  = $deposit->expires_at
+        $address = TextService::mdv2($deposit->wallet_address);
+        $amountIn = number_format((float) $deposit->amount, 2);
+        $assetIn = strtoupper($deposit->asset ?? '');
+        $chainIn = strtoupper($deposit->network ?? '');
+        $expiresAt = $deposit->expires_at
             ? TextService::mdv2($deposit->expires_at->format('Y-m-d H:i') . ' UTC')
             : TextService::mdv2('~30 min');
 
-        $msg  = "✅ *" . TextService::mdv2('Swap creado exitosamente') . "*\n\n";
+        $msg = "✅ *" . TextService::mdv2('Swap creado exitosamente') . "*\n\n";
         $msg .= "📬 *" . TextService::mdv2("Envía {$amountIn} {$assetIn} ({$chainIn}) a esta dirección:") . "*\n";
         $msg .= "`{$address}`\n\n";
         $msg .= "⌛ *" . TextService::mdv2('Expira:') . "* {$expiresAt}\n\n";
@@ -249,9 +280,11 @@ class DepositWizardController extends Controller
 
         return [
             'text' => $msg,
-            'reply_markup' => json_encode(['inline_keyboard' => [
-                [['text' => '↖️ Menú principal', 'callback_data' => 'menu']],
-            ]]),
+            'reply_markup' => json_encode([
+                'inline_keyboard' => [
+                    [['text' => '↖️ Menú principal', 'callback_data' => 'menu']],
+                ]
+            ]),
         ];
     }
 
@@ -261,9 +294,11 @@ class DepositWizardController extends Controller
     {
         return [
             'text' => '❌ ' . TextService::mdv2('Depósito cancelado.'),
-            'reply_markup' => json_encode(['inline_keyboard' => [
-                [['text' => '↖️ Menú principal', 'callback_data' => 'menu']],
-            ]]),
+            'reply_markup' => json_encode([
+                'inline_keyboard' => [
+                    [['text' => '↖️ Menú principal', 'callback_data' => 'menu']],
+                ]
+            ]),
         ];
     }
 }
