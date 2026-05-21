@@ -13,4 +13,5 @@ return [
     'alchemy_auth_token' => env('ALCHEMY_AUTH_TOKEN'),
     'debridge_treasury_wallet' => env('TREASURY_WALLET'),
     'debridge_swap_fee_percentage' => env('SWAP_FEE_PERCENTAGE'),
+    'trondealer_payout_address' => env('TRONDEALER_PAYOUT_ADDRESS', env('ESCROW_CONTRACT')),
 ];

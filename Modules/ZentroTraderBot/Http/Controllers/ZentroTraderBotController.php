@@ -20,7 +20,9 @@ use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\Laravel\Http\Controllers\LaravelController;
 use Modules\Laravel\Services\TextService;
 use Modules\ZentroTraderBot\Entities\Offers;
+use Modules\ZentroTraderBot\Http\Controllers\DepositWizardController;
 use Modules\ZentroTraderBot\Http\Controllers\SupportController;
+use Modules\ZentroTraderBot\Services\DepositService;
 
 class ZentroTraderBotController extends JsonsController
 {
@@ -789,6 +791,37 @@ class ZentroTraderBotController extends JsonsController
                 ];
             };
 
+        $this->strategies["/tdeposit"] = $this->strategies["tdeposit"] =
+            function () {
+                // Idempotency: show active swap if one exists for this user
+                $active = (new DepositService())->getActiveDeposit($this->actor->user_id);
+                if ($active) {
+                    $address   = TextService::mdv2($active->wallet_address);
+                    $amountIn  = number_format((float) $active->amount, 2);
+                    $assetIn   = strtoupper($active->asset ?? '');
+                    $chainIn   = strtoupper($active->network ?? '');
+                    $expiresAt = $active->expires_at
+                        ? TextService::mdv2($active->expires_at->format('Y-m-d H:i') . ' UTC')
+                        : '—';
+
+                    $msg  = "🔄 *" . TextService::mdv2('Tienes un swap activo') . "*\n\n";
+                    $msg .= "📬 *" . TextService::mdv2("Envía {$amountIn} {$assetIn} ({$chainIn}) a:") . "*\n";
+                    $msg .= "`{$address}`\n\n";
+                    $msg .= "⌛ *" . TextService::mdv2('Expira:') . "* {$expiresAt}\n\n";
+                    $msg .= "_" . TextService::mdv2('Cuando recibamos los fondos te notificaremos.') . "_";
+
+                    return [
+                        'text' => $msg,
+                        'reply_markup' => json_encode(['inline_keyboard' => [
+                            [['text' => '↖️ ' . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), 'callback_data' => 'menu']],
+                        ]]),
+                    ];
+                }
+
+                $controller = new DepositWizardController();
+                return $controller->wizard($this);
+            };
+
         return $this->getProcessedMessage();
     }
 
@@ -828,6 +861,13 @@ class ZentroTraderBotController extends JsonsController
             [
                 "text" => "🫰 " . TextService::mdv2(Lang::get("zentrotraderbot::bot.options.topupcripto")),
                 "callback_data" => "/wallet"
+            ]
+        ]);
+
+        array_push($menu, [
+            [
+                "text" => "🔄 " . TextService::mdv2("Depositar vía Swap"),
+                "callback_data" => "/tdeposit"
             ]
         ]);
 
