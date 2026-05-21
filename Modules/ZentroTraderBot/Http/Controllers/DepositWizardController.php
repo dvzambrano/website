@@ -214,11 +214,11 @@ class DepositWizardController extends Controller
         $chainIn = strtoupper($quote['chain_in']);
         $amountOut = number_format($adjusted, 2);
 
-        $msg = "📋 *" . TextService::mdv2('Resumen del Swap') . "*\n\n";
+        $msg = "📋 *" . TextService::mdv2('Resumen del Depósito') . "*\n\n";
         $msg .= "📤 *" . TextService::mdv2('Envías:') . "* `{$amountIn} {$assetIn}` \\({$chainIn}\\)\n";
         $msg .= "📥 *" . TextService::mdv2('Recibes aprox:') . "* `{$amountOut} USDC` \\(Polygon\\)\n\n";
         $msg .= "_" . TextService::mdv2('El monto recibido es estimado e incluye las comisiones del servicio.') . "_\n\n";
-        $msg .= TextService::mdv2('¿Confirmas el depósito?');
+        $msg .= TextService::mdv2('¿Confirmas que deseas hacer este depósito?');
 
         return [
             '__update' => true,
@@ -272,6 +272,7 @@ class DepositWizardController extends Controller
         $amountIn = number_format((float) $deposit->amount, 2);
         $assetIn = strtoupper($deposit->asset ?? '');
         $chainIn = strtoupper($deposit->network ?? '');
+
         $expiresAt = $deposit->expires_at
             ? TextService::mdv2($deposit->expires_at->format('Y-m-d H:i') . ' UTC')
             : TextService::mdv2('~30 min');
