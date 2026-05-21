@@ -18,6 +18,9 @@ class AsyncTelegramProcessor
      */
     public function terminate($request, $response)
     {
+        if (!app()->bound('active_bot')) {
+            return;
+        }
         $tenant = app('active_bot');
         $update = $request->all();
 
