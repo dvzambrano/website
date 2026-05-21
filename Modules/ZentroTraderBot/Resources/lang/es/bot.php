@@ -802,6 +802,7 @@ return [
         "quote_confirm" => "Confirmas que deseas hacer este deposito?",
         "error_create" => "No se pudo crear el deposito. Intenta de nuevo mas tarde.",
         "success_header" => "Swap creado exitosamente",
+        "swap_id_label" => "ID de referencia:",
         "send_to" => "Envia :amount :asset (:chain) a esta direccion:",
         "expires_label" => "Expira:",
         "monitor_notice" => "Monitorearemos el deposito automaticamente y te notificaremos al completarse.",

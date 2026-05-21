@@ -289,7 +289,10 @@ class DepositWizardController extends Controller
             $expiresAt = TextService::mdv2('~30 min');
         }
 
+        $swapId = TextService::mdv2($deposit->swap_id ?? '');
+
         $msg = "✅ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.success_header')) . "*\n\n";
+        $msg .= "🆔 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.swap_id_label')) . "* `{$swapId}`\n\n";
         $msg .= "📬 *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.send_to', ['amount' => $amountIn, 'asset' => $assetIn, 'chain' => $chainIn])) . "*\n";
         $msg .= "`{$address}`\n\n";
         $msg .= "⌛ *" . TextService::mdv2(Lang::get('zentrotraderbot::bot.deposit_wizard.expires_label')) . "* {$expiresAt}\n\n";
