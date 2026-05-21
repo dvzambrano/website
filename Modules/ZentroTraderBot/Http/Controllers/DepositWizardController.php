@@ -127,7 +127,9 @@ class DepositWizardController extends Controller
         if ($pairInfo) {
             $min = number_format($pairInfo['min'], 2);
             $max = number_format($pairInfo['max'], 2);
-            $limitsLine = "🤏 _" . TextService::mdv2("Mínimo: {$min} {$assetIn}") . "_  🫰 _" . TextService::mdv2("Máximo: {$max} {$assetIn}") . "_\n\n";
+            $limitsLine =
+                "🤏 _" . TextService::mdv2("Mínimo: {$min} {$assetIn}") . "_\n" .
+                "🫰 _" . TextService::mdv2("Máximo: {$max} {$assetIn}") . "_\n\n";
         }
 
         // Validate if user sent a number
@@ -137,12 +139,12 @@ class DepositWizardController extends Controller
             if ($pairInfo) {
                 if ($amount < $pairInfo['min']) {
                     $min = number_format($pairInfo['min'], 2);
-                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} es menor al mínimo permitido ({$min}).") . "_\n\n";
+                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} es menor al mínimo permitido ({$min}).") . "_\n";
                     return $this->renderEnterAmountStep($assetIn, $chainIn, $limitsLine, $error);
                 }
                 if ($amount > $pairInfo['max']) {
                     $max = number_format($pairInfo['max'], 2);
-                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} supera el máximo permitido ({$max}).") . "_\n\n";
+                    $error = "⚠️ _" . TextService::mdv2("El valor {$amount} {$assetIn} supera el máximo permitido ({$max}).") . "_\n";
                     return $this->renderEnterAmountStep($assetIn, $chainIn, $limitsLine, $error);
                 }
             }
