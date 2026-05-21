@@ -293,6 +293,7 @@ class DepositWizardController extends Controller
 
         return [
             'text' => $msg,
+            'photo' => 'https://quickchart.io/qr?text=' . urlencode($deposit->wallet_address) . '&size=220',
             'reply_markup' => json_encode([
                 'inline_keyboard' => [
                     [["text" => "↖️ " . TextService::mdv2(Lang::get('telegrambot::bot.options.backtomainmenu')), "callback_data" => "menu"]],
