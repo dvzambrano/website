@@ -71,7 +71,31 @@ class CheckSwapStatus implements ShouldQueue
         }
 
         $previousStatus = $deposit->status;
-        $status = strtolower($swap['status'] ?? $deposit->status);
+
+        // Only trust a status from the API when it's a non-empty string.
+        // `??` only catches null — false/"" survive it and strtolower() would
+        // produce "" which breaks the DB ENUM and perpetuates itself on retry.
+        $rawApiStatus = isset($swap['status']) && \is_string($swap['status']) && $swap['status'] !== ''
+            ? strtolower($swap['status'])
+            : null;
+        $status = $rawApiStatus ?? $deposit->status ?? 'waiting_deposit';
+
+        if (env("DEBUG_MODE", false)) {
+            Log::debug('[CheckSwapStatus] Swap polled', [
+                'deposit_id'  => $this->depositId,
+                'attempt'     => $this->attempt,
+                'raw_status'  => $swap['status'] ?? '(missing)',
+                'resolved'    => $status,
+                'has_tx_hash' => !empty($swap['deposit_tx_hash']),
+                'swap_keys'   => \array_keys($swap),
+            ]);
+        }
+
+        // If the API confirmed a tx hash but returned no valid new status,
+        // infer deposit_detected so the user gets notified and the ENUM stays valid.
+        if (!empty($swap['deposit_tx_hash']) && $rawApiStatus === null && $status === 'waiting_deposit') {
+            $status = 'deposit_detected';
+        }
 
         $updates = ['status' => $status];
         if (!empty($swap['deposit_tx_hash'])) {
