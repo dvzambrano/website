@@ -34,14 +34,14 @@ class CheckSwapStatus implements ShouldQueue
     {
         $tenant = TelegramBots::where('key', $this->tenantKey)->first();
         if (!$tenant) {
-            Log::error('[CheckSwapStatus] Tenant not found', ['key' => $this->tenantKey]);
+            Log::error('🆘 CheckSwapStatus handle: Tenant not found', ['key' => $this->tenantKey]);
             return;
         }
         $tenant->connectToThisTenant();
 
         $deposit = TronDealerDeposit::find($this->depositId);
         if (!$deposit) {
-            Log::warning('[CheckSwapStatus] Deposit not found', ['id' => $this->depositId]);
+            Log::warning('⚠️ CheckSwapStatus handle: Deposit not found', ['id' => $this->depositId]);
             return;
         }
 
@@ -81,7 +81,7 @@ class CheckSwapStatus implements ShouldQueue
             }
             */
         } catch (\Throwable $e) {
-            Log::error('[CheckSwapStatus] getSwap error', [
+            Log::error('🆘 CheckSwapStatus handle: getSwap error', [
                 'deposit_id' => $this->depositId,
                 'attempt' => $this->attempt,
                 'error' => $e->getMessage(),
@@ -103,7 +103,7 @@ class CheckSwapStatus implements ShouldQueue
         }
 
         if (env("DEBUG_MODE", false)) {
-            Log::debug('🐞 [CheckSwapStatus] Swap polled', [
+            Log::debug('🐞 CheckSwapStatus handle', [
                 'deposit_id' => $this->depositId,
                 'attempt' => $this->attempt,
                 'swap' => $swap,
