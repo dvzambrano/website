@@ -46,7 +46,6 @@ use FurqanSiddiqui\BIP39\BIP39;
 use FurqanSiddiqui\BIP39\Wordlist;
 
 use Modules\Laravel\Services\Office\ExcelService;
-use Modules\ZentroPackageBot\Entities\Packages;
 
 use Dvzambrano\ZentroTraderBot\Http\Controllers\RampController;
 
