@@ -14,10 +14,10 @@ use Modules\GutoTradeBot\Entities\Accounts;
 use Modules\GutoTradeBot\Entities\Capitals;
 use Modules\GutoTradeBot\Entities\Moneys;
 use Modules\GutoTradeBot\Entities\Payments;
-use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
-use Modules\TelegramBot\Traits\UsesTelegramBot;
+use Dvzambrano\TelegramBot\Entities\Actors;
+use Dvzambrano\TelegramBot\Http\Controllers\ActorsController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Traits\UsesTelegramBot;
 use Modules\GutoTradeBot\Jobs\CheckEmails;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;

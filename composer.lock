@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4f8c3ac22e50931d70b9d226aad0e3a1",
+    "content-hash": "249488a15631f8ba91def413ab86eeb0",
     "packages": [
         {
             "name": "amenadiel/jpgraph",
@@ -702,7 +702,7 @@
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "git@github.com:dvzambrano/laravel.git",
+                "url": "git@github.com:dvzambrano/Laravel.git",
                 "reference": "d9c90e5cac55ee3579a811879b4e7eb48d63fd2e"
             },
             "require": {
@@ -745,6 +745,70 @@
             ],
             "description": "Modulo base para funcionalidades de Laravel",
             "time": "2026-05-14T21:20:16+00:00"
+        },
+        {
+            "name": "dvzambrano/telegrambot",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/TelegramBot.git",
+                "reference": "3293a51710aa9ef792b69b7bd75ee27bf10bb313"
+            },
+            "require": {
+                "dvzambrano/laravel": "dev-main",
+                "laravel/framework": "^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\TelegramBot\\Providers\\TelegramBotServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\TelegramBot\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\": "Tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "php vendor/bin/phpunit"
+                ],
+                "test:feature": [
+                    "php vendor/bin/phpunit --testsuite Feature"
+                ],
+                "test:unit": [
+                    "php vendor/bin/phpunit --testsuite Unit"
+                ],
+                "test:verbose": [
+                    "php vendor/bin/phpunit --testdox"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Paquete base para la integración de bots de Telegram en proyectos Laravel. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
+            "time": "2026-05-23T09:47:43+00:00"
         },
         {
             "name": "dvzambrano/trondealer",
@@ -822,7 +886,7 @@
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "git@github.com:dvzambrano/web3.git",
+                "url": "git@github.com:dvzambrano/Web3.git",
                 "reference": "0a3c9d1a3c6a815f3c9e9ab9b6e05686366c2902"
             },
             "require": {
@@ -870,6 +934,58 @@
             ],
             "description": "Modulo base para funcionalidades Web3",
             "time": "2026-05-05T13:23:50+00:00"
+        },
+        {
+            "name": "dvzambrano/zentroownerbot",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/ZentroOwnerBot.git",
+                "reference": "15666b6ae887f2763436c7534dda6b5d9e9cbd58"
+            },
+            "require": {
+                "dvzambrano/laravel": "dev-main",
+                "dvzambrano/telegrambot": "dev-main",
+                "dvzambrano/web3": "dev-main",
+                "laravel/framework": "^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\ZentroOwnerBot\\Providers\\ZentroOwnerBotServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\ZentroOwnerBot\\": ""
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Bot de Telegram para administración de propietarios Zentro: generación de hashes, licencias y gestión de escrow en blockchain",
+            "keywords": [
+                "blockchain",
+                "bot",
+                "escrow",
+                "laravel",
+                "telegram",
+                "zentro"
+            ],
+            "time": "2026-05-23T09:54:31+00:00"
         },
         {
             "name": "egulias/email-validator",
@@ -1214,16 +1330,16 @@
         },
         {
             "name": "guzzlehttp/guzzle",
-            "version": "7.10.2",
+            "version": "7.10.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "aed36fd5fb4844f284252a999d9abf35d3a9a1ae"
+                "reference": "aec528da477062d3af11f51e6b33402be233b21f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/aed36fd5fb4844f284252a999d9abf35d3a9a1ae",
-                "reference": "aed36fd5fb4844f284252a999d9abf35d3a9a1ae",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/aec528da477062d3af11f51e6b33402be233b21f",
+                "reference": "aec528da477062d3af11f51e6b33402be233b21f",
                 "shasum": ""
             },
             "require": {
@@ -1321,7 +1437,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/guzzle/issues",
-                "source": "https://github.com/guzzle/guzzle/tree/7.10.2"
+                "source": "https://github.com/guzzle/guzzle/tree/7.10.4"
             },
             "funding": [
                 {
@@ -1337,20 +1453,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-20T11:58:52+00:00"
+            "time": "2026-05-22T19:00:53+00:00"
         },
         {
             "name": "guzzlehttp/promises",
-            "version": "2.3.1",
+            "version": "2.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/promises.git",
-                "reference": "d2d8dfae4757f384d630fdffc2d8d6618d8f4c5e"
+                "reference": "09e8a212562fb1fb6a512c4156ed71525969d6c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/promises/zipball/d2d8dfae4757f384d630fdffc2d8d6618d8f4c5e",
-                "reference": "d2d8dfae4757f384d630fdffc2d8d6618d8f4c5e",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/09e8a212562fb1fb6a512c4156ed71525969d6c2",
+                "reference": "09e8a212562fb1fb6a512c4156ed71525969d6c2",
                 "shasum": ""
             },
             "require": {
@@ -1404,7 +1520,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/promises/issues",
-                "source": "https://github.com/guzzle/promises/tree/2.3.1"
+                "source": "https://github.com/guzzle/promises/tree/2.4.1"
             },
             "funding": [
                 {
@@ -1420,7 +1536,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-19T18:30:48+00:00"
+            "time": "2026-05-20T22:57:30+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -10881,6 +10997,8 @@
     "stability-flags": {
         "dvzambrano/laravel": 20,
         "dvzambrano/web3": 20,
+        "dvzambrano/telegrambot": 20,
+        "dvzambrano/zentroownerbot": 20,
         "dvzambrano/trondealer": 20
     },
     "prefer-stable": true,

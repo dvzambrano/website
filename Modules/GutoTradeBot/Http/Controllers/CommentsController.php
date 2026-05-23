@@ -4,7 +4,7 @@ namespace Modules\GutoTradeBot\Http\Controllers;
 
 use Modules\Laravel\Http\Controllers\JsonsController;
 use Modules\GutoTradeBot\Entities\Comments;
-use Modules\TelegramBot\Entities\Actors;
+use Dvzambrano\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Services\TextService;
 

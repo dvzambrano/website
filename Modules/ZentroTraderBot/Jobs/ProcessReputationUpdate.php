@@ -9,7 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 use Modules\Laravel\Services\BehaviorService;
 
 class ProcessReputationUpdate implements ShouldQueue

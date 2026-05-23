@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\Web3\Services\ConfigService;
@@ -15,7 +15,7 @@ use Modules\ZentroTraderBot\Services\ScrowMockService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Laravel\Services\Exchange\CambiocupService;
 use Modules\Laravel\Services\BehaviorService;
 

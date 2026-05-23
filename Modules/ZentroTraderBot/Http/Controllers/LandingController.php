@@ -3,9 +3,9 @@
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
 use Modules\Laravel\Http\Controllers\Controller;
-use Modules\TelegramBot\Entities\TelegramBots;
-use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\Actors;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Laravel\Services\Codes\QrService;
 use Modules\Web3\Http\Controllers\BlockchainProviderController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;

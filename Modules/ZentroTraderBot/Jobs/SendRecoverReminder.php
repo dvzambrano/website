@@ -10,8 +10,8 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Modules\ZentroTraderBot\Entities\Offers;
-use Modules\TelegramBot\Entities\TelegramBots;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Laravel\Services\BehaviorService;
 use Modules\Laravel\Services\TextService;
 

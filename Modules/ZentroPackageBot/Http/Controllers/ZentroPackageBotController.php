@@ -3,10 +3,10 @@
 namespace Modules\ZentroPackageBot\Http\Controllers;
 
 use Modules\Laravel\Http\Controllers\JsonsController;
-use Modules\TelegramBot\Traits\UsesTelegramBot;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Traits\UsesTelegramBot;
+use Dvzambrano\TelegramBot\Http\Controllers\ActorsController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Lang;
 use Modules\ZentroPackageBot\Entities\Packages;
 use Modules\ZentroPackageBot\Entities\Histories;

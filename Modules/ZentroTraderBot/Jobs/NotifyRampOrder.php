@@ -10,7 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Lang;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
 use Modules\Laravel\Services\TextService;
 use Modules\Web3\Services\ConfigService;
 

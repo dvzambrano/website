@@ -11,7 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 
 class ManageScrow implements ShouldQueue
 {

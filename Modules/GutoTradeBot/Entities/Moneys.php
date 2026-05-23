@@ -3,8 +3,8 @@
 namespace Modules\GutoTradeBot\Entities;
 
 use Modules\GutoTradeBot\Entities\Jsons;
-use Modules\TelegramBot\Http\Controllers\TelegramBotController;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramBotController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Services\TextService;
 

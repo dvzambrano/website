@@ -4,15 +4,15 @@ namespace Modules\ZentroTraderBot\Listeners;
 
 use Modules\Web3\Events\ContractActivityDetected;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
-use Modules\TelegramBot\Entities\TelegramBots;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Lang;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\Laravel\Services\BehaviorService;
 use Modules\Laravel\Services\TextService;
-use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
+use Dvzambrano\TelegramBot\Jobs\DeleteTelegramMessage;
 
 class ProcessContractActivity
 {

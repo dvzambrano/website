@@ -3,8 +3,8 @@
 namespace Modules\ZentroTraderBot\Http\Controllers;
 
 use Modules\Laravel\Http\Controllers\Controller;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
-use Modules\TelegramBot\Http\Controllers\WizardController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Http\Controllers\WizardController;
 use Modules\ZentroTraderBot\Entities\Paymentmethods;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Illuminate\Support\Facades\Lang;

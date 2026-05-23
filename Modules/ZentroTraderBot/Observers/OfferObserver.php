@@ -3,16 +3,16 @@
 namespace Modules\ZentroTraderBot\Observers;
 
 use Modules\ZentroTraderBot\Entities\Offers;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 use Modules\Laravel\Services\DateService;
 use Carbon\Carbon;
 use Modules\ZentroTraderBot\Jobs\UpdateOfferInChannel;
 use Illuminate\Support\Facades\Lang;
-use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
-use Modules\TelegramBot\Jobs\DeleteTelegramMessage;
+use Dvzambrano\TelegramBot\Entities\Actors;
+use Dvzambrano\TelegramBot\Http\Controllers\ActorsController;
+use Dvzambrano\TelegramBot\Jobs\DeleteTelegramMessage;
 use Modules\ZentroTraderBot\Jobs\SendRecoverReminder;
 use Modules\ZentroTraderBot\Http\Controllers\OffersController;
 use Modules\Laravel\Services\TextService;

@@ -16,8 +16,8 @@ use Modules\Laravel\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Log;
 use Modules\GutoTradeBot\Entities\Moneys;
 use Modules\Laravel\Http\Controllers\TextController;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 use Modules\Laravel\Services\TextService;
 
 class CheckEmails implements ShouldQueue

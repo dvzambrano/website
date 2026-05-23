@@ -10,7 +10,7 @@ use Modules\Laravel\Services\TextService;
 use Illuminate\Support\Facades\Log;
 use Modules\GutoTradeBot\Entities\Capitals;
 use Modules\GutoTradeBot\Entities\Moneys;
-use Modules\TelegramBot\Entities\Actors;
+use Dvzambrano\TelegramBot\Entities\Actors;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;

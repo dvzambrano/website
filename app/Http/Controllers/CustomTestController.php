@@ -16,12 +16,12 @@ use Modules\GutoTradeBot\Http\Controllers\CapitalsController;
 use Modules\GutoTradeBot\Http\Controllers\GutoTradeBotController;
 use Modules\GutoTradeBot\Http\Controllers\PaymentsController;
 use Modules\GutoTradeBot\Http\Controllers\ProfitsController;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Http\Controllers\ActorsController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
 use Modules\GutoTradeBot\Http\Controllers\CoingeckoController;
 use Webklex\IMAP\Facades\Client;
-use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\Actors;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -38,7 +38,7 @@ use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 use Modules\Web3\Http\Controllers\WalletController;
 use Modules\ZentroTraderBot\Http\Controllers\TraderWalletController;
-use Modules\ZentroOwnerBot\Http\Controllers\ZentroOwnerBotController;
+use Dvzambrano\ZentroOwnerBot\Http\Controllers\ZentroOwnerBotController;
 use Modules\Laravel\Services\DateService;
 use Modules\Laravel\Services\NumberService;
 
@@ -53,7 +53,7 @@ use Modules\ZentroTraderBot\Http\Controllers\RampController;
 use Modules\Laravel\Http\Controllers\TestController as BaseController;
 use Modules\Laravel\Services\ConfigService;
 
-use Modules\ZentroOwnerBot\Services\SecurityService;
+use Dvzambrano\ZentroOwnerBot\Services\SecurityService;
 
 class CustomTestController extends BaseController
 {

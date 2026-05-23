@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Mockery;
 use Modules\ZentroTraderBot\Tests\TestCase;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 
 class ProcessWalletActivityTest extends TestCase
 {

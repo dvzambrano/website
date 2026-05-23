@@ -3,14 +3,14 @@
 namespace Modules\ZentroCriptoBot\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
-use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Entities\TelegramBots;
-use Modules\TelegramBot\Http\Controllers\ActorsController;
-use Modules\TelegramBot\Http\Controllers\TelegramBotController;
-use Modules\TelegramBot\Http\Controllers\TelegramController;
+use Dvzambrano\TelegramBot\Entities\Actors;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Http\Controllers\ActorsController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramBotController;
+use Dvzambrano\TelegramBot\Http\Controllers\TelegramController;
 
 use Modules\Laravel\Http\Controllers\JsonsController;
-use Modules\TelegramBot\Traits\UsesTelegramBot;
+use Dvzambrano\TelegramBot\Traits\UsesTelegramBot;
 
 class ZentroCriptoBotController extends JsonsController
 {

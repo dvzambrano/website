@@ -23,7 +23,7 @@ use Modules\ZentroTraderBot\Console\StartScrowSimulation;
 use Modules\ZentroTraderBot\Console\StartCheckGas;
 use Modules\ZentroTraderBot\Console\ResetCheckGas;
 use Modules\ZentroTraderBot\Console\ClearLaravel;
-use Modules\TelegramBot\Middleware\TenantMiddleware;
+use Dvzambrano\TelegramBot\Middleware\TenantMiddleware;
 
 class ZentroTraderBotServiceProvider extends ServiceProvider
 {

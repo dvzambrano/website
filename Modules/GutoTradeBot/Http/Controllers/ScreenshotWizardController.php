@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Http\Controllers\Controller;
 use Modules\Laravel\Services\TextService;
-use Modules\TelegramBot\Entities\Actors;
-use Modules\TelegramBot\Http\Controllers\WizardController;
+use Dvzambrano\TelegramBot\Entities\Actors;
+use Dvzambrano\TelegramBot\Http\Controllers\WizardController;
 
 class ScreenshotWizardController extends Controller
 {

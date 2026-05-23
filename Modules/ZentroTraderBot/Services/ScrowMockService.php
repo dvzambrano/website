@@ -4,7 +4,7 @@ namespace Modules\ZentroTraderBot\Services;
 
 use Illuminate\Support\Str;
 use Modules\ZentroTraderBot\Tests\TestCase;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 use Modules\ZentroTraderBot\Entities\Offers;
 use Modules\ZentroTraderBot\Entities\Suscriptions;
 use Modules\Web3\Events\ContractActivityDetected;

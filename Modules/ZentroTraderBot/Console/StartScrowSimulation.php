@@ -5,7 +5,7 @@ namespace Modules\ZentroTraderBot\Console;
 use Illuminate\Console\Command;
 use Modules\ZentroTraderBot\Jobs\SimulateScrowAction;
 use Illuminate\Support\Facades\Cache;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 
 class StartScrowSimulation extends Command
 {

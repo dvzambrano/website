@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Lang;
 use Modules\Laravel\Services\TextService;
 use Modules\GutoTradeBot\Entities\Capitals;
 use Modules\GutoTradeBot\Entities\Payments;
-use Modules\TelegramBot\Entities\Actors;
+use Dvzambrano\TelegramBot\Entities\Actors;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;

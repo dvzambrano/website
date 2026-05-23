@@ -3,7 +3,7 @@
 namespace Modules\GutoTradeBot\Entities;
 
 use Modules\GutoTradeBot\Http\Controllers\PaymentsController;
-use Modules\TelegramBot\Entities\Actors;
+use Dvzambrano\TelegramBot\Entities\Actors;
 
 class Agents extends Actors
 {

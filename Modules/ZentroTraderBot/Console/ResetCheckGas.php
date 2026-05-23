@@ -4,7 +4,7 @@ namespace Modules\ZentroTraderBot\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 use Modules\ZentroTraderBot\Http\Controllers\BlockchainController;
 
 class ResetCheckGas extends Command

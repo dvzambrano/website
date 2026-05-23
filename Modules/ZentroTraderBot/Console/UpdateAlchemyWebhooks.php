@@ -5,7 +5,7 @@ namespace Modules\ZentroTraderBot\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Modules\Laravel\Services\BehaviorService;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 use Modules\Web3\Http\Controllers\AlchemyController;
 
 class UpdateAlchemyWebhooks extends Command

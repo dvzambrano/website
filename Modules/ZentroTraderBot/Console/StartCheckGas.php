@@ -4,7 +4,7 @@ namespace Modules\ZentroTraderBot\Console;
 
 use Illuminate\Console\Command;
 use Modules\ZentroTraderBot\Jobs\CheckGas;
-use Modules\TelegramBot\Entities\TelegramBots;
+use Dvzambrano\TelegramBot\Entities\TelegramBots;
 use Illuminate\Support\Facades\Cache;
 
 class StartCheckGas extends Command

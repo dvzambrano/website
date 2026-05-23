@@ -12,6 +12,8 @@
         "php": "^8.3",
         "dvzambrano/laravel": "dev-main",
         "dvzambrano/web3": "dev-main",
+        "dvzambrano/telegrambot": "dev-main",
+        "dvzambrano/zentroownerbot": "dev-main",
         "dvzambrano/trondealer": "dev-main",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10|^3.0",
@@ -31,11 +33,19 @@
     "repositories": [
         {
             "type": "git",
-            "url": "git@github.com:dvzambrano/laravel.git"
+            "url": "git@github.com:dvzambrano/Laravel.git"
         },
         {
             "type": "git",
-            "url": "git@github.com:dvzambrano/web3.git"
+            "url": "git@github.com:dvzambrano/Web3.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/TelegramBot.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/ZentroOwnerBot.git"
         },
         {
             "type": "git",

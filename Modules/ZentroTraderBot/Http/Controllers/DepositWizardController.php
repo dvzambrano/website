@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
 use Modules\Laravel\Http\Controllers\Controller;
 use Modules\Laravel\Services\TextService;
-use Modules\TelegramBot\Http\Controllers\WizardController;
+use Dvzambrano\TelegramBot\Http\Controllers\WizardController;
 use Modules\Web3\Services\ConfigService;
 use Modules\ZentroTraderBot\Jobs\CheckSwapStatus;
 use Modules\ZentroTraderBot\Services\DepositService;
