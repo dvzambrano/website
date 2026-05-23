@@ -1,2 +1,0 @@
-"_comment_webklex": "Para leer correos electrónicos desde Laravel: para que el bot procese facturas o avisos que llegan por email",
- "webklex/laravel-imap": "^4.1"
