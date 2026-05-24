@@ -14,6 +14,7 @@
         "dvzambrano/web3": "dev-main",
         "dvzambrano/telegrambot": "dev-main",
         "dvzambrano/zentroownerbot": "dev-main",
+        "dvzambrano/safe": "dev-main",
         "dvzambrano/gutotradebot": "dev-main",
         "dvzambrano/zentrotraderbot": "dev-main",
         "dvzambrano/trondealer": "dev-main",
@@ -47,6 +48,10 @@
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/ZentroOwnerBot.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/Safe.git"
         },
         {
             "type": "git",
