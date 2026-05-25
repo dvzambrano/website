@@ -23,9 +23,7 @@
         "pragmarx/google2fa-laravel": "^3.0",
         "webklex/laravel-imap": "^6.2",
         "wikimedia/composer-merge-plugin": "^2.1",
-        "phpoffice/phpspreadsheet": "*",
-        "kornrunner/keccak": "^1.1",
-        "simplito/elliptic-php": "^1.0"
+        "phpoffice/phpspreadsheet": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
