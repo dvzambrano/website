@@ -84,6 +84,17 @@ class CustomTestController extends BaseController
         dd($mio, $nuevo);
     }
 
+    public function testConfig()
+    {
+        $configs = [
+            'APP_NAME' => config('app.name'),
+            'BSC' => config("safe.networks"),
+
+        ];
+
+        dd($configs);
+    }
+
 
     public function testNetworks()
     {
