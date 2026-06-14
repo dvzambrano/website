@@ -2218,7 +2218,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/TelegramBot.git",
-                "reference": "7256dca5960c8d8dce59cc2dd501ac417e8fed78"
+                "reference": "667dbed94b4fbc5eabb637cab0b7289b3db44571"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -2277,7 +2277,7 @@
                 }
             ],
             "description": "Paquete base para la integración de bots de Telegram en proyectos Laravel. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-06-14T17:50:26+00:00"
+            "time": "2026-06-14T19:37:08+00:00"
         },
         {
             "name": "dvzambrano/tenant",
