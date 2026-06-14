@@ -10,14 +10,27 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "dvzambrano/laravel": "dev-main",
-        "dvzambrano/web3": "dev-main",
+        "dvzambrano/encryption": "dev-main",
+        "dvzambrano/date": "dev-main",
+        "dvzambrano/number": "dev-main",
+        "dvzambrano/text": "dev-main",
+        "dvzambrano/cambiocup": "dev-main",
+        "dvzambrano/qr": "dev-main",
+        "dvzambrano/office": "dev-main",
+        "dvzambrano/filesystem": "dev-main",
+        "dvzambrano/tenant": "dev-main",
+        "dvzambrano/metadata": "dev-main",
+        "dvzambrano/eloquent": "dev-main",
+        "dvzambrano/behavior": "dev-main",
+        "dvzambrano/locale": "dev-main",
+        "dvzambrano/graphs": "dev-main",
         "dvzambrano/telegrambot": "dev-main",
         "dvzambrano/zentroownerbot": "dev-main",
         "dvzambrano/safe": "dev-main",
         "dvzambrano/gutotradebot": "dev-main",
         "dvzambrano/zentrotraderbot": "dev-main",
         "dvzambrano/trondealer": "dev-main",
+        "nesbot/carbon": ">=2.72.5 <3.12.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10|^3.0",
         "pragmarx/google2fa-laravel": "^3.0",
@@ -36,11 +49,59 @@
     "repositories": [
         {
             "type": "git",
-            "url": "git@github.com:dvzambrano/Laravel.git"
+            "url": "git@github.com:dvzambrano/encryption.git"
         },
         {
             "type": "git",
-            "url": "git@github.com:dvzambrano/Web3.git"
+            "url": "git@github.com:dvzambrano/date.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/number.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/text.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/cambiocup.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/qr.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/office.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/filesystem.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/tenant.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/metadata.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/eloquent.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/behavior.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/locale.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/graphs.git"
         },
         {
             "type": "git",
@@ -65,6 +126,62 @@
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/trondealer.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/security.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/web3core.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/1inch.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/alchemy.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/blockchainprovider.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/chainid.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/coingecko.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/debridge.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/escrow.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/ethers.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/etherscan.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/moralis.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/walletconnect.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/zeroex.git"
         }
     ],
     "autoload": {

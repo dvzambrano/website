@@ -174,3 +174,33 @@ php artisan view:clear
 php artisan cache:clear
 php artisan event:clear
 composer dump-autoload
+
+
+
+
+
+
+encryption:encrypt {value}	Cifra un texto usando APP_KEY y semilla en caché
+encryption:decrypt {value}	Descifra un hash cifrado
+encryption:unlock	Gestiona la Semilla Maestra del vault
+
+laravel:clear	Limpia caché, optimiza el proyecto y refresca el autoload de Composer
+bot:test {id} {text=/start} {user_id=816767995} {language_code=es} [--real]	Simula un webhook de Telegram localmente
+bot:leaked {id} {token}	Reemplaza el token de un bot comprometido
+bot:set-webhook {id} [--domain=]	Configura el webhook en Telegram para un bot
+bot:get-webhook {id}	Obtiene el estado del webhook de un bot
+bot:reset-all-webhooks [--domain=]	Genera nuevos secretos y actualiza webhooks de todos los bots
+bot:stop-job {bot} {job} {time=3600}	Detiene la cadena recursiva de un Job vía caché
+modules:migrate-seed	Ejecuta migraciones y seeders del proyecto y todos los módulos/tenants
+web3:install	Instala/actualiza los assets del módulo Web3
+trondealer:test	Prueba la integración (credenciales, wallet, balance, HMAC)
+laravel:clear [--checkgas] [--scrowtest] [--clean]	Versión extendida: limpia caché + opciones de monitoreo
+zentrotraderbot:start-check-gas {bot=KashioBot} {user}	Inicia el Job de monitoreo de gas en la red
+zentrotraderbot:reset-gas-alerts {bot} {user}	Limpia caché de alertas de gas y reinicia el monitoreo
+zentrotraderbot:start-scrow-simulation {bot} [--fast]	Inicia simulación de operaciones Escrow (requiere ESCROW_TEST_MODE=true)
+zentrotraderbot:moralis-init-streams {module} [--bot=] [--domain=]	Crea Streams en Moralis y guarda sus IDs en los bots
+zentrotraderbot:moralis-delete-stream {id}	Elimina un Stream de Moralis por ID
+zentrotraderbot:moralis-get-stream-addresses {bot}	Lista todas las direcciones de un Stream de Moralis
+zentrotraderbot:alchemy-init-webhooks {module} [--domain=]	Crea webhooks vacíos en Alchemy y guarda sus IDs
+zentrotraderbot:alchemy-update-webhooks {module}	Actualiza URL/configuración de webhooks existentes en Alchemy
+zentrotraderbot:alchemy-sync-wallets {module}	Sincroniza wallets de suscriptores hacia sus webhooks en Alchemy
