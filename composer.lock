@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "81a66602caa797cd672ad0d7367bc56a",
+    "content-hash": "f0bac1522d32c64016b4acaa1c9c2f51",
     "packages": [
         {
             "name": "amenadiel/jpgraph",
@@ -264,28 +264,29 @@
         },
         {
             "name": "composer/pcre",
-            "version": "3.3.2",
+            "version": "3.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/pcre.git",
-                "reference": "b2bed4734f0cc156ee1fe9c0da2550420d99a21e"
+                "reference": "d5a341b3fb61f3001970940afb1d332968a183ed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/pcre/zipball/b2bed4734f0cc156ee1fe9c0da2550420d99a21e",
-                "reference": "b2bed4734f0cc156ee1fe9c0da2550420d99a21e",
+                "url": "https://api.github.com/repos/composer/pcre/zipball/d5a341b3fb61f3001970940afb1d332968a183ed",
+                "reference": "d5a341b3fb61f3001970940afb1d332968a183ed",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.4 || ^8.0"
             },
             "conflict": {
-                "phpstan/phpstan": "<1.11.10"
+                "phpstan/phpstan": "<2.2.2"
             },
             "require-dev": {
-                "phpstan/phpstan": "^1.12 || ^2",
-                "phpstan/phpstan-strict-rules": "^1 || ^2",
-                "phpunit/phpunit": "^8 || ^9"
+                "phpstan/phpstan": "^2",
+                "phpstan/phpstan-deprecation-rules": "^2",
+                "phpstan/phpstan-strict-rules": "^2",
+                "phpunit/phpunit": "^9"
             },
             "type": "library",
             "extra": {
@@ -323,7 +324,7 @@
             ],
             "support": {
                 "issues": "https://github.com/composer/pcre/issues",
-                "source": "https://github.com/composer/pcre/tree/3.3.2"
+                "source": "https://github.com/composer/pcre/tree/3.4.0"
             },
             "funding": [
                 {
@@ -333,13 +334,9 @@
                 {
                     "url": "https://github.com/composer",
                     "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/composer/composer",
-                    "type": "tidelift"
                 }
             ],
-            "time": "2024-11-12T16:29:46+00:00"
+            "time": "2026-06-07T11:47:49+00:00"
         },
         {
             "name": "dasprid/enum",
@@ -698,18 +695,959 @@
             "time": "2025-10-31T18:51:33+00:00"
         },
         {
+            "name": "dvzambrano/1inch",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/1inch.git",
+                "reference": "844a9f0cccca4e887d6233204342bb8ac010598c"
+            },
+            "require": {
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0",
+                "vlucas/phpdotenv": "^5.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\OneInch\\Providers\\OneInchServiceProvider"
+                    ],
+                    "aliases": {
+                        "OneInch": "Dvzambrano\\OneInch\\Facades\\OneInch"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\OneInch\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\OneInch\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel package for 1inch token catalog integration. Fetches, caches, and indexes EVM token lists by address and symbol, with configurable per-chain manual token overrides.",
+            "time": "2026-06-10T18:25:47+00:00"
+        },
+        {
+            "name": "dvzambrano/alchemy",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/alchemy.git",
+                "reference": "337d0963aea411ce4f23977ae56c69d2b4b075b9"
+            },
+            "require": {
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0",
+                "vlucas/phpdotenv": "^5.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Alchemy\\Providers\\AlchemyServiceProvider"
+                    ],
+                    "aliases": {
+                        "Alchemy": "Dvzambrano\\Alchemy\\Facades\\Alchemy"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Alchemy\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Alchemy\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Alchemy blockchain provider: webhook processing and on-chain queries (balances, transfers, gas)",
+            "time": "2026-06-10T15:31:10+00:00"
+        },
+        {
+            "name": "dvzambrano/behavior",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/behavior.git",
+                "reference": "92afae9fe0b6e243bb555a3963d44837722d4568"
+            },
+            "require": {
+                "illuminate/cache": "^11.0|^12.0",
+                "illuminate/support": "^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^9.0|^10.0",
+                "phpunit/phpunit": "^11.0|^12.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Behavior\\Providers\\BehaviorServiceProvider"
+                    ],
+                    "aliases": {
+                        "Behavior": "Dvzambrano\\Behavior\\Facades\\Behavior"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Behavior\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Behavior\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Env-aware Laravel cache wrapper and HTTP timeout helper — longer TTL in local, shorter in production.",
+            "keywords": [
+                "behavior",
+                "cache",
+                "env",
+                "laravel",
+                "timeout"
+            ],
+            "time": "2026-06-13T00:10:44+00:00"
+        },
+        {
+            "name": "dvzambrano/blockchainprovider",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/blockchainprovider.git",
+                "reference": "a1f8f88aadf5306862e2c23afc2325485659c462"
+            },
+            "require": {
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0",
+                "vlucas/phpdotenv": "^5.0"
+            },
+            "suggest": {
+                "dvzambrano/alchemy": "Alchemy Notify/RPC provider",
+                "dvzambrano/ethers": "Direct JSON-RPC provider (no API key required)",
+                "dvzambrano/moralis": "Moralis Streams/Deep-Index provider"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\BlockchainProvider\\Providers\\BlockchainProviderServiceProvider"
+                    ],
+                    "aliases": {
+                        "BlockchainProvider": "Dvzambrano\\BlockchainProvider\\Facades\\BlockchainProvider"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\BlockchainProvider\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\BlockchainProvider\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Unified blockchain provider facade for Moralis, Alchemy, and Ethers — routes balances, transactions, and webhooks to the configured driver.",
+            "time": "2026-06-13T17:52:00+00:00"
+        },
+        {
+            "name": "dvzambrano/cambiocup",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/cambiocup.git",
+                "reference": "51f193346cea6b6c37c52fad2db1fb81d8cc6811"
+            },
+            "require": {
+                "illuminate/cache": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/log": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Cambiocup\\Providers\\CambiocupServiceProvider"
+                    ],
+                    "aliases": {
+                        "Cambiocup": "Dvzambrano\\Cambiocup\\Facades\\Cambiocup"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Cambiocup\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Cambiocup\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for CambioCUP API integration — fetch, clean, and cache Cuban exchange rates (CUP, MLC, USD and more).",
+            "keywords": [
+                "cambiocup",
+                "cuba",
+                "cup",
+                "currency",
+                "exchange",
+                "laravel",
+                "mlc",
+                "rates"
+            ],
+            "time": "2026-06-12T15:45:16+00:00"
+        },
+        {
+            "name": "dvzambrano/chainid",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/chainid.git",
+                "reference": "106d2fdc1f17009306a90bccfdf7272ab5ffaf88"
+            },
+            "require": {
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0",
+                "vlucas/phpdotenv": "^5.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Chainid\\Providers\\ChainidServiceProvider"
+                    ],
+                    "aliases": {
+                        "Chainid": "Dvzambrano\\Chainid\\Facades\\Chainid"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Chainid\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Chainid\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel package for EVM network/chain catalog from chainid.network: fetch, cache, and look up chains by shortName or chainId. Includes ConfigService helpers for active-network resolution.",
+            "time": "2026-06-10T17:50:50+00:00"
+        },
+        {
+            "name": "dvzambrano/coingecko",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/coingecko.git",
+                "reference": "3a6aa2885c49421d3891d68f799892a032f422db"
+            },
+            "require": {
+                "illuminate/cache": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Coingecko\\Providers\\CoingeckoServiceProvider"
+                    ],
+                    "aliases": {
+                        "Coingecko": "Dvzambrano\\Coingecko\\Facades\\Coingecko"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Coingecko\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Coingecko\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for CoinGecko API integration — historical prices, live rates, and multi-currency support.",
+            "keywords": [
+                "bitcoin",
+                "coingecko",
+                "crypto",
+                "ethereum",
+                "laravel",
+                "polygon",
+                "price",
+                "rates"
+            ],
+            "time": "2026-06-10T10:32:56+00:00"
+        },
+        {
+            "name": "dvzambrano/date",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/date.git",
+                "reference": "78bf2aa89f168bb60dec752e5027b99a157033fc"
+            },
+            "require": {
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/translation": "^9.0|^10.0|^11.0|^12.0",
+                "nesbot/carbon": "^2.0|^3.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Date\\Providers\\DateServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Date\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Date\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for date and time operations — period arithmetic and human-readable time differences with multi-language support.",
+            "keywords": [
+                "carbon",
+                "date",
+                "diff",
+                "i18n",
+                "laravel",
+                "period",
+                "time"
+            ],
+            "time": "2026-06-12T14:33:09+00:00"
+        },
+        {
+            "name": "dvzambrano/debridge",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/debridge.git",
+                "reference": "3109c6be7ecf0fe549b0ccc04c52936b2eca5d6b"
+            },
+            "require": {
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0",
+                "vlucas/phpdotenv": "^5.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\DeBridge\\Providers\\DeBridgeServiceProvider"
+                    ],
+                    "aliases": {
+                        "DeBridge": "Dvzambrano\\DeBridge\\Facades\\DeBridge"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\DeBridge\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\DeBridge\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel package for deBridge DLN cross-chain and same-chain swap integration. Covers order creation, status tracking, supported chains, and token lists.",
+            "time": "2026-06-10T18:05:57+00:00"
+        },
+        {
+            "name": "dvzambrano/eloquent",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/eloquent.git",
+                "reference": "c73fb86144e415dccc7982d6b8f37739e230b995"
+            },
+            "require": {
+                "illuminate/database": "^11.0|^12.0",
+                "illuminate/support": "^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^9.0|^10.0",
+                "phpunit/phpunit": "^11.0|^12.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Eloquent\\Providers\\EloquentServiceProvider"
+                    ],
+                    "aliases": {
+                        "Query": "Dvzambrano\\Eloquent\\Facades\\Query"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Eloquent\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Eloquent\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Generic Eloquent query helpers — find, filter, JSON-column operations, and safe model updates.",
+            "keywords": [
+                "eloquent",
+                "json",
+                "laravel",
+                "model",
+                "query"
+            ],
+            "time": "2026-06-12T23:50:47+00:00"
+        },
+        {
+            "name": "dvzambrano/encryption",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/encryption.git",
+                "reference": "4b9c0ce567193d60ed406aa053323e4d44c64ba0"
+            },
+            "require": {
+                "illuminate/console": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/encryption": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/log": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Encryption\\Providers\\EncryptionServiceProvider"
+                    ],
+                    "aliases": {
+                        "Encryption": "Dvzambrano\\Encryption\\Facades\\Encryption"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Encryption\\": ""
+                },
+                "files": [
+                    "Helpers/functions.php"
+                ],
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Encryption\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for symmetric encryption with optional vault seed — two-tier security using APP_KEY and a runtime master seed.",
+            "keywords": [
+                "aes-256",
+                "crypt",
+                "encryption",
+                "laravel",
+                "security",
+                "symmetric",
+                "vault"
+            ],
+            "time": "2026-06-12T13:52:21+00:00"
+        },
+        {
+            "name": "dvzambrano/escrow",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/escrow.git",
+                "reference": "f148bb3bc39d22a69ae9b673719a4607a84d77de"
+            },
+            "require": {
+                "dvzambrano/web3core": "dev-main",
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "kornrunner/keccak": "^1.1",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Escrow\\Providers\\EscrowServiceProvider"
+                    ],
+                    "aliases": {
+                        "Escrow": "Dvzambrano\\Escrow\\Facades\\Escrow"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Escrow\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Escrow\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for EVM smart-contract Escrow operations: trade lifecycle (create, sign, cancel, expire, dispute), EIP-712 meta-transactions (gasless for seller/buyer), admin functions, and ABI log decoding. Depends on dvzambrano/web3core.",
+            "keywords": [
+                "eip712",
+                "escrow",
+                "ethereum",
+                "evm",
+                "laravel",
+                "metatransaction",
+                "polygon",
+                "smart-contract",
+                "usdc"
+            ],
+            "time": "2026-06-10T15:45:20+00:00"
+        },
+        {
+            "name": "dvzambrano/ethers",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/ethers.git",
+                "reference": "ffc98c355fb5eea15e37e35ff7d49e33e0f81029"
+            },
+            "require": {
+                "dvzambrano/web3core": "dev-main as 1.0.0",
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0",
+                "vlucas/phpdotenv": "^5.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Ethers\\Providers\\EthersServiceProvider"
+                    ],
+                    "aliases": {
+                        "Ethers": "Dvzambrano\\Ethers\\Facades\\Ethers"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Ethers\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Ethers\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel package for EVM balance queries (native + ERC-20) via JSON-RPC with multi-node fallback. Implements the BlockchainProviderInterface: getNativeBalance, getTokenBalance, processWebhook.",
+            "time": "2026-06-10T21:05:18+00:00"
+        },
+        {
+            "name": "dvzambrano/etherscan",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/etherscan.git",
+                "reference": "6a20be5ba9c4f855a1ec98ad50f500253101e5da"
+            },
+            "require": {
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "kornrunner/keccak": "^1.1",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0",
+                "vlucas/phpdotenv": "^5.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Etherscan\\Providers\\EtherscanServiceProvider"
+                    ],
+                    "aliases": {
+                        "Etherscan": "Dvzambrano\\Etherscan\\Facades\\Etherscan"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Etherscan\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Etherscan\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel package for Etherscan v2 API integration: fetch and cache contract ABIs (with proxy follow-through), compute event topics and function selectors via Keccak-256.",
+            "time": "2026-06-10T18:16:01+00:00"
+        },
+        {
+            "name": "dvzambrano/filesystem",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/filesystem.git",
+                "reference": "6dc2e5388826d895401ab8e3f88770a5f7c59fee"
+            },
+            "require": {
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "nesbot/carbon": "^2.0|^3.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Filesystem\\Providers\\FilesystemServiceProvider"
+                    ],
+                    "aliases": {
+                        "Filesystem": "Dvzambrano\\Filesystem\\Facades\\Filesystem",
+                        "AppLog": "Dvzambrano\\Filesystem\\Facades\\AppLog"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Filesystem\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Filesystem\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for file and folder management — directory/file CRUD, path normalization, MIME-type mapping, timestamp-based filenames, and Laravel log reading/searching/clearing.",
+            "keywords": [
+                "directory",
+                "file",
+                "filesystem",
+                "folder",
+                "laravel",
+                "log",
+                "mime"
+            ],
+            "time": "2026-06-12T18:02:54+00:00"
+        },
+        {
+            "name": "dvzambrano/graphs",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/graphs.git",
+                "reference": "b1d12da6dcb39d4216327a1e13f16566282df41b"
+            },
+            "require": {
+                "amenadiel/jpgraph": "*",
+                "illuminate/routing": "^11.0|^12.0",
+                "illuminate/support": "^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^9.0|^10.0",
+                "phpunit/phpunit": "^11.0|^12.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Graphs\\Providers\\GraphsServiceProvider"
+                    ],
+                    "aliases": {
+                        "Graphs": "Dvzambrano\\Graphs\\Facades\\Graphs"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Graphs\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Graphs\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "JpGraph-based chart generation (lines, grouped bars, comprobant canvas) with auto-expiring temp file management for Laravel.",
+            "keywords": [
+                "canvas",
+                "charts",
+                "graphs",
+                "jpgraph",
+                "laravel",
+                "visualization"
+            ],
+            "time": "2026-06-13T00:42:52+00:00"
+        },
+        {
             "name": "dvzambrano/gutotradebot",
             "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/GutoTradeBot.git",
-                "reference": "0273d56d59497971127e7a68d830d182926037ac"
+                "reference": "0442cff0db39bc3e28759bc2545b7f4b57c3ff8b"
             },
             "require": {
-                "dvzambrano/laravel": "dev-main",
+                "dvzambrano/date": "dev-main",
+                "dvzambrano/eloquent": "dev-main",
+                "dvzambrano/filesystem": "dev-main",
+                "dvzambrano/graphs": "dev-main",
+                "dvzambrano/number": "dev-main",
                 "dvzambrano/safe": "dev-main",
                 "dvzambrano/telegrambot": "dev-main",
-                "dvzambrano/web3": "dev-main",
+                "dvzambrano/tenant": "dev-main",
+                "dvzambrano/text": "dev-main",
+                "dvzambrano/web3core": "dev-main as 1.0.0",
                 "laravel/framework": "^12.0",
                 "php": "^8.2",
                 "phpoffice/phpspreadsheet": "*",
@@ -764,44 +1702,51 @@
                 }
             ],
             "description": "Paquete Laravel para gestión de pagos, capitales y remesas vía Telegram Bot. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-06-05T08:43:24+00:00"
+            "time": "2026-06-13T21:09:06+00:00"
         },
         {
-            "name": "dvzambrano/laravel",
+            "name": "dvzambrano/locale",
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "git@github.com:dvzambrano/Laravel.git",
-                "reference": "d9c90e5cac55ee3579a811879b4e7eb48d63fd2e"
+                "url": "git@github.com:dvzambrano/locale.git",
+                "reference": "b5d9df8bc7e1abb90886bb2be182cafc0fbf90b6"
             },
             "require": {
-                "amenadiel/jpgraph": "*",
-                "bacon/bacon-qr-code": "^3.0",
-                "laravel/framework": "^12.0",
-                "php": "^8.2",
-                "phpoffice/phpspreadsheet": "^1.29"
+                "illuminate/routing": "^11.0|^12.0",
+                "illuminate/session": "^11.0|^12.0",
+                "illuminate/support": "^11.0|^12.0",
+                "illuminate/view": "^11.0|^12.0",
+                "php": "^8.2"
             },
             "require-dev": {
-                "orchestra/testbench": "^10.9"
+                "orchestra/testbench": "^9.0|^10.0",
+                "phpunit/phpunit": "^11.0|^12.0"
             },
             "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
                     "providers": [
-                        "Modules\\Laravel\\Providers\\LaravelServiceProvider",
-                        "Modules\\Laravel\\Providers\\ModuleDatabaseServiceProvider"
-                    ]
+                        "Dvzambrano\\Locale\\Providers\\LocaleServiceProvider"
+                    ],
+                    "aliases": {
+                        "AppLocale": "Dvzambrano\\Locale\\Facades\\Locale"
+                    }
                 }
             },
             "autoload": {
                 "psr-4": {
-                    "Modules\\Laravel\\": ""
+                    "Dvzambrano\\Locale\\": ""
                 },
-                "files": [
-                    "Helpers/ModuleHelper.php",
-                    "Helpers/EncryptionHelper.php"
+                "exclude-from-classmap": [
+                    "/tests/"
                 ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Locale\\Tests\\": "tests/"
+                }
             },
             "license": [
                 "MIT"
@@ -812,8 +1757,313 @@
                     "email": "dvzambrano@gmail.com"
                 }
             ],
-            "description": "Modulo base para funcionalidades de Laravel",
-            "time": "2026-05-14T21:20:16+00:00"
+            "description": "Session-based locale switching middleware, language selector UI component, and locale utilities for Laravel.",
+            "keywords": [
+                "i18n",
+                "language",
+                "laravel",
+                "locale",
+                "middleware",
+                "selector"
+            ],
+            "time": "2026-06-13T00:26:23+00:00"
+        },
+        {
+            "name": "dvzambrano/metadata",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/metadata.git",
+                "reference": "5533b08aa1ccf3ed10c10aaf30f506a596a2f984"
+            },
+            "require": {
+                "illuminate/database": "^11.0|^12.0",
+                "illuminate/encryption": "^11.0|^12.0",
+                "illuminate/support": "^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^9.0|^10.0",
+                "phpunit/phpunit": "^11.0|^12.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Metadata\\Providers\\MetadataServiceProvider"
+                    ],
+                    "aliases": {
+                        "Metadata": "Dvzambrano\\Metadata\\Facades\\Metadata"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Metadata\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Metadata\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Encrypted key-value metadata store with type taxonomy and automatic config injection for Laravel.",
+            "keywords": [
+                "config",
+                "encrypted",
+                "laravel",
+                "metadata",
+                "settings"
+            ],
+            "time": "2026-06-12T23:11:17+00:00"
+        },
+        {
+            "name": "dvzambrano/moralis",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/moralis.git",
+                "reference": "d9782d13a8d0634a86bd46724c3f3042848fa3e7"
+            },
+            "require": {
+                "illuminate/events": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0",
+                "vlucas/phpdotenv": "^5.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Moralis\\Providers\\MoralisServiceProvider"
+                    ],
+                    "aliases": {
+                        "Moralis": "Dvzambrano\\Moralis\\Facades\\Moralis"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Moralis\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Moralis\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel package for Moralis Streams and Deep-Index API integration. Processes blockchain webhooks (native txs, ERC-20 transfers, NFT transfers, contract logs), queries wallet balances and transaction history, and manages stream address subscriptions.",
+            "time": "2026-06-10T22:00:40+00:00"
+        },
+        {
+            "name": "dvzambrano/number",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/number.git",
+                "reference": "23fd1f0f702bd0fa0c1ee0ad6abc5295d9f1ca8a"
+            },
+            "require": {
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Number\\Providers\\NumberServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Number\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Number\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for number parsing and rounding — handles international formats (US, EU, Latam) and precision rounding with ceil/floor control.",
+            "keywords": [
+                "decimal",
+                "float",
+                "format",
+                "laravel",
+                "number",
+                "parse",
+                "round"
+            ],
+            "time": "2026-06-12T21:55:14+00:00"
+        },
+        {
+            "name": "dvzambrano/office",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/office.git",
+                "reference": "ac6f57292f25c3a8efabce4c4d385c3eda341959"
+            },
+            "require": {
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.1",
+                "phpoffice/phpspreadsheet": "^1.29|^2.0|^3.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Office\\Providers\\OfficeServiceProvider"
+                    ],
+                    "aliases": {
+                        "Office": "Dvzambrano\\Office\\Facades\\Office"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Office\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Office\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for Office file operations — dynamic Excel import with header mapping, field normalization, and fingerprint hashing via phpoffice/phpspreadsheet.",
+            "keywords": [
+                "excel",
+                "import",
+                "laravel",
+                "office",
+                "phpspreadsheet",
+                "spreadsheet",
+                "xlsx"
+            ],
+            "time": "2026-06-12T16:51:35+00:00"
+        },
+        {
+            "name": "dvzambrano/qr",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/qr.git",
+                "reference": "beb610019131bef54031abbb15632847b4f4be83"
+            },
+            "require": {
+                "bacon/bacon-qr-code": "^2.0|^3.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Qr\\Providers\\QrServiceProvider"
+                    ],
+                    "aliases": {
+                        "Qr": "Dvzambrano\\Qr\\Facades\\Qr"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Qr\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Qr\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for QR code generation — produces high-quality SVG output using bacon/bacon-qr-code with configurable size and error correction level.",
+            "keywords": [
+                "bacon",
+                "barcode",
+                "laravel",
+                "qr",
+                "qrcode",
+                "svg"
+            ],
+            "time": "2026-06-12T16:19:44+00:00"
         },
         {
             "name": "dvzambrano/safe",
@@ -821,7 +2071,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Safe.git",
-                "reference": "cbd50347501892e8d8479725a976ee108cb13268"
+                "reference": "52bc854b5c6b73953446aab127fedbb792ddcb66"
             },
             "require": {
                 "kornrunner/keccak": "^1.1",
@@ -894,7 +2144,73 @@
                 "smart-account",
                 "web3"
             ],
-            "time": "2026-05-27T02:10:23+00:00"
+            "time": "2026-06-07T01:51:08+00:00"
+        },
+        {
+            "name": "dvzambrano/security",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/security.git",
+                "reference": "14794085ca39a8359ba019212b190d4a490081a3"
+            },
+            "require": {
+                "illuminate/console": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Security\\Providers\\SecurityServiceProvider"
+                    ],
+                    "aliases": {
+                        "Security": "Dvzambrano\\Security\\Facades\\Security"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Security\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Security\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Daniel Vzambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for hardware-bound software licensing — fingerprint, key generation, expiration validation, AES-256 encryption, and file integrity checking.",
+            "keywords": [
+                "aes-256",
+                "encryption",
+                "hardware-fingerprint",
+                "integrity",
+                "laravel",
+                "license",
+                "licensing",
+                "security",
+                "serial-number"
+            ],
+            "time": "2026-06-13T13:42:15+00:00"
         },
         {
             "name": "dvzambrano/telegrambot",
@@ -902,10 +2218,13 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/TelegramBot.git",
-                "reference": "3293a51710aa9ef792b69b7bd75ee27bf10bb313"
+                "reference": "c214808b45c2133881c7a3d7e07ecb83bac02ef5"
             },
             "require": {
-                "dvzambrano/laravel": "dev-main",
+                "dvzambrano/filesystem": "dev-main",
+                "dvzambrano/metadata": "dev-main",
+                "dvzambrano/tenant": "dev-main",
+                "dvzambrano/text": "dev-main",
                 "laravel/framework": "^12.0",
                 "php": "^8.2"
             },
@@ -958,7 +2277,135 @@
                 }
             ],
             "description": "Paquete base para la integración de bots de Telegram en proyectos Laravel. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-05-23T09:47:43+00:00"
+            "time": "2026-06-13T14:31:59+00:00"
+        },
+        {
+            "name": "dvzambrano/tenant",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/tenant.git",
+                "reference": "bfbd25c102597f3f31655fbc1c8c121554ab9306"
+            },
+            "require": {
+                "illuminate/cache": "^11.0|^12.0",
+                "illuminate/console": "^11.0|^12.0",
+                "illuminate/database": "^11.0|^12.0",
+                "illuminate/process": "^11.0|^12.0",
+                "illuminate/support": "^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^9.0|^10.0",
+                "phpunit/phpunit": "^11.0|^12.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Tenant\\Providers\\TenantServiceProvider"
+                    ],
+                    "aliases": {
+                        "Behavior": "Dvzambrano\\Tenant\\Facades\\Behavior"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Tenant\\": ""
+                },
+                "files": [
+                    "Helpers/ModuleHelper.php"
+                ],
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Tenant\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Multi-tenant database routing, env-aware behavior caching, and Laravel deep-clean artisan command.",
+            "keywords": [
+                "behavior",
+                "cache",
+                "laravel",
+                "module",
+                "multidb",
+                "tenant"
+            ],
+            "time": "2026-06-12T22:25:04+00:00"
+        },
+        {
+            "name": "dvzambrano/text",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/text.git",
+                "reference": "80e90cc01355c3b9b2098d13482cf202cf3510a2"
+            },
+            "require": {
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Text\\Providers\\TextServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Text\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Text\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Donel Vazquez Zambrano",
+                    "email": "dvzambrano@gmail.com"
+                }
+            ],
+            "description": "Laravel package for text utilities — emoji star ratings, number-to-emoji conversion, and Telegram MarkdownV2 escaping.",
+            "keywords": [
+                "emoji",
+                "laravel",
+                "markdown",
+                "markdownv2",
+                "rating",
+                "stars",
+                "telegram",
+                "text"
+            ],
+            "time": "2026-06-12T21:52:23+00:00"
         },
         {
             "name": "dvzambrano/trondealer",
@@ -1032,46 +2479,106 @@
             "time": "2026-05-22T10:27:34+00:00"
         },
         {
-            "name": "dvzambrano/web3",
+            "name": "dvzambrano/walletconnect",
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "git@github.com:dvzambrano/Web3.git",
-                "reference": "0a3c9d1a3c6a815f3c9e9ab9b6e05686366c2902"
+                "url": "git@github.com:dvzambrano/walletconnect.git",
+                "reference": "8a722e5e4687daa8f91fe47b698374a89760acd0"
             },
             "require": {
-                "dvzambrano/laravel": "dev-main as 1.0.0",
-                "kornrunner/ethereum-offline-raw-tx": "^0.9.0",
-                "kornrunner/keccak": "^1.1",
-                "laravel/framework": "^12.0",
-                "php": "^8.2",
-                "simplito/elliptic-php": "^1.0",
-                "web3p/web3.php": "*"
+                "illuminate/auth": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/console": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/view": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.2"
             },
             "require-dev": {
-                "orchestra/testbench": "^10.9"
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0",
+                "vlucas/phpdotenv": "^5.0"
+            },
+            "suggest": {
+                "dvzambrano/chainid": "Provides chain catalog for the AppKit frontend widget automatically"
             },
             "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
                     "providers": [
-                        "Modules\\Web3\\Providers\\Web3ServiceProvider"
-                    ]
+                        "Dvzambrano\\WalletConnect\\Providers\\WalletConnectServiceProvider"
+                    ],
+                    "aliases": {
+                        "WalletConnect": "Dvzambrano\\WalletConnect\\Facades\\WalletConnect"
+                    }
                 }
             },
             "autoload": {
                 "psr-4": {
-                    "Modules\\Web3\\": ""
+                    "Dvzambrano\\WalletConnect\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\WalletConnect\\Tests\\": "tests/"
                 }
             },
-            "scripts": {
-                "post-install-cmd": [
-                    "@php artisan web3:install"
-                ],
-                "post-update-cmd": [
-                    "@php artisan web3:install"
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel package for Reown AppKit (WalletConnect) integration: publishes the AppKit JS bundle, provides a Blade component for wallet connection, and handles wallet-address-based authentication.",
+            "time": "2026-06-11T23:16:08+00:00"
+        },
+        {
+            "name": "dvzambrano/web3core",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/web3core.git",
+                "reference": "9c7c43debf06c350ad7ec978aa8a271fabde47a7"
+            },
+            "require": {
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "kornrunner/ethereum-offline-raw-tx": "^0.9.0",
+                "kornrunner/keccak": "^1.1",
+                "php": "^8.2",
+                "simplito/elliptic-php": "^1.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\Web3core\\Providers\\Web3CoreServiceProvider"
+                    ],
+                    "aliases": {
+                        "Web3Core": "Dvzambrano\\Web3core\\Facades\\Web3Core"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\Web3core\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
                 ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\Web3core\\Tests\\": "tests/"
+                }
             },
             "license": [
                 "MIT"
@@ -1082,8 +2589,21 @@
                     "email": "dvzambrano@gmail.com"
                 }
             ],
-            "description": "Modulo base para funcionalidades Web3",
-            "time": "2026-05-05T13:23:50+00:00"
+            "description": "Laravel package for EVM blockchain core: RPC client, transaction signing (Legacy + EIP-1559), EIP-712 off-chain signing, ABI encoding, ERC-20 operations, and BIP39 wallet generation.",
+            "keywords": [
+                "bip39",
+                "eip1559",
+                "eip712",
+                "ethereum",
+                "evm",
+                "laravel",
+                "polygon",
+                "rpc",
+                "signing",
+                "wallet",
+                "web3"
+            ],
+            "time": "2026-06-12T01:03:01+00:00"
         },
         {
             "name": "dvzambrano/zentroownerbot",
@@ -1091,12 +2611,15 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/ZentroOwnerBot.git",
-                "reference": "15666b6ae887f2763436c7534dda6b5d9e9cbd58"
+                "reference": "cd2d50a7962c78bc7fbdb4c214f99f1a772bb7e6"
             },
             "require": {
-                "dvzambrano/laravel": "dev-main",
+                "dvzambrano/1inch": "dev-main as 1.0.0",
+                "dvzambrano/chainid": "dev-main as 1.0.0",
+                "dvzambrano/escrow": "dev-main as 1.0.0",
+                "dvzambrano/security": "dev-main",
                 "dvzambrano/telegrambot": "dev-main",
-                "dvzambrano/web3": "dev-main",
+                "dvzambrano/web3core": "dev-main as 1.0.0",
                 "laravel/framework": "^12.0",
                 "php": "^8.2"
             },
@@ -1135,7 +2658,7 @@
                 "telegram",
                 "zentro"
             ],
-            "time": "2026-05-23T09:54:31+00:00"
+            "time": "2026-06-13T14:32:32+00:00"
         },
         {
             "name": "dvzambrano/zentrotraderbot",
@@ -1143,12 +2666,30 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/ZentroTraderBot.git",
-                "reference": "2a1fb1d2a10215c6948c4df8e8a2244c415fb1a3"
+                "reference": "f97395bfec6945a357fc729e4590b249ae5f92cb"
             },
             "require": {
-                "dvzambrano/laravel": "dev-main",
+                "dvzambrano/1inch": "dev-main as 1.0.0",
+                "dvzambrano/alchemy": "dev-main as 1.0.0",
+                "dvzambrano/blockchainprovider": "dev-main as 1.0.0",
+                "dvzambrano/cambiocup": "dev-main",
+                "dvzambrano/chainid": "dev-main as 1.0.0",
+                "dvzambrano/coingecko": "dev-main as 1.0.0",
+                "dvzambrano/date": "dev-main",
+                "dvzambrano/debridge": "dev-main as 1.0.0",
+                "dvzambrano/escrow": "dev-main as 1.0.0",
+                "dvzambrano/ethers": "dev-main as 1.0.0",
+                "dvzambrano/etherscan": "dev-main as 1.0.0",
+                "dvzambrano/metadata": "dev-main",
+                "dvzambrano/moralis": "dev-main as 1.0.0",
+                "dvzambrano/number": "dev-main",
+                "dvzambrano/qr": "dev-main",
                 "dvzambrano/telegrambot": "dev-main",
-                "dvzambrano/web3": "dev-main",
+                "dvzambrano/tenant": "dev-main",
+                "dvzambrano/text": "dev-main",
+                "dvzambrano/walletconnect": "dev-main as 1.0.0",
+                "dvzambrano/web3core": "dev-main as 1.0.0",
+                "dvzambrano/zeroex": "dev-main as 1.0.0",
                 "firebase/php-jwt": "^7.0",
                 "laravel/framework": "^12.0",
                 "php": "^8.2"
@@ -1202,7 +2743,60 @@
                 }
             ],
             "description": "Bot P2P de trading cripto con custodia on-chain (Escrow), wallets HD integradas, depósitos TronDealer y soporte multi-tenant para Laravel 12+.",
-            "time": "2026-05-23T21:20:12+00:00"
+            "time": "2026-06-14T13:43:38+00:00"
+        },
+        {
+            "name": "dvzambrano/zeroex",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:dvzambrano/zeroex.git",
+                "reference": "d17c5ea77b60a9b89d580513471c41c99d8d7d54"
+            },
+            "require": {
+                "dvzambrano/1inch": "dev-main as 1.0.0",
+                "dvzambrano/chainid": "dev-main as 1.0.0",
+                "dvzambrano/web3core": "dev-main as 1.0.0",
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0",
+                "vlucas/phpdotenv": "^5.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Dvzambrano\\ZeroEx\\Providers\\ZeroExServiceProvider"
+                    ],
+                    "aliases": {
+                        "ZeroEx": "Dvzambrano\\ZeroEx\\Facades\\ZeroEx"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dvzambrano\\ZeroEx\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/tests/"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Dvzambrano\\ZeroEx\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Laravel package for 0x Protocol v2 swap integration. Wraps the allowance-holder quote API, handles ERC-20 approval, signs and broadcasts EVM transactions, and supports cancel-by-nonce for stuck TXs.",
+            "time": "2026-06-10T20:49:20+00:00"
         },
         {
             "name": "egulias/email-validator",
@@ -1272,78 +2866,17 @@
             "time": "2025-03-06T22:45:56+00:00"
         },
         {
-            "name": "ezyang/htmlpurifier",
-            "version": "v4.19.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ezyang/htmlpurifier.git",
-                "reference": "b287d2a16aceffbf6e0295559b39662612b77fcf"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ezyang/htmlpurifier/zipball/b287d2a16aceffbf6e0295559b39662612b77fcf",
-                "reference": "b287d2a16aceffbf6e0295559b39662612b77fcf",
-                "shasum": ""
-            },
-            "require": {
-                "php": "~5.6.0 || ~7.0.0 || ~7.1.0 || ~7.2.0 || ~7.3.0 || ~7.4.0 || ~8.0.0 || ~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0"
-            },
-            "require-dev": {
-                "cerdic/css-tidy": "^1.7 || ^2.0",
-                "simpletest/simpletest": "dev-master"
-            },
-            "suggest": {
-                "cerdic/css-tidy": "If you want to use the filter 'Filter.ExtractStyleBlocks'.",
-                "ext-bcmath": "Used for unit conversion and imagecrash protection",
-                "ext-iconv": "Converts text to and from non-UTF-8 encodings",
-                "ext-tidy": "Used for pretty-printing HTML"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "library/HTMLPurifier.composer.php"
-                ],
-                "psr-0": {
-                    "HTMLPurifier": "library/"
-                },
-                "exclude-from-classmap": [
-                    "/library/HTMLPurifier/Language/"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "LGPL-2.1-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "Edward Z. Yang",
-                    "email": "admin@htmlpurifier.org",
-                    "homepage": "http://ezyang.com"
-                }
-            ],
-            "description": "Standards compliant HTML filter written in PHP",
-            "homepage": "http://htmlpurifier.org/",
-            "keywords": [
-                "html"
-            ],
-            "support": {
-                "issues": "https://github.com/ezyang/htmlpurifier/issues",
-                "source": "https://github.com/ezyang/htmlpurifier/tree/v4.19.0"
-            },
-            "time": "2025-10-17T16:34:55+00:00"
-        },
-        {
             "name": "firebase/php-jwt",
-            "version": "v7.0.5",
+            "version": "v7.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/php-jwt.git",
-                "reference": "47ad26bab5e7c70ae8a6f08ed25ff83631121380"
+                "reference": "b374a5d1a4f1f67fadc2165cdb284645945e2fc0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/php-jwt/zipball/47ad26bab5e7c70ae8a6f08ed25ff83631121380",
-                "reference": "47ad26bab5e7c70ae8a6f08ed25ff83631121380",
+                "url": "https://api.github.com/repos/googleapis/php-jwt/zipball/b374a5d1a4f1f67fadc2165cdb284645945e2fc0",
+                "reference": "b374a5d1a4f1f67fadc2165cdb284645945e2fc0",
                 "shasum": ""
             },
             "require": {
@@ -1352,6 +2885,7 @@
             "require-dev": {
                 "guzzlehttp/guzzle": "^7.4",
                 "phpfastcache/phpfastcache": "^9.2",
+                "phpseclib/phpseclib": "~3.0",
                 "phpspec/prophecy-phpunit": "^2.0",
                 "phpunit/phpunit": "^9.5",
                 "psr/cache": "^2.0||^3.0",
@@ -1360,7 +2894,8 @@
             },
             "suggest": {
                 "ext-sodium": "Support EdDSA (Ed25519) signatures",
-                "paragonie/sodium_compat": "Support EdDSA (Ed25519) signatures when libsodium is not present"
+                "paragonie/sodium_compat": "Support EdDSA (Ed25519) signatures when libsodium is not present",
+                "phpseclib/phpseclib": "Support PS256 (RSASSA-PSS) signatures"
             },
             "type": "library",
             "autoload": {
@@ -1385,16 +2920,16 @@
                 }
             ],
             "description": "A simple library to encode and decode JSON Web Tokens (JWT) in PHP. Should conform to the current spec.",
-            "homepage": "https://github.com/firebase/php-jwt",
+            "homepage": "https://github.com/googleapis/php-jwt",
             "keywords": [
                 "jwt",
                 "php"
             ],
             "support": {
                 "issues": "https://github.com/googleapis/php-jwt/issues",
-                "source": "https://github.com/googleapis/php-jwt/tree/v7.0.5"
+                "source": "https://github.com/googleapis/php-jwt/tree/v7.1.0"
             },
-            "time": "2026-04-01T20:38:03+00:00"
+            "time": "2026-06-11T17:54:14+00:00"
         },
         {
             "name": "fruitcake/php-cors",
@@ -1611,16 +3146,16 @@
         },
         {
             "name": "guzzlehttp/guzzle",
-            "version": "7.11.0",
+            "version": "7.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "c987f8ce84b8434fa430795eca0f3430663da72b"
+                "reference": "5af96f374e0ab4ebd747b8310888c99d3adb0a8c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/c987f8ce84b8434fa430795eca0f3430663da72b",
-                "reference": "c987f8ce84b8434fa430795eca0f3430663da72b",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/5af96f374e0ab4ebd747b8310888c99d3adb0a8c",
+                "reference": "5af96f374e0ab4ebd747b8310888c99d3adb0a8c",
                 "shasum": ""
             },
             "require": {
@@ -1639,7 +3174,7 @@
                 "bamarni/composer-bin-plugin": "^1.8.2",
                 "ext-curl": "*",
                 "guzzle/client-integration-tests": "3.0.2",
-                "guzzlehttp/test-server": "^0.4",
+                "guzzlehttp/test-server": "^0.5",
                 "php-http/message-factory": "^1.1",
                 "phpunit/phpunit": "^8.5.52 || ^9.6.34",
                 "psr/log": "^1.1 || ^2.0 || ^3.0"
@@ -1719,7 +3254,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/guzzle/issues",
-                "source": "https://github.com/guzzle/guzzle/tree/7.11.0"
+                "source": "https://github.com/guzzle/guzzle/tree/7.11.1"
             },
             "funding": [
                 {
@@ -1735,7 +3270,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-06-02T12:40:51+00:00"
+            "time": "2026-06-07T22:54:06+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -1942,16 +3477,16 @@
         },
         {
             "name": "guzzlehttp/uri-template",
-            "version": "v1.0.6",
+            "version": "v1.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/uri-template.git",
-                "reference": "eef7f87bab6f204eba3c39224d8075c70c637946"
+                "reference": "7fe811c23a9e3cd712b4389eaeb50b5456d8c529"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/uri-template/zipball/eef7f87bab6f204eba3c39224d8075c70c637946",
-                "reference": "eef7f87bab6f204eba3c39224d8075c70c637946",
+                "url": "https://api.github.com/repos/guzzle/uri-template/zipball/7fe811c23a9e3cd712b4389eaeb50b5456d8c529",
+                "reference": "7fe811c23a9e3cd712b4389eaeb50b5456d8c529",
                 "shasum": ""
             },
             "require": {
@@ -2008,7 +3543,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/uri-template/issues",
-                "source": "https://github.com/guzzle/uri-template/tree/v1.0.6"
+                "source": "https://github.com/guzzle/uri-template/tree/v1.0.7"
             },
             "funding": [
                 {
@@ -2024,7 +3559,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-23T22:00:21+00:00"
+            "time": "2026-06-12T21:33:43+00:00"
         },
         {
             "name": "kornrunner/ethereum-offline-raw-tx",
@@ -2223,16 +3758,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v12.61.1",
+            "version": "v12.62.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "e8472ca9774452fe50841d9bdced060679f4d58d"
+                "reference": "f7e61eb1e0e06a38996802b769bce9127aec227c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/e8472ca9774452fe50841d9bdced060679f4d58d",
-                "reference": "e8472ca9774452fe50841d9bdced060679f4d58d",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/f7e61eb1e0e06a38996802b769bce9127aec227c",
+                "reference": "f7e61eb1e0e06a38996802b769bce9127aec227c",
                 "shasum": ""
             },
             "require": {
@@ -2441,7 +3976,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2026-06-04T14:22:52+00:00"
+            "time": "2026-06-09T13:50:13+00:00"
         },
         {
             "name": "laravel/prompts",
@@ -4141,20 +5676,20 @@
         },
         {
             "name": "phpoffice/phpspreadsheet",
-            "version": "1.30.5",
+            "version": "3.10.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "97bcabd32a64924688487dcd64aceaf158affb5c"
+                "reference": "8de8215d6ff984f8db77a4a49dc089a396209e1b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/97bcabd32a64924688487dcd64aceaf158affb5c",
-                "reference": "97bcabd32a64924688487dcd64aceaf158affb5c",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/8de8215d6ff984f8db77a4a49dc089a396209e1b",
+                "reference": "8de8215d6ff984f8db77a4a49dc089a396209e1b",
                 "shasum": ""
             },
             "require": {
-                "composer/pcre": "^1||^2||^3",
+                "composer/pcre": "^1 || ^2 || ^3",
                 "ext-ctype": "*",
                 "ext-dom": "*",
                 "ext-fileinfo": "*",
@@ -4168,30 +5703,28 @@
                 "ext-xmlwriter": "*",
                 "ext-zip": "*",
                 "ext-zlib": "*",
-                "ezyang/htmlpurifier": "^4.15",
                 "maennchen/zipstream-php": "^2.1 || ^3.0",
                 "markbaker/complex": "^3.0",
                 "markbaker/matrix": "^3.0",
-                "php": ">=7.4.0 <8.5.0",
+                "php": "^8.1",
                 "psr/simple-cache": "^1.0 || ^2.0 || ^3.0"
             },
             "require-dev": {
                 "dealerdirect/phpcodesniffer-composer-installer": "dev-main",
-                "doctrine/instantiator": "^1.5",
-                "dompdf/dompdf": "^1.0 || ^2.0 || ^3.0",
+                "dompdf/dompdf": "^2.0 || ^3.0",
                 "friendsofphp/php-cs-fixer": "^3.2",
-                "mitoteam/jpgraph": "^10.3",
+                "mitoteam/jpgraph": "^10.5",
                 "mpdf/mpdf": "^8.1.1",
                 "phpcompatibility/php-compatibility": "^9.3",
                 "phpstan/phpstan": "^1.1",
                 "phpstan/phpstan-phpunit": "^1.0",
-                "phpunit/phpunit": "^8.5 || ^9.0",
+                "phpunit/phpunit": "^10.5",
                 "squizlabs/php_codesniffer": "^3.7",
                 "tecnickcom/tcpdf": "^6.5"
             },
             "suggest": {
                 "dompdf/dompdf": "Option for rendering PDF with PDF Writer",
-                "ext-intl": "PHP Internationalization Functions",
+                "ext-intl": "PHP Internationalization Functions, required for NumberFormatter Wizard",
                 "mitoteam/jpgraph": "Option for rendering charts, or including charts with PDF or HTML Writers",
                 "mpdf/mpdf": "Option for rendering PDF with PDF Writer",
                 "tecnickcom/tcpdf": "Option for rendering PDF with PDF Writer"
@@ -4243,9 +5776,9 @@
             ],
             "support": {
                 "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues",
-                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/1.30.5"
+                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/3.10.6"
             },
-            "time": "2026-05-31T05:13:11+00:00"
+            "time": "2026-06-07T02:39:57+00:00"
         },
         {
             "name": "phpoption/phpoption",
@@ -4321,116 +5854,6 @@
                 }
             ],
             "time": "2025-12-27T19:41:33+00:00"
-        },
-        {
-            "name": "phpseclib/phpseclib",
-            "version": "2.0.54",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "a96a835067c39ee7a709329fe70869817da18081"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/a96a835067c39ee7a709329fe70869817da18081",
-                "reference": "a96a835067c39ee7a709329fe70869817da18081",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.3"
-            },
-            "require-dev": {
-                "phing/phing": "~2.7",
-                "phpunit/phpunit": "^4.8.35|^5.7|^6.0|^8.5|^9.4",
-                "squizlabs/php_codesniffer": "~2.0"
-            },
-            "suggest": {
-                "ext-gmp": "Install the GMP (GNU Multiple Precision) extension in order to speed up arbitrary precision integer arithmetic operations.",
-                "ext-libsodium": "SSH2/SFTP can make use of some algorithms provided by the libsodium-php extension.",
-                "ext-mcrypt": "Install the Mcrypt extension in order to speed up a few other cryptographic operations.",
-                "ext-openssl": "Install the OpenSSL extension in order to speed up a wide variety of cryptographic operations.",
-                "ext-xml": "Install the XML extension to load XML formatted public keys."
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "phpseclib/bootstrap.php"
-                ],
-                "psr-4": {
-                    "phpseclib\\": "phpseclib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jim Wigginton",
-                    "email": "terrafrost@php.net",
-                    "role": "Lead Developer"
-                },
-                {
-                    "name": "Patrick Monnerat",
-                    "email": "pm@datasphere.ch",
-                    "role": "Developer"
-                },
-                {
-                    "name": "Andreas Fischer",
-                    "email": "bantu@phpbb.com",
-                    "role": "Developer"
-                },
-                {
-                    "name": "Hans-Jürgen Petrich",
-                    "email": "petrich@tronic-media.com",
-                    "role": "Developer"
-                },
-                {
-                    "name": "Graham Campbell",
-                    "email": "graham@alt-three.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "PHP Secure Communications Library - Pure-PHP implementations of RSA, AES, SSH2, SFTP, X.509 etc.",
-            "homepage": "http://phpseclib.sourceforge.net",
-            "keywords": [
-                "BigInteger",
-                "aes",
-                "asn.1",
-                "asn1",
-                "blowfish",
-                "crypto",
-                "cryptography",
-                "encryption",
-                "rsa",
-                "security",
-                "sftp",
-                "signature",
-                "signing",
-                "ssh",
-                "twofish",
-                "x.509",
-                "x509"
-            ],
-            "support": {
-                "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/2.0.54"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/terrafrost",
-                    "type": "github"
-                },
-                {
-                    "url": "https://www.patreon.com/phpseclib",
-                    "type": "patreon"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/phpseclib/phpseclib",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2026-04-27T06:59:24+00:00"
         },
         {
             "name": "pragmarx/google2fa",
@@ -6807,16 +8230,16 @@
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.38.1",
+            "version": "v1.38.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "14c5439eec4ccff081ac14eca2dc57feb2a66d92"
+                "reference": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/14c5439eec4ccff081ac14eca2dc57feb2a66d92",
-                "reference": "14c5439eec4ccff081ac14eca2dc57feb2a66d92",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6",
+                "reference": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6",
                 "shasum": ""
             },
             "require": {
@@ -6868,7 +8291,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.38.1"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.38.2"
             },
             "funding": [
                 {
@@ -6888,7 +8311,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-26T12:51:13+00:00"
+            "time": "2026-05-27T06:59:30+00:00"
         },
         {
             "name": "symfony/polyfill-php80",
@@ -6976,16 +8399,16 @@
         },
         {
             "name": "symfony/polyfill-php83",
-            "version": "v1.38.1",
+            "version": "v1.38.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php83.git",
-                "reference": "8339098cae28673c15cce00d80734af0453054e2"
+                "reference": "796a26abb75ce49f3a84433cd81bf1009d73d5f8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php83/zipball/8339098cae28673c15cce00d80734af0453054e2",
-                "reference": "8339098cae28673c15cce00d80734af0453054e2",
+                "url": "https://api.github.com/repos/symfony/polyfill-php83/zipball/796a26abb75ce49f3a84433cd81bf1009d73d5f8",
+                "reference": "796a26abb75ce49f3a84433cd81bf1009d73d5f8",
                 "shasum": ""
             },
             "require": {
@@ -7032,7 +8455,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php83/tree/v1.38.1"
+                "source": "https://github.com/symfony/polyfill-php83/tree/v1.38.2"
             },
             "funding": [
                 {
@@ -7052,7 +8475,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-26T12:51:13+00:00"
+            "time": "2026-05-27T06:51:48+00:00"
         },
         {
             "name": "symfony/polyfill-php84",
@@ -8184,53 +9607,6 @@
                 }
             ],
             "time": "2026-04-26T05:33:54+00:00"
-        },
-        {
-            "name": "web3p/web3.php",
-            "version": "0.1.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/web3p/web3.php.git",
-                "reference": "2eafffbbe50b79b819088c6a72baf3780d672e11"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/web3p/web3.php/zipball/2eafffbbe50b79b819088c6a72baf3780d672e11",
-                "reference": "2eafffbbe50b79b819088c6a72baf3780d672e11",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "guzzlehttp/guzzle": "^6.3|^7.0",
-                "kornrunner/keccak": "~1.0",
-                "php": "^7.2|^8.0",
-                "phpseclib/phpseclib": "~2.0.30"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "~8.0|~9.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Web3\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "sc0Vu",
-                    "email": "alk03073135@gmail.com"
-                }
-            ],
-            "description": "Ethereum web3 interface.",
-            "support": {
-                "issues": "https://github.com/web3p/web3.php/issues",
-                "source": "https://github.com/web3p/web3.php/tree/0.1.6"
-            },
-            "time": "2022-03-07T03:26:51+00:00"
         },
         {
             "name": "webklex/laravel-imap",
@@ -11191,8 +12567,20 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "dvzambrano/laravel": 20,
-        "dvzambrano/web3": 20,
+        "dvzambrano/encryption": 20,
+        "dvzambrano/date": 20,
+        "dvzambrano/number": 20,
+        "dvzambrano/text": 20,
+        "dvzambrano/cambiocup": 20,
+        "dvzambrano/qr": 20,
+        "dvzambrano/office": 20,
+        "dvzambrano/filesystem": 20,
+        "dvzambrano/tenant": 20,
+        "dvzambrano/metadata": 20,
+        "dvzambrano/eloquent": 20,
+        "dvzambrano/behavior": 20,
+        "dvzambrano/locale": 20,
+        "dvzambrano/graphs": 20,
         "dvzambrano/telegrambot": 20,
         "dvzambrano/zentroownerbot": 20,
         "dvzambrano/safe": 20,

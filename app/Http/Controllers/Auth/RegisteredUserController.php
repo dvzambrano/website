@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
-use Modules\Laravel\Http\Controllers\Controller;
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;

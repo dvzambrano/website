@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\TwoFactorAuthController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -32,3 +33,30 @@ Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->n
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
 
 require __DIR__ . '/auth.php';
+
+Route::get('/cache', function () {
+    echo 'Intentando borrar cache<br/>';
+    $commands = [
+        'route:cache',
+        'cache:clear',
+        'config:clear',
+        'config:cache',
+        'view:clear',
+        'optimize',
+        'route:clear',
+    ];
+    foreach ($commands as $line) {
+        $code = \Artisan::call($line);
+        echo $line . ': ' . $code . '<br/>';
+    }
+    die('Hecho!');
+});
+
+Route::get('/test/{name?}', [TestController::class, 'test'])->name('test-byname');
+
+Route::prefix('logs')->group(function () {
+    Route::get('/clear', [FileController::class, 'clearLog'])->name('clear-logs');
+    Route::get('/{type?}/{amount?}', [FileController::class, 'readLog'])->name('read-logs');
+});
+
+Route::get('/report/{format}/{name}', [FileController::class, 'renderAndDestroy'])->name('report-byname');

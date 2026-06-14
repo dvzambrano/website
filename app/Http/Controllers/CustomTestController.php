@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
-use Modules\Laravel\Http\Controllers\GraphsController;
+use Dvzambrano\Graphs\Http\Controllers\GraphsController;
 use Carbon\Carbon;
 use DOMDocument;
 use Illuminate\Http\Request;
@@ -29,7 +29,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use Modules\Laravel\Http\Controllers\FileController;
+use App\Http\Controllers\FileController;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Dvzambrano\GutoTradeBot\Jobs\CheckEmails;
@@ -39,18 +39,18 @@ use Dvzambrano\ZentroTraderBot\Http\Controllers\ZentroTraderBotController;
 use Modules\Web3\Http\Controllers\WalletController;
 use Dvzambrano\ZentroTraderBot\Http\Controllers\TraderWalletController;
 use Dvzambrano\ZentroOwnerBot\Http\Controllers\ZentroOwnerBotController;
-use Modules\Laravel\Services\DateService;
-use Modules\Laravel\Services\NumberService;
+use Dvzambrano\Date\Services\DateService;
+use Dvzambrano\Number\Services\NumberService;
 
 use FurqanSiddiqui\BIP39\BIP39;
 use FurqanSiddiqui\BIP39\Wordlist;
 
-use Modules\Laravel\Services\Office\ExcelService;
+use Dvzambrano\Office\Services\ExcelService;
 
 use Dvzambrano\ZentroTraderBot\Http\Controllers\RampController;
 
-use Modules\Laravel\Http\Controllers\TestController as BaseController;
-use Modules\Laravel\Services\ConfigService;
+use App\Http\Controllers\TestController as BaseController;
+use Modules\Web3\Services\ConfigService;
 
 use Dvzambrano\ZentroOwnerBot\Services\SecurityService;
 
