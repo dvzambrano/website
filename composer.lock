@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f0bac1522d32c64016b4acaa1c9c2f51",
+    "content-hash": "71bb1aa48759760b810f4564d159aba3",
     "packages": [
         {
             "name": "amenadiel/jpgraph",
@@ -2666,7 +2666,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/ZentroTraderBot.git",
-                "reference": "f97395bfec6945a357fc729e4590b249ae5f92cb"
+                "reference": "ee6411dd32b63d7822c3cc73a49ad1e95efcb921"
             },
             "require": {
                 "dvzambrano/1inch": "dev-main as 1.0.0",
@@ -2743,7 +2743,7 @@
                 }
             ],
             "description": "Bot P2P de trading cripto con custodia on-chain (Escrow), wallets HD integradas, depósitos TronDealer y soporte multi-tenant para Laravel 12+.",
-            "time": "2026-06-14T13:43:38+00:00"
+            "time": "2026-06-14T17:30:39+00:00"
         },
         {
             "name": "dvzambrano/zeroex",
