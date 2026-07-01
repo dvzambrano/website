@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f0bac1522d32c64016b4acaa1c9c2f51",
+    "content-hash": "2138ff0ddfa9cf3bd1fa716e008648c0",
     "packages": [
         {
             "name": "amenadiel/jpgraph",
@@ -797,21 +797,20 @@
         {
             "name": "dvzambrano/behavior",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/behavior.git",
-                "reference": "92afae9fe0b6e243bb555a3963d44837722d4568"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Behavior",
+                "reference": "1ac064a0c5b0f0a880bd6b0271c0b7f39dc8df9f"
             },
             "require": {
-                "illuminate/cache": "^11.0|^12.0",
-                "illuminate/support": "^11.0|^12.0",
+                "illuminate/cache": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
                 "php": "^8.2"
             },
             "require-dev": {
                 "orchestra/testbench": "^9.0|^10.0",
                 "phpunit/phpunit": "^11.0|^12.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -853,7 +852,10 @@
                 "laravel",
                 "timeout"
             ],
-            "time": "2026-06-13T00:10:44+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/blockchainprovider",
@@ -913,23 +915,22 @@
         {
             "name": "dvzambrano/cambiocup",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/cambiocup.git",
-                "reference": "51f193346cea6b6c37c52fad2db1fb81d8cc6811"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Cambiocup",
+                "reference": "afd321c08803575da2e3999eb3444e635164bc62"
             },
             "require": {
-                "illuminate/cache": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/log": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/cache": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/log": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
                 "php": "^8.1"
             },
             "require-dev": {
                 "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
                 "phpunit/phpunit": "^10.0|^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -974,7 +975,10 @@
                 "mlc",
                 "rates"
             ],
-            "time": "2026-06-12T15:45:16+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/chainid",
@@ -1095,14 +1099,14 @@
         {
             "name": "dvzambrano/date",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/date.git",
-                "reference": "78bf2aa89f168bb60dec752e5027b99a157033fc"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Date",
+                "reference": "b99c46690c88854bb0f9da3489c65da866ccf3db"
             },
             "require": {
-                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/translation": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/translation": "^9.0|^10.0|^11.0|^12.0|^13.0",
                 "nesbot/carbon": "^2.0|^3.0",
                 "php": "^8.1"
             },
@@ -1110,7 +1114,6 @@
                 "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
                 "phpunit/phpunit": "^10.0|^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1151,7 +1154,10 @@
                 "period",
                 "time"
             ],
-            "time": "2026-06-12T14:33:09+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/debridge",
@@ -1206,21 +1212,20 @@
         {
             "name": "dvzambrano/eloquent",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/eloquent.git",
-                "reference": "c73fb86144e415dccc7982d6b8f37739e230b995"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Eloquent",
+                "reference": "9bc605a8c5d5978ce7753f5c756ec2b210846596"
             },
             "require": {
-                "illuminate/database": "^11.0|^12.0",
-                "illuminate/support": "^11.0|^12.0",
+                "illuminate/database": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
                 "php": "^8.2"
             },
             "require-dev": {
                 "orchestra/testbench": "^9.0|^10.0",
                 "phpunit/phpunit": "^11.0|^12.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1262,28 +1267,30 @@
                 "model",
                 "query"
             ],
-            "time": "2026-06-12T23:50:47+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/encryption",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/encryption.git",
-                "reference": "4b9c0ce567193d60ed406aa053323e4d44c64ba0"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Encryption",
+                "reference": "63c6141c8d039832671742f8d11b76f45558220c"
             },
             "require": {
-                "illuminate/console": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/encryption": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/log": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/console": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/encryption": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/log": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
                 "php": "^8.1"
             },
             "require-dev": {
                 "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
                 "phpunit/phpunit": "^10.0|^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1330,7 +1337,10 @@
                 "symmetric",
                 "vault"
             ],
-            "time": "2026-06-12T13:52:21+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/escrow",
@@ -1505,13 +1515,13 @@
         {
             "name": "dvzambrano/filesystem",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/filesystem.git",
-                "reference": "6dc2e5388826d895401ab8e3f88770a5f7c59fee"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Filesystem",
+                "reference": "1099716371ab658c53899f5da0917d1c1f9316db"
             },
             "require": {
-                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
                 "nesbot/carbon": "^2.0|^3.0",
                 "php": "^8.1"
             },
@@ -1519,7 +1529,6 @@
                 "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
                 "phpunit/phpunit": "^10.0|^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1564,27 +1573,29 @@
                 "log",
                 "mime"
             ],
-            "time": "2026-06-12T18:02:54+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/graphs",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/graphs.git",
-                "reference": "b1d12da6dcb39d4216327a1e13f16566282df41b"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Graphs",
+                "reference": "0654f34dcd3069f74a7b4f57f33a53e9a65866e6"
             },
             "require": {
                 "amenadiel/jpgraph": "*",
-                "illuminate/routing": "^11.0|^12.0",
-                "illuminate/support": "^11.0|^12.0",
+                "illuminate/routing": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
                 "php": "^8.2"
             },
             "require-dev": {
                 "orchestra/testbench": "^9.0|^10.0",
                 "phpunit/phpunit": "^11.0|^12.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1627,15 +1638,18 @@
                 "laravel",
                 "visualization"
             ],
-            "time": "2026-06-13T00:42:52+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/gutotradebot",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/GutoTradeBot.git",
-                "reference": "f4821d0c38077fba3d6a7371636b0bb71f94022a"
+            "dist": {
+                "type": "path",
+                "url": "../Module/GutoTradeBot",
+                "reference": "dcf4df44ec6b3ad45c9ca878cd2a3929285dd8c3"
             },
             "require": {
                 "dvzambrano/date": "dev-main",
@@ -1648,7 +1662,7 @@
                 "dvzambrano/tenant": "dev-main",
                 "dvzambrano/text": "dev-main",
                 "dvzambrano/web3core": "dev-main as 1.0.0",
-                "laravel/framework": "^12.0",
+                "laravel/framework": "^12.0 || ^13.0",
                 "php": "^8.2",
                 "phpoffice/phpspreadsheet": "*",
                 "webklex/laravel-imap": "^6.2"
@@ -1656,7 +1670,6 @@
             "require-dev": {
                 "orchestra/testbench": "^10.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1702,28 +1715,30 @@
                 }
             ],
             "description": "Paquete Laravel para gestión de pagos, capitales y remesas vía Telegram Bot. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-06-14T19:30:37+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/locale",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/locale.git",
-                "reference": "b5d9df8bc7e1abb90886bb2be182cafc0fbf90b6"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Locale",
+                "reference": "815fa909c119985afd0ee780629e43b7b7cd91bb"
             },
             "require": {
-                "illuminate/routing": "^11.0|^12.0",
-                "illuminate/session": "^11.0|^12.0",
-                "illuminate/support": "^11.0|^12.0",
-                "illuminate/view": "^11.0|^12.0",
+                "illuminate/routing": "^11.0|^12.0|^13.0",
+                "illuminate/session": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "illuminate/view": "^11.0|^12.0|^13.0",
                 "php": "^8.2"
             },
             "require-dev": {
                 "orchestra/testbench": "^9.0|^10.0",
                 "phpunit/phpunit": "^11.0|^12.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1766,27 +1781,29 @@
                 "middleware",
                 "selector"
             ],
-            "time": "2026-06-13T00:26:23+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/metadata",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/metadata.git",
-                "reference": "5533b08aa1ccf3ed10c10aaf30f506a596a2f984"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Metadata",
+                "reference": "d6cdee02886ef075364b0e523a719997042e87bb"
             },
             "require": {
-                "illuminate/database": "^11.0|^12.0",
-                "illuminate/encryption": "^11.0|^12.0",
-                "illuminate/support": "^11.0|^12.0",
+                "illuminate/database": "^11.0|^12.0|^13.0",
+                "illuminate/encryption": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
                 "php": "^8.2"
             },
             "require-dev": {
                 "orchestra/testbench": "^9.0|^10.0",
                 "phpunit/phpunit": "^11.0|^12.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1828,7 +1845,10 @@
                 "metadata",
                 "settings"
             ],
-            "time": "2026-06-12T23:11:17+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/moralis",
@@ -1884,20 +1904,19 @@
         {
             "name": "dvzambrano/number",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/number.git",
-                "reference": "23fd1f0f702bd0fa0c1ee0ad6abc5295d9f1ca8a"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Number",
+                "reference": "6b0c8df530c62fdf8ab11fcd9de5d65b296f39e2"
             },
             "require": {
-                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
                 "php": "^8.1"
             },
             "require-dev": {
                 "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
                 "phpunit/phpunit": "^10.0|^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1938,18 +1957,21 @@
                 "parse",
                 "round"
             ],
-            "time": "2026-06-12T21:55:14+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/office",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/office.git",
-                "reference": "ac6f57292f25c3a8efabce4c4d385c3eda341959"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Office",
+                "reference": "2e25ca87ae08d82084c39b4816c8d706a48f03cf"
             },
             "require": {
-                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
                 "php": "^8.1",
                 "phpoffice/phpspreadsheet": "^1.29|^2.0|^3.0"
             },
@@ -1957,7 +1979,6 @@
                 "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
                 "phpunit/phpunit": "^10.0|^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -2001,26 +2022,28 @@
                 "spreadsheet",
                 "xlsx"
             ],
-            "time": "2026-06-12T16:51:35+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/qr",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/qr.git",
-                "reference": "beb610019131bef54031abbb15632847b4f4be83"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Qr",
+                "reference": "9761ec4c634148efc3f7789609f8aa6a876d825f"
             },
             "require": {
                 "bacon/bacon-qr-code": "^2.0|^3.0",
-                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
                 "php": "^8.1"
             },
             "require-dev": {
                 "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
                 "phpunit/phpunit": "^10.0|^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -2063,17 +2086,21 @@
                 "qrcode",
                 "svg"
             ],
-            "time": "2026-06-12T16:19:44+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/safe",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/Safe.git",
-                "reference": "52bc854b5c6b73953446aab127fedbb792ddcb66"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Safe",
+                "reference": "b61e52368e8ba63d6fb79df3a127dbdbffc871e7"
             },
             "require": {
+                "dvzambrano/walletconnect": "dev-main",
                 "kornrunner/keccak": "^1.1",
                 "laravel/framework": "^11.0|^12.0",
                 "php": "^8.2",
@@ -2082,7 +2109,6 @@
             "require-dev": {
                 "orchestra/testbench": "^9.0|^10.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -2144,7 +2170,10 @@
                 "smart-account",
                 "web3"
             ],
-            "time": "2026-06-07T01:51:08+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/security",
@@ -2215,23 +2244,22 @@
         {
             "name": "dvzambrano/telegrambot",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/TelegramBot.git",
-                "reference": "667dbed94b4fbc5eabb637cab0b7289b3db44571"
+            "dist": {
+                "type": "path",
+                "url": "../Module/TelegramBot",
+                "reference": "854e06a9579e37b2fe685107808b6baa243b1fc2"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
                 "dvzambrano/metadata": "dev-main",
                 "dvzambrano/tenant": "dev-main",
                 "dvzambrano/text": "dev-main",
-                "laravel/framework": "^12.0",
+                "laravel/framework": "^12.0 || ^13.0",
                 "php": "^8.2"
             },
             "require-dev": {
                 "orchestra/testbench": "^10.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -2277,38 +2305,37 @@
                 }
             ],
             "description": "Paquete base para la integración de bots de Telegram en proyectos Laravel. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-06-14T19:37:08+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/tenant",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/tenant.git",
-                "reference": "bfbd25c102597f3f31655fbc1c8c121554ab9306"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Tenant",
+                "reference": "bfac42b76d34ec6afd42b6ef9db80991f9a1f798"
             },
             "require": {
-                "illuminate/cache": "^11.0|^12.0",
-                "illuminate/console": "^11.0|^12.0",
-                "illuminate/database": "^11.0|^12.0",
-                "illuminate/process": "^11.0|^12.0",
-                "illuminate/support": "^11.0|^12.0",
+                "illuminate/console": "^11.0|^12.0|^13.0",
+                "illuminate/database": "^11.0|^12.0|^13.0",
+                "illuminate/process": "^11.0|^12.0|^13.0",
+                "illuminate/support": "^11.0|^12.0|^13.0",
                 "php": "^8.2"
             },
             "require-dev": {
                 "orchestra/testbench": "^9.0|^10.0",
                 "phpunit/phpunit": "^11.0|^12.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
                     "providers": [
                         "Dvzambrano\\Tenant\\Providers\\TenantServiceProvider"
                     ],
-                    "aliases": {
-                        "Behavior": "Dvzambrano\\Tenant\\Facades\\Behavior"
-                    }
+                    "aliases": []
                 }
             },
             "autoload": {
@@ -2336,34 +2363,34 @@
                     "email": "dvzambrano@gmail.com"
                 }
             ],
-            "description": "Multi-tenant database routing, env-aware behavior caching, and Laravel deep-clean artisan command.",
+            "description": "Multi-tenant database routing and Laravel deep-clean artisan command.",
             "keywords": [
-                "behavior",
-                "cache",
                 "laravel",
                 "module",
                 "multidb",
                 "tenant"
             ],
-            "time": "2026-06-12T22:25:04+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/text",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/text.git",
-                "reference": "80e90cc01355c3b9b2098d13482cf202cf3510a2"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Text",
+                "reference": "a311e11058098b50f7f7029d1584e3f520e954d6"
             },
             "require": {
-                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
                 "php": "^8.1"
             },
             "require-dev": {
                 "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
                 "phpunit/phpunit": "^10.0|^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -2405,30 +2432,32 @@
                 "telegram",
                 "text"
             ],
-            "time": "2026-06-12T21:52:23+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/trondealer",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/trondealer.git",
-                "reference": "d56019d50a68705467813483830a8f1c2716e8d4"
+            "dist": {
+                "type": "path",
+                "url": "../Module/Trondealer",
+                "reference": "f14220fd7a5a7d6c04a5661c61024dc351a2b0c7"
             },
             "require": {
                 "guzzlehttp/guzzle": "^7.0",
-                "illuminate/console": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/log": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/console": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/log": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
                 "php": "^8.1"
             },
             "require-dev": {
                 "orchestra/testbench": "^7.0|^8.0|^9.0|^10.0",
                 "phpunit/phpunit": "^10.0|^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -2476,23 +2505,26 @@
                 "usdt",
                 "webhook"
             ],
-            "time": "2026-05-22T10:27:34+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/walletconnect",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/walletconnect.git",
-                "reference": "8a722e5e4687daa8f91fe47b698374a89760acd0"
+            "dist": {
+                "type": "path",
+                "url": "../Module/WalletConnect",
+                "reference": "bf3327bb4c0ef7246de459383eb012dadd71f7c7"
             },
             "require": {
-                "illuminate/auth": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/console": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/http": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
-                "illuminate/view": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/auth": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/console": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/http": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/routing": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
+                "illuminate/view": "^9.0|^10.0|^11.0|^12.0|^13.0",
                 "php": "^8.2"
             },
             "require-dev": {
@@ -2503,7 +2535,6 @@
             "suggest": {
                 "dvzambrano/chainid": "Provides chain catalog for the AppKit frontend widget automatically"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -2532,7 +2563,10 @@
                 "MIT"
             ],
             "description": "Laravel package for Reown AppKit (WalletConnect) integration: publishes the AppKit JS bundle, provides a Blade component for wallet connection, and handles wallet-address-based authentication.",
-            "time": "2026-06-11T23:16:08+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/web3core",
@@ -2608,10 +2642,10 @@
         {
             "name": "dvzambrano/zentroownerbot",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/ZentroOwnerBot.git",
-                "reference": "cd2d50a7962c78bc7fbdb4c214f99f1a772bb7e6"
+            "dist": {
+                "type": "path",
+                "url": "../Module/ZentroOwnerBot",
+                "reference": "d6290fbb416bf06126fe11e2312918173d5e4aee"
             },
             "require": {
                 "dvzambrano/1inch": "dev-main as 1.0.0",
@@ -2620,13 +2654,12 @@
                 "dvzambrano/security": "dev-main",
                 "dvzambrano/telegrambot": "dev-main",
                 "dvzambrano/web3core": "dev-main as 1.0.0",
-                "laravel/framework": "^12.0",
+                "laravel/framework": "^12.0 || ^13.0",
                 "php": "^8.2"
             },
             "require-dev": {
                 "orchestra/testbench": "^10.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -2658,15 +2691,18 @@
                 "telegram",
                 "zentro"
             ],
-            "time": "2026-06-13T14:32:32+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/zentrotraderbot",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:dvzambrano/ZentroTraderBot.git",
-                "reference": "f97395bfec6945a357fc729e4590b249ae5f92cb"
+            "dist": {
+                "type": "path",
+                "url": "../Module/ZentroTraderBot",
+                "reference": "cd7e547d0b6223f6f89ed68b1c418e8af4962eda"
             },
             "require": {
                 "dvzambrano/1inch": "dev-main as 1.0.0",
@@ -2680,6 +2716,7 @@
                 "dvzambrano/escrow": "dev-main as 1.0.0",
                 "dvzambrano/ethers": "dev-main as 1.0.0",
                 "dvzambrano/etherscan": "dev-main as 1.0.0",
+                "dvzambrano/locale": "dev-main",
                 "dvzambrano/metadata": "dev-main",
                 "dvzambrano/moralis": "dev-main as 1.0.0",
                 "dvzambrano/number": "dev-main",
@@ -2691,13 +2728,12 @@
                 "dvzambrano/web3core": "dev-main as 1.0.0",
                 "dvzambrano/zeroex": "dev-main as 1.0.0",
                 "firebase/php-jwt": "^7.0",
-                "laravel/framework": "^12.0",
+                "laravel/framework": "^12.0 || ^13.0",
                 "php": "^8.2"
             },
             "require-dev": {
                 "orchestra/testbench": "^10.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -2743,7 +2779,10 @@
                 }
             ],
             "description": "Bot P2P de trading cripto con custodia on-chain (Escrow), wallets HD integradas, depósitos TronDealer y soporte multi-tenant para Laravel 12+.",
-            "time": "2026-06-14T13:43:38+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "dvzambrano/zeroex",
@@ -12586,7 +12625,8 @@
         "dvzambrano/safe": 20,
         "dvzambrano/gutotradebot": 20,
         "dvzambrano/zentrotraderbot": 20,
-        "dvzambrano/trondealer": 20
+        "dvzambrano/trondealer": 20,
+        "dvzambrano/walletconnect": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

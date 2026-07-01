@@ -30,6 +30,7 @@
         "dvzambrano/gutotradebot": "dev-main",
         "dvzambrano/zentrotraderbot": "dev-main",
         "dvzambrano/trondealer": "dev-main",
+        "dvzambrano/walletconnect": "dev-main",
         "nesbot/carbon": ">=2.72.5 <3.12.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10|^3.0",
@@ -50,136 +51,306 @@
     },
     "repositories": [
         {
+            "type": "path",
+            "url": "../Module/Encryption",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/encryption.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Date",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/date.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Number",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/number.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Text",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/text.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Cambiocup",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/cambiocup.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Qr",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/qr.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Office",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/office.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Filesystem",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/filesystem.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Tenant",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/tenant.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Metadata",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/metadata.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Eloquent",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/eloquent.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Behavior",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/behavior.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Locale",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/locale.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Graphs",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/graphs.git"
         },
         {
+            "type": "path",
+            "url": "../Module/TelegramBot",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/TelegramBot.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/ZentroOwnerBot",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/ZentroOwnerBot.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Safe",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/Safe.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/GutoTradeBot",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/GutoTradeBot.git"
         },
         {
+            "type": "path",
+            "url": "../Module/ZentroTraderBot",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/ZentroTraderBot.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Trondealer",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/trondealer.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Security",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/security.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Web3core",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/web3core.git"
         },
         {
+            "type": "path",
+            "url": "../Module/1Inch",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/1inch.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Alchemy",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/alchemy.git"
         },
         {
+            "type": "path",
+            "url": "../Module/BlockchainProvider",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/blockchainprovider.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Chainid",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/chainid.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Coingecko",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/coingecko.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/DeBridge",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/debridge.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Escrow",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/escrow.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Ethers",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/ethers.git"
         },
         {
+            "type": "path",
+            "url": "../Module/Etherscan",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/etherscan.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/Moralis",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/moralis.git"
         },
         {
+            "type": "path",
+            "url": "../Module/WalletConnect",
+            "options": { "symlink": true }
+        },
+        {
             "type": "git",
             "url": "git@github.com:dvzambrano/walletconnect.git"
+        },
+        {
+            "type": "path",
+            "url": "../Module/ZeroEx",
+            "options": { "symlink": true }
         },
         {
             "type": "git",
