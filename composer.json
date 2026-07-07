@@ -28,6 +28,7 @@
         "dvzambrano/zentroownerbot": "dev-main",
         "dvzambrano/safe": "dev-main",
         "dvzambrano/gutotradebot": "dev-main",
+        "dvzambrano/ocr": "dev-main",
         "dvzambrano/zentrotraderbot": "dev-main",
         "dvzambrano/trondealer": "dev-main",
         "dvzambrano/walletconnect": "dev-main",
@@ -129,6 +130,10 @@
         {
             "type": "git",
             "url": "git@github.com:dvzambrano/trondealer.git"
+        },
+        {
+            "type": "git",
+            "url": "git@github.com:dvzambrano/ocr.git"
         },
         {
             "type": "git",
