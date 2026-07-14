@@ -28,7 +28,10 @@ class FileController extends Controller
     public function readLog($type = null, $amount = 10, $log = 'laravel')
     {
         $entries = app(LogService::class)->read($log, $type ?: null, (int) $amount);
-        return response()->json($entries);
+
+        // Pretty-print + sin escapar unicode/slashes: los mensajes llevan emoji y
+        // acentos, y así se leen directamente en el navegador en vez de como \uXXXX.
+        return response()->json($entries, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     public function clearLog($log = 'laravel')
