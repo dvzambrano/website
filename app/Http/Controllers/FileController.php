@@ -34,6 +34,17 @@ class FileController extends Controller
         return response()->json($entries, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
+    public function exportLog($log = 'laravel')
+    {
+        $path = app(LogService::class)->path($log);
+
+        if (!file_exists($path)) {
+            return response()->json(['error' => "El log \"{$log}\" no existe."], 404);
+        }
+
+        return response()->download($path, basename($path));
+    }
+
     public function clearLog($log = 'laravel')
     {
         app(LogService::class)->clear($log);

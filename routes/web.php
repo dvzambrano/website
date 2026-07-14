@@ -56,6 +56,7 @@ Route::get('/test/{name?}', [TestController::class, 'test'])->name('test-byname'
 
 Route::prefix('logs')->group(function () {
     Route::get('/clear', [FileController::class, 'clearLog'])->name('clear-logs');
+    Route::get('/export/{log?}', [FileController::class, 'exportLog'])->name('export-logs');
     Route::get('/{type?}/{amount?}', [FileController::class, 'readLog'])->name('read-logs');
 });
 
