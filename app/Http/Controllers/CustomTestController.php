@@ -156,8 +156,7 @@ class CustomTestController extends BaseController
 
         //dd(basename(config('logging.channels.storage.path')));
 
-        $fc = new FileController();
-        $payments = $fc->searchInLog('payment', "Juan", basename(config('logging.channels.storage.path')), false);
+        $payments = AppLog::search('payment', "Juan", basename(config('logging.channels.storage.path')), false);
         dd($payments);
 
         $array = $this->GutoTradeTestBot->getCommand("Esta es una prueba");
@@ -346,8 +345,7 @@ class CustomTestController extends BaseController
 
         //4143
         $id = 1134;
-        $fc = new FileController();
-        $payments = $fc->searchInLog('payment', $id, 'storage', true);
+        $payments = AppLog::search('payment', $id, 'storage', true);
         foreach ($payments as $array)
             if ($array["id"] == $id) {
                 $payment = new Payments($array);
@@ -920,8 +918,7 @@ class CustomTestController extends BaseController
         dd($host);
         die(date("Y-m-d H:i:s") . ": DONE!");
 
-        $fc = new FileController();
-        $response = $fc->searchInLog('payment', "Santiago", 'storage', false);
+        $response = AppLog::search('payment', "Santiago", 'storage', false);
         dd($response);
         die(date("Y-m-d H:i:s") . ": DONE!");
 
