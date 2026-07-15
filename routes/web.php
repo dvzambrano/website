@@ -54,10 +54,7 @@ Route::get('/cache', function () {
 
 Route::get('/test/{name?}', [TestController::class, 'test'])->name('test-byname');
 
-Route::prefix('logs')->group(function () {
-    Route::get('/clear', [FileController::class, 'clearLog'])->name('clear-logs');
-    Route::get('/export/{log?}', [FileController::class, 'exportLog'])->name('export-logs');
-    Route::get('/{type?}/{amount?}', [FileController::class, 'readLog'])->name('read-logs');
-});
+// /logs/* ahora las sirve dvzambrano/filesystem directamente (Routes/web.php
+// del paquete, vía su propio RouteServiceProvider) — nada que registrar aquí.
 
 Route::get('/report/{format}/{name}', [FileController::class, 'renderAndDestroy'])->name('report-byname');
