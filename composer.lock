@@ -1519,7 +1519,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/filesystem.git",
-                "reference": "9fc6f7a9d1033c2da1151625dde026eabaf2cc73"
+                "reference": "1d4630af06a5348f156f9c8245b1643b672b963c"
             },
             "require": {
                 "illuminate/http": "^9.0|^10.0|^11.0|^12.0|^13.0",
@@ -1577,7 +1577,7 @@
                 "log",
                 "mime"
             ],
-            "time": "2026-07-15T15:47:41+00:00"
+            "time": "2026-07-15T16:03:53+00:00"
         },
         {
             "name": "dvzambrano/graphs",
