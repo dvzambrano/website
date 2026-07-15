@@ -22,7 +22,7 @@ use Dvzambrano\GutoTradeBot\Http\Controllers\CoingeckoController;
 use Webklex\IMAP\Facades\Client;
 use Dvzambrano\TelegramBot\Entities\Actors;
 use Dvzambrano\TelegramBot\Entities\TelegramBots;
-use Illuminate\Support\Facades\Log;
+use Dvzambrano\Filesystem\Facades\AppLog;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -499,7 +499,7 @@ class CustomTestController extends BaseController
                         ),
                     );
                     $response = TelegramController::sendPhoto($array, $bot->token);
-                    Log::info("✅ CheckEmails sendtogroup message = " . json_encode($array["message"]) . " response = " . json_encode($response) . "\n");
+                    AppLog::info('CheckEmails sendtogroup', ['message' => $array['message'], 'response' => $response]);
 
 
                 } else {
@@ -512,7 +512,7 @@ class CustomTestController extends BaseController
             // Desconectarse del servidor IMAP
             $client->disconnect();
         } catch (\Throwable $th) {
-            Log::error("🆘 CheckEmails job ERROR CODE {$th->getCode()} line {$th->getLine()}: {$th->getMessage()}");
+            AppLog::error('Error en CheckEmails job', ['code' => $th->getCode(), 'line' => $th->getLine(), 'error' => $th->getMessage()]);
         }
 
 

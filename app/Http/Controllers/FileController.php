@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Dvzambrano\Filesystem\Services\FilesystemService;
-use Dvzambrano\Filesystem\Services\LogService;
 
 class FileController extends Controller
 {
@@ -25,22 +24,8 @@ class FileController extends Controller
         return response()->download($report_path);
     }
 
-    public function readLog($type = null, $amount = 10, $log = 'laravel')
-    {
-        $entries = app(LogService::class)->read($log, $type ?: null, (int) $amount);
-        return response()->json($entries);
-    }
-
-    public function clearLog($log = 'laravel')
-    {
-        app(LogService::class)->clear($log);
-        return response()->json(['success' => true, 'message' => 'Log limpiado correctamente.']);
-    }
-
-    public function searchInLog($key, $searchValue, $log = 'storage.log', $exactMatch = true)
-    {
-        return app(LogService::class)->search($key, $searchValue, $log, (bool) $exactMatch);
-    }
+    // Las rutas /logs/* (visor, export, clear, búsqueda) ahora las sirve
+    // dvzambrano/filesystem directamente — ver su propio LogViewerController.
 
     public static function getFileNameAsUnixTime(string $extension, int $amount, string $period = 'SECONDS'): string
     {
