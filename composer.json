@@ -107,7 +107,7 @@
         },
         {
             "type": "git",
-            "url": "git@github.com:dvzambrano/TelegramBot.git"
+            "url": "git@github.com:dvzambrano/telegrambot.git"
         },
         {
             "type": "git",
@@ -123,7 +123,7 @@
         },
         {
             "type": "git",
-            "url": "git@github.com:dvzambrano/ZentroTraderBot.git"
+            "url": "git@github.com:dvzambrano/zentrotraderbot.git"
         },
         {
             "type": "git",

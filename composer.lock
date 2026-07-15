@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9be262dad72ddd2cf4f8f34d1bcc3dbc",
+    "content-hash": "b5185939263c597dd84448827950c802",
     "packages": [
         {
             "name": "amenadiel/jpgraph",
@@ -1519,7 +1519,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/filesystem.git",
-                "reference": "d576cd3107e5361ec41eebe083ca22a80a0ca557"
+                "reference": "25d01423af83affedb166c35b23eae2b530206b4"
             },
             "require": {
                 "illuminate/http": "^9.0|^10.0|^11.0|^12.0|^13.0",
@@ -1577,7 +1577,7 @@
                 "log",
                 "mime"
             ],
-            "time": "2026-07-15T11:22:58+00:00"
+            "time": "2026-07-15T14:16:20+00:00"
         },
         {
             "name": "dvzambrano/graphs",
