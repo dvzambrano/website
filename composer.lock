@@ -2152,7 +2152,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Safe.git",
-                "reference": "93cd1e4f5865810a0e9c27344c059ea3ccc81d64"
+                "reference": "b03f1ef1e20f64ab68105fdcf48bac2673a0590e"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -2227,7 +2227,7 @@
                 "smart-account",
                 "web3"
             ],
-            "time": "2026-07-16T00:15:55+00:00"
+            "time": "2026-07-16T00:26:40+00:00"
         },
         {
             "name": "dvzambrano/security",
