@@ -42,4 +42,46 @@ class TronDealerServiceForwardTest extends TestCase
                 && $request->hasHeader('X-Signature-256', 'sig-value');
         });
     }
+
+    public function test_real_webhook_request_to_service_segment_triggers_forward(): void
+    {
+        Http::fake([
+            'kashio.*' => Http::response('ok', 200),
+        ]);
+
+        $secret = env('TRONDEALER_WEBHOOK_SECRET', '');
+        if (empty($secret)) {
+            $this->markTestSkipped('TRONDEALER_WEBHOOK_SECRET not configured');
+        }
+
+        $payload = [
+            'tx_hash' => '0x' . bin2hex(random_bytes(32)),
+            'to_address' => '0x' . bin2hex(random_bytes(20)),
+            'amount' => '10.5',
+            'asset' => 'USDT',
+            'network' => 'bsc',
+            'status' => 'notified',
+        ];
+        $body = json_encode($payload);
+        $signature = hash_hmac('sha256', $body, $secret);
+
+        $response = $this->call(
+            'POST',
+            'http://micalme.com/webhook/trondealer/kashio',
+            [], [], [],
+            [
+                'HTTP_X-Signature-256' => $signature,
+                'CONTENT_TYPE' => 'application/json',
+            ],
+            $body
+        );
+
+        $response->assertStatus(200);
+
+        Http::assertSent(function ($request) use ($body, $signature) {
+            return $request->url() === 'http://kashio.micalme.com/webhook/trondealer'
+                && $request->body() === $body
+                && $request->hasHeader('X-Signature-256', $signature);
+        });
+    }
 }
