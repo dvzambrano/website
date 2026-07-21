@@ -55,12 +55,16 @@ class TronDealerServiceForwardTest extends TestCase
         }
 
         $payload = [
-            'tx_hash' => '0x' . bin2hex(random_bytes(32)),
-            'to_address' => '0x' . bin2hex(random_bytes(20)),
-            'amount' => '10.5',
-            'asset' => 'USDT',
-            'network' => 'bsc',
-            'status' => 'notified',
+            'event' => 'transaction.confirmed',
+            'timestamp' => now()->toIso8601String(),
+            'data' => [
+                'tx_hash' => '0x' . bin2hex(random_bytes(32)),
+                'to_address' => '0x' . bin2hex(random_bytes(20)),
+                'amount' => '10.5',
+                'asset' => 'USDT',
+                'network' => 'bsc',
+                'confirmations' => 15,
+            ],
         ];
         $body = json_encode($payload);
         $signature = hash_hmac('sha256', $body, $secret);
