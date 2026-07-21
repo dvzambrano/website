@@ -41,4 +41,9 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    // webhook/trondealer/{service} reenvía a {service}.{host actual}/webhook/trondealer
+    'trondealer_service_forward' => [
+        'timeout' => env('TRONDEALER_SERVICE_FORWARD_TIMEOUT', 15),
+    ],
+
 ];
