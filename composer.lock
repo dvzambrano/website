@@ -2491,7 +2491,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/trondealer.git",
-                "reference": "a2746f72d6a81759e062594dc3d790ded6009868"
+                "reference": "a1ca1b51a6550082929a03415c49e5dd01a67607"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -2555,7 +2555,7 @@
                 "usdt",
                 "webhook"
             ],
-            "time": "2026-07-21T15:30:20+00:00"
+            "time": "2026-07-21T15:44:42+00:00"
         },
         {
             "name": "dvzambrano/walletconnect",
