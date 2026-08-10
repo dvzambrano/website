@@ -34,15 +34,17 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Illuminate\Console\Scheduling\Schedule $schedule) {
-        // Procesar jobs de la cola cada minuto
-        $schedule->command('queue:work --stop-when-empty')
+        // Procesar jobs de la cola cada minuto.
+        // --max-time=59 acota el worker a la propia ventana del minuto (sin esto,
+        // un lote grande —p.ej. un anuncio a muchos suscriptores— puede dejar el
+        // proceso corriendo más de lo esperado) y runInBackground() evita que
+        // schedule:run se quede esperándolo. withoutOverlapping(5) reemplaza el
+        // candado por defecto de 24h: si una corrida llega a quedar colgada, el
+        // procesamiento de la cola se autorecupera en minutos en vez de bloquearse
+        // el resto del día.
+        $schedule->command('queue:work --stop-when-empty --max-time=59')
             ->everyMinute()
-            ->withoutOverlapping();
-        /*
-    $schedule->command('queue:work --stop-when-empty --max-time=59')
-        ->everyMinute()
-        ->withoutOverlapping()
-        ->runInBackground();
-        */
+            ->withoutOverlapping(5)
+            ->runInBackground();
     })
     ->create();
