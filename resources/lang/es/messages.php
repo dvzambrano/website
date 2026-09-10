@@ -17,6 +17,7 @@ return [
     "form.field.alreadyhaveaccount.label" => "¿Ya tiene una cuenta?",
     "form.field.loginaccount.label" => "Autenticarse",
     "form.field.loginwithgoogle.label" => "Acceder usando mi cuenta Google",
+    "form.field.loginwithweb3.label" => "Acceder usando Web3",
     "form.field.2fa.label" => "Código de verificación",
     "form.action.cancel.label" => "Cancelar",
     "form.field.dontverifyemail.label" => "¿No quiere hacerlo?",

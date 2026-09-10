@@ -9,15 +9,6 @@
 @endsection
 
 @section('maincontent')
-    <!-- Icono QR flotante -->
-    <div class="qr-flotante" data-bs-toggle="popover" data-bs-placement="left"
-        data-bs-content="<img src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Ejemplo'"
-        data-bs-html="true">
-        <a class="nav-link scrollto" href="#web3" onclick="window.appKit.open()">
-            <i class="bi bi-qr-code" style="font-size: 1.5rem;"></i>
-        </a>
-    </div>
-
     <div class="container">
 
         <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
@@ -98,6 +89,10 @@
                                         <p class="small mb-0"><a href="{{ route('auth.google') }}"><i
                                                     class="bi bi-google"></i>
                                                 {{ trans("messages.form.field.loginwithgoogle.label") }}</a></p>
+
+                                        <p class="small mb-0"><a href="#web3" onclick="window.appKit.open(); return false;"><i
+                                                    class="bi bi-wallet2"></i>
+                                                {{ trans("messages.form.field.loginwithweb3.label") }}</a></p>
                                     </div>
 
                                 </form>
