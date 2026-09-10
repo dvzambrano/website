@@ -2571,7 +2571,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/walletconnect.git",
-                "reference": "78c459179fc99ad6fb40623d08cb8b5168e24de2"
+                "reference": "167a77d3c80d9ae943a43a3c4789eb1e5839b15a"
             },
             "require": {
                 "illuminate/auth": "^9.0|^10.0|^11.0|^12.0|^13.0",
@@ -2619,7 +2619,7 @@
                 "MIT"
             ],
             "description": "Laravel package for Reown AppKit (WalletConnect) integration: publishes the AppKit JS bundle, provides a Blade component for wallet connection, and handles wallet-address-based authentication.",
-            "time": "2026-09-10T15:17:13+00:00"
+            "time": "2026-09-10T15:34:13+00:00"
         },
         {
             "name": "dvzambrano/web3core",

@@ -118,9 +118,19 @@
         // reemplazarla para poder seguir usándola y sumarle el flujo de login.
         (function () {
             var genericOnWalletConnected = window.onWalletConnected;
+            // subscribeAccount() puede notificar más de una vez para la misma
+            // conexión; sin esta guarda, dos llamadas casi simultáneas a
+            // checkIsRegistered/register (ambas con Auth::login(), que migra
+            // la sesión) compiten por el mismo token CSRF y la segunda puede
+            // fallar en silencio. El login solo debe intentarse una vez por
+            // carga de página.
+            var loginAttempted = false;
 
             window.onWalletConnected = function (account, chainId) {
                 genericOnWalletConnected(account, 8, function () {
+                    if (loginAttempted) { return; }
+                    loginAttempted = true;
+
                     checkIsRegistered(account, function () {
                         window.location.href = "{{ route('dashboard') }}";
                     }, function () {
