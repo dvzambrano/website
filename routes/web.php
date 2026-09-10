@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BotsPanelController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\TwoFactorAuthController;
@@ -15,6 +16,14 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified', '2fa'])->name('dashboard');
+
+// Listado central de bots con link a su dashboard (Fase 2, Paso D del
+// dashboard de GutoTradeBot — ver Docs/ToDo-Dashboard.md y Docs/DASHBOARD.md
+// de ese paquete). Mismo nivel de acceso que el resto del panel del hub
+// (TELEGRAM_ADMIN_MIDDLEWARE usa la misma combinación para bot-create, etc.).
+Route::get('/panel/bots', [BotsPanelController::class, 'index'])
+    ->middleware(['auth', 'verified', '2fa'])
+    ->name('panel.bots');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
