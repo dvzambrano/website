@@ -3,11 +3,9 @@
 @section('mainstyle', 'margin-left:auto;margin-top:auto;')
 
 @section('layoutjsincludes')
-    @include('web3::include.script.wallet_actions')
-@endsection
-
-@section('layoutcssincludes')
-    @include('web3::include.css.styles')
+    <script src="{{ asset(config('walletconnect.assets.path', 'vendor/dvzambrano/walletconnect/js') . '/appkit-reown.js') }}"></script>
+    @include('walletconnect::partials.appkit-init', app(\Dvzambrano\WalletConnect\Services\AppKitService::class)->getConfig())
+    @include('walletconnect::partials.wallet-actions')
 @endsection
 
 @section('maincontent')
@@ -15,7 +13,7 @@
     <div class="qr-flotante" data-bs-toggle="popover" data-bs-placement="left"
         data-bs-content="<img src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=Ejemplo'"
         data-bs-html="true">
-        <a class="nav-link scrollto" href="#web3" onclick="window.web3Modal.openModal()">
+        <a class="nav-link scrollto" href="#web3" onclick="window.appKit.open()">
             <i class="bi bi-qr-code" style="font-size: 1.5rem;"></i>
         </a>
     </div>
@@ -118,17 +116,25 @@
 
 <script>
     @section('ondocumentready')
-        // INIT web3modal configurations:
-        initializeWeb3Modal(function (account, size = 8, callback = false) {
-            onWalletConnected(account, size, callback);
-        }, onWalletDisconnected, function (account) {
-            checkIsRegistered(account, function () {
-                window.location.href = "{{ route('dashboard') }}";
-            }, function () {
-                register(account, "{{ request()->query('code') }}", function () {
-                    window.location.href = "{{ route('dashboard') }}";
+        // window.onWalletConnected / window.onWalletDisconnected son los hooks
+        // globales que appkit-init.blade.php invoca al conectar/desconectar la
+        // wallet. wallet-actions.blade.php ya define una versión genérica (solo
+        // actualiza el DOM) bajo esos mismos nombres; la guardamos aquí antes de
+        // reemplazarla para poder seguir usándola y sumarle el flujo de login.
+        (function () {
+            var genericOnWalletConnected = window.onWalletConnected;
+
+            window.onWalletConnected = function (account, chainId) {
+                genericOnWalletConnected(account, 8, function () {
+                    checkIsRegistered(account, function () {
+                        window.location.href = "{{ route('dashboard') }}";
+                    }, function () {
+                        register(account, "{{ request()->query('code') }}", function () {
+                            window.location.href = "{{ route('dashboard') }}";
+                        });
+                    });
                 });
-            });
-        });
+            };
+        })();
     @endsection
 </script>

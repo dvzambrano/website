@@ -1,19 +1,30 @@
 @section('layoutjsincludes')
-    @include('web3::include.script.wallet_actions')
+    <script src="{{ asset(config('walletconnect.assets.path', 'vendor/dvzambrano/walletconnect/js') . '/appkit-reown.js') }}"></script>
+    @include('walletconnect::partials.appkit-init', app(\Dvzambrano\WalletConnect\Services\AppKitService::class)->getConfig())
+    @include('walletconnect::partials.wallet-actions')
 @endsection
 
 <script>
     @section('ondocumentready')
-        // INIT web3modal configurations:
-        initializeWeb3Modal(function (account, size = 8, callback = false) {
-            onWalletConnected(account, 16, callback);
-        }, function (account, size = 8, callback = false) {
-            onWalletDisconnected(function () {
-                window.location.href = "{{ route('login') }}";
-            });
-        }, function (account) {
+        // window.onWalletConnected / window.onWalletDisconnected son los hooks
+        // globales que appkit-init.blade.php invoca al conectar/desconectar la
+        // wallet. wallet-actions.blade.php ya define una versión genérica (solo
+        // actualiza el DOM) bajo esos mismos nombres; la guardamos aquí antes de
+        // reemplazarla para poder seguir usándola y sumarle el redirect a login.
+        (function () {
+            var genericOnWalletConnected    = window.onWalletConnected;
+            var genericOnWalletDisconnected = window.onWalletDisconnected;
 
-        });
+            window.onWalletConnected = function (account, chainId) {
+                genericOnWalletConnected(account, 16, function () {});
+            };
+
+            window.onWalletDisconnected = function () {
+                genericOnWalletDisconnected(function () {
+                    window.location.href = "{{ route('login') }}";
+                });
+            };
+        })();
     @endsection
 </script>
 <!-- ======= Header ======= -->
@@ -219,7 +230,7 @@
 
                     <li class="conected">
                         <a class="dropdown-item d-flex align-items-center" href="#wallet"
-                            onclick="window.web3Modal.openModal()">
+                            onclick="window.appKit.open()">
                             <i class="bi bi-qr-code"></i>
                             <span>Wallet</span>
                         </a>
