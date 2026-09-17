@@ -1654,11 +1654,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/GutoTradeBot.git",
-                "reference": "d68bd0a37504dc11fc677c1605b08d43eea92dc3"
+                "reference": "c11d1d6934f782bc66a39294d51fa46953b1c2ab"
             },
             "require": {
                 "dvzambrano/date": "dev-main",
                 "dvzambrano/eloquent": "dev-main",
+                "dvzambrano/encryption": "dev-main",
                 "dvzambrano/filesystem": "dev-main",
                 "dvzambrano/graphs": "dev-main",
                 "dvzambrano/number": "dev-main",
@@ -1676,7 +1677,10 @@
                 "webklex/laravel-imap": "^6.2"
             },
             "require-dev": {
-                "orchestra/testbench": "^10.0"
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.20",
+                "orchestra/testbench": "^10.0",
+                "phpstan/phpstan": "^2.1"
             },
             "default-branch": true,
             "type": "library",
@@ -1712,6 +1716,23 @@
                 ],
                 "test:verbose": [
                     "php vendor/bin/phpunit --testdox"
+                ],
+                "analyse": [
+                    "phpstan analyse --memory-limit=1G"
+                ],
+                "lint": [
+                    "pint --test"
+                ],
+                "lint:fix": [
+                    "pint"
+                ],
+                "check": [
+                    "@lint",
+                    "@analyse",
+                    "@test"
+                ],
+                "coverage": [
+                    "php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-text --coverage-html .coverage --no-progress"
                 ]
             },
             "license": [
@@ -1724,7 +1745,7 @@
                 }
             ],
             "description": "Paquete Laravel para gestión de pagos, capitales y remesas vía Telegram Bot. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-09-15T00:11:21+00:00"
+            "time": "2026-09-17T14:15:31+00:00"
         },
         {
             "name": "dvzambrano/locale",
