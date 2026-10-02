@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8b9c2fdf15acf7d2d4b09416412a446c",
+    "content-hash": "3a545f47a0639e005bffc6279418163d",
     "packages": [
         {
             "name": "amenadiel/jpgraph",
@@ -13054,6 +13054,9 @@
     "platform": {
         "php": "^8.3"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "platform-dev": {},
+    "platform-overrides": {
+        "php": "8.3"
+    },
+    "plugin-api-version": "2.9.0"
 }
