@@ -26,8 +26,10 @@ Producción es `micalme.com` y staging `dev.micalme.com`.
 - **Deploy** (desde el 2026-10-03, igual que Poker y Micalpays): desde
   la máquina local con `deploy/release.sh staging|production`. Exige
   `main` limpio y pusheado, corre la suite una vez por commit, arma el
-  release (`git archive` + `composer install --no-dev` +
-  `npm ci && npm run build`), lo sube por rsync a `~/tmp/`, hace backup
+  release (`git archive` + `composer install --no-dev`, sin build de
+  Vite: `package-lock.json` no coincide con `package.json` y el
+  servidor nunca tuvo `public/build`), lo sube por rsync a `~/tmp/`,
+  hace backup
   del `.env` y mysqldump de la base central en
   `~/backups/micalme-deploy/`, reemplaza los directorios de código
   (nunca `.env` ni `storage/`; tampoco `public/autodestroy`) y corre

@@ -12,8 +12,8 @@
 # Pasos: 1) exige main limpio y pusheado; 2) suite completa (una vez por
 # commit: queda marcado en .git/ y el deploy a producción del mismo commit
 # no la repite); 3) build del release con `git archive` +
-# `composer install --no-dev` + `npm ci && npm run build` (el hosting no
-# tiene npm); 4) sube el release a ~/tmp/ del servidor; 5) allá: backup del
+# `composer install --no-dev`; 4) sube el release a ~/tmp/ del servidor;
+# 5) allá: backup del
 # .env y mysqldump de la base central, reemplazo de los directorios de
 # código con `rsync --delete` (nunca .env ni storage/) y deploy/deploy.sh.
 # Producción exige que ese mismo commit ya esté en staging.
@@ -90,10 +90,8 @@ else
     # dvzambrano/* se instalan por git clone: su .git/ no sirve en runtime y
     # sus pack files 0444 no se pueden pisar en el deploy siguiente.
     find "$build_dir/vendor" -type d -name .git -prune -exec rm -rf {} +
-    # public/build no está en git y el hosting no tiene npm: Vite compila aquí.
-    # node_modules no viaja al servidor.
-    (cd "$build_dir" && npm ci --no-audit --no-fund && npm run build)
-    rm -rf "$build_dir/node_modules"
+    # Sin build de Vite (como Micalpays): el servidor nunca tuvo
+    # public/build y package-lock.json no coincide con package.json.
     echo "$sha" > "$build_dir/REVISION"
 fi
 

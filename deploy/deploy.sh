@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Corre en el servidor, dentro de la carpeta de la app, invocado por
 # deploy/release.sh DESPUÉS de que la máquina local armó el release
-# (composer install --no-dev, npm build) y lo sincronizó con rsync: en el
+# (composer install --no-dev) y lo sincronizó con rsync: en el
 # hosting no corren git, composer ni npm. Aquí solo va lo que depende del
 # .env real del servidor.
 set -euo pipefail
