@@ -1654,7 +1654,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/GutoTradeBot.git",
-                "reference": "80f03ed57a85255e5bfe7287fe4a4d7624391807"
+                "reference": "b5e2d7788ff8f99e792d81167a7b2c05ffac3aa8"
             },
             "require": {
                 "dvzambrano/date": "dev-main",
@@ -1745,7 +1745,7 @@
                 }
             ],
             "description": "Paquete Laravel para gestión de pagos, capitales y remesas vía Telegram Bot. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-10-03T14:45:11+00:00"
+            "time": "2026-10-03T15:27:42+00:00"
         },
         {
             "name": "dvzambrano/locale",
