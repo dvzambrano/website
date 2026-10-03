@@ -23,22 +23,39 @@ Producción es `micalme.com` y staging `dev.micalme.com`.
   `kashio.micalme.com` → `subdomain_kashio/` y `pkr.micalme.com` →
   `subdomain_pkr/` (carpetas hoy inexistentes). `~/public_html` es un
   symlink a esa carpeta. `backup/` guarda copias de los `.env`.
-- **Deploy**: `domain/` y `subdomain_devtest/` son checkouts git de este
-  repo en `main`, actualizados automáticamente por el Git deploy de
-  hPanel en cada push (`reset` + `pull --quiet` en el reflog). O sea:
-  **un push a `main` va a producción y a staging a la vez**, sin
-  pipeline propio ni `deploy.sh`. Cambios que requieran
-  `composer install`, migraciones o limpiar caché hay que hacerlos a
-  mano por SSH después del push (el host sí tiene `composer` y `mysql`
-  en `/usr/local/bin` y `/usr/bin`, PHP 8.3, sin `npm`/`node`).
+- **Deploy** (desde el 2026-10-03, igual que Poker y Micalpays): desde
+  la máquina local con `deploy/release.sh staging|production`. Exige
+  `main` limpio y pusheado, corre la suite una vez por commit, arma el
+  release (`git archive` + `composer install --no-dev` +
+  `npm ci && npm run build`), lo sube por rsync a `~/tmp/`, hace backup
+  del `.env` y mysqldump de la base central en
+  `~/backups/micalme-deploy/`, reemplaza los directorios de código
+  (nunca `.env` ni `storage/`; tampoco `public/autodestroy`) y corre
+  `deploy/deploy.sh` (`route:cache`, `view:cache`, `event:cache`; sin
+  `config:cache` porque hay `env()` en runtime). **Un push a `main` ya no
+  despliega nada**: los dos webhooks de Hostinger del repo en GitHub
+  quedaron desactivados (`active=false`, no borrados). Producción exige
+  que staging ya corra ese mismo commit (archivo `REVISION`) y solo se
+  despliega cuando el usuario lo pide expresamente cada vez.
+  - **Migraciones**: no corren en el deploy. `php artisan migrate` ve
+    las migraciones de los paquetes de bots (tablas de tenant) y las
+    crearía en la base central; `modules:migrate-seed` hace
+    `migrate:fresh` (borra datos). Se corren a mano por SSH con la base
+    y el `--path` que correspondan.
+  - **Tests**: al 2026-10-03 la suite local está en rojo por causas
+    previas (tests de Breeze contra la conexión `tenant`), así que el
+    deploy necesita `--skip-tests` hasta que se arregle.
+  - `domain/` y `subdomain_devtest/` conservan el `.git` del esquema
+    anterior (checkout de `main`), ya sin uso.
 - **Cron**: no existe el binario `crontab` en el host; los cron jobs se
   gestionan solo desde hPanel.
 - **`.env` de cada ambiente** vive solo en el servidor, nunca en git.
   No sobreescribirlo en un deploy.
 - **Antes de modificar algo en el servidor**: hacer backup del archivo
   (`cp x x.bak-YYYYMMDD`) y, si es un cambio en producción, confirmar
-  con el usuario primero. Después de cambiar código PHP correr
-  `php artisan optimize:clear` en la carpeta de la app.
+  con el usuario primero. Después de cambiar código PHP a mano
+  en el servidor, regenerar los caches con `bash deploy/deploy.sh` en la
+  carpeta de la app.
 - Si `ssh hostinger` responde `Permission denied (publickey,password)`,
   la llave local (`~/.ssh/id_ed25519.pub`, comentario
   `dvzambrano@gmail.com`) fue quitada de `~/.ssh/authorized_keys` del
