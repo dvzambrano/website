@@ -44,9 +44,11 @@ Producción es `micalme.com` y staging `dev.micalme.com`.
     crearía en la base central; `modules:migrate-seed` hace
     `migrate:fresh` (borra datos). Se corren a mano por SSH con la base
     y el `--path` que correspondan.
-  - **Tests**: al 2026-10-03 la suite local está en rojo por causas
-    previas (tests de Breeze contra la conexión `tenant`), así que el
-    deploy necesita `--skip-tests` hasta que se arregle.
+  - **Tests**: la suite solo cubre el proyecto (auth, perfil, webhooks
+    propios); cada bot/tenant se prueba en su propio repo. Los tests con
+    base de datos usan `Tests\RefreshDatabase`, que migra solo
+    `database/migrations` (las migraciones de los paquetes apuntan a la
+    conexión `tenant`, inexistente aquí).
   - `domain/` y `subdomain_devtest/` conservan el `.git` del esquema
     anterior (checkout de `main`), ya sin uso.
 - **Cron**: no existe el binario `crontab` en el host; los cron jobs se
