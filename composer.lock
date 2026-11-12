@@ -1652,7 +1652,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/GutoTradeBot.git",
-                "reference": "07bc141584eb65bf6e6d94426681e68e8b3bd868"
+                "reference": "80a1bde3ab09f63ab7d081fb8eb4dd35bc279840"
             },
             "require": {
                 "dvzambrano/date": "dev-main",
@@ -1743,7 +1743,7 @@
                 }
             ],
             "description": "Paquete Laravel para gestión de pagos, capitales y remesas vía Telegram Bot. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-11-12T15:26:46+00:00"
+            "time": "2026-11-12T18:31:13+00:00"
         },
         {
             "name": "dvzambrano/locale",
@@ -2328,7 +2328,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/telegrambot.git",
-                "reference": "1359fbc54ab217e5fbef8577fb756d58d27ac2c5"
+                "reference": "65ab9c447af21d78c4319f53b819d77cda53f695"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -2387,7 +2387,7 @@
                 }
             ],
             "description": "Paquete base para la integración de bots de Telegram en proyectos Laravel. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-11-12T15:18:46+00:00"
+            "time": "2026-11-12T18:13:18+00:00"
         },
         {
             "name": "dvzambrano/tenant",
@@ -2718,7 +2718,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/ZentroOwnerBot.git",
-                "reference": "4923c9bc8bfd8da756a9816e666c655440b3d24c"
+                "reference": "b6ba930a7a292a66e82e15cbb26cb0cbacff71a3"
             },
             "require": {
                 "dvzambrano/1inch": "dev-main as 1.0.0",
@@ -2766,7 +2766,7 @@
                 "telegram",
                 "zentro"
             ],
-            "time": "2026-08-25T15:36:09+00:00"
+            "time": "2026-11-12T18:31:20+00:00"
         },
         {
             "name": "dvzambrano/zentrotraderbot",
@@ -3488,16 +3488,16 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "2.13.2",
+            "version": "2.13.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "adee536f95101929f262b8c59e8a61472f347d58"
+                "reference": "6d3cd8285a97eaa352956a4ada92fa03ecce1c4e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/adee536f95101929f262b8c59e8a61472f347d58",
-                "reference": "adee536f95101929f262b8c59e8a61472f347d58",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/6d3cd8285a97eaa352956a4ada92fa03ecce1c4e",
+                "reference": "6d3cd8285a97eaa352956a4ada92fa03ecce1c4e",
                 "shasum": ""
             },
             "require": {
@@ -3587,7 +3587,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.13.2"
+                "source": "https://github.com/guzzle/psr7/tree/2.13.3"
             },
             "funding": [
                 {
@@ -3603,7 +3603,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-17T23:49:46+00:00"
+            "time": "2026-11-12T15:57:42+00:00"
         },
         {
             "name": "guzzlehttp/uri-template",
