@@ -1877,7 +1877,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/moralis.git",
-                "reference": "dc543c3b325d7ea46c4a58cf1fb8692c194415c5"
+                "reference": "023929780b8a507e36ac089514c9ae7d3b6b8a5c"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -1921,7 +1921,7 @@
                 "MIT"
             ],
             "description": "Laravel package for Moralis Streams and Deep-Index API integration. Processes blockchain webhooks (native txs, ERC-20 transfers, NFT transfers, contract logs), queries wallet balances and transaction history, and manages stream address subscriptions.",
-            "time": "2026-07-07T20:33:47+00:00"
+            "time": "2026-11-12T13:39:58+00:00"
         },
         {
             "name": "dvzambrano/number",
@@ -2328,7 +2328,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/telegrambot.git",
-                "reference": "76dcfb7418fb8d604739716a42bf09620848dd8e"
+                "reference": "d2dda6247b945207e30f86c3e867a8f94bfd5eea"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -2387,7 +2387,7 @@
                 }
             ],
             "description": "Paquete base para la integración de bots de Telegram en proyectos Laravel. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-10-28T20:29:37+00:00"
+            "time": "2026-11-12T13:55:30+00:00"
         },
         {
             "name": "dvzambrano/tenant",
@@ -2774,7 +2774,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/zentrotraderbot.git",
-                "reference": "c28257e022960cb8b425579fc6b2d7a28fe428dc"
+                "reference": "4806c6db9a31d387d77bb9f63354840fcbc1fe90"
             },
             "require": {
                 "dvzambrano/1inch": "dev-main",
@@ -2795,6 +2795,7 @@
                 "dvzambrano/moralis": "dev-main",
                 "dvzambrano/number": "dev-main",
                 "dvzambrano/qr": "dev-main",
+                "dvzambrano/safe": "dev-main",
                 "dvzambrano/telegrambot": "dev-main",
                 "dvzambrano/tenant": "dev-main",
                 "dvzambrano/text": "dev-main",
@@ -2863,7 +2864,7 @@
                 }
             ],
             "description": "Bot P2P de trading cripto con custodia on-chain (Escrow), wallets HD integradas, depósitos TronDealer y soporte multi-tenant para Laravel 12+.",
-            "time": "2026-08-14T22:12:13+00:00"
+            "time": "2026-11-12T14:07:27+00:00"
         },
         {
             "name": "dvzambrano/zeroex",
