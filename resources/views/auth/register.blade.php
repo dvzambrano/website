@@ -31,7 +31,8 @@
 
                                     <div class="col-md-12">
                                         <div class="form-floating">
-                                            <input id="name" name="name"
+                                            <input id="name" name="name" maxlength="60"
+                                                title="Solo letras y espacios"
                                                 placeholder="{{ trans("messages.form.field.name.label") }}"
                                                 class="form-control" required autofocus>
                                             <label for="code">{{ trans("messages.form.field.name.label") }}</label>
@@ -69,6 +70,15 @@
                                         </div>
                                     </div>
 
+                                    @if (filled(config('services.turnstile.site_key')))
+                                        <div class="col-12 d-flex justify-content-center">
+                                            <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}"></div>
+                                        </div>
+                                        @error('cf-turnstile-response')
+                                            <div class="col-12 text-danger small text-center">{{ $message }}</div>
+                                        @enderror
+                                    @endif
+
                                     <div class="col-12">
                                         <button class="btn btn-primary w-100"
                                             type="submit">{{ trans("messages.form.field.register.label") }}</button>
@@ -97,6 +107,10 @@
         </section>
 
     </div>
+@endsection
+
+@section('layoutjsincludes')
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 @endsection
 
 <script>

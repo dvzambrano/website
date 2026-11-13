@@ -41,6 +41,12 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    // Cloudflare Turnstile: captcha del registro público (routes/auth.php).
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
     // webhook/trondealer/{service} reenvía a {service}.{host actual}/webhook/trondealer
     'trondealer_service_forward' => [
         'timeout' => env('TRONDEALER_SERVICE_FORWARD_TIMEOUT', 15),

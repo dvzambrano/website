@@ -16,6 +16,13 @@ class User extends Authenticatable implements MustVerifyEmail
     use HasFactory, Notifiable;
 
     /**
+     * Nombre de persona: solo letras y espacios (una sola separación entre palabras),
+     * 2 a 60 caracteres. Sin dígitos, símbolos, URLs ni marcado: el nombre se imprime
+     * en los correos de verificación, así que no puede llevar enlaces ni spam.
+     */
+    public const NAME_RULES = ['string', 'min:2', 'max:60', 'regex:/^\pL+(?: \pL+)*$/u'];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
