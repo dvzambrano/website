@@ -2328,7 +2328,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/telegrambot.git",
-                "reference": "93f4d141da0e8255850681168381021c4da4daf4"
+                "reference": "78d4bc9ada1164483d5b112ab22bfc22c8fe24f9"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -2387,7 +2387,7 @@
                 }
             ],
             "description": "Paquete base para la integración de bots de Telegram en proyectos Laravel. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-11-13T14:38:11+00:00"
+            "time": "2026-11-13T18:24:12+00:00"
         },
         {
             "name": "dvzambrano/tenant",
@@ -2718,7 +2718,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/ZentroOwnerBot.git",
-                "reference": "b6ba930a7a292a66e82e15cbb26cb0cbacff71a3"
+                "reference": "329fcd11a16648c4a7164fe27cb9bad171eab02b"
             },
             "require": {
                 "dvzambrano/1inch": "dev-main as 1.0.0",
@@ -2766,7 +2766,7 @@
                 "telegram",
                 "zentro"
             ],
-            "time": "2026-11-12T18:31:20+00:00"
+            "time": "2026-11-13T18:24:25+00:00"
         },
         {
             "name": "dvzambrano/zentrotraderbot",
