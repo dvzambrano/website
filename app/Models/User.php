@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PragmaRX\Google2FA\Google2FA;
@@ -76,6 +77,19 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $google2fa = new Google2FA();
         return $google2fa->verifyKey($this->google2fa_secret, $code);
+    }
+
+    /**
+     * Rol del usuario. Nullable: un usuario sin rol no es administrador.
+     */
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role?->slug === Role::ADMIN;
     }
 
     public function sendEmailVerificationNotification()

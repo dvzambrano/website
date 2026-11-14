@@ -33,6 +33,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Asigna el rol 'admin' (requiere que la migración de roles haya corrido).
+     */
+    public function admin(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'role_id' => \App\Models\Role::where('slug', \App\Models\Role::ADMIN)->value('id'),
+        ]);
+    }
+
+    /**
      * Indicate that the model's email address should be unverified.
      */
     public function unverified(): static

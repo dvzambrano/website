@@ -14,7 +14,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Visor de logs (/logs): solo administradores autenticados. El paquete
+        // dvzambrano/filesystem lee este middleware al cargar sus rutas; se
+        // fija aquí con la notación de punto para no pisar el resto de su config.
+        // 2fa va antes que admin: un admin con 2FA activo debe verificar el código.
+        config(['filesystem.logs.middleware' => ['auth', '2fa', 'admin']]);
     }
 
     /**

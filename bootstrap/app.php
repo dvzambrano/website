@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // Tu middleware
             '2fa' => \App\Http\Middleware\Verify2FA::class,
+            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
