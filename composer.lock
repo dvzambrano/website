@@ -2774,7 +2774,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/zentrotraderbot.git",
-                "reference": "4806c6db9a31d387d77bb9f63354840fcbc1fe90"
+                "reference": "3dcd989c8c8fe59295d87253d2035fa2563c2873"
             },
             "require": {
                 "dvzambrano/1inch": "dev-main",
@@ -2864,7 +2864,7 @@
                 }
             ],
             "description": "Bot P2P de trading cripto con custodia on-chain (Escrow), wallets HD integradas, depósitos TronDealer y soporte multi-tenant para Laravel 12+.",
-            "time": "2026-11-12T14:07:27+00:00"
+            "time": "2026-11-14T13:17:31+00:00"
         },
         {
             "name": "dvzambrano/zeroex",
