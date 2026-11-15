@@ -754,7 +754,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/alchemy.git",
-                "reference": "04aa52006c060144f3a090383edce400b4efcbeb"
+                "reference": "ddcc8b5d17da27448ca371a18a8b50e7396a19c5"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -797,7 +797,7 @@
                 "MIT"
             ],
             "description": "Alchemy blockchain provider: webhook processing and on-chain queries (balances, transfers, gas)",
-            "time": "2026-11-14T13:06:32+00:00"
+            "time": "2026-11-15T14:55:27+00:00"
         },
         {
             "name": "dvzambrano/behavior",
@@ -2179,7 +2179,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/Safe.git",
-                "reference": "cab093b2f60327e1ea11ee8dfcae858278612eda"
+                "reference": "3efc9dc744723eea5217d96b9e4568a49575195a"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -2254,7 +2254,7 @@
                 "smart-account",
                 "web3"
             ],
-            "time": "2026-09-21T02:16:14+00:00"
+            "time": "2026-11-15T14:53:00+00:00"
         },
         {
             "name": "dvzambrano/security",
@@ -2518,7 +2518,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/trondealer.git",
-                "reference": "799dd0356fa2d463dd09f37ffe913afc8a03aa9c"
+                "reference": "8bc8a4be3eb2b4ee17d8c347a2a2d2bdce296437"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -2582,7 +2582,7 @@
                 "usdt",
                 "webhook"
             ],
-            "time": "2026-09-22T11:54:59+00:00"
+            "time": "2026-11-15T14:54:55+00:00"
         },
         {
             "name": "dvzambrano/walletconnect",
