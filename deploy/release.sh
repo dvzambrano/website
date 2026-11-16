@@ -205,6 +205,7 @@ if [ "$is_home" -eq 0 ]; then
     # es de deploy: lo que creó la web ya tiene sus permisos.
     mkdir -p bootstrap/cache public/autodestroy
     for rw in storage bootstrap/cache public/autodestroy; do
+        find "$rw" -user deploy -exec chgrp www-data {} + 2>/dev/null || true
         find "$rw" -user deploy -type d -exec chmod 2775 {} + 2>/dev/null || true
         find "$rw" -user deploy -type f -exec chmod 664 {} + 2>/dev/null || true
         find "$rw" -user deploy -exec setfacl -m g::rwx {} + 2>/dev/null || true
