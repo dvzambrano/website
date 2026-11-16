@@ -2774,7 +2774,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/zentrotraderbot.git",
-                "reference": "3dcd989c8c8fe59295d87253d2035fa2563c2873"
+                "reference": "9975f5fb4ed269b01fc19d45cefdd71a0dc2ec82"
             },
             "require": {
                 "dvzambrano/1inch": "dev-main",
@@ -2864,7 +2864,7 @@
                 }
             ],
             "description": "Bot P2P de trading cripto con custodia on-chain (Escrow), wallets HD integradas, depósitos TronDealer y soporte multi-tenant para Laravel 12+.",
-            "time": "2026-11-14T13:17:31+00:00"
+            "time": "2026-11-16T22:09:21+00:00"
         },
         {
             "name": "dvzambrano/zeroex",
@@ -5188,16 +5188,16 @@
         },
         {
             "name": "monolog/monolog",
-            "version": "3.12.1",
+            "version": "3.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Seldaek/monolog.git",
-                "reference": "d7059e4c691d05ea1222b5124bed0f961be46e15"
+                "reference": "1f5f55bb4a9a230ff6d8a4ceccea31d10b0142ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/d7059e4c691d05ea1222b5124bed0f961be46e15",
-                "reference": "d7059e4c691d05ea1222b5124bed0f961be46e15",
+                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/1f5f55bb4a9a230ff6d8a4ceccea31d10b0142ac",
+                "reference": "1f5f55bb4a9a230ff6d8a4ceccea31d10b0142ac",
                 "shasum": ""
             },
             "require": {
@@ -5277,7 +5277,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Seldaek/monolog/issues",
-                "source": "https://github.com/Seldaek/monolog/tree/3.12.1"
+                "source": "https://github.com/Seldaek/monolog/tree/3.13.0"
             },
             "funding": [
                 {
@@ -5289,7 +5289,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-29T19:21:12+00:00"
+            "time": "2026-11-16T10:43:05+00:00"
         },
         {
             "name": "nesbot/carbon",
