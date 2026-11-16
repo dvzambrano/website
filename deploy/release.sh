@@ -199,10 +199,50 @@ done
 # archivos privados quedan como están.
 rsync -a --ignore-existing "$release/storage/" "$app_dir/storage/"
 
+# ===== FIX PERMISOS AUTOMÁTICO EN CADA DEPLOY =====
+# Asegura que administrador (usuario que ejecuta artisan) tenga write en:
+# - .env (lectura de env() en runtime)
+# - vendor/ (composer dump-autoload)
+# - storage/ y bootstrap/cache/ (logs, cache, sesiones)
+# Esto cubre tanto el VPS (deploy user) como Hostinger (usuario home).
+fix_deploy_perms() {
+    local user_runtime="administrador"
+    local group_web="www-data"
+    local app_dir="$1"
+
+    # .env - asegura lectura por usuario runtime
+    if [ -f "$app_dir/.env" ]; then
+        chown "$user_runtime:$group_web" "$app_dir/.env" 2>/dev/null || true
+        chmod 664 "$app_dir/.env" 2>/dev/null || true
+    fi
+
+    # vendor/ - composer necesita escribir autoload_psr4.php
+    if [ -d "$app_dir/vendor" ]; then
+        chown -R "$user_runtime:$group_web" "$app_dir/vendor" 2>/dev/null || true
+        chmod -R 775 "$app_dir/vendor" 2>/dev/null || true
+    fi
+
+    # storage/ y bootstrap/cache/ - Laravel write
+    for dir in storage bootstrap/cache; do
+        if [ -d "$app_dir/$dir" ]; then
+            chown -R "$user_runtime:$group_web" "$app_dir/$dir" 2>/dev/null || true
+            chmod -R 775 "$app_dir/$dir" 2>/dev/null || true
+            # Setgid en directorios para herencia de grupo
+            find "$app_dir/$dir" -type d -exec chmod g+s {} + 2>/dev/null || true
+        fi
+    done
+
+    # public/autodestroy - bot writes
+    if [ -d "$app_dir/public/autodestroy" ]; then
+        chown -R "$user_runtime:$group_web" "$app_dir/public/autodestroy" 2>/dev/null || true
+        chmod -R 775 "$app_dir/public/autodestroy" 2>/dev/null || true
+    fi
+}
+
+fix_deploy_perms "$app_dir"
+
 if [ "$is_home" -eq 0 ]; then
-    # VPS: Apache (www-data) escribe en storage/, bootstrap/cache/ y en las
-    # carpetas que escriben los bots (public/autodestroy). Solo se toca lo que
-    # es de deploy: lo que creó la web ya tiene sus permisos.
+    # VPS: complementario - ACLs para www-data en dirs que Apache escribe
     mkdir -p bootstrap/cache public/autodestroy
     for rw in storage bootstrap/cache public/autodestroy; do
         find "$rw" -user deploy -exec chgrp www-data {} + 2>/dev/null || true
