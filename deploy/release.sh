@@ -190,7 +190,7 @@ for dir in $code_dirs; do
     mkdir -p "$app_dir/$dir"
     # public/autodestroy y public/import.xls los escriben los bots en
     # runtime (no están en git): el exclude los protege del --delete.
-    rsync -a --no-group --delete --exclude=/autodestroy/ --exclude=/import.xls "$release/$dir/" "$app_dir/$dir/"
+    rsync -a --no-group --no-times --delete --exclude=/autodestroy/ --exclude=/import.xls "$release/$dir/" "$app_dir/$dir/"
 done
 for file in $code_files; do
     cp "$release/$file" "$app_dir/$file"
