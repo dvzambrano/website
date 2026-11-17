@@ -190,14 +190,14 @@ for dir in $code_dirs; do
     mkdir -p "$app_dir/$dir"
     # public/autodestroy y public/import.xls los escriben los bots en
     # runtime (no están en git): el exclude los protege del --delete.
-    rsync -a --no-group --no-times --delete --exclude=/autodestroy/ --exclude=/import.xls "$release/$dir/" "$app_dir/$dir/"
+    rsync -a --no-group --no-times --no-perms --delete --exclude=/autodestroy/ --exclude=/import.xls "$release/$dir/" "$app_dir/$dir/"
 done
 for file in $code_files; do
     cp "$release/$file" "$app_dir/$file"
 done
 # storage/ solo recibe la estructura de carpetas que falte: logs, sesiones y
 # archivos privados quedan como están.
-rsync -a --ignore-existing "$release/storage/" "$app_dir/storage/"
+rsync -a --no-group --no-times --no-perms --ignore-existing "$release/storage/" "$app_dir/storage/"
 
 # ===== FIX PERMISOS AUTOMÁTICO EN CADA DEPLOY =====
 # Asegura que administrador (usuario que ejecuta artisan) tenga write en:
