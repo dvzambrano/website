@@ -22,8 +22,8 @@
 # el servidor no tiene npm y public/build no está en git); 4) sube el release
 # a ~/tmp/ del usuario del destino; 5) allá: backup del .env y mysqldump de la
 # base central, reemplazo de los directorios de código con `rsync --delete`
-# (nunca .env ni storage/) y deploy/deploy.sh. Producción exige que ese mismo
-# commit ya esté en staging.
+# (conserva los datos de ejecución) y deploy/deploy.sh. En el VPS, producción
+# reutiliza el artefacto que staging validó.
 #
 # Las migraciones NO corren en el deploy (ver deploy/deploy.sh).
 set -euo pipefail
@@ -130,8 +130,15 @@ else
     date -u +'%Y-%m-%d %H:%M UTC' > "$tested_marker"
 fi
 
+promote_vps=0
+if [ "$build_only" -eq 0 ] && [ "$target" = vps ] && [ "$env_name" = production ]; then
+    promote_vps=1
+fi
+
 build_dir="${TMPDIR:-/tmp}/$APP_SLUG-release-$sha"
-if [ -f "$build_dir/REVISION" ]; then
+if [ "$promote_vps" -eq 1 ]; then
+    step "Producción usará el artefacto validado en staging"
+elif [ -f "$build_dir/REVISION" ]; then
     step "Build: reutilizando $build_dir"
 else
     step "Build del release en $build_dir"
@@ -154,23 +161,63 @@ if [ "$build_only" -eq 1 ]; then
     exit 0
 fi
 
-remote_release="$REMOTE_HOME/tmp/$APP_SLUG-release-$short"
-step "Subiendo el release a $remote_release ($target)"
-ssh "$SSH_HOST" "mkdir -p '$remote_release'"
-rsync -az --delete "$build_dir/" "$SSH_HOST:$remote_release/"
+remote_release='-'
+if [ "$promote_vps" -eq 0 ]; then
+    remote_release=$(ssh "$SSH_HOST" "umask 077; mkdir -p '$REMOTE_HOME/tmp'; mktemp -d '$REMOTE_HOME/tmp/$APP_SLUG-release-$short.XXXXXXXX'")
+    step "Subiendo el release a $remote_release ($target)"
+    rsync -az --omit-dir-times "$build_dir/" "$SSH_HOST:$remote_release/"
+fi
 
 step "Backup, reemplazo y deploy/deploy.sh en $env_name ($target)"
 stamp=$(date -u +%Y%m%d-%H%M%S)
-ssh "$SSH_HOST" bash -s -- "$remote_dir" "$env_name" "$stamp" "$remote_release" "$REMOTE_HOME" "$REMOTE_IS_HOME" "$APP_SLUG" <<'REMOTE'
+ssh "$SSH_HOST" bash -s -- "$remote_dir" "$env_name" "$stamp" "$remote_release" "$REMOTE_HOME" "$REMOTE_IS_HOME" "$APP_SLUG" "$sha" <<'REMOTE'
 set -euo pipefail
-app_dir=$1; env_name=$2; stamp=$3; release=$4; home=$5; is_home=$6; slug=$7
+app_dir=$1; env_name=$2; stamp=$3; release=$4; home=$5; is_home=$6; slug=$7; sha=$8
 # Ni .env ni storage/.
 code_dirs='app bootstrap config database deploy public resources routes vendor'
-code_files='.htaccess artisan composer.json composer.lock REVISION'
+code_files='.htaccess artisan composer.json composer.lock'
 cd "$app_dir"
 # Un .env hecho a mano marca un destino real de deploy: sin él, no se toca nada.
-test -f .env || { echo "No hay .env en $app_dir: no es un destino de deploy" >&2; exit 1; }
+test -r .env || { echo "No se puede leer .env en $app_dir: no es un destino de deploy" >&2; exit 1; }
 
+umask 077
+if [ "$is_home" -eq 0 ]; then
+    exec 9>"$home/.$slug-deploy.lock"
+    flock -n 9 || { echo "Ya hay un despliegue de $slug en el VPS" >&2; exit 1; }
+    if [ "$env_name" = production ]; then
+        staging="$(dirname "$app_dir")/subdomain_devtest"
+        [ -r "$staging/REVISION" ] && [ "$(cat "$staging/REVISION")" = "$sha" ] || {
+            echo "La revisión de staging cambió antes de la promoción" >&2
+            exit 1
+        }
+        if ! release=$(cat "$staging/.deploy-artifact" 2>/dev/null); then
+            echo "Vuelve a desplegar staging con este script para registrar su artefacto" >&2
+            exit 1
+        fi
+        case "$release" in
+            "$home/tmp/$slug-release-${sha:0:7}."????????) ;;
+            *) echo "Ruta de artefacto de staging inválida" >&2; exit 1 ;;
+        esac
+    fi
+    for path in . $code_dirs storage bootstrap/cache public/autodestroy; do
+        if [ ! -d "$path" ] || [ ! -w "$path" ] || [ ! -x "$path" ]; then
+            echo "deploy necesita acceso de escritura en $app_dir/$path" >&2
+            exit 1
+        fi
+    done
+    blocked=$(find $code_dirs \
+        \( -path bootstrap/cache -o -path public/autodestroy -o -path public/import.xls \) -prune -o \
+        \( -type d -o -type f \) ! -writable -print -quit)
+    if [ -n "$blocked" ]; then
+        echo "deploy no puede actualizar $app_dir/$blocked" >&2
+        exit 1
+    fi
+fi
+
+[ "$(cat "$release/REVISION")" = "$sha" ] || {
+    echo "El artefacto no coincide con el commit esperado" >&2
+    exit 1
+}
 backups="$home/backups/$slug-deploy"
 mkdir -p "$backups"
 chmod 700 "$backups"
@@ -186,79 +233,69 @@ chmod 600 "$backups/$env_name".env.bak-"$stamp" "$backups/$env_name-$db-before-d
 echo "Backups: $backups/*$stamp*"
 
 echo "Antes: $(cat REVISION 2>/dev/null || echo '(sin REVISION)')"
+if [ "$is_home" -eq 0 ]; then
+    # Copia el código activo para poder restaurar incluso el primer deploy
+    # con el flujo nuevo. Conserva .env y datos de ejecución por separado.
+    if [ -f REVISION ]; then
+        snapshot=$(mktemp "$backups/$env_name-code-$stamp.XXXXXXXX")
+        tar --exclude=bootstrap/cache --exclude=public/autodestroy \
+            --exclude=public/import.xls --exclude=public/storage \
+            -czf "$snapshot" $code_dirs $code_files REVISION
+        mv "$snapshot" "$backups/$env_name-code-previous.tar.gz"
+    fi
+    umask 027
+fi
+
+# Invalida la revisión activa antes de cambiar archivos. Se publica otra vez
+# solo después de completar Artisan y la comprobación HTTP.
+rm -f REVISION
 for dir in $code_dirs; do
     mkdir -p "$app_dir/$dir"
-    # public/autodestroy y public/import.xls los escriben los bots en
-    # runtime (no están en git): el exclude los protege del --delete.
-    rsync -a --no-group --no-times --no-perms --delete --exclude=/autodestroy/ --exclude=/import.xls "$release/$dir/" "$app_dir/$dir/"
+    excludes=()
+    case "$dir" in
+        bootstrap) excludes=(--exclude=/cache/) ;;
+        public) excludes=(--exclude=/autodestroy/ --exclude=/import.xls --exclude=/storage) ;;
+    esac
+    rsync -a --no-group --no-times --no-perms --delete "${excludes[@]}" "$release/$dir/" "$app_dir/$dir/"
 done
 for file in $code_files; do
     cp "$release/$file" "$app_dir/$file"
 done
-# storage/ solo recibe la estructura de carpetas que falte: logs, sesiones y
-# archivos privados quedan como están.
+# Conserva logs, sesiones y archivos privados.
 rsync -a --no-group --no-times --no-perms --ignore-existing "$release/storage/" "$app_dir/storage/"
 
-# ===== FIX PERMISOS AUTOMÁTICO EN CADA DEPLOY =====
-# Asegura que administrador (usuario que ejecuta artisan) tenga write en:
-# - .env (lectura de env() en runtime)
-# - vendor/ (composer dump-autoload)
-# - storage/ y bootstrap/cache/ (logs, cache, sesiones)
-# Esto cubre tanto el VPS (deploy user) como Hostinger (usuario home).
-fix_deploy_perms() {
-    local user_runtime="administrador"
-    local group_web="www-data"
-    local app_dir="$1"
-
-    # .env - asegura lectura por usuario runtime
-    if [ -f "$app_dir/.env" ]; then
-        chown "$user_runtime:$group_web" "$app_dir/.env" 2>/dev/null || true
-        chmod 664 "$app_dir/.env" 2>/dev/null || true
-    fi
-
-    # vendor/ - composer necesita escribir autoload_psr4.php
-    if [ -d "$app_dir/vendor" ]; then
-        chown -R "$user_runtime:$group_web" "$app_dir/vendor" 2>/dev/null || true
-        chmod -R 775 "$app_dir/vendor" 2>/dev/null || true
-    fi
-
-    # storage/ y bootstrap/cache/ - Laravel write
-    for dir in storage bootstrap/cache; do
-        if [ -d "$app_dir/$dir" ]; then
-            chown -R "$user_runtime:$group_web" "$app_dir/$dir" 2>/dev/null || true
-            chmod -R 775 "$app_dir/$dir" 2>/dev/null || true
-            # Setgid en directorios para herencia de grupo
-            find "$app_dir/$dir" -type d -exec chmod g+s {} + 2>/dev/null || true
-        fi
-    done
-
-    # public/autodestroy - bot writes
-    if [ -d "$app_dir/public/autodestroy" ]; then
-        chown -R "$user_runtime:$group_web" "$app_dir/public/autodestroy" 2>/dev/null || true
-        chmod -R 775 "$app_dir/public/autodestroy" 2>/dev/null || true
-    fi
-}
-
-fix_deploy_perms "$app_dir"
-
-if [ "$is_home" -eq 0 ]; then
-    # VPS: complementario - ACLs para www-data en dirs que Apache escribe
-    mkdir -p bootstrap/cache public/autodestroy
-    for rw in storage bootstrap/cache public/autodestroy; do
-        find "$rw" -user deploy -exec chgrp www-data {} + 2>/dev/null || true
-        find "$rw" -user deploy -type d -exec chmod 2775 {} + 2>/dev/null || true
-        find "$rw" -user deploy -type f -exec chmod 664 {} + 2>/dev/null || true
-        find "$rw" -user deploy -exec setfacl -m g::rwx {} + 2>/dev/null || true
-        find "$rw" -user deploy -type d -exec setfacl -d -m g::rwx {} + 2>/dev/null || true
-    done
-    chgrp www-data public/autodestroy 2>/dev/null || true
-fi
-
 bash deploy/deploy.sh
+if [ "$is_home" -eq 0 ]; then
+    host=micalme.com
+    if [ "$env_name" = staging ]; then
+        host=dev.micalme.com
+    fi
+    status=$(curl --silent --show-error --max-time 20 --output /dev/null \
+        --write-out '%{http_code}' --resolve "$host:443:127.0.0.1" "https://$host/up")
+    [ "$status" = 200 ] || { echo "$host/up devolvió HTTP $status" >&2; exit 1; }
+fi
+if [ "$is_home" -eq 0 ]; then
+    printf '%s\n' "$release" > .deploy-artifact.tmp
+    mv -f .deploy-artifact.tmp .deploy-artifact
+fi
+cp "$release/REVISION" REVISION.tmp
+mv -f REVISION.tmp REVISION
 echo "Ahora: $(cat REVISION)"
 
-# Se conservan los 3 releases más recientes en tmp.
-ls -dt "$home"/tmp/$slug-release-* 2>/dev/null | tail -n +4 | xargs -r rm -rf
+# Conserva los artefactos activos y los tres más recientes del VPS.
+if [ "$is_home" -eq 0 ]; then
+    production_artifact=$(cat "$(dirname "$app_dir")/domain/.deploy-artifact" 2>/dev/null || true)
+    staging_artifact=$(cat "$(dirname "$app_dir")/subdomain_devtest/.deploy-artifact" 2>/dev/null || true)
+    find "$home/tmp" -mindepth 1 -maxdepth 1 -type d -name "$slug-release-*" -mtime +1 \
+        -printf '%T@ %p\n' | sort -nr | tail -n +4 | cut -d' ' -f2- |
+        while IFS= read -r artifact; do
+            if [ "$artifact" != "$production_artifact" ] && [ "$artifact" != "$staging_artifact" ]; then
+                rm -rf -- "$artifact"
+            fi
+        done
+else
+    ls -dt "$home"/tmp/$slug-release-* 2>/dev/null | tail -n +4 | xargs -r rm -rf
+fi
 REMOTE
 
 step "Listo: $short en $env_name ($target)"
