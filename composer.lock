@@ -2328,7 +2328,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/telegrambot.git",
-                "reference": "fc021df1a381099e203e1490a933b43e50026f6f"
+                "reference": "d1986ceb97b5a8202f4ae0f8e83fd0fb88024b06"
             },
             "require": {
                 "dvzambrano/filesystem": "dev-main",
@@ -2387,7 +2387,7 @@
                 }
             ],
             "description": "Paquete base para la integración de bots de Telegram en proyectos Laravel. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-11-17T16:03:45+00:00"
+            "time": "2026-11-19T15:17:45+00:00"
         },
         {
             "name": "dvzambrano/tenant",
@@ -2718,7 +2718,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/ZentroOwnerBot.git",
-                "reference": "3ce7140a8cb740dc3c7e94dc7cfe3090aed23770"
+                "reference": "7d1eb5d106702926ddd42b4bd5b45043df9c91a1"
             },
             "require": {
                 "dvzambrano/1inch": "dev-main as 1.0.0",
@@ -2766,7 +2766,7 @@
                 "telegram",
                 "zentro"
             ],
-            "time": "2026-11-13T19:23:46+00:00"
+            "time": "2026-11-19T15:18:40+00:00"
         },
         {
             "name": "dvzambrano/zentrotraderbot",
@@ -5700,16 +5700,16 @@
         },
         {
             "name": "paragonie/constant_time_encoding",
-            "version": "v3.1.4",
+            "version": "v3.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/constant_time_encoding.git",
-                "reference": "5efef6e6cb43e088ccab7d0c1e2f2ab25b9e8b54"
+                "reference": "ceed38ba49d98b85808edfc4f04750ff61eb9739"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/5efef6e6cb43e088ccab7d0c1e2f2ab25b9e8b54",
-                "reference": "5efef6e6cb43e088ccab7d0c1e2f2ab25b9e8b54",
+                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/ceed38ba49d98b85808edfc4f04750ff61eb9739",
+                "reference": "ceed38ba49d98b85808edfc4f04750ff61eb9739",
                 "shasum": ""
             },
             "require": {
@@ -5765,20 +5765,20 @@
                 "issues": "https://github.com/paragonie/constant_time_encoding/issues",
                 "source": "https://github.com/paragonie/constant_time_encoding"
             },
-            "time": "2026-11-06T20:31:19+00:00"
+            "time": "2026-11-18T13:55:22+00:00"
         },
         {
             "name": "paragonie/ecc",
-            "version": "v2.6.0",
+            "version": "v2.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/phpecc.git",
-                "reference": "1a49380410b8ce826bc7fd3de6324053e049205c"
+                "reference": "69871d2a8c4f6c7042885c786842c3dc6978970f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/phpecc/zipball/1a49380410b8ce826bc7fd3de6324053e049205c",
-                "reference": "1a49380410b8ce826bc7fd3de6324053e049205c",
+                "url": "https://api.github.com/repos/paragonie/phpecc/zipball/69871d2a8c4f6c7042885c786842c3dc6978970f",
+                "reference": "69871d2a8c4f6c7042885c786842c3dc6978970f",
                 "shasum": ""
             },
             "require": {
@@ -5853,9 +5853,9 @@
             ],
             "support": {
                 "issues": "https://github.com/paragonie/phpecc/issues",
-                "source": "https://github.com/paragonie/phpecc/tree/v2.6.0"
+                "source": "https://github.com/paragonie/phpecc/tree/v2.6.1"
             },
-            "time": "2026-08-20T07:00:03+00:00"
+            "time": "2026-11-18T13:34:09+00:00"
         },
         {
             "name": "paragonie/sodium_compat",
