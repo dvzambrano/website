@@ -1652,7 +1652,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/GutoTradeBot.git",
-                "reference": "b598122ca931e54fba0fba18cadeda41ecf15a7d"
+                "reference": "71f87c6f0095c99682ef1faed59d8534498a46bb"
             },
             "require": {
                 "dvzambrano/date": "dev-main",
@@ -1743,7 +1743,7 @@
                 }
             ],
             "description": "Paquete Laravel para gestión de pagos, capitales y remesas vía Telegram Bot. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-11-20T01:10:47+00:00"
+            "time": "2026-11-20T11:46:19+00:00"
         },
         {
             "name": "dvzambrano/locale",
@@ -5859,16 +5859,16 @@
         },
         {
             "name": "paragonie/sodium_compat",
-            "version": "v2.5.2",
+            "version": "v2.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/sodium_compat.git",
-                "reference": "3246b36803c177847e677862fedeb7f937869adb"
+                "reference": "3f1ee77cc481eeebdbd562dc21da33eaf994cc24"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/sodium_compat/zipball/3246b36803c177847e677862fedeb7f937869adb",
-                "reference": "3246b36803c177847e677862fedeb7f937869adb",
+                "url": "https://api.github.com/repos/paragonie/sodium_compat/zipball/3f1ee77cc481eeebdbd562dc21da33eaf994cc24",
+                "reference": "3f1ee77cc481eeebdbd562dc21da33eaf994cc24",
                 "shasum": ""
             },
             "require": {
@@ -5949,9 +5949,9 @@
             ],
             "support": {
                 "issues": "https://github.com/paragonie/sodium_compat/issues",
-                "source": "https://github.com/paragonie/sodium_compat/tree/v2.5.2"
+                "source": "https://github.com/paragonie/sodium_compat/tree/v2.6.0"
             },
-            "time": "2026-08-18T23:46:48+00:00"
+            "time": "2026-11-20T07:37:02+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
@@ -6136,16 +6136,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "4.0.3",
+            "version": "4.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "6077cecfed9e371993d3aa339b0afeb23f7bf636"
+                "reference": "44303c95a83b6071229cdea56cdcd52712730476"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/6077cecfed9e371993d3aa339b0afeb23f7bf636",
-                "reference": "6077cecfed9e371993d3aa339b0afeb23f7bf636",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/44303c95a83b6071229cdea56cdcd52712730476",
+                "reference": "44303c95a83b6071229cdea56cdcd52712730476",
                 "shasum": ""
             },
             "require": {
@@ -6154,12 +6154,12 @@
                 "symfony/polyfill-php82": "^1.26"
             },
             "require-dev": {
-                "brianium/paratest": "^7.22",
+                "brianium/paratest": "7.27.5",
                 "ext-xml": "*",
-                "php-parallel-lint/php-parallel-lint": "^1.3",
-                "phpunit/phpunit": "^13",
-                "squizlabs/php_codesniffer": "^3.7",
-                "vimeo/psalm": "*"
+                "php-parallel-lint/php-parallel-lint": "1.4.0",
+                "phpunit/phpunit": "13.4.6",
+                "squizlabs/php_codesniffer": "4.0.4",
+                "vimeo/psalm": "7.6.0"
             },
             "suggest": {
                 "ext-dom": "Install the DOM extension to load XML formatted public keys.",
@@ -6232,7 +6232,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/4.0.3"
+                "source": "https://github.com/phpseclib/phpseclib/tree/4.0.4"
             },
             "funding": [
                 {
@@ -6248,7 +6248,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-02T10:46:03+00:00"
+            "time": "2026-11-20T07:41:04+00:00"
         },
         {
             "name": "pragmarx/google2fa",
