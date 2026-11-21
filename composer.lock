@@ -1652,7 +1652,7 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:dvzambrano/GutoTradeBot.git",
-                "reference": "52636814f82e9f5cc0a8c2dcec33082f664b88cf"
+                "reference": "e87c65c8e0220844bfbf0ecb426f542f78f292a2"
             },
             "require": {
                 "dvzambrano/date": "dev-main",
@@ -1743,7 +1743,7 @@
                 }
             ],
             "description": "Paquete Laravel para gestión de pagos, capitales y remesas vía Telegram Bot. Multi-tenant, multi-idioma y listo para usar sin publicar recursos.",
-            "time": "2026-11-20T22:05:24+00:00"
+            "time": "2026-11-21T13:10:13+00:00"
         },
         {
             "name": "dvzambrano/locale",
@@ -3276,16 +3276,16 @@
         },
         {
             "name": "guzzlehttp/guzzle",
-            "version": "7.16.4",
+            "version": "7.16.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "9888e03ac453dbea608b68dbd1f5dd6f688d651c"
+                "reference": "b0605f32e77a13cf98bc5e75b1d71877b6814e17"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/9888e03ac453dbea608b68dbd1f5dd6f688d651c",
-                "reference": "9888e03ac453dbea608b68dbd1f5dd6f688d651c",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/b0605f32e77a13cf98bc5e75b1d71877b6814e17",
+                "reference": "b0605f32e77a13cf98bc5e75b1d71877b6814e17",
                 "shasum": ""
             },
             "require": {
@@ -3384,7 +3384,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/guzzle/issues",
-                "source": "https://github.com/guzzle/guzzle/tree/7.16.4"
+                "source": "https://github.com/guzzle/guzzle/tree/7.16.5"
             },
             "funding": [
                 {
@@ -3400,20 +3400,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-20T18:11:43+00:00"
+            "time": "2026-11-20T22:56:33+00:00"
         },
         {
             "name": "guzzlehttp/promises",
-            "version": "2.6.1",
+            "version": "2.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/promises.git",
-                "reference": "a1b6aceb39165acd5c421239e6abfa1b83dbe224"
+                "reference": "72e93ed2b1f3d8c09d1460c950bd5726face7ccd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/promises/zipball/a1b6aceb39165acd5c421239e6abfa1b83dbe224",
-                "reference": "a1b6aceb39165acd5c421239e6abfa1b83dbe224",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/72e93ed2b1f3d8c09d1460c950bd5726face7ccd",
+                "reference": "72e93ed2b1f3d8c09d1460c950bd5726face7ccd",
                 "shasum": ""
             },
             "require": {
@@ -3468,7 +3468,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/promises/issues",
-                "source": "https://github.com/guzzle/promises/tree/2.6.1"
+                "source": "https://github.com/guzzle/promises/tree/2.6.2"
             },
             "funding": [
                 {
@@ -3484,7 +3484,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-20T00:03:12+00:00"
+            "time": "2026-11-21T03:45:23+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
